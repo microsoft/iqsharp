@@ -1,0 +1,50 @@
+##
+# Build and test IQ#.
+##
+steps:
+
+##
+# Pre-reqs
+##
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
+  displayName: 'Use Python 3.6'
+    
+- script: pip install setuptools wheel pytest jupyter
+  displayName: 'Install Python tools'
+
+##
+# Build, test & pack
+##
+- powershell: .\build.ps1
+  displayName: "Building IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+- powershell: .\test.ps1
+  displayName: "Testing IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+
+- powershell: .\pack.ps1
+  displayName: "Packing IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+##
+# Publish tests results and build artifacts.
+##
+- task: PublishTestResults@2
+  displayName: 'Publish IQ# tests results'
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(System.DefaultWorkingDirectory)/**/*.trx'
+    testRunTitle: 'IQ# tests'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  condition: succeededOrFailed()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: iqsharp

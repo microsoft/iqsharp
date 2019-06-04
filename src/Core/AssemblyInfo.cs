@@ -1,0 +1,108 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Microsoft.Quantum.QsCompiler.CompilationBuilder;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler.SyntaxTree;
+
+
+namespace Microsoft.Quantum.IQSharp
+{
+    /// <summary>
+    /// This class stores the information about a .net core assembly.
+    /// If the assembly was built from Q# code, then it also keeps track of the list of Operations
+    /// defined in it, plus the corresponding SyntaxTree.
+    /// </summary>
+    public class AssemblyInfo : IEquatable<AssemblyInfo>
+    {
+        /// List of operations found. Calculated on demand.
+        private Lazy<OperationInfo[]> _operations;
+
+        /// <summary>
+        /// Constructor for non Q# compiled assemblies.
+        /// </summary>
+        public AssemblyInfo(Assembly assembly) : this(assembly, location: null, syntaxTree: null)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for Q# compiled assemblies.
+        /// </summary>
+        public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree)
+        {
+            Assembly = assembly;
+            Location = location ?? assembly?.Location;
+            SyntaxTree = syntaxTree;
+            _operations = new Lazy<OperationInfo[]>(InitOperations);
+        }
+
+        /// <summary>
+        /// The actual Assembly we're wrapping.
+        /// </summary>
+        public Assembly Assembly { get; }
+
+        /// <summary>
+        /// The path (location) in disk of this assembly.
+        /// </summary>
+        public string Location { get; }
+
+        /// <summary>
+        /// For Q#-based assemblies, the corresponding SyntaxTree.
+        /// </summary>
+        public QsNamespace[] SyntaxTree { get; }
+
+        /// <summary>
+        /// For Q#-based assemblies, the corresponding operations found in the SyntaxTree.
+        /// </summary>
+        public IEnumerable<OperationInfo> Operations => _operations.Value;
+
+        /// <summary>
+        ///  Used to lazily calculate operations in an assembly.
+        ///  Assumes that all Types in the Assembly are for operations.
+        /// </summary>
+        private OperationInfo[] InitOperations()
+        {
+            if (Assembly == null) return new OperationInfo[0];
+
+            // Parse the assembly headers to find which types are operation or function types.
+            var logger = new QSharpLogger(null); 
+            var refs = ProjectManager.LoadReferencedAssemblies(new[] { Location }, d => logger.Log(d), ex => logger.Log(ex));
+
+            System.Diagnostics.Debug.Assert(refs.Declarations.Count == 1);
+            var headers = refs.Declarations.Values.First();
+
+            var ops = new List<OperationInfo>();
+            foreach (var header in headers.Callables)
+            {
+                // Find the associated type.
+                var fullName = header.QualifiedName.ToFullName();
+                var type = Assembly.GetType(fullName);
+                var info = new OperationInfo(type, header);
+                ops.Add(info);
+            }
+
+            return ops.ToArray();
+        }
+
+        #region Equals
+        public override string ToString() => Assembly?.ToString();
+
+        public override bool Equals(object obj) => Equals(obj as AssemblyInfo);
+
+        public bool Equals(AssemblyInfo other) => Assembly?.FullName == other?.Assembly?.FullName;
+
+        public override int GetHashCode() => Assembly?.FullName?.GetHashCode() ?? 0;
+
+        public static bool operator ==(AssemblyInfo info1, AssemblyInfo info2) => info1?.Assembly?.FullName == info2?.Assembly?.FullName;
+
+        public static bool operator !=(AssemblyInfo info1, AssemblyInfo info2) => !(info1 == info2);
+        #endregion
+
+        public static AssemblyInfo Create(Assembly assembly) => assembly == null ? null : new AssemblyInfo(assembly);
+
+    }
+}
