@@ -10,6 +10,14 @@ steps:
       echo "##vso[task.setvariable variable=IQSharp.Constants]TELEMETRY"
     displayName: 'Enable telemetry'
 
+- ${{ if ne(parameters.enableTelemetry, 'true') }}:
+  - powershell: |
+      echo "##vso[task.setvariable variable=IQSharp.Constants]"
+    displayName: 'Disable telemetry'
+
+- script: setVersionNumber.cmd
+  displayName: "Set version number."
+
 - task: DotNetCoreCLI@2
   displayName: 'Build IQ#'
   inputs:
