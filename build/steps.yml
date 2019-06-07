@@ -15,7 +15,9 @@ steps:
       echo "##vso[task.setvariable variable=IQSharp.Constants]"
     displayName: 'Disable telemetry'
 
-- script: setVersionNumber.cmd
+- task: PowerShell@2
+  inputs:
+    script: Update-VersionNumber.ps1
   displayName: "Set version number."
 
 - task: DotNetCoreCLI@2
