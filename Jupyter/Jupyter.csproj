@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <RootNamespace>Microsoft.Quantum.IQSharp.Jupyter</RootNamespace>
+    <AssemblyName>Microsoft.Quantum.IQSharp.Jupyter</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="res\kernel.js" />
+    <None Remove="res\logo-64x64.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DelaySign.cs" Link="Properties\DelaySign.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="res\kernel.js" />
+    <EmbeddedResource Include="res\logo-64x64.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.1.14623" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Src\Core.csproj" />
+  </ItemGroup>
+
+</Project>

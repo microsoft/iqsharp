@@ -1,5 +1,42 @@
+# Microsoft Quantum Development Kit: IQ# Kernel #
 
-# Contributing
+Welcome to the Microsoft Quantum Development Kit!
+
+This repository contains the IQ# kernel for the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
+This kernel provides Q# support for the Jupyter platform, as well as the backend used by the Python client for Q#.
+
+- **[Jupyter/](./tree/master/Jupyter/)**: Assembly used to interoperate between Jupyter and the rest of the IQ# kernel.
+- **[Src/](./tree/master/Src/)**: Core of the IQ# kernel.
+- **[Tests/](./tree/master/Tests/)**: Unit tests for IQ#.
+- **[Tool/](./tree/master/Tool/)**: .NET Core Global Tool used to install and launch IQ#.
+- **[Web/](./tree/master/Web/)**: Provides a RESTful API into IQ#.
+
+## New to Quantum? ##
+
+See the [introduction to quantum computing](https://docs.microsoft.com/quantum/concepts/) provided with the Quantum Development Kit.
+
+## Getting Started ##
+
+The libraries provided in this repository are built using [.NET Core](https://docs.microsoft.com/dotnet/core/) and the
+compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
+Please see the [installation guide](https://docs.microsoft.com/quantum/install-guide) for how to get up and running.
+
+You may also visit our [Quantum](https://github.com/microsoft/quantum) repository, which offers a wide variety
+of samples on how to use these libraries to write quantum based programs.
+
+## Build Status ##
+
+<!-- TODO
+| branch | status    |
+|--------|-----------|
+| master | [![Build Status](https://quarcsw.visualstudio.com/Libraries/_apis/build/status/Github/Libraries%20(GitHub))](https://quarcsw.visualstudio.com/Libraries/_build/latest?definitionId=62) | -->
+
+## Feedback ##
+
+If you have feedback about IQ#, please let us know by filing a [new issue](https://github.com/microsoft/iqsharp/issues/new)!
+If you have feedback about some other part of the Microsoft Quantum Development Kit, please see the [contribution guide](https://docs.microsoft.com/quantum/contributing/) for more information.
+
+## Contributing ##
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
@@ -12,3 +49,5 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+For more details, please see [CONTRIBUTING.md](./tree/master/CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/quantum/contributing/).

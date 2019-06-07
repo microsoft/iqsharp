@@ -1,0 +1,51 @@
+##
+# Build, test and pack the simulation framework.
+##
+parameters:
+  enableTelemetry: "false"
+
+steps:
+- ${{ if eq(parameters.enableTelemetry, 'true') }}:
+  - powershell: |
+      echo "##vso[task.setvariable variable=IQSharp.Constants]TELEMETRY"
+    displayName: 'Enable telemetry'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build IQ#'
+  inputs:
+    command: build
+    arguments: >
+      -c $(BuildConfiguration) 
+      -v $(Build.Verbosity)  
+      /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
+      /p:Version=$(Assembly.Version)
+    projects: '$(IQSharpSrcDir)/../IQsharp.sln'
+
+
+- task: DotNetCoreCLI@2
+  displayName: 'Pack IQ#'
+  inputs:
+    command: custom
+    custom: pack
+    projects: |
+      $(IQSharpSrcDir)/Tool/Tool.csproj
+      $(IQSharpSrcDir)/Src/Core.csproj
+    arguments: >
+      --no-build
+      -c $(BuildConfiguration)
+      -v n
+      -o $(System.DefaultWorkingDirectory)
+      /p:Version=$(Assembly.Version)
+      /p:PackageVersion=$(Nuget.Version)
+
+
+- task: DotNetCoreCLI@2
+  displayName: 'Test IQ#'
+  inputs:
+    command: test
+    arguments: >
+      -c $(BuildConfiguration) 
+      -v $(Build.Verbosity)  
+      /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
+      /p:Version=$(Assembly.Version)
+    projects: '$(IQSharpSrcDir)/../IQsharp.sln'
