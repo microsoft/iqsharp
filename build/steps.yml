@@ -19,7 +19,7 @@ steps:
       -v $(Build.Verbosity)  
       /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
       /p:Version=$(Assembly.Version)
-    projects: '$(IQSharpSrcDir)/../IQsharp.sln'
+    projects: '$(System.DefaultWorkingDirectory)/iqsharp.sln'
 
 
 - task: DotNetCoreCLI@2
@@ -28,8 +28,8 @@ steps:
     command: custom
     custom: pack
     projects: |
-      $(IQSharpSrcDir)/Tool/Tool.csproj
-      $(IQSharpSrcDir)/Src/Core.csproj
+      $(System.DefaultWorkingDirectory)/Tool/Tool.csproj
+      $(System.DefaultWorkingDirectory)/Src/Core.csproj
     arguments: >
       --no-build
       -c $(BuildConfiguration)
@@ -49,4 +49,4 @@ steps:
       -v $(Build.Verbosity)  
       /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
       /p:Version=$(Assembly.Version)
-    projects: '$(IQSharpSrcDir)/../IQsharp.sln'
+    projects: '$(System.DefaultWorkingDirectory)/iqsharp.sln'

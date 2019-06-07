@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
-    <ProjectReference Include="..\Src\Core.csproj" />
+    <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>
