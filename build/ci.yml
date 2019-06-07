@@ -5,7 +5,7 @@ variables:
 - template: vars-common.yml
 
 jobs:
-- job: "IQ# (w/o telemetry)"
+- job: "iqsharp"
   steps:
   - template: steps.yml
     parameters:
