@@ -1,2 +1,16 @@
+parameters:
+  major: 0
+  minor: 0
+  nuget_pre: -alpha
+  signed: ""
+
 variables:
+  Signed: ${{ parameters.signed }}
+  Build.Major: ${{ parameters.major }}
+  Build.Minor: ${{ parameters.minor }}
+  Build.Verbosity: 'n'
+  IQSharp.Hosting.Env: 'build-agent'
+  Assembly.Constants: $(Signed)
+  Assembly.Version: $(Build.BuildNumber)
+  Nuget.Version: $(Assembly.Version)${{ parameters.nuget_pre }}
   Semicolon: "%3B"
