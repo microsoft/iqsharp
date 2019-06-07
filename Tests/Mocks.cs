@@ -4,11 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Applications.Events;
 using Microsoft.Extensions.Options;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp;
+
+#if TELEMETRY
+using Microsoft.Applications.Events;
+#endif
 
 namespace Tests.IQSharp
 {
@@ -69,6 +72,7 @@ namespace Tests.IQSharp
         public void Stdout(string message) => msgs.Add(message);
     }
 
+    #if TELEMETRY
     public class MockTelemetryLogger : ILogger
     {
         public List<EventProperties> Events = new List<EventProperties>();
@@ -121,4 +125,6 @@ namespace Tests.IQSharp
         public EVTStatus SetContext(string name, Guid value, PiiKind piiKind = PiiKind.None) =>
             throw new NotImplementedException();
     }
+    #endif
+
 }
