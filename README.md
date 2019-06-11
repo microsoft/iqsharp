@@ -36,6 +36,18 @@ of samples on how to use these libraries to write quantum based programs.
 If you have feedback about IQ#, please let us know by filing a [new issue](https://github.com/microsoft/iqsharp/issues/new)!
 If you have feedback about some other part of the Microsoft Quantum Development Kit, please see the [contribution guide](https://docs.microsoft.com/quantum/contributing/) for more information.
 
+## Legal and Licensing ##
+
+### Telemetry ###
+
+By default, IQ# collects information about the runtime performance of IQ#.
+To opt-out of sending telemetry, create an environment variable called IQSHARP_TELEMETRY_OPT_OUT set to a value of 1 before starting IQ#.
+The telemetry we collect falls under the Microsoft Privacy Statement.
+
+### Data Collection ###
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
 ## Contributing ##
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
