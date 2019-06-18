@@ -83,7 +83,7 @@ namespace Tests.IQSharp
             var response = await controller.Compile(SNIPPETS.InvalidFunctor);
             Console.WriteLine(JsonConvert.SerializeObject(response));
             Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(4, response.messages.Length);
+            Assert.AreEqual(5, response.messages.Length);
         }
 
         [TestMethod]
