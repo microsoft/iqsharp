@@ -14,9 +14,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
-using Microsoft.Quantum.QsCompiler.CsCodeGeneration;
+using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
-using Microsoft.Quantum.QsCompiler.Diagnostics;
+
 
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
@@ -56,9 +56,9 @@ namespace Microsoft.Quantum.IQSharp
             var sources = new Dictionary<Uri, string>() { { new Uri($"file:///temp"), $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
             var references = QsReferences.Empty;
 
-            CompilationUnitManager.BuildCompilation(sources, references, out var compilation, out var diagnostics, ex => logger?.Log(ex));
-            logger?.Log(diagnostics);
-            return compilation?.SyntaxTree[ns].Elements;
+            var loadOptions = new QsCompiler.CompilationLoader.Configuration(); // do not generate functor support
+            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
+            return loaded.VerifiedCompilation?.SyntaxTree[ns].Elements;
         }
 
         /// <summary>
@@ -67,7 +67,8 @@ namespace Microsoft.Quantum.IQSharp
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
             var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger);
-            var assembly = BuildAssembly(files.Select(f => CompilationUnitManager.TryGetUri(NonNullable<string>.New(f))).ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
+            Uri FileUri(string f) => CompilationUnitManager.TryGetUri(NonNullable<string>.New(f), out var uri) ? uri : null;
+            var assembly = BuildAssembly(files.Select(FileUri) .ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
 
             return assembly;
         }
@@ -87,33 +88,33 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger)
         {
-            CompilationUnitManager.BuildCompilation(sources, references, out var compilation, out var diagnostics, ex => logger?.Log(ex));
-            logger?.Log(diagnostics);
-            FunctorGeneration.GenerateFunctorSpecializations(compilation?.SyntaxTree?.Values, out var syntaxTree);
-            return syntaxTree?.ToArray();
+            var loadOptions = new QsCompiler.CompilationLoader.Configuration { GenerateFunctorSupport = true }; 
+            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
+            return loaded.GeneratedSyntaxTree?.ToArray();
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private static AssemblyInfo BuildAssembly(Uri[] filesNames, QsCompiler.SyntaxTree.QsNamespace[] syntaxTree, IEnumerable<MetadataReference> references, QSharpLogger logger, string targetDll)
+        private static AssemblyInfo BuildAssembly(Uri[] fileNames, QsCompiler.SyntaxTree.QsNamespace[] syntaxTree, IEnumerable<MetadataReference> references, QSharpLogger logger, string targetDll)
         {
             if (logger.HasErrors) return null;
 
-            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", filesNames.Select(f => f.LocalPath))}");
+            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", fileNames.Select(f => f.LocalPath))}");
 
             try
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
                 var trees = new List<SyntaxTree>();
-                foreach (var file in filesNames)
+                NonNullable<string> GetFileId(Uri uri) => CompilationUnitManager.TryGetFileId(uri, out var id) ? id : NonNullable<string>.New(uri.AbsolutePath);
+                foreach (var file in fileNames)
                 {
-                    var code = SimulationCode.generate(file.AbsolutePath, syntaxTree);
+                    var sourceFile = GetFileId(file);
+                    var code = SimulationCode.generate(sourceFile, syntaxTree);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
-                    logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
+                    logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");
                 }
-
 
                 // Compile the C# syntax trees:
                 var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
