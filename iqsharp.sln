@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jupyter", "Jupyter\Jupyter.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{0ACA57A6-A8F6-497C-85D3-D547433BFACB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "src\Core\Core.csproj", "{0ACA57A6-A8F6-497C-85D3-D547433BFACB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.IQsharp", "Tests\Tests.IQsharp.csproj", "{756BE082-2E89-47F0-A48A-D7E762B0A82E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.IQsharp", "src\Tests\Tests.IQsharp.csproj", "{756BE082-2E89-47F0-A48A-D7E762B0A82E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tool", "Tool\Tool.csproj", "{7EB9C7E8-7D40-432E-9857-1DD6301B9F4A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tool", "src\Tool\Tool.csproj", "{7EB9C7E8-7D40-432E-9857-1DD6301B9F4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "Web\Web.csproj", "{6431E92B-12AA-432C-8D53-C9A7A54BA21B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "src\Web\Web.csproj", "{6431E92B-12AA-432C-8D53-C9A7A54BA21B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
