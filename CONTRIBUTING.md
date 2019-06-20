@@ -7,7 +7,7 @@ For more details on how to contribute to IQ# or the rest of the Quantum Developm
 
 ## Asking Questions
 
-Have a question? Rather than opening an issue, please ask away on [Stack Overflow](https://stackoverflow.com/questions/tagged/vscode) using the tag `qsharp`.
+Have a question? Rather than opening an issue, please ask away on [Stack Overflow](https://stackoverflow.com/questions/tagged/q%23) using the tag `qsharp`.
 
 The active community will be eager to assist you.
 Your well-worded question will serve as a resource to others searching for help.
