@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\Nuspecs\ThirdPartyNotice.txt" Link="ThirdPartyNotice.txt" />
+    <Content Include="..\..\ThirdPartyNotice.txt" Link="ThirdPartyNotice.txt" />
   </ItemGroup>
 
   <ItemGroup>
