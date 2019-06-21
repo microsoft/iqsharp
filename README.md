@@ -26,10 +26,9 @@ of samples on how to use these libraries to write quantum based programs.
 
 ## Build Status ##
 
-<!-- TODO
 | branch | status    |
 |--------|-----------|
-| master | [![Build Status](https://quarcsw.visualstudio.com/Libraries/_apis/build/status/Github/Libraries%20(GitHub))](https://quarcsw.visualstudio.com/Libraries/_build/latest?definitionId=62) | -->
+| master | [![Build Status](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_apis/build/status/microsoft.iqsharp?branchName=master)](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_build/latest?definitionId=14&branchName=master) |
 
 ## Feedback ##
 
