@@ -24,6 +24,27 @@ Please see the [installation guide](https://docs.microsoft.com/quantum/install-g
 You may also visit our [Quantum](https://github.com/microsoft/quantum) repository, which offers a wide variety
 of samples on how to use these libraries to write quantum based programs.
 
+### Building IQ# ###
+
+To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/master/iqsharp.sln) solution file.
+To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
+
+In either case, the IQ# kernel can be installed by using `dotnet run`:
+
+```
+cd src/Tool/
+dotnet run -- install
+```
+
+Optionally, you can install IQ# in _development mode_, which instructs the Jupyter platform to rebuild IQ# whenever a new kernel is started:
+
+```
+cd src/Tool/
+dotnet run -- install --develop
+```
+
+This can cause some issues, especially when running multiple instances of IQ#, such that we recommend against using development mode in general usage.
+
 ## Build Status ##
 
 | branch | status    |
