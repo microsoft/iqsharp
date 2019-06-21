@@ -62,7 +62,7 @@ If you have feedback about some other part of the Microsoft Quantum Development 
 
 By default, IQ# collects information about the runtime performance of IQ#.
 To opt-out of sending telemetry, create an environment variable called IQSHARP_TELEMETRY_OPT_OUT set to a value of 1 before starting IQ#.
-The telemetry we collect falls under the Microsoft Privacy Statement.
+The telemetry we collect falls under the [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement).
 
 ### Data Collection ###
 
