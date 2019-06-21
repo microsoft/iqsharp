@@ -55,7 +55,7 @@ steps:
   inputs:
     command: test
     arguments: >
-      -c $(BuildConfiguration
+      -c $(BuildConfiguration)
       -v $(Build.Verbosity)
       /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
       /p:Version=$(Assembly.Version)
