@@ -60,3 +60,8 @@ steps:
       /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
       /p:Version=$(Assembly.Version)
     projects: '$(IQSharp.SourceDir)/iqsharp.sln'
+
+- task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+  displayName: 'Component Detection'
+  inputs:
+    failOnAlert: true
