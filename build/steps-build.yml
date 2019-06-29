@@ -1,0 +1,27 @@
+##
+# Build and test IQ#.
+##
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Build IQ#'
+  inputs:
+    command: build
+    arguments: >
+      -c $(BuildConfiguration)
+      -v $(Build.Verbosity)
+      /p:DefineConstants="$(Assembly.Constants)"
+      /p:Version=$(Assembly.Version)
+    projects: '$(IQSharp.SourceDir)/iqsharp.sln'
+
+
+- task: DotNetCoreCLI@2
+  displayName: 'Test IQ#'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+  inputs:
+    command: test
+    arguments: >
+      -c $(BuildConfiguration)
+      -v $(Build.Verbosity)
+      /p:DefineConstants="$(Assembly.Constants)"
+      /p:Version=$(Assembly.Version)
+    projects: '$(IQSharp.SourceDir)/iqsharp.sln'

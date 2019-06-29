@@ -7,6 +7,9 @@ variables:
 jobs:
 - job: "iqsharp"
   steps:
-  - template: steps.yml
-    parameters:
-      enableTelemetry: "false"
+  - template: steps-build.yml
+  - template: steps-pack.yml
+  - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+    displayName: 'Component Detection'
+    inputs:
+      failOnAlert: true
