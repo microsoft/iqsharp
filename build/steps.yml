@@ -6,21 +6,35 @@ steps:
   displayName: "Building IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
 
-
 - script: ./test.sh
   displayName: "Testing IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
-- task: PublishTestResults@2
-  displayName: 'Publish IQ# tests results'
-  condition: and(succeededOrFailed(), ne(variables['Skip.Tests'], 'true'))
-  inputs:
-    testResultsFormat: VSTest
-    testResultsFiles: '$(IQSharp.WorkingDirectory)/**/*.trx'
-    testRunTitle: 'IQ# Sanity tests'
-
 
 - script: ./pack.sh
   displayName: "Packing IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
+
+##
+# Publish tests results and build artifacts.
+##
+- task: PublishTestResults@2
+  displayName: 'Publish IQ# tests results'
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(IQSharp.WorkingDirectory)/**/*.trx'
+    testRunTitle: 'IQ# tests'
+
+- task: PublishSymbols@1
+  displayName: 'Publish symbols'
+  continueOnError: true
+  inputs:
+    SearchPattern: '$(Runtime.WorkingDirectory)/src/**/*.pdb'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  condition: succeededOrFailed()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
