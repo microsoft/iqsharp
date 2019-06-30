@@ -1,5 +1,6 @@
 #!/bin/bash 
 set -e
+set -x
 
 : ${BUILD_BUILDNUMBER:="0.0.0.1"}
 echo "##vso[task.setvariable variable=BUILD_BUILDNUMBER]$BUILD_BUILDNUMBER"
