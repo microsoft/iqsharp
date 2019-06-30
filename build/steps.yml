@@ -2,11 +2,6 @@
 # Build and test IQ#.
 ##
 steps:
-- script: ./set-env.sh
-  displayName: "Building IQ#"
-  workingDirectory: '$(IQSharp.WorkingDirectory)/build'
-
-  
 - script: ./build.sh
   displayName: "Building IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
