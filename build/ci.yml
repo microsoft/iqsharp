@@ -2,13 +2,15 @@ name: $(Build.Major).$(Build.Minor).$(date:yyMM).$(DayOfMonth)$(rev:rr)
 trigger: none
 
 variables:
-- template: vars-common.yml
+  Build.Major: 0
+  Build.Minor: 0
+  IQSharp.WorkingDirectory: '$(System.DefaultWorkingDirectory)'
+  IQSharp.Hosting.Env: 'build-agent'
 
 jobs:
 - job: "iqsharp"
   steps:
-  - template: steps-build.yml
-  - template: steps-pack.yml
+  - template: steps.yml
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
     inputs:

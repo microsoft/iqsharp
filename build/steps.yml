@@ -1,0 +1,25 @@
+##
+# Build and test IQ#.
+##
+steps:
+- script: build.sh
+  displayName: "Building IQ#"
+  workingDirectory: '$(IQSharp.WorkingDirectory)/build
+
+
+- script: test.sh
+  displayName: "Testing IQ#"
+  workingDirectory: '$(IQSharp.WorkingDirectory)/build
+
+- task: PublishTestResults@2
+  displayName: 'Publish IQ# tests results'
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(IQSharp.WorkingDirectory)/**/*.trx'
+    testRunTitle: 'IQ# Sanity tests'
+
+
+- script: pack.sh
+  displayName: "Packing IQ#"
+  workingDirectory: '$(IQSharp.WorkingDirectory)/build
