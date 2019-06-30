@@ -2,12 +2,12 @@
 # Build and test IQ#.
 ##
 steps:
-- script: build.sh
+- script: ./build.sh
   displayName: "Building IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
 
 
-- script: test.sh
+- script: ./test.sh
   displayName: "Testing IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
@@ -21,6 +21,6 @@ steps:
     testRunTitle: 'IQ# Sanity tests'
 
 
-- script: pack.sh
+- script: ./pack.sh
   displayName: "Packing IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
