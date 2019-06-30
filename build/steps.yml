@@ -27,14 +27,9 @@ steps:
     testResultsFiles: '$(IQSharp.WorkingDirectory)/**/*.trx'
     testRunTitle: 'IQ# tests'
 
-- task: PublishSymbols@1
-  displayName: 'Publish symbols'
-  continueOnError: true
-  inputs:
-    SearchPattern: '$(Runtime.WorkingDirectory)/src/**/*.pdb'
-
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
   condition: succeededOrFailed()
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: iqsharp
