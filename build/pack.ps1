@@ -54,6 +54,7 @@ Write-Host "##[info]Pack IQ# tool:"
 Pack-One '../src/Tool/Tool.csproj'
 
 Write-Host "##[info]Pack Python wheel:"
+python --version
 Pack-Wheel '../src/Python/'
 
 Write-Host "##[info]Packing Docker image:"
