@@ -5,20 +5,21 @@ $ErrorActionPreference = 'Stop'
 
 .\set-env.ps1
 
+function Pack-One() {
+    Param($project)
+    dotnet pack $project `
+        --no-build `
+        -c $Env:BUILD_CONFIGURATION `
+        -v $Env:BUILD_VERBOSITY `
+        -o $Env:NUGET_OUTDIR `
+        /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:PackageVersion=$Env:NUGET_VERSION
+
+    if ($LastExitCode -ne 0) { throw "Cannot pack $project." }
+}
+
 Write-Host "##[info]Pack IQ# library:"
-dotnet pack ../src/Core/Core.csproj `
-    --no-build `
-    -c $Env:BUILD_CONFIGURATION `
-    -v $Env:BUILD_VERBOSITY `
-    -o $Env:NUGET_OUTDIR `
-    /property:Version=$Env:ASSEMBLY_VERSION `
-    /property:PackageVersion=$Env:NUGET_VERSION
+Pack-One '../src/Core/Core.csproj' 
 
 Write-Host "##[info]Pack IQ# tool:"
-dotnet pack ../src/Tool/Tool.csproj `
-    --no-build `
-    -c $Env:BUILD_CONFIGURATION `
-    -v $Env:BUILD_VERBOSITY `
-    -o $Env:NUGET_OUTDIR `
-    /property:Version=$Env:ASSEMBLY_VERSION `
-    /property:PackageVersion=$Env:NUGET_VERSION
+Pack-One '../src/Tool/Tool.csproj'
