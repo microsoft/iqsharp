@@ -3,9 +3,10 @@
 
 $ErrorActionPreference = 'Stop'
 
-.\set-env.ps1
+& "$PSScriptRoot/set-env.ps1"
+$all_ok = $True
 
-function Pack-One() {
+function Pack-Nuget() {
     Param($project)
     dotnet pack $project `
         --no-build `
@@ -15,11 +16,16 @@ function Pack-One() {
         /property:Version=$Env:ASSEMBLY_VERSION `
         /property:PackageVersion=$Env:NUGET_VERSION
 
-    if ($LastExitCode -ne 0) { throw "Cannot pack $project." }
+    return ($LastExitCode -eq 0)
 }
 
-Write-Host "##[info]Pack IQ# library:"
-Pack-One '../src/Core/Core.csproj' 
+Write-Host "##[info]Packing IQ# library..."
+$all_ok = (Pack-Nuget '../src/Core/Core.csproj') -and $all_ok
 
-Write-Host "##[info]Pack IQ# tool:"
-Pack-One '../src/Tool/Tool.csproj'
+Write-Host "##[info]Packing IQ# tool..."
+$all_ok = (Pack-Nuget '../src/Tool/Tool.csproj') -and $all_ok
+
+
+if (-not $all_ok) {
+    throw "At least one package failed to build. Check the logs."
+}

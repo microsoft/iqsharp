@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-.\set-env.ps1
+& "$PSScriptRoot/set-env.ps1"
 
 Write-Host "Build IQ#:"
 dotnet build ../iqsharp.sln `
