@@ -3,10 +3,10 @@
 
 $ErrorActionPreference = 'Stop'
 
-.\set-env.ps1
+& "$PSScriptRoot/set-env.ps1"
 
 Write-Host "Build IQ#:"
-dotnet build ../iqsharp.sln `
+dotnet build (Join-Path $PSScriptRoot ../iqsharp.sln) `
     -c $Env:BUILD_CONFIGURATION `
     -v $Env:BUILD_VERBOSITY `
     /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
