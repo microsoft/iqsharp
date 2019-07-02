@@ -20,16 +20,16 @@ steps:
 ##
 - powershell: .\build.ps1
   displayName: "Building IQ#"
-  workingDirectory: '$(IQSharp.WorkingDirectory)/build'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 - powershell: .\test.ps1
   displayName: "Testing IQ#"
-  workingDirectory: '$(IQSharp.WorkingDirectory)/build'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
 - powershell: .\pack.ps1
   displayName: "Packing IQ#"
-  workingDirectory: '$(IQSharp.WorkingDirectory)/build'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 ##
 # Publish tests results and build artifacts.
@@ -39,7 +39,7 @@ steps:
   condition: succeededOrFailed()
   inputs:
     testResultsFormat: VSTest
-    testResultsFiles: '$(IQSharp.WorkingDirectory)/**/*.trx'
+    testResultsFiles: '$(System.DefaultWorkingDirectory)/**/*.trx'
     testRunTitle: 'IQ# tests'
 
 - task: PublishBuildArtifacts@1
