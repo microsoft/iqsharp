@@ -32,7 +32,7 @@ function Pack-Wheel() {
     Push-Location (Join-Path $PSScriptRoot $Path)
         python setup.py bdist_wheel
         $result = $LastExitCode
-        Copy-Item "dist/*-${Env:PYTHON_VERSION}-*.whl" $Env:NUGET_OUTDIR
+        Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
     Pop-Location
 
     return ($result -eq 0)
