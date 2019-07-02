@@ -70,13 +70,13 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
           <configuration>\n\
               <packageSources>\n\
                   <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
-                  <add key=\"context\" value=\"${LOCAL_PACKAGES}/nuget\" />\n\
+                  <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
               </packageSources>\n\
           </configuration>\n\
     " > ${HOME}/.nuget/NuGet/NuGet.Config
 # Add Python and NuGet packages from the build context
-ADD *.nupkg ${LOCAL_PACKAGES}/nuget/
-ADD *.whl ${LOCAL_PACKAGES}/wheels/
+ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
+ADD wheels/*.whl ${LOCAL_PACKAGES}/wheels/
 # Give the notebook user ownership over the packages and config copied from
 # the context.
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
