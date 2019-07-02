@@ -2,6 +2,10 @@
 # Build and test IQ#.
 ##
 steps:
+
+##
+# Pre-reqs
+##
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.6'
@@ -11,6 +15,9 @@ steps:
 - script: pip install setuptools wheel pytest jupyter
   displayName: 'Install Python tools'
 
+##
+# Build, test & pack
+##
 - powershell: .\build.ps1
   displayName: "Building IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
@@ -19,7 +26,6 @@ steps:
   displayName: "Testing IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
-
 
 - powershell: .\pack.ps1
   displayName: "Packing IQ#"

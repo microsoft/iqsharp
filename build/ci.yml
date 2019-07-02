@@ -6,8 +6,8 @@ variables:
   Build.Major: 0
   Build.Minor: 0
   IQSharp.WorkingDirectory: '$(System.DefaultWorkingDirectory)'
-  Nuget.Outdir: $(Build.ArtifactStagingDirectory)/drop.nugets
-  Docs.Outdir: $(Build.ArtifactStagingDirectory)/drop.docs
+  Nuget.Outdir: $(Build.ArtifactStagingDirectory)/drops/nugets
+  Docs.Outdir: $(Build.ArtifactStagingDirectory)/drops/docs
 
 jobs:
 - job: "iqsharp"
