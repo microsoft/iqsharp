@@ -47,7 +47,7 @@ function Pack-Image() {
     docker build `
         <# We treat $DROP_DIR as the build context, as we will need to ADD
            nuget packages into the image. #> `
-        $Env:DROP_DIR `
+        $Env:DROPS_DIR `
         <# This means that the Dockerfile lives outside the build context. #> `
         -f (Join-Path $PSScriptRoot $Dockerfile) `
         <# Next, we tell Docker what version of IQ# to install. #> `
