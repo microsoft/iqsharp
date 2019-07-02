@@ -64,11 +64,11 @@ $all_ok = (Pack-Nuget '../src/Core/Core.csproj') -and $all_ok
 Write-Host "##[info]Packing IQ# tool..."
 $all_ok = (Pack-Nuget '../src/Tool/Tool.csproj') -and $all_ok
 
-Write-Host "##[info]Pack Python wheel:"
+Write-Host "##[info]Packing Python wheel..."
 python --version
 $all_ok = (Pack-Wheel '../src/Python/') -and $all_ok
 
-Write-Host "##[info]Packing Docker image:"
+Write-Host "##[info]Packing Docker image..."
 $all_ok = (Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile') -and $all_ok
 
 if (-not $all_ok) {
