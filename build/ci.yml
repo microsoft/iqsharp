@@ -6,9 +6,7 @@ variables:
   Build.Major: 0
   Build.Minor: 0
   IQSharp.WorkingDirectory: '$(System.DefaultWorkingDirectory)'
-  Nuget.Outdir: $(Build.ArtifactStagingDirectory)/drops/nugets
-  Python.Outdir: $(Build.ArtifactStagingDirectory)/drops/nugets
-  Docs.Outdir: $(Build.ArtifactStagingDirectory)/drops/docs
+  Drop.Dir: $(Build.ArtifactStagingDirectory)/drops
 
 jobs:
 - job: "iqsharp"
