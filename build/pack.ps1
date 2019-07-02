@@ -19,7 +19,7 @@ function Pack-Nuget() {
         /property:Version=$Env:ASSEMBLY_VERSION `
         /property:PackageVersion=$Env:NUGET_VERSION
 
-    return ($LastExitCode -eq 0)
+    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
 }
 
 function Pack-Wheel() {
@@ -35,7 +35,7 @@ function Pack-Wheel() {
         Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
     Pop-Location
 
-    return ($result -eq 0)
+    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
 }
 
 function Pack-Image() {
@@ -55,21 +55,21 @@ function Pack-Image() {
         <# Finally, we tag the image with the current build number. #> `
         -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:BUILD_BUILDNUMBER}"
 
-    return ($LastExitCode -eq 0)
+    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
 }
 
 Write-Host "##[info]Packing IQ# library..."
-$all_ok = (Pack-Nuget '../src/Core/Core.csproj') -and $all_ok
+Pack-Nuget '../src/Core/Core.csproj'
 
 Write-Host "##[info]Packing IQ# tool..."
-$all_ok = (Pack-Nuget '../src/Tool/Tool.csproj') -and $all_ok
+Pack-Nuget '../src/Tool/Tool.csproj'
 
 Write-Host "##[info]Packing Python wheel..."
 python --version
-$all_ok = (Pack-Wheel '../src/Python/') -and $all_ok
+Pack-Wheel '../src/Python/'
 
 Write-Host "##[info]Packing Docker image..."
-$all_ok = (Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile') -and $all_ok
+Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 
 if (-not $all_ok) {
     throw "At least one package failed to build. Check the logs."
