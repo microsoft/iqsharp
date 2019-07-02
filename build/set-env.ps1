@@ -18,3 +18,7 @@ If (-not (Test-Path -Path $Env:NUGET_OUTDIR)) { md -Force $Env:NUGET_OUTDIR }
 
 If ($Env:PYTHON_OUTDIR -eq $null) { $Env:PYTHON_OUTDIR =  [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\drop\wheels")) }
 If (-not (Test-Path -Path $Env:PYTHON_OUTDIR)) { md -Force $Env:PYTHON_OUTDIR }
+
+If ($Env:DOCS_OUTDIR -eq $null) { $Env:DOCS_OUTDIR =  [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\drop\docs")) }
+If (-not (Test-Path -Path $Env:DOCS_OUTDIR)) { md -Force $Env:DOCS_OUTDIR }
+
