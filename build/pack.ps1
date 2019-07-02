@@ -42,7 +42,7 @@ function Pack-Image() {
         <# This means that the Dockerfile lives outside the build context. #> `
         -f (Join-Path $PSScriptRoot $Dockerfile) `
         <# Next, we tell Docker what version of IQ# to install. #> `
-        --build-arg NUGET_VERSION=$Env:NUGET_VERSION `
+        --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
         <# Finally, we tag the image with the current build number. #> `
         -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:BUILD_BUILDNUMBER}"
 }
