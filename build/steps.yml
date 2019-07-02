@@ -2,6 +2,11 @@
 # Build and test IQ#.
 ##
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
+
 - powershell: .\build.ps1
   displayName: "Building IQ#"
   workingDirectory: '$(IQSharp.WorkingDirectory)/build'
