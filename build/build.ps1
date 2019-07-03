@@ -5,9 +5,29 @@ $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
 
-Write-Host "Build IQ#:"
-dotnet build (Join-Path $PSScriptRoot ../iqsharp.sln) `
-    -c $Env:BUILD_CONFIGURATION `
-    -v $Env:BUILD_VERBOSITY `
-    /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
-    /property:Version=$Env:ASSEMBLY_VERSION
+$all_ok = $True
+
+function Build-One {
+    param(
+        [string]$action,
+        [string]$project
+    );
+
+    Write-Host "##[info]Building $project"
+    dotnet $action (Join-Path $PSScriptRoot $project) `
+        -c $Env:BUILD_CONFIGURATION `
+        -v $Env:BUILD_VERBOSITY `
+        /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:QsharpDocsOutDir=$Env:DOCS_OUTDIR
+
+    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
+}
+
+Build-One build '../iqsharp.sln'
+
+if (-not $all_ok) 
+{
+    throw "At least one project failed to compile. Check the logs."
+}
+
