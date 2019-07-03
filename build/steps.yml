@@ -1,67 +1,50 @@
 ##
-# Build, test and pack the simulation framework.
+# Build and test IQ#.
 ##
-parameters:
-  enableTelemetry: "false"
-
 steps:
-- ${{ if eq(parameters.enableTelemetry, 'true') }}:
-  - powershell: |
-      echo "##vso[task.setvariable variable=IQSharp.Constants]TELEMETRY"
-    displayName: 'Enable telemetry'
 
-- ${{ if ne(parameters.enableTelemetry, 'true') }}:
-  - powershell: |
-      echo "##vso[task.setvariable variable=IQSharp.Constants]"
-    displayName: 'Disable telemetry'
-
-- task: PowerShell@2
+##
+# Pre-reqs
+##
+- task: UsePythonVersion@0
   inputs:
-    filePath: Update-VersionNumber.ps1
-  displayName: "Set version number."
+    versionSpec: '3.6'
+    architecture: 'x64'
+  displayName: 'Use Python 3.6'
+    
+- script: pip install setuptools wheel pytest jupyter
+  displayName: 'Install Python tools'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build IQ#'
-  inputs:
-    command: build
-    arguments: >
-      -c $(BuildConfiguration)
-      -v $(Build.Verbosity)
-      /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
-      /p:Version=$(Assembly.Version)
-    projects: '$(IQSharp.SourceDir)/iqsharp.sln'
+##
+# Build, test & pack
+##
+- powershell: .\build.ps1
+  displayName: "Building IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
-
-- task: DotNetCoreCLI@2
-  displayName: 'Pack IQ#'
-  inputs:
-    command: custom
-    custom: pack
-    projects: |
-      $(IQSharp.SourceDir)/src/Tool/Tool.csproj
-      $(IQSharp.SourceDir)/src/Core/Core.csproj
-    arguments: >
-      --no-build
-      -c $(BuildConfiguration)
-      -v n
-      -o $(Nuget.OutDir)
-      /p:Version=$(Assembly.Version)
-      /p:PackageVersion=$(Nuget.Version)
-
-
-- task: DotNetCoreCLI@2
-  displayName: 'Test IQ#'
+- powershell: .\test.ps1
+  displayName: "Testing IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
-  inputs:
-    command: test
-    arguments: >
-      -c $(BuildConfiguration)
-      -v $(Build.Verbosity)
-      /p:DefineConstants="$(Assembly.Constants)$(Semicolon)$(IQSharp.Constants)"
-      /p:Version=$(Assembly.Version)
-    projects: '$(IQSharp.SourceDir)/iqsharp.sln'
 
-- task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-  displayName: 'Component Detection'
+- powershell: .\pack.ps1
+  displayName: "Packing IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+##
+# Publish tests results and build artifacts.
+##
+- task: PublishTestResults@2
+  displayName: 'Publish IQ# tests results'
+  condition: succeededOrFailed()
   inputs:
-    failOnAlert: true
+    testResultsFormat: VSTest
+    testResultsFiles: '$(System.DefaultWorkingDirectory)/**/*.trx'
+    testRunTitle: 'IQ# tests'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  condition: succeededOrFailed()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: iqsharp

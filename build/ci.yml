@@ -1,12 +1,17 @@
 name: $(Build.Major).$(Build.Minor).$(date:yyMM).$(DayOfMonth)$(rev:rr)
-trigger: none
+trigger:
+- master
 
 variables:
-- template: vars-common.yml
+  Build.Major: 0
+  Build.Minor: 0
+  Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
 
 jobs:
 - job: "iqsharp"
   steps:
   - template: steps.yml
-    parameters:
-      enableTelemetry: "false"
+  - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+    displayName: 'Component Detection'
+    inputs:
+      failOnAlert: true
