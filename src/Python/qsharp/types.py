@@ -26,10 +26,10 @@ class Result(IntEnum):
         return random.choice(list(cls))
 
 class Pauli(IntEnum):
-    I = 0
-    X = 1
-    Y = 2
-    Z = 3
+    I = 0b00
+    X = 0b01
+    Y = 0b11
+    Z = 0b10
 
     @classmethod
     def sample(cls):
