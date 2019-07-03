@@ -24,7 +24,6 @@ from typing import List, Dict, Callable, Any
 from pathlib import Path
 from distutils.version import LooseVersion
 
-from qsharp.utils import log_messages
 from qsharp.serialization import map_tuples, unmap_tuples
 
 ## LOGGING ##
@@ -35,6 +34,9 @@ logger = logging.getLogger(__name__)
 ## CLASSES ##
 
 class IQSharpError(RuntimeError):
+    """
+    Represents a Q# error passed by the IQ# kernel to the Python host.
+    """
     def __init__(self, iqsharp_errors : List[str]):
         self.iqsharp_errors = iqsharp_errors
         error_msg = StringIO()
@@ -45,6 +47,10 @@ class IQSharpError(RuntimeError):
         super().__init__(error_msg.getvalue())
 
 class AlreadyExecutingError(IOError):
+    """
+    Raised when the IQ# client is already executing a command and cannot safely
+    process an additional command.
+    """
     pass
 
 class IQSharpClient(object):
@@ -142,10 +148,13 @@ class IQSharpClient(object):
 
     ## Internal-Use Methods ##
 
-    def _execute_callable_magic(self, magic : str, op, **params) -> Any:
-        return self._execute(f'%{magic} {op._name} {json.dumps(map_tuples(params))}')
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, **params) -> Any:
+        return self._execute(f'%{magic} {json.dumps(map_tuples(params))}', raise_on_stderr=raise_on_stderr)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr=False, output_hook=None, **kwargs):
+    def _execute_callable_magic(self, magic : str, op, raise_on_stderr : bool = False, **params) -> Any:
+        return self._execute_magic(f"{magic} {op._name}", raise_on_stderr=raise_on_stderr, **params)
+
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, **kwargs):
         logger.debug(f"sending:\n{input}")
 
         # make sure the server is still running:
