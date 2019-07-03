@@ -44,6 +44,13 @@ function Pack-Image() {
         [string] $Dockerfile
     );
 
+    Try {
+        docker version
+    } Catch {
+        Write-Host "$("##vso[task.logissue type=warning;]")docker not installed. Will skip creation of image for $Dockerfile"
+        return
+    }
+
     docker build `
         <# We treat $DROP_DIR as the build context, as we will need to ADD
            nuget packages into the image. #> `
