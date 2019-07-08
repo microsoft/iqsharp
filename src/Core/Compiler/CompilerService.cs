@@ -74,8 +74,10 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Builds the Q# syntax tree from the given files. The files ae given as a list of files names, so we call the CompilationBuilder.LoadSourceFiles
-        /// to get them in the format (Dictionary of Uri, string) that the compiler likes.
+        /// Builds the Q# syntax tree from the given files.
+        /// The files are given as a list of filenames, as per the format expected by
+        /// the <see cref="Microsoft.Quantum.QsCompiler.CompilationBuilder.ProjectManager.LoadSourceFiles(IEnumerable{string}, Action{VisualStudio.LanguageServer.Protocol.Diagnostic}, Action{Exception})" />
+        /// method.
         /// </summary>
         private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger)
         {
