@@ -44,7 +44,7 @@ function Pack-Image() {
         [string] $Dockerfile
     );
 
-    if ($IsWindows -or (($Env:OS -ne $null) -and ($Env:OS.StartsWith("Win")))) {
+    if (($Env:AGENT_OS -ne $null) -and ($Env:AGENT_OS.StartsWith("Win"))) {
         Write-Host "##vso[task.logissue type=warning;]cannot create docker image on Windows."
         return
     }
