@@ -17,7 +17,7 @@ def test_load_broombridge():
 
 def test_load_fermion_hamiltonian():
     """
-    Checks that loading a fermion hamiltonian from file or from broombridget gives the same result.
+    Checks that loading a fermion hamiltonian from file or from broombridge gives the same result.
     """
     broombridge = load_broombridge("broombridge.yaml")
 
