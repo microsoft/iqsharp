@@ -8,7 +8,7 @@ print ( qsharp.component_versions() )
 
 def test_load_broombridge():
     """
-    Checks that we can load a broombridget schema file.
+    Checks that we can load a broombridge schema file.
     """
     broombridge = load_broombridge("broombridge.yaml")
     assert(len(broombridge.problem_description) == 1)
