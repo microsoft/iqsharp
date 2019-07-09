@@ -89,7 +89,7 @@ namespace Microsoft.Quantum.IQSharp
 
 
         /// <summary>
-        /// Returns an estimation of how many resources are needed to run the given operation on a quantum computer.
+        /// Returns an estimate of how many resources are needed to run the given operation on a quantum computer.
         /// As with simulate, supports both, GET and POST.
         /// If GET, then the parameters are expected as normal query parameters
         /// If POST, then the parameters are expected as a JSON object in the body.
