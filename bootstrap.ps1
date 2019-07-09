@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 
-# If the compiler constants include TELEMETRY, explicitly add the Aria telemtry package to iqsharp tool:
+# If the compiler constants include TELEMETRY, explicitly add the Aria telemetry package to the iqsharp tool:
 if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("TELEMETRY"))) {
 
     $project =  (Join-Path $PSScriptRoot 'src\Tool\Tool.csproj')
