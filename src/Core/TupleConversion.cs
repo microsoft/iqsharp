@@ -31,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         ///  A helper method to read a json object and return it as a dictionary.
         ///  Only the immediate elements of the object are used as keys. Their values
-        ///  are return as json objects themselves.
+        ///  are returned as json objects themselves.
         /// <returns></returns>
         public static Dictionary<string, string> JsonToDict(string json)
         {
