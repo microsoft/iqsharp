@@ -60,7 +60,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Wraps the result of calling an asynchronous action into a `Response` object.
         /// If an Exception is caught, it returns an error response with the Exception as the
-        /// corresponding error messages.
+        /// corresponding error message.
         /// </summary>
         public virtual async Task<Response<T>> AsResponse<T>(Func<Action<string>, Task<T>> action)
         {
