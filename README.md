@@ -17,12 +17,11 @@ See the [introduction to quantum computing](https://docs.microsoft.com/quantum/c
 
 ## Getting Started ##
 
-The libraries provided in this repository are built using [.NET Core](https://docs.microsoft.com/dotnet/core/) and the
-compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
+The Jupyter kernel provided in this repository is built using [.NET Core](https://docs.microsoft.com/dotnet/core/) (2.2 or later) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
 Please see the [installation guide](https://docs.microsoft.com/quantum/install-guide) for how to get up and running.
 
 You may also visit our [Quantum](https://github.com/microsoft/quantum) repository, which offers a wide variety
-of samples on how to use these libraries to write quantum based programs.
+of samples on how to use this kernel to run Q# in Jupyter Notebooks, or from Python.
 
 ### Building IQ# ###
 
