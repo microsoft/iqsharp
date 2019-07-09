@@ -58,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp
             });
 
         /// <summary>
-        /// Wrapps the result of calling an asynchronous action into a `Response` object.
+        /// Wraps the result of calling an asynchronous action into a `Response` object.
         /// If an Exception is caught, it returns an error response with the Exception as the
         /// corresponding error messages.
         /// </summary>
