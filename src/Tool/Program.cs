@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
     /// The iqsharp program.
-    /// On top of the default commands for a Jupyter Kenel, this program also
+    /// On top of the default commands for a Jupyter Kernel, this program also
     /// exposes a "server" command that starts this Kernel in HTTP mode,
     /// so the operations can be accessed and simulated using REST methods.
     /// </summary>
