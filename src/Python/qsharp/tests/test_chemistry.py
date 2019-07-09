@@ -38,7 +38,7 @@ def test_load_fermion_hamiltonian():
 
 def test_load_input_state():
     """
-    Checks that loading an input state from file or from broombridget gives the same result.
+    Checks that loading an input state from file or from broombridge gives the same result.
     """
     broombridge = qsharp.chemistry.load_broombridge("broombridge.yaml")
 
