@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /// Q# code should be in one or more .qs files that live 
-/// in the same directory as the python clasical driver.
+/// in the same directory as the python classical driver.
 ///
 
 namespace Microsoft.Quantum.SanityTests {

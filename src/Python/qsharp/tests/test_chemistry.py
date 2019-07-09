@@ -8,7 +8,7 @@ print ( qsharp.component_versions() )
 
 def test_load_broombridge():
     """
-    Checks that we can load a broombridget schema file.
+    Checks that we can load a broombridge schema file.
     """
     broombridge = load_broombridge("broombridge.yaml")
     assert(len(broombridge.problem_description) == 1)
@@ -17,7 +17,7 @@ def test_load_broombridge():
 
 def test_load_fermion_hamiltonian():
     """
-    Checks that loading a fermion hamiltonian from file or from broombridget gives the same result.
+    Checks that loading a fermion hamiltonian from file or from broombridge gives the same result.
     """
     broombridge = load_broombridge("broombridge.yaml")
 
@@ -38,7 +38,7 @@ def test_load_fermion_hamiltonian():
 
 def test_load_input_state():
     """
-    Checks that loading an input state from file or from broombridget gives the same result.
+    Checks that loading an input state from file or from broombridge gives the same result.
     """
     broombridge = qsharp.chemistry.load_broombridge("broombridge.yaml")
 

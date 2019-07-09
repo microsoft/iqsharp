@@ -80,9 +80,9 @@ namespace Microsoft.Quantum.IQSharp
             }));
 
         /// <summary>
-        /// Simulatest the execution of the given operation. 
+        /// Simulates the execution of the given operation. 
         /// Supports both, GET and POST.
-        /// If GET, then the parameters are expected as normal query parameters
+        /// If GET, then the parameters are expected as normal query parameters.
         /// If POST, then the parameters are expected as a JSON object in the body.
         /// </summary>
         [HttpGet("{id}/simulate")]
