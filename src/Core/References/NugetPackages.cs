@@ -43,7 +43,8 @@ namespace Microsoft.Quantum.IQSharp
             public string[] DefaultPackageVersions { get; set; }
         }
 
-        // The framework used to find packages. We only use netcoreapp2.1 is what IQSharp is built on:
+        // The framework used to find packages.
+        // We only use netcoreapp2.1, as IQSharp is built against this moniker.
         public static NuGetFramework NETCOREAPP2_1 = NuGetFramework.ParseFolder("netcoreapp2.1");
 
         // Nuget's logger.

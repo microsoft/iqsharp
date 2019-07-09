@@ -24,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp
     public class Snippets : ISnippets
     {
         /// <summary>
-        /// Namespace that all Snippets gets comipled into.
+        /// Namespace that all Snippets gets compiled into.
         /// </summary>
         public static readonly string SNIPPETS_NAMESPACE = "SNIPPET";
 
@@ -41,7 +41,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// This event is triggered when after a Snippet finishes compilation.
+        /// This event is triggered when a Snippet finishes compilation.
         /// </summary>
         public event EventHandler<SnippetCompiledEventArgs> SnippetCompiled;
 
@@ -73,7 +73,7 @@ namespace Microsoft.Quantum.IQSharp
         internal ILogger Logger { get; }
 
         /// <summary>
-        /// The list of current available snippets 
+        /// The list of currently available snippets. 
         /// </summary>
         internal IEnumerable<Snippet> Items { get; set; }
 
@@ -153,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Selects the list of snippets to compile. 
         /// Basically it consumes all current Snippets except those related to `newSnippet`
         /// - either because they have the same id, or because they previously defined an operation
-        /// which is in the new Snippet- and replaced with `newSnippet` itself.
+        /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
         private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
         {
