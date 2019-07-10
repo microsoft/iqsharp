@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\ThirdPartyNotice.txt" Link="ThirdPartyNotice.txt" />
+    <Content Include="..\..\NOTICE.txt" Link="NOTICE.txt" />
   </ItemGroup>
 
   <ItemGroup>
