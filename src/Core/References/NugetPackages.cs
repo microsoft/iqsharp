@@ -137,10 +137,13 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Given a package name, it generated a PackageId.
-        /// the package name can include the version delimited by double colon (::). If not,
+        /// Given a package name, generates a PackageId.
+        /// The package name can include the version delimited by double colon (::). If not,
         /// it will call GetLatestVersion to get the latest version found across all sources.
         /// </summary>
+        /// <exception cref="System.ArgumentNullException">
+        ///     If <paramref name="package" /> is <c>null</c>.
+        /// </exception>
         public async Task<PackageIdentity> ParsePackageId(string package)
         {
             package = package?.Trim() ?? throw new ArgumentNullException(nameof(package));
@@ -244,7 +247,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Find the list of netstandard Assemblies (if any) for the given package.
         /// Certain System and .NET packages are ignored as the assemblies of these should
-        /// be automatically 
+        /// be automatically included without package references.
         /// </summary>
         public IEnumerable<AssemblyInfo> GetAssemblies(PackageIdentity pkg)
         {

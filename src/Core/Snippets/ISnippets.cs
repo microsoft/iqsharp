@@ -46,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp
     public interface ISnippets
     {
         /// <summary>
-        /// This event is triggered when after a Snippet finishes compilation.
+        /// This event is triggered when a Snippet finishes compilation.
         /// </summary>
         event EventHandler<SnippetCompiledEventArgs> SnippetCompiled;
 

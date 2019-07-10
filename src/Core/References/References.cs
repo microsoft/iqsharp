@@ -22,7 +22,8 @@ namespace Microsoft.Quantum.IQSharp
     /// <summary>
     /// Default implementation of IReferences.
     /// This service keeps track of references (assemblies) needed for compilation
-    /// and exposes them in the different formats, depending on what each compiler need.
+    /// and exposes them in the different formats, depending on what each
+    /// compiler needs.
     /// </summary>
     public class References : IReferences
     {

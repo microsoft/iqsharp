@@ -11,8 +11,8 @@ using Newtonsoft.Json;
 namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
-    ///  A Snippet represents a piece Q# code provided by the user.
-    ///  This snippets are efemeral thus not part of the environment.
+    ///  A Snippet represents a piece of Q# code provided by the user.
+    ///  These snippets are ephemeral thus not part of the environment.
     ///  Each Snippet represents a single entry from the user.
     ///  During execution, a user may provide multiple Snippets.
     /// </summary>
@@ -41,7 +41,8 @@ namespace Microsoft.Quantum.IQSharp
         public QsNamespaceElement[] Elements { get; set; }
 
         /// <summary>
-        /// The compiler needs an actual URI for each piece of Q# code is going to compile.
+        ///     The compiler needs an actual URI for each piece of Q# code
+        //      that it is going to compile.
         /// </summary>
         [JsonIgnore]
         public Uri Uri => new Uri(Path.GetFullPath(Path.Combine("/", $"snippet:{id}")));

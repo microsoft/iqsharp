@@ -57,8 +57,8 @@ namespace Microsoft.Quantum.IQSharp
         internal IWorkspace Workspace { get; }
 
         /// <summary>
-        ///  The Workspace these Snippets depend on. Snippets may call operations
-        ///  defined in this Workspace.
+        /// The assembly references that should be provided to the compiler when
+        /// building all snippets.
         /// </summary>
         internal IReferences GlobalReferences { get; }
 
@@ -73,7 +73,7 @@ namespace Microsoft.Quantum.IQSharp
         internal ILogger Logger { get; }
 
         /// <summary>
-        /// The list of currently available snippets. 
+        /// The list of currently available snippets.
         /// </summary>
         internal IEnumerable<Snippet> Items { get; set; }
 
