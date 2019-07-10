@@ -14,7 +14,7 @@
     <Description>Microsoft's IQ# Server.</Description>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
-    <PackageLicenseUrl>https://github.com/Microsoft/Quantum/raw/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Microsoft/Quantum</PackageProjectUrl>
     <PackageIconUrl>https://secure.gravatar.com/avatar/bd1f02955b2853ba0a3b1cdc2434e8ec.png</PackageIconUrl>
     <PackageTags>Quantum Q# Qsharp</PackageTags>
@@ -41,10 +41,6 @@
     <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(DefineConstants.Contains('TELEMETRY'))">
-    <PackageReference Include="Microsoft.Applications.Events.Server.Core2" Version="0.92.6" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
@@ -54,6 +50,5 @@
     <PackageReference Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
-
 
 </Project>
