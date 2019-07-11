@@ -19,7 +19,10 @@ function Pack-Nuget() {
         /property:Version=$Env:ASSEMBLY_VERSION `
         /property:PackageVersion=$Env:NUGET_VERSION
 
-    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
+    if  ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to build $(project)."
+        $script:all_ok = $False
+    }
 }
 
 function Pack-Wheel() {
@@ -31,11 +34,15 @@ function Pack-Wheel() {
 
     Push-Location (Join-Path $PSScriptRoot $Path)
         python setup.py bdist_wheel
-        $result = $LastExitCode
-        Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
+
+        if  ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.logissue type=error;]Failed to build $(Path)."
+            $script:all_ok = $False
+        } else {
+            Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
+        }
     Pop-Location
 
-    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
 }
 
 function Pack-Image() {
@@ -67,7 +74,10 @@ function Pack-Image() {
         <# Finally, we tag the image with the current build number. #> `
         -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:BUILD_BUILDNUMBER}"
 
-    $script:all_ok = ($LastExitCode -eq 0) -and $script:all_ok
+    if  ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to create docker image for $(Dockerfile)."
+        $script:all_ok = $False
+    }
 }
 
 Write-Host "##[info]Packing IQ# library..."
