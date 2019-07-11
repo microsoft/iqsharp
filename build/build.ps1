@@ -22,7 +22,7 @@ function Build-One {
         /property:QsharpDocsOutDir=$Env:DOCS_OUTDIR
 
     if  ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to build $(project)."
+        Write-Host "##vso[task.logissue type=error;]Failed to build $project"
         $script:all_ok = $False
     }
 }

@@ -20,7 +20,7 @@ function Pack-Nuget() {
         /property:PackageVersion=$Env:NUGET_VERSION
 
     if  ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to build $(project)."
+        Write-Host "##vso[task.logissue type=error;]Failed to build $project."
         $script:all_ok = $False
     }
 }
@@ -36,7 +36,7 @@ function Pack-Wheel() {
         python setup.py bdist_wheel
 
         if  ($LastExitCode -ne 0) {
-            Write-Host "##vso[task.logissue type=error;]Failed to build $(Path)."
+            Write-Host "##vso[task.logissue type=error;]Failed to build $Path."
             $script:all_ok = $False
         } else {
             Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
@@ -75,7 +75,7 @@ function Pack-Image() {
         -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:BUILD_BUILDNUMBER}"
 
     if  ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to create docker image for $(Dockerfile)."
+        Write-Host "##vso[task.logissue type=error;]Failed to create docker image for $Dockerfile."
         $script:all_ok = $False
     }
 }

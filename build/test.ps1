@@ -20,7 +20,7 @@ function Test-One {
         /property:Version=$Env:ASSEMBLY_VERSION
 
     if  ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to test $(project)."
+        Write-Host "##vso[task.logissue type=error;]Failed to test $project"
         $script:all_ok = $False
     }
 }
