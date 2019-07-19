@@ -1,5 +1,5 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim
+FROM python:3.7-slim-stretch
 
 # install the notebook package
 RUN pip install --no-cache --upgrade pip && \
