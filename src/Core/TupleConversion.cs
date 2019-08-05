@@ -24,7 +24,8 @@ namespace Microsoft.Quantum.IQSharp
             converters = new JsonConverter[] {
                 new QTupleConverter(),
                 new QVoidConverter(),
-                new UDTConverter()
+                new UDTConverter(),
+                new ResultConverter()
             }.ToImmutableList();
         }
 
@@ -143,6 +144,22 @@ namespace Microsoft.Quantum.IQSharp
             {
                 ["@type"] = "tuple"
             });
+            token.WriteTo(writer);
+        }
+    }
+
+    public class ResultConverter : JsonConverter<Result>
+    {
+        public override Result ReadJson(JsonReader reader, Type objectType, Result existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, Result value, JsonSerializer serializer)
+        {
+            // See https://github.com/JamesNK/Newtonsoft.Json/issues/386#issuecomment-421161191
+            // for why this works to pass through.
+            var token = JToken.FromObject(value.GetValue(), serializer);
             token.WriteTo(writer);
         }
     }
