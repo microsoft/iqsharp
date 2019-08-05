@@ -20,12 +20,12 @@ namespace Tests.IQSharp
 {
     public class Complex : UDTBase<(double, double)>
     {
-        public Complex((double, double) data) : base(data) {}
+        public Complex((double, double) data) : base(data) { }
     }
 
     public class QubitState : UDTBase<(Complex, Complex)>
     {
-        public QubitState((Complex, Complex) data) : base(data) {}
+        public QubitState((Complex, Complex) data) : base(data) { }
     }
 
     [TestClass]
@@ -96,6 +96,21 @@ namespace Tests.IQSharp
                 new QubitState((new Complex((0.1, 0.2)), new Complex((0.3, 0.4)))),
                 deserialized
             );
+        }
+
+        [TestMethod]
+        public async Task SerializeResultInstance()
+        {
+            {
+                Result result = new ResultConst(ResultValue.One);
+                var token = JToken.Parse(JsonConvert.SerializeObject(result, TupleConverters.Converters));
+                Assert.AreEqual(1, token.Value<int>());
+            }
+            {
+                Result result = new ResultConst(ResultValue.Zero);
+                var token = JToken.Parse(JsonConvert.SerializeObject(result, TupleConverters.Converters));
+                Assert.AreEqual(0, token.Value<int>());
+            }
         }
 
     }
