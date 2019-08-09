@@ -5,6 +5,11 @@ package:
 source:
   - path:    ../../
     folder:  iqsharp
+    patches:
+      # We need to disable <PackAsTool>true</PackAsTool> when publishing on macOS
+      # and Linux due to https://github.com/dotnet/cli/issues/10607. This should
+      # be resolved with .NET Core SDK 3.0 and later.
+      - bug-10607-workaround.patch # [not win]
 
 requirements:
   build:
@@ -18,9 +23,17 @@ requirements:
     - python
     - jupyter
 
-# test:
-#   imports:
-#     -
+test:
+  requires:
+    - pwsh>=6.2.2 # [not win]
+    - jupyter
+
+  source_files:
+    - test.ps1
+
+  commands:
+    - powershell -NoProfile test.ps1 # [win]
+    - pwsh test.ps1 # [not win]
 
 about:
   home: https://docs.microsoft.com/quantum
