@@ -93,9 +93,11 @@ function Pack-CondaRecipe() {
 
     conda build (Resolve-Path $Path);
 
-    if  ($LastExitCode -ne 0) {
+    if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
         $script:all_ok = $False
+    } else {
+        Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR;
     }
 }
 
