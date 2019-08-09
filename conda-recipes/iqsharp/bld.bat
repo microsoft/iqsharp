@@ -1,1 +1,1 @@
-pwsh iqsharp/conda-recipes/iqsharp/build.ps1
+powershell -NoProfile iqsharp/conda-recipes/iqsharp/build.ps1
