@@ -1,0 +1,13 @@
+package:
+  name: pwsh
+  version: "6.2.2"
+
+requirements:
+  build:
+    - dotnetcore-sdk
+
+  run:
+    - dotnetcore-sdk
+
+about:
+  home: https://docs.microsoft.com/dotnet/core/
