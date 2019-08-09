@@ -1,0 +1,28 @@
+package:
+  name: iqsharp
+  version: "0.8"
+
+source:
+  - path:    ../../
+    folder:  iqsharp
+
+requirements:
+  build:
+    - python
+    - setuptools
+    # TODO: List dotnet-sdk as a build requirement.
+    #       For now, we assume it is present locally
+    #       (that is, not through conda).
+    # TODO: List pwsh as a build requirement.
+    - jupyter
+
+  run:
+    - python
+    - jupyter
+
+# test:
+#   imports:
+#     -
+
+about:
+  home: https://docs.microsoft.com/quantum
