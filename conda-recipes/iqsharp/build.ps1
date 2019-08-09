@@ -4,7 +4,9 @@ param(
     $Configuration = "Release"
 );
 
-if ($IsWindows) {
+# On Windows PowerShell, we don't have the nice $IsWindows / $IsLinux / $IsMacOS
+# variables.
+if ($IsWindows -or ($PSVersionTable.PSEdition -eq "Desktop")) {
     # NOTE: Building this package is ★only★ supported for Windows 10.
     $RuntimeID = "win10-x$Env:ARCH";
 } elseif ($IsLinux) {
@@ -24,7 +26,7 @@ Write-Host "## Diagnostic Information ##"
     "Prefix" = $Env:PREFIX;
     "Runtime ID" = $RuntimeID;
     "Target directory" = $TargetDirectory;
-    "Path to Jupyter" = (Get-Command jupyter -ErrorAction SilentlyContinue);
+    "Path to Jupyter" = (Get-Command jupyter -ErrorAction SilentlyContinue).Source;
     "Repo root" = $RepoRoot;
 } | Format-Table | Out-String | Write-Host
 
