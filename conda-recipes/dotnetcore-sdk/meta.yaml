@@ -1,0 +1,14 @@
+package:
+  name: dotnetcore-sdk
+  version: "2.2.401"
+
+source:
+  - url: https://dot.net/v1/dotnet-install.sh  # [not win]
+  - url: https://dot.net/v1/dotnet-install.ps1 # [win]
+
+# test:
+#   imports:
+#     -
+
+about:
+  home: https://docs.microsoft.com/dotnet/core/
