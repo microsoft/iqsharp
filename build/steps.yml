@@ -9,7 +9,7 @@ steps:
 - task: CondaEnvironment@1
   inputs:
     packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build"
-  displayName: 'Use Python 3.6'
+  displayName: 'Use conda environment w/ Python 3.6'
 
 ##
 # Build, test & pack
