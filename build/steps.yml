@@ -11,9 +11,6 @@ steps:
     packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build"
   displayName: 'Use Python 3.6'
 
-- script: pip install setuptools wheel pytest jupyter
-  displayName: 'Install Python tools'
-
 ##
 # Build, test & pack
 ##
