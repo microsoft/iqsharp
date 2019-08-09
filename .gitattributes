@@ -1,0 +1,3 @@
+# Force line endings to be Unix style so that we can apply patch files.
+src/Tool/Tool.csproj text eol=lf
+conda-recipes/iqsharp/*.patch text eol=lf
