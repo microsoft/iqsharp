@@ -10,10 +10,8 @@ requirements:
   build:
     - python
     - setuptools
-    # TODO: List dotnet-sdk as a build requirement.
-    #       For now, we assume it is present locally
-    #       (that is, not through conda).
-    # TODO: List pwsh as a build requirement.
+    - dotnetcore-sdk=2.2.401
+    - pwsh>=6.2.2 # [not win]
     - jupyter
 
   run:
