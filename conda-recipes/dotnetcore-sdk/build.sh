@@ -26,14 +26,14 @@ mkdir -p $DEACT_D
 echo "\$Env:_CONDA_PKG_BACKUP_PATH = \"\$Env:PATH\";" >> $ACT_D/dotnet_home.ps1
 echo "\$Env:_CONDA_PKG_BACKUP_DOTNET_HOME = \"\$Env:DOTNET_HOME\";" >> $ACT_D/dotnet_home.ps1
 echo "\$Env:DOTNET_HOME = \"$PREFIX/opt/dotnet/\";" >> $ACT_D/dotnet_home.ps1
-echo "\$Env:PATH = \"$PATH:$DOTNET_HOME\";" >> $ACT_D/dotnet_home.ps1
+echo "\$Env:PATH = \"\$DOTNET_HOME:$Env:PATH\";" >> $ACT_D/dotnet_home.ps1
 echo "\$Env:PATH = \"\$Env:_CONDA_PKG_BACKUP_PATH\";" >> $DEACT_D/dotnet_home.ps1
 echo "\$Env:DOTNET_HOME = \"\$Env:_CONDA_PKG_BACKUP_DOTNET_HOME\";" >> $DEACT_D/dotnet_home.ps1
 
 # -- posix-style activation/deactivation --
-echo "export _CONDA_PKG_BACKUP_PATH=\"$PATH\";" >> $ACT_D/dotnet_home.sh
+echo "export _CONDA_PKG_BACKUP_PATH=\"\$PATH\";" >> $ACT_D/dotnet_home.sh
 echo "export _CONDA_PKG_BACKUP_DOTNET_HOME=\"$DOTNET_HOME\";" >> $ACT_D/dotnet_home.sh
 echo "export DOTNET_HOME=\"$DOTNET_HOME\";" >> $ACT_D/dotnet_home.sh
-echo "export PATH=\"$PATH:$DOTNET_HOME\";" >> $ACT_D/dotnet_home.sh
+echo "export PATH=\"\$DOTNET_HOME:$PATH\";" >> $ACT_D/dotnet_home.sh
 echo "export PATH=\"\$_CONDA_PKG_BACKUP_PATH\";" >> $DEACT_D/dotnet_home.sh
 echo "export DOTNET_HOME=\"\$_CONDA_PKG_BACKUP_DOTNET_HOME\";" >> $DEACT_D/dotnet_home.sh

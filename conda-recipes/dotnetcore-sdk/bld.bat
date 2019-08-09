@@ -21,6 +21,13 @@ powershell.exe -Command "./dotnet-install.ps1 -Version %PKG_VERSION% -NoPath -In
 @REM system. See also:
 @REM     https://github.com/conda/conda/issues/6820.
 
+@REM Known issues:
+@REM - Does not support recursive entry into environments, as the
+@REM   _CONDA_PKG_BACKUP_* variables are overwritten by activate.d calls.
+@REM - POSIX-style shells are not yet supported on Windows, as it is not clear
+@REM   how to convert Windows paths visible to cmd.exe to a format expected by
+@REM   Git Bash or msys2 bash.
+
 set ACT_D=%PREFIX%\etc\conda\activate.d
 md %ACT_D%
 set DEACT_D=%PREFIX%\etc\conda\deactivate.d
@@ -30,22 +37,28 @@ md %DEACT_D%
 echo set _CONDA_PKG_BACKUP_PATH=%%PATH%% >> %ACT_D%\dotnet_home.cmd
 echo set _CONDA_PKG_BACKUP_DOTNET_HOME=%%DOTNET_HOME%% >> %ACT_D%\dotnet_home.cmd
 echo set DOTNET_HOME=%DOTNET_HOME% >> %ACT_D%\dotnet_home.cmd
-echo set PATH=%PATH%;%DOTNET_HOME% >> %ACT_D%\dotnet_home.cmd
+echo set PATH=%DOTNET_HOME%;%%PATH%% >> %ACT_D%\dotnet_home.cmd
 echo set PATH=%%_CONDA_PKG_BACKUP_PATH%% >> %DEACT_D%\dotnet_home.cmd
 echo set DOTNET_HOME=%%_CONDA_PKG_BACKUP_DOTNET_HOME%% >> %DEACT_D%\dotnet_home.cmd
+echo set _CONDA_PKG_BACKUP_DOTNET_HOME= >> %DEACT_D%\dotnet_home.cmd
+echo set _CONDA_PKG_BACKUP_PATH= >> %DEACT_D%\dotnet_home.cmd
 
 @REM -- pwsh activation/deactivation --
 echo $Env:_CONDA_PKG_BACKUP_PATH = "$Env:PATH"; >> %ACT_D%\dotnet_home.ps1
 echo $Env:_CONDA_PKG_BACKUP_DOTNET_HOME = "$Env:DOTNET_HOME"; >> %ACT_D%\dotnet_home.ps1
 echo $Env:DOTNET_HOME = "%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.ps1
-echo $Env:PATH = "%PATH%;%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.ps1
+echo $Env:PATH = "%DOTNET_HOME%;$Env:PATH"; >> %ACT_D%\dotnet_home.ps1
 echo $Env:PATH = "$Env:_CONDA_PKG_BACKUP_PATH"; >> %DEACT_D%\dotnet_home.ps1
 echo $Env:DOTNET_HOME = "$Env:_CONDA_PKG_BACKUP_DOTNET_HOME"; >> %DEACT_D%\dotnet_home.ps1
+echo $Env:_CONDA_PKG_BACKUP_PATH = $null; >> %DEACT_D%\dotnet_home.ps1
+echo $Env:_CONDA_PKG_BACKUP_DOTNET_HOME = $null; >> %DEACT_D%\dotnet_home.ps1
 
 @REM -- posix-style activation/deactivation --
-echo export _CONDA_PKG_BACKUP_PATH="$PATH"; >> %ACT_D%\dotnet_home.sh
-echo export _CONDA_PKG_BACKUP_DOTNET_HOME="$DOTNET_HOME"; >> %ACT_D%\dotnet_home.sh
-echo export DOTNET_HOME="%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
-echo export PATH="%PATH%;%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
-echo export PATH="$_CONDA_PKG_BACKUP_PATH" >> %DEACT_D%\dotnet_home.sh
-echo export DOTNET_HOME="$_CONDA_PKG_BACKUP_DOTNET_HOME" >> %DEACT_D%\dotnet_home.sh
+@REM echo export _CONDA_PKG_BACKUP_PATH="$PATH"; >> %ACT_D%\dotnet_home.sh
+@REM echo export _CONDA_PKG_BACKUP_DOTNET_HOME="$DOTNET_HOME"; >> %ACT_D%\dotnet_home.sh
+@REM echo export DOTNET_HOME="%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
+@REM echo export PATH="$PATH;%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
+@REM echo export PATH="$_CONDA_PKG_BACKUP_PATH" >> %DEACT_D%\dotnet_home.sh
+@REM echo export DOTNET_HOME="$_CONDA_PKG_BACKUP_DOTNET_HOME" >> %DEACT_D%\dotnet_home.sh
+@REM echo unset _CONDA_PKG_BACKUP_DOTNET_HOME >> %DEACT_D%\dotnet_home.sh
+@REM echo unset _CONDA_PKG_BACKUP_PATH >> %DEACT_D%\dotnet_home.sh
