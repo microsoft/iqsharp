@@ -6,12 +6,11 @@ steps:
 ##
 # Pre-reqs
 ##
-- task: UsePythonVersion@0
+- task: CondaEnvironment@1
   inputs:
-    versionSpec: '3.6'
-    architecture: 'x64'
+    packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build"
   displayName: 'Use Python 3.6'
-    
+
 - script: pip install setuptools wheel pytest jupyter
   displayName: 'Install Python tools'
 
