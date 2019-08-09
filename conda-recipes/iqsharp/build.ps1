@@ -4,9 +4,20 @@ param(
     $Configuration = "Release"
 );
 
+# The user may not have run .NET Core SDK before, so we disable first-time
+# experience to avoid capturing the NuGet cache.
+$Env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true";
+$Env:NUGET_XMLDOC_MODE = "skip";
+
 # On Windows PowerShell, we don't have the nice $IsWindows / $IsLinux / $IsMacOS
-# variables.
-if ($IsWindows -or ($PSVersionTable.PSEdition -eq "Desktop")) {
+# variables. Since Windows PowerShell is the only PowerShell variant that
+# has "Desktop" as its PSEdition, we can check for that and create the
+# $IsWindows variable if need be.
+if ($PSVersionTable.PSEdition -eq "Desktop") {
+    $IsWindows = $true;
+}
+
+if ($IsWindows) {
     # NOTE: Building this package is ★only★ supported for Windows 10.
     $RuntimeID = "win10-x$Env:ARCH";
 } elseif ($IsLinux) {
@@ -36,11 +47,11 @@ Push-Location (Join-Path $RepoRoot src/Tool)
 Pop-Location
 
 Write-Host "## Installing IQ# into Jupyter. ##"
+$BaseName = "Microsoft.Quantum.IQSharp";
+if ($IsWindows) {
+    $BaseName = "${BaseName}.exe";
+}
 Push-Location $TargetDirectory
-    $BaseName = "Microsoft.Quantum.IQSharp";
-    if ($IsWindows) {
-        $BaseName = "${BaseName}.exe";
-    }
     $PathToTool = Resolve-Path "./$BaseName";
     & $PathToTool install --path-to-tool $PathToTool --sys-prefix
 Pop-Location
