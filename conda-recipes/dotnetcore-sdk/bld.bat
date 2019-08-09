@@ -1,15 +1,15 @@
-set DOTNET_HOME=%PREFIX%\opt\dotnet
+set DOTNET_ROOT=%PREFIX%\opt\dotnet
 
 @REM We use powershell.exe and not pwsh.exe to invoke the downloaded script,
 @REM as we do not know whether or not the build agent has PowerShell 6 or later
 @REM installed.
-powershell.exe -Command "./dotnet-install.ps1 -Version %PKG_VERSION% -NoPath -InstallDir %DOTNET_HOME%"
+powershell.exe -Command "./dotnet-install.ps1 -Version %PKG_VERSION% -NoPath -InstallDir %DOTNET_ROOT%"
 
 @REM We can save environment variables into the new package using the technique
 @REM demonstrated at:
 @REM     https://github.com/conda-forge/staged-recipes/pull/2002/files
 @REM We do so here to ensure that the new install of .NET Core SDK is added
-@REM to %PATH%, and that the %DOTNET_HOME% variable is set for use with global
+@REM to %PATH%, and that the %DOTNET_ROOT% variable is set for use with global
 @REM tools.
 
 @REM Since the activate.d mechanism is shell-dependent, we will also need to
@@ -34,31 +34,31 @@ set DEACT_D=%PREFIX%\etc\conda\deactivate.d
 md %DEACT_D%
 
 @REM -- cmd activation/deactivation --
-echo set _CONDA_PKG_BACKUP_PATH=%%PATH%% >> %ACT_D%\dotnet_home.cmd
-echo set _CONDA_PKG_BACKUP_DOTNET_HOME=%%DOTNET_HOME%% >> %ACT_D%\dotnet_home.cmd
-echo set DOTNET_HOME=%DOTNET_HOME% >> %ACT_D%\dotnet_home.cmd
-echo set PATH=%DOTNET_HOME%;%%PATH%% >> %ACT_D%\dotnet_home.cmd
-echo set PATH=%%_CONDA_PKG_BACKUP_PATH%% >> %DEACT_D%\dotnet_home.cmd
-echo set DOTNET_HOME=%%_CONDA_PKG_BACKUP_DOTNET_HOME%% >> %DEACT_D%\dotnet_home.cmd
-echo set _CONDA_PKG_BACKUP_DOTNET_HOME= >> %DEACT_D%\dotnet_home.cmd
-echo set _CONDA_PKG_BACKUP_PATH= >> %DEACT_D%\dotnet_home.cmd
+echo set _CONDA_PKG_BACKUP_PATH=%%PATH%% >> %ACT_D%\DOTNET_ROOT.cmd
+echo set _CONDA_PKG_BACKUP_DOTNET_ROOT=%%DOTNET_ROOT%% >> %ACT_D%\DOTNET_ROOT.cmd
+echo set DOTNET_ROOT=%DOTNET_ROOT% >> %ACT_D%\DOTNET_ROOT.cmd
+echo set PATH=%DOTNET_ROOT%;%%PATH%% >> %ACT_D%\DOTNET_ROOT.cmd
+echo set PATH=%%_CONDA_PKG_BACKUP_PATH%% >> %DEACT_D%\DOTNET_ROOT.cmd
+echo set DOTNET_ROOT=%%_CONDA_PKG_BACKUP_DOTNET_ROOT%% >> %DEACT_D%\DOTNET_ROOT.cmd
+echo set _CONDA_PKG_BACKUP_DOTNET_ROOT= >> %DEACT_D%\DOTNET_ROOT.cmd
+echo set _CONDA_PKG_BACKUP_PATH= >> %DEACT_D%\DOTNET_ROOT.cmd
 
 @REM -- pwsh activation/deactivation --
-echo $Env:_CONDA_PKG_BACKUP_PATH = "$Env:PATH"; >> %ACT_D%\dotnet_home.ps1
-echo $Env:_CONDA_PKG_BACKUP_DOTNET_HOME = "$Env:DOTNET_HOME"; >> %ACT_D%\dotnet_home.ps1
-echo $Env:DOTNET_HOME = "%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.ps1
-echo $Env:PATH = "%DOTNET_HOME%;$Env:PATH"; >> %ACT_D%\dotnet_home.ps1
-echo $Env:PATH = "$Env:_CONDA_PKG_BACKUP_PATH"; >> %DEACT_D%\dotnet_home.ps1
-echo $Env:DOTNET_HOME = "$Env:_CONDA_PKG_BACKUP_DOTNET_HOME"; >> %DEACT_D%\dotnet_home.ps1
-echo $Env:_CONDA_PKG_BACKUP_PATH = $null; >> %DEACT_D%\dotnet_home.ps1
-echo $Env:_CONDA_PKG_BACKUP_DOTNET_HOME = $null; >> %DEACT_D%\dotnet_home.ps1
+echo $Env:_CONDA_PKG_BACKUP_PATH = "$Env:PATH"; >> %ACT_D%\DOTNET_ROOT.ps1
+echo $Env:_CONDA_PKG_BACKUP_DOTNET_ROOT = "$Env:DOTNET_ROOT"; >> %ACT_D%\DOTNET_ROOT.ps1
+echo $Env:DOTNET_ROOT = "%DOTNET_ROOT%"; >> %ACT_D%\DOTNET_ROOT.ps1
+echo $Env:PATH = "%DOTNET_ROOT%;$Env:PATH"; >> %ACT_D%\DOTNET_ROOT.ps1
+echo $Env:PATH = "$Env:_CONDA_PKG_BACKUP_PATH"; >> %DEACT_D%\DOTNET_ROOT.ps1
+echo $Env:DOTNET_ROOT = "$Env:_CONDA_PKG_BACKUP_DOTNET_ROOT"; >> %DEACT_D%\DOTNET_ROOT.ps1
+echo $Env:_CONDA_PKG_BACKUP_PATH = $null; >> %DEACT_D%\DOTNET_ROOT.ps1
+echo $Env:_CONDA_PKG_BACKUP_DOTNET_ROOT = $null; >> %DEACT_D%\DOTNET_ROOT.ps1
 
 @REM -- posix-style activation/deactivation --
-@REM echo export _CONDA_PKG_BACKUP_PATH="$PATH"; >> %ACT_D%\dotnet_home.sh
-@REM echo export _CONDA_PKG_BACKUP_DOTNET_HOME="$DOTNET_HOME"; >> %ACT_D%\dotnet_home.sh
-@REM echo export DOTNET_HOME="%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
-@REM echo export PATH="$PATH;%DOTNET_HOME%"; >> %ACT_D%\dotnet_home.sh
-@REM echo export PATH="$_CONDA_PKG_BACKUP_PATH" >> %DEACT_D%\dotnet_home.sh
-@REM echo export DOTNET_HOME="$_CONDA_PKG_BACKUP_DOTNET_HOME" >> %DEACT_D%\dotnet_home.sh
-@REM echo unset _CONDA_PKG_BACKUP_DOTNET_HOME >> %DEACT_D%\dotnet_home.sh
-@REM echo unset _CONDA_PKG_BACKUP_PATH >> %DEACT_D%\dotnet_home.sh
+@REM echo export _CONDA_PKG_BACKUP_PATH="$PATH"; >> %ACT_D%\DOTNET_ROOT.sh
+@REM echo export _CONDA_PKG_BACKUP_DOTNET_ROOT="$DOTNET_ROOT"; >> %ACT_D%\DOTNET_ROOT.sh
+@REM echo export DOTNET_ROOT="%DOTNET_ROOT%"; >> %ACT_D%\DOTNET_ROOT.sh
+@REM echo export PATH="$PATH;%DOTNET_ROOT%"; >> %ACT_D%\DOTNET_ROOT.sh
+@REM echo export PATH="$_CONDA_PKG_BACKUP_PATH" >> %DEACT_D%\DOTNET_ROOT.sh
+@REM echo export DOTNET_ROOT="$_CONDA_PKG_BACKUP_DOTNET_ROOT" >> %DEACT_D%\DOTNET_ROOT.sh
+@REM echo unset _CONDA_PKG_BACKUP_DOTNET_ROOT >> %DEACT_D%\DOTNET_ROOT.sh
+@REM echo unset _CONDA_PKG_BACKUP_PATH >> %DEACT_D%\DOTNET_ROOT.sh
