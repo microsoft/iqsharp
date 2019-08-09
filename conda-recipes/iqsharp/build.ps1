@@ -13,7 +13,10 @@ if ($IsWindows) {
     $RuntimeID = "osx-x$Env:ARCH";
 }
 
-$TargetDirectory = (Join-Path $Env:PREFIX "opt" "iqsharp");
+# On PowerShell 6 (Core) and later, Join-Path takes multiple child paths,
+# but we don't use that for compatability with Windows PowerShell (5.1 and
+# earlier).
+$TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
 $RepoRoot = Resolve-Path iqsharp;
 
 Write-Host "## Diagnostic Information ##"
@@ -23,7 +26,7 @@ Write-Host "## Diagnostic Information ##"
     "Target directory" = $TargetDirectory;
     "Path to Jupyter" = (Get-Command jupyter -ErrorAction SilentlyContinue);
     "Repo root" = $RepoRoot;
-} | Format-Table | Write-Host
+} | Format-Table | Out-String | Write-Host
 
 Write-Host "## Building IQ#. ##"
 Push-Location (Join-Path $RepoRoot src/Tool)
