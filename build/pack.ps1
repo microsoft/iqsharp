@@ -114,7 +114,11 @@ Pack-Wheel '../src/Python/'
 Write-Host "##[info]Packing Docker image..."
 Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 
-Write-Host "##[info]Packing conda recipe..."
+Write-Host "##[info]Packing conda recipes..."
+Pack-CondaRecipe -Path "../conda-recipes/dotnetcore-sdk"
+if (-not $IsWindows) {
+    Pack-CondaRecipe -Path "../conda-recipes/pwsh"
+}
 Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
 
 if (-not $all_ok) {
