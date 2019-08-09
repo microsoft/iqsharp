@@ -13,7 +13,7 @@ if ($IsWindows) {
     $RuntimeID = "osx-x$Env:ARCH";
 }
 
-$TargetDirectory = (Join-Path $Env:PREFIX "iqsharp");
+$TargetDirectory = (Join-Path $Env:PREFIX "opt" "iqsharp");
 $RepoRoot = Resolve-Path iqsharp;
 
 Write-Host "## Diagnostic Information ##"
