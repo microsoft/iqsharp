@@ -80,6 +80,25 @@ function Pack-Image() {
     }
 }
 
+function Pack-CondaRecipe() {
+    param(
+        [string] $Path
+    );
+
+    if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
+        Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
+                   "Will skip creation of conda package for $Path.";
+        return;
+    }
+
+    conda build (Resolve-Path $Path);
+
+    if  ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
+        $script:all_ok = $False
+    }
+}
+
 Write-Host "##[info]Packing IQ# library..."
 Pack-Nuget '../src/Core/Core.csproj'
 
@@ -92,6 +111,9 @@ Pack-Wheel '../src/Python/'
 
 Write-Host "##[info]Packing Docker image..."
 Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+
+Write-Host "##[info]Packing conda recipe..."
+Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
 
 if (-not $all_ok) {
     throw "At least one package failed to build. Check the logs."
