@@ -195,7 +195,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 -------------------------------------------------------------------
 
-Microsoft.Jupyter.Core 1.1.14623 - MIT
+Microsoft.Jupyter.Core 1.1.17470 - MIT
 (c) 2008 VeriSign, Inc.
 (c) Microsoft Corporation.
 Copyright (c) Microsoft Corporation.
