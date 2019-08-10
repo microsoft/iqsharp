@@ -4,10 +4,10 @@ package:
 
 requirements:
   build:
-    - dotnetcore-sdk
+    - dotnetcore-sdk=2.2.401
 
   run:
-    - dotnetcore-sdk
+    - dotnetcore-sdk=2.2.401
 
 about:
-  home: https://docs.microsoft.com/dotnet/core/
+  home: https://github.com/PowerShell/PowerShell
