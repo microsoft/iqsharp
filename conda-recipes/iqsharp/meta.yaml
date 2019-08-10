@@ -29,11 +29,11 @@ test:
     - jupyter
 
   source_files:
-    - test.ps1
+    - iqsharp/conda-recipes/iqsharp/test.ps1
 
   commands:
-    - powershell -NoProfile test.ps1 # [win]
-    - pwsh test.ps1 # [not win]
+    - powershell -NoProfile iqsharp/conda-recipes/iqsharp/test.ps1 # [win]
+    - pwsh iqsharp/conda-recipes/iqsharp/test.ps1 # [not win]
 
 about:
   home: https://docs.microsoft.com/quantum
