@@ -5,11 +5,6 @@ package:
 source:
   - path:    ../../
     folder:  iqsharp
-    patches:
-      # We need to disable <PackAsTool>true</PackAsTool> when publishing on macOS
-      # and Linux due to https://github.com/dotnet/cli/issues/10607. This should
-      # be resolved with .NET Core SDK 3.0 and later.
-      - bug-10607-workaround.patch # [not win]
 
 requirements:
   build:

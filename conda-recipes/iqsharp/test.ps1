@@ -11,4 +11,6 @@ if ($null -eq $kernels.kernelspecs.iqsharp) {
 # If any tests failed, raise an error code.
 if ($failed) {
     exit -1;
+} else {
+    Write-Host "## ALL TESTS PASSED ##";
 }

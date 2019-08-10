@@ -34,12 +34,19 @@ $RepoRoot = Resolve-Path iqsharp;
 
 Write-Host "## Diagnostic Information ##"
 @{
+    "Script root" = $PSScriptRoot;
     "Prefix" = $Env:PREFIX;
     "Runtime ID" = $RuntimeID;
     "Target directory" = $TargetDirectory;
     "Path to Jupyter" = (Get-Command jupyter -ErrorAction SilentlyContinue).Source;
     "Repo root" = $RepoRoot;
 } | Format-Table | Out-String | Write-Host
+
+# We need to disable <PackAsTool>true</PackAsTool> when publishing
+# due to https://github.com/dotnet/cli/issues/10607. This should
+# be resolved with .NET Core SDK 3.0 and later.
+Write-Host "## Patching IQ# for Standalone Deployment. ##"
+Copy-Item (Join-Path $PSScriptRoot "ToolStandalone.csproj") (Join-Path (Join-Path (Join-Path $RepoRoot "src") "Tool") "Tool.csproj");
 
 Write-Host "## Building IQ#. ##"
 Push-Location (Join-Path $RepoRoot src/Tool)
