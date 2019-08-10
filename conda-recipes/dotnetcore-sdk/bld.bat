@@ -3,7 +3,7 @@ set DOTNET_ROOT=%PREFIX%\opt\dotnet
 @REM We use powershell.exe and not pwsh.exe to invoke the downloaded script,
 @REM as we do not know whether or not the build agent has PowerShell 6 or later
 @REM installed.
-powershell.exe -Command "./dotnet-install.ps1 -Version %PKG_VERSION% -NoPath -InstallDir %DOTNET_ROOT%"
+powershell.exe -NoProfile -Command "./dotnet-install.ps1 -Version %PKG_VERSION% -NoPath -InstallDir %DOTNET_ROOT%"
 
 @REM We can save environment variables into the new package using the technique
 @REM demonstrated at:
