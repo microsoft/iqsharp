@@ -120,6 +120,7 @@ if (-not $IsWindows) {
     Pack-CondaRecipe -Path "../conda-recipes/pwsh"
 }
 Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
+Pack-CondaRecipe -Path "../conda-recipes/qsharp"
 
 if (-not $all_ok) {
     throw "At least one package failed to build. Check the logs."
