@@ -1,6 +1,8 @@
+{% set version = environ.get('PYTHON_VERSION', '0.0.0.1') %}
+
 package:
   name: iqsharp
-  version: "0.8"
+  version: "{{ version }}"
 
 source:
   - path:    ../../
