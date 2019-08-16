@@ -1,8 +1,20 @@
 #!/usr/bin/env pwsh
 param(
     [string]
-    $Configuration = "Release"
+    $Configuration = "Release",
+
+    [string]
+    $DotNetPath = $null
 );
+
+# If we weren't given a path, find dotnet now.
+if ($null -eq $DotNetPath) {
+    $DotNetPath = (Get-Command dotnet).Source;
+    if ($DotNetPath -eq $null) {
+        Write-Error "Could not find .NET Core SDK. This should never happen."
+        exit -1;
+    }
+}
 
 # The user may not have run .NET Core SDK before, so we disable first-time
 # experience to avoid capturing the NuGet cache.
@@ -34,6 +46,7 @@ $RepoRoot = Resolve-Path iqsharp;
 
 Write-Host "## Diagnostic Information ##"
 @{
+    "Path to .NET Core SDK" = $DotNetPath;
     "Script root" = $PSScriptRoot;
     "Prefix" = $Env:PREFIX;
     "Runtime ID" = $RuntimeID;
@@ -50,7 +63,7 @@ Copy-Item (Join-Path $PSScriptRoot "ToolStandalone.csproj") (Join-Path (Join-Pat
 
 Write-Host "## Building IQ#. ##"
 Push-Location (Join-Path $RepoRoot src/Tool)
-    dotnet publish --self-contained -c $Configuration -r $RuntimeID -o $TargetDirectory
+    & $DotNetPath publish --self-contained -c $Configuration -r $RuntimeID -o $TargetDirectory
 Pop-Location
 
 Write-Host "## Installing IQ# into Jupyter. ##"
