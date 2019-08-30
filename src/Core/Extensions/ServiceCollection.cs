@@ -12,6 +12,7 @@ namespace Microsoft.Quantum.IQSharp
     {
         public static void AddIQSharp(this IServiceCollection services)
         {
+            services.AddSingleton<IRuntimeSettings, RuntimeSettings>();
             services.AddSingleton<ICompilerService, CompilerService>();
             services.AddSingleton<IOperationResolver, OperationResolver>();
             services.AddSingleton<IReferences, References>();
