@@ -45,6 +45,8 @@ dotnet run -- install --develop
 
 This can cause some issues, especially when running multiple instances of IQ#, such that we recommend against using development mode in general usage.
 
+Note that when building IQ# from source, this repository is configured so that .NET Core will automatically look at the [Quantum Development Kit prerelease feed](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_packaging?_a=feed&feed=alpha) in addition to any other feeds you may have configured.
+
 ### Using IQ# as a Container ###
 
 This repository provides a [Dockerfile](./images/iqsharp-base/Dockerfile) that includes the .NET Core SDK, Python, Jupyter Notebook, and the IQ# kernel.
