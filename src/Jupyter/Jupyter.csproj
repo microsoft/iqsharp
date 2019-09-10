@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.1.14623" />
+    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.1.3712-CI-20190822-052017" />
   </ItemGroup>
 
   <ItemGroup>
