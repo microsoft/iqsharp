@@ -1,8 +1,6 @@
 ##
 # Build and test IQ#.
 ##
-parameters:
-  onlyConda: "false"
 
 steps:
 
@@ -11,27 +9,24 @@ steps:
 ##
 - task: CondaEnvironment@1
   inputs:
-    packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build"
+    packageSpecs: "python=3.6 pip setuptools pytest jupyter"
   displayName: 'Use conda environment w/ Python 3.6'
 
 ##
 # Build, test & pack
 ##
-- ${{ if eq(parameters.onlyConda, 'false') }}:
-  - powershell: .\build.ps1
-    displayName: "Building IQ#"
-    workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+- powershell: .\build.ps1
+  displayName: "Building IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
-  - powershell: .\test.ps1
-    displayName: "Testing IQ#"
-    workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-    condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+- powershell: .\test.ps1
+  displayName: "Testing IQ#"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
 - powershell: .\pack.ps1
   displayName: "Packing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  env:
-    ONLY_CONDA: ${{ parameters.onlyConda }}
 
 ##
 # Publish tests results and build artifacts.

@@ -9,37 +9,27 @@ variables:
 
 jobs:
 - job: "iqsharp"
-  pool:
-    vmImage: ubuntu-16.04
   steps:
   - template: steps.yml
-    parameters:
-      onlyConda: "false"
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
     inputs:
       failOnAlert: true
+
+- job: "pack_conda_linux"
+  pool:
+    vmImage: ubuntu-16.04
+  steps:
+  - template: steps-conda.yml
 
 - job: "pack_conda_macos"
   pool:
     vmImage: macOS-10.14
   steps:
-  - template: steps.yml
-    parameters:
-      onlyConda: "true"
-  - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-    displayName: 'Component Detection'
-    inputs:
-      failOnAlert: true
+  - template: steps-conda.yml
 
 - job: "pack_conda_win"
   pool:
     vmImage: windows-2019
   steps:
-  - template: steps.yml
-    parameters:
-      onlyConda: "true"
-  - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-    displayName: 'Component Detection'
-    inputs:
-      failOnAlert: true
+  - template: steps-conda.yml

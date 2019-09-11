@@ -4,20 +4,6 @@ $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
 $all_ok = $True
-$LogGuid = New-Guid;
-
-if ("true" -ne $Env:ONLY_CONDA) {
-    Write-Host "##vso[task.logdetail id=$LogGuid;name=iqsharp;type=build;order=1]Packing IQ# (only conda)"
-} else {
-    Write-Host "##vso[task.logdetail id=$LogGuid;name=iqsharp;type=build;order=1]Packing IQ#"
-}
-
-# Detect whether we're on Windows. On PowerShell Core, this is easy, but
-# Windows PowerShell doesn't have an $IsWindows automatic variable, so we need
-# to do a little more work there.
-if ($PSVersionTable.PSEdition -eq "Desktop") {
-    $IsWindows = $true;
-}
 
 function Pack-Nuget() {
     param(
@@ -93,59 +79,15 @@ function Pack-Image() {
     }
 }
 
-function Pack-CondaRecipe() {
-    param(
-        [string] $Path
-    );
+Write-Host "##[info]Packing IQ# library..."
+Pack-Nuget '../src/Core/Core.csproj'
 
-    if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
-        Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
-                   "Will skip creation of conda package for $Path.";
-        return;
-    }
+Write-Host "##[info]Packing IQ# tool..."
+Pack-Nuget '../src/Tool/Tool.csproj'
 
-    # conda-build prints some warnings to stderr, which can lead to false positives.
-    # We wrap in a try-finally to make sure we can condition on the exit code and not on
-    # writing to stderr.
-    try {
-        Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path);
-    } catch {
-        Write-Host "##vso[task.logissue type=warning;]$_";
-    } finally {
-        if ($LastExitCode -ne 0) {
-            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
-            $script:all_ok = $False
-        } else {
-            Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR -ErrorAction Continue;
-        }
-    }
-}
+Write-Host "##[info]Packing Python wheel..."
+python --version
+Pack-Wheel '../src/Python/'
 
-if ("true" -ne $Env:ONLY_CONDA) {
-    Write-Host "##[info]Packing IQ# library..."
-    Pack-Nuget '../src/Core/Core.csproj'
-
-    Write-Host "##[info]Packing IQ# tool..."
-    Pack-Nuget '../src/Tool/Tool.csproj'
-
-    Write-Host "##[info]Packing Python wheel..."
-    python --version
-    Pack-Wheel '../src/Python/'
-
-    Write-Host "##[info]Packing Docker image..."
-    Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
-
-}
-
-Write-Host "##[info]Packing conda recipes..."
-Pack-CondaRecipe -Path "../conda-recipes/dotnetcore-sdk"
-if (-not $IsWindows) {
-    Pack-CondaRecipe -Path "../conda-recipes/pwsh"
-}
-Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
-Pack-CondaRecipe -Path "../conda-recipes/qsharp"
-
-if (-not $all_ok) {
-    throw "At least one package failed to build. Check the logs."
-}
+Write-Host "##[info]Packing Docker image..."
+Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'

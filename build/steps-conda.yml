@@ -1,0 +1,30 @@
+##
+# Build and test IQ#.
+##
+
+steps:
+
+##
+# Pre-reqs
+##
+- task: CondaEnvironment@1
+  inputs:
+    packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build"
+  displayName: 'Use conda environment w/ Python 3.6'
+
+##
+# Pack conda packages
+##
+- powershell: .\pack-conda.ps1
+  displayName: "Packing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+##
+# Publish build artifacts.
+##
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  condition: succeededOrFailed()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: iqsharp
