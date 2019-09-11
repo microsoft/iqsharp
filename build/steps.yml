@@ -30,6 +30,8 @@ steps:
 - powershell: .\pack.ps1
   displayName: "Packing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  env:
+    ONLY_CONDA: ${{ parameters.onlyConda }}
 
 ##
 # Publish tests results and build artifacts.

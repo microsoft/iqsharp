@@ -1,11 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-param(
-    [switch]
-    $OnlyConda = $false
-);
-
 $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
@@ -106,7 +100,7 @@ function Pack-CondaRecipe() {
     }
 }
 
-if (-not $OnlyConda.IsPresent) {
+if ("true" -eq $Env:ONLY_CONDA) {
 
     Write-Host "##[info]Packing IQ# library..."
     Pack-Nuget '../src/Core/Core.csproj'
