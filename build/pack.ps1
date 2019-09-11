@@ -109,13 +109,18 @@ function Pack-CondaRecipe() {
         return;
     }
 
-    conda build (Resolve-Path $Path);
-
-    if ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
-        $script:all_ok = $False
-    } else {
-        Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR;
+    # conda-build prints some warnings to stderr, which can lead to false positives.
+    # We wrap in a try-finally to make sure we can condition on the exit code and not on
+    # writing to stderr.
+    try {
+        conda build (Resolve-Path $Path);
+    } finally {
+        if ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
+            $script:all_ok = $False
+        } else {
+            Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR;
+        }
     }
 }
 
