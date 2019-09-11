@@ -12,16 +12,11 @@ if ("true" -ne $Env:ONLY_CONDA) {
     Write-Host "##vso[task.logdetail id=$LogGuid;name=iqsharp;type=build;order=1]Packing IQ#"
 }
 
-$script:Order = 1;
-function Write-LogDetail() {
-    param(
-        [string]
-        $Name,
-        [string]
-        $Message
-    );
-    Write-Host "##vso[task.logdetail id=$(New-Guid);parent=$LogGuid;name=$Name;type=build;order=$script:Order]$Message";
-    $script:Order += 1;
+# Detect whether we're on Windows. On PowerShell Core, this is easy, but
+# Windows PowerShell doesn't have an $IsWindows automatic variable, so we need
+# to do a little more work there.
+if ($PSVersionTable.PSEdition -eq "Desktop") {
+    $IsWindows = $true;
 }
 
 function Pack-Nuget() {
@@ -113,6 +108,7 @@ function Pack-CondaRecipe() {
     # We wrap in a try-finally to make sure we can condition on the exit code and not on
     # writing to stderr.
     try {
+        Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
         conda build (Resolve-Path $Path);
     } finally {
         if ($LastExitCode -ne 0) {
@@ -125,26 +121,21 @@ function Pack-CondaRecipe() {
 }
 
 if ("true" -ne $Env:ONLY_CONDA) {
-    Write-LogDetail "core" "Packing IQ# library..."
     Write-Host "##[info]Packing IQ# library..."
     Pack-Nuget '../src/Core/Core.csproj'
 
-    Write-LogDetail "tool" "Packing IQ# tool..."
     Write-Host "##[info]Packing IQ# tool..."
     Pack-Nuget '../src/Tool/Tool.csproj'
 
-    Write-LogDetail "wheel" "Packing Python wheel..."
     Write-Host "##[info]Packing Python wheel..."
     python --version
     Pack-Wheel '../src/Python/'
 
-    Write-LogDetail "docker" "Packing Docker image..."
     Write-Host "##[info]Packing Docker image..."
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 
 }
 
-Write-LogDetail "conda" "Packing conda recipes..."
 Write-Host "##[info]Packing conda recipes..."
 Pack-CondaRecipe -Path "../conda-recipes/dotnetcore-sdk"
 if (-not $IsWindows) {
