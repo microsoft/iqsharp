@@ -110,12 +110,14 @@ function Pack-CondaRecipe() {
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
         conda build (Resolve-Path $Path);
+    } catch {
+        Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
             $script:all_ok = $False
         } else {
-            Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR;
+            Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR -ErrorAction Continue;
         }
     }
 }
