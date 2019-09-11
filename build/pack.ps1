@@ -1,6 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+param(
+    [switch]
+    $OnlyConda = $false
+);
+
 $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
@@ -101,18 +106,22 @@ function Pack-CondaRecipe() {
     }
 }
 
-Write-Host "##[info]Packing IQ# library..."
-Pack-Nuget '../src/Core/Core.csproj'
+if (-not $OnlyConda.IsPresent) {
 
-Write-Host "##[info]Packing IQ# tool..."
-Pack-Nuget '../src/Tool/Tool.csproj'
+    Write-Host "##[info]Packing IQ# library..."
+    Pack-Nuget '../src/Core/Core.csproj'
 
-Write-Host "##[info]Packing Python wheel..."
-python --version
-Pack-Wheel '../src/Python/'
+    Write-Host "##[info]Packing IQ# tool..."
+    Pack-Nuget '../src/Tool/Tool.csproj'
 
-Write-Host "##[info]Packing Docker image..."
-Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+    Write-Host "##[info]Packing Python wheel..."
+    python --version
+    Pack-Wheel '../src/Python/'
+
+    Write-Host "##[info]Packing Docker image..."
+    Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+
+}
 
 Write-Host "##[info]Packing conda recipes..."
 Pack-CondaRecipe -Path "../conda-recipes/dotnetcore-sdk"
