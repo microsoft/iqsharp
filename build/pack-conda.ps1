@@ -37,7 +37,6 @@ function Pack-CondaRecipe() {
     } catch {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
-        Write-Host "##vso[task.uploadfile]$($LogFile.FullName)"
         $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $PackagePath = (conda build (Resolve-Path $Path) --output);
