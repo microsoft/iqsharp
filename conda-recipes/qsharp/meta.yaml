@@ -15,7 +15,6 @@ requirements:
     - jupyter
     - jupyter_client
     - iqsharp={{ version }}
-    - pwsh # [not win]
 
   run:
     - python

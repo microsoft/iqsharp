@@ -12,8 +12,6 @@ requirements:
   build:
     - python
     - setuptools
-    - dotnetcore-sdk=2.2.401
-    - pwsh>=6.2.2 # [not win]
     - jupyter
 
   run:

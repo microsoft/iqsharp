@@ -19,14 +19,7 @@ if ($PSVersionTable.PSEdition -eq "Desktop") {
 # By default, look for the executable provided by the dotnetcore-sdk package,
 # since the activate.d script isn't run by conda-build on all platforms.
 if (($null -eq $DotNetPath) -or $DotNetPath.Length -eq 0) {
-    $CondaDotNet = Join-Path (Join-Path (Join-Path $Env:PREFIX "opt") "dotnet") "dotnet";
-    if (Get-Command $CondaDotNet -ErrorAction SilentlyContinue) {
-        $DotNetPath = $CondaDotNet;
-    } else {
-        # Check for a globally installed fallback and warn.
-        Write-Warning "Could not find dotnet as installed by the dotnetcore-sdk package. Falling back to global version.";
-        $DotNetPath = (Get-Command dotnet).Source;
-    }
+    $DotNetPath = (Get-Command dotnet).Source;
 }
 
 if (-not (Get-Command $DotNetPath)) {
