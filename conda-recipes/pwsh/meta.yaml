@@ -3,9 +3,11 @@ package:
   version: "6.2.2"
 
 build:
-  detect_binary_files_with_prefix: False
-  ignore_prefix_files:
-    - libmi.dylib
+  # Note that we do not need to look for prefixes with this package, as it is a
+  # .NET Core Global Tool; any prefixing is done in the dotnetcore-sdk package itself.
+  # Disabling prefixing fixes a macOS-specific bug and makes building this package much
+  # faster.
+  ignore_prefix_files: True
 
 requirements:
   build:

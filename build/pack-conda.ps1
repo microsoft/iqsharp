@@ -22,8 +22,6 @@ function Pack-CondaRecipe() {
         [string] $Path
     );
 
-    $LogFile = New-TemporaryFile;
-    Write-Host "Logging conda-build to $($LogFile.FullName)";
     if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
         Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
                    "Will skip creation of conda package for $Path.";
@@ -49,6 +47,7 @@ function Pack-CondaRecipe() {
                 $TargetDir `
                 -ErrorAction Continue `
                 -Verbose;
+            Write-Host "##[info]Copied $PackagePath to $TargetDir.";
         } else {
             Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
             $script:all_ok = $False
