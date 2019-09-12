@@ -20,6 +20,7 @@ function Pack-CondaRecipe() {
     );
 
     $LogFile = New-TemporaryFile;
+    Write-Host "Logging conda-build to $($LogFile.FullName)";
     if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
         Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
                    "Will skip creation of conda package for $Path.";
