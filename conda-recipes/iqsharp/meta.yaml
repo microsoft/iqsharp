@@ -20,7 +20,6 @@ requirements:
 
 test:
   requires:
-    - pwsh>=6.2.2 # [not win]
     - jupyter
     - python>=3.6
     - jupyter_client
