@@ -14,6 +14,9 @@ if ("Desktop" -eq $PSVersionTable.PSEdition) {
     $IsWindows = $true;
 }
 
+# Write out diagnostics about what version of PowerShell we're on.
+$PSVersionTable | Write-Host;
+
 function Pack-CondaRecipe() {
     param(
         [string] $Path
@@ -32,24 +35,23 @@ function Pack-CondaRecipe() {
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path) `
-            | Tee-Object -FilePath $LogFile.FullName `
-            | Write-Host;
+        conda build (Resolve-Path $Path);
     } catch {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
         Write-Host "##vso[task.uploadfile]$($LogFile.FullName)"
-        if ($LastExitCode -ne 0) {
-            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
-            $script:all_ok = $False
-        } else {
-            $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
-            New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
+        New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
+        $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
+        $PackagePath = (conda build (Resolve-Path $Path) --output);
+        if (Test-Path $PackagePath) {
             Copy-Item `
-                (conda build (Resolve-Path $Path) --output) `
+                $PackagePath `
                 $TargetDir `
                 -ErrorAction Continue `
                 -Verbose;
+        } else {
+            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
+            $script:all_ok = $False
         }
     }
 }
