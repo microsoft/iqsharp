@@ -40,8 +40,8 @@ function Pack-CondaRecipe() {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
         Write-Host "##vso[task.uploadfile]$($LogFile.FullName)"
-        New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
+        New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $PackagePath = (conda build (Resolve-Path $Path) --output);
         if (Test-Path $PackagePath) {
             Copy-Item `

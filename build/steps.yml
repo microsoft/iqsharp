@@ -15,16 +15,16 @@ steps:
 ##
 # Build, test & pack
 ##
-- powershell: .\build.ps1
+- pwsh: .\build.ps1
   displayName: "Building IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
-- powershell: .\test.ps1
+- pwsh: .\test.ps1
   displayName: "Testing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
-- powershell: .\pack.ps1
+- pwsh: .\pack.ps1
   displayName: "Packing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
