@@ -7,20 +7,6 @@ param(
     $DotNetPath = $null
 );
 
-# If we weren't given a path, find dotnet now.
-if ($null -eq $DotNetPath) {
-    $DotNetPath = (Get-Command dotnet).Source;
-    if ($DotNetPath -eq $null) {
-        Write-Error "Could not find .NET Core SDK. This should never happen."
-        exit -1;
-    }
-}
-
-# The user may not have run .NET Core SDK before, so we disable first-time
-# experience to avoid capturing the NuGet cache.
-$Env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true";
-$Env:NUGET_XMLDOC_MODE = "skip";
-
 # On Windows PowerShell, we don't have the nice $IsWindows / $IsLinux / $IsMacOS
 # variables. Since Windows PowerShell is the only PowerShell variant that
 # has "Desktop" as its PSEdition, we can check for that and create the
@@ -28,6 +14,30 @@ $Env:NUGET_XMLDOC_MODE = "skip";
 if ($PSVersionTable.PSEdition -eq "Desktop") {
     $IsWindows = $true;
 }
+
+# If we weren't given a path, find dotnet now.
+# By default, look for the executable provided by the dotnetcore-sdk package,
+# since the activate.d script isn't run by conda-build on all platforms.
+if (($null -eq $DotNetPath) -or $DotNetPath.Length -eq 0) {
+    $CondaDotNet = Join-Path (Join-Path (Join-Path $Env:PREFIX "opt") "dotnet") "dotnet";
+    if (Get-Command $CondaDotNet -ErrorAction SilentlyContinue) {
+        $DotNetPath = $CondaDotNet;
+    } else {
+        # Check for a globally installed fallback and warn.
+        Write-Warning "Could not find dotnet as installed by the dotnetcore-sdk package. Falling back to global version.";
+        $DotNetPath = (Get-Command dotnet).Source;
+    }
+}
+
+if (-not (Get-Command $DotNetPath)) {
+    Write-Error "Could not find .NET Core SDK. This should never happen."
+    exit -1;
+}
+
+# The user may not have run .NET Core SDK before, so we disable first-time
+# experience to avoid capturing the NuGet cache.
+$Env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true";
+$Env:NUGET_XMLDOC_MODE = "skip";
 
 if ($IsWindows) {
     # NOTE: Building this package is ★only★ supported for Windows 10.

@@ -4,6 +4,9 @@ $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
 $all_ok = $True
+$CondaPlatform = (conda info --json) `
+    | ConvertFrom-Json `
+    | Select-Object -ExpandProperty platform;
 
 # Detect if we're running on Windows. This is trivial on PowerShell Core, but
 # takes a bit more work on Windows PowerShell.
@@ -35,7 +38,13 @@ function Pack-CondaRecipe() {
             Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
             $script:all_ok = $False
         } else {
-            Copy-Item (conda build (Resolve-Path $Path) --output) $Env:CONDA_OUTDIR -ErrorAction Continue;
+            $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
+            New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
+            Copy-Item `
+                (conda build (Resolve-Path $Path) --output) `
+                $TargetDir `
+                -ErrorAction Continue `
+                -Verbose;
         }
     }
 }
