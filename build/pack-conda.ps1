@@ -32,7 +32,7 @@ function Pack-CondaRecipe() {
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path) *>&1 `
+        conda build (Resolve-Path $Path) `
             | Tee-Object -FilePath $LogFile.FullName `
             | Write-Host;
     } catch {
