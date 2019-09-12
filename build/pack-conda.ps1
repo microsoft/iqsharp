@@ -8,12 +8,6 @@ $CondaPlatform = (conda info --json) `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
 
-# Detect if we're running on Windows. This is trivial on PowerShell Core, but
-# takes a bit more work on Windows PowerShell.
-if ("Desktop" -eq $PSVersionTable.PSEdition) {
-    $IsWindows = $true;
-}
-
 # Write out diagnostics about what version of PowerShell we're on.
 $PSVersionTable | Format-Table | Out-String | Write-Host;
 
@@ -55,10 +49,6 @@ function Pack-CondaRecipe() {
 }
 
 Write-Host "##[info]Packing conda recipes..."
-Pack-CondaRecipe -Path "../conda-recipes/dotnetcore-sdk"
-if (-not $IsWindows) {
-    Pack-CondaRecipe -Path "../conda-recipes/pwsh"
-}
 Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
 Pack-CondaRecipe -Path "../conda-recipes/qsharp"
 
