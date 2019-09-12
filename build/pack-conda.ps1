@@ -15,7 +15,7 @@ if ("Desktop" -eq $PSVersionTable.PSEdition) {
 }
 
 # Write out diagnostics about what version of PowerShell we're on.
-$PSVersionTable | Write-Host;
+$PSVersionTable | Format-Table | Out-String | Write-Host;
 
 function Pack-CondaRecipe() {
     param(
