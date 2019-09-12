@@ -19,6 +19,7 @@ function Pack-CondaRecipe() {
         [string] $Path
     );
 
+    $LogFile = New-TemporaryFile;
     if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
         Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
                    "Will skip creation of conda package for $Path.";
@@ -30,10 +31,13 @@ function Pack-CondaRecipe() {
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path);
+        conda build (Resolve-Path $Path) *>&1 `
+            | Tee-Object -FilePath $LogFile.FullName;
     } catch {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
+        Write-Host "##[vso.uploadfile]$($LogFile.FullPath)"
+        Write-Host "[vso.uploadfile]$($LogFile.FullPath)"
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
             $script:all_ok = $False
