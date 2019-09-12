@@ -38,8 +38,7 @@ function Pack-CondaRecipe() {
     } catch {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
-        Write-Host "##[vso.uploadfile]$($LogFile.FullName)"
-        Write-Host "[vso.uploadfile]$($LogFile.FullName)"
+        Write-Host "##vso[task.uploadfile]$($LogFile.FullName)"
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
             $script:all_ok = $False
