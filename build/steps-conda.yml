@@ -15,7 +15,7 @@ steps:
 ##
 # Pack conda packages
 ##
-- powershell: .\pack-conda.ps1
+- pwsh: .\pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
