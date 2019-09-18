@@ -8,10 +8,8 @@ $CondaPlatform = (conda info --json) `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
 
-# Write out diagnostics about what version of PowerShell and .NET Core SDK we're on.
-Write-Host "##[info]Diagnostic information:";
+# Write out diagnostics about what version of PowerShell we're on.
 $PSVersionTable | Format-Table | Out-String | Write-Host;
-dotnet --info;
 
 function Pack-CondaRecipe() {
     param(
