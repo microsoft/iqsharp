@@ -27,7 +27,7 @@ function Pack-CondaRecipe() {
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path);
+        conda build (Resolve-Path $Path) --debug --keep-going;
     } catch {
         Write-Host "##vso[task.logissue type=warning;]$_";
     } finally {
