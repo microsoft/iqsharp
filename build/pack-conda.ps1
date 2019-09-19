@@ -23,11 +23,11 @@ function Pack-CondaRecipe() {
     }
 
     # conda-build prints some warnings to stderr, which can lead to false positives.
-    # We wrap in a try-finally to make sure we can condition on the exit code and not on
+    # We wrap in a try-finally to make sure we can condition on the built file being there, and not on
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path);
+        conda build (Resolve-Path $Path) *>&1;
     } catch {
         Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
     } finally {
