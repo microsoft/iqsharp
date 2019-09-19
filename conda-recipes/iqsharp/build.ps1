@@ -81,8 +81,8 @@ $Env:ManifestFile = New-TemporaryFile | Select-Object -ExpandProperty FullName;
 python -c @"
 from conda_build.utils import prefix_files
 import os
-with open(os.getenv('ManifestFile', 'w') as f:
+with open(os.getenv('ManifestFile', 'w')) as f:
     f.write(prefix_files(os.getenv('PREFIX'))
 "@
-Get-ChildItem -Recurse $TargetDirectory | Out-File $ManifestFile;
-Write-Host "##vso[task.uploadfile]$($ManifestFile.FullName)"
+Get-ChildItem -Recurse $TargetDirectory | Out-File $Env:ManifestFile;
+Write-Host "##vso[task.uploadfile]$Env:ManifestFile"
