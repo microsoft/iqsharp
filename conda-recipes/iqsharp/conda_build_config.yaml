@@ -1,0 +1,3 @@
+# Workaround for conda/conda-build#3170.
+numpy:
+  - 1.11

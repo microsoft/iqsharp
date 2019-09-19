@@ -27,9 +27,9 @@ function Pack-CondaRecipe() {
     # writing to stderr.
     try {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path) --debug --keep-going;
+        conda build (Resolve-Path $Path);
     } catch {
-        Write-Host "##vso[task.logissue type=warning;]$_";
+        Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
     } finally {
         $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
