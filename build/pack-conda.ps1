@@ -26,6 +26,8 @@ function Pack-CondaRecipe() {
     # We wrap in a try-finally to make sure we can condition on the built file being there, and not on
     # writing to stderr.
     try {
+        $OldPreference = $ErrorActionPreference;
+        $ErrorActionPreference = "Continue";
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
         # See https://stackoverflow.com/a/20950421/267841 for why this works to force conda
         # to output all log messages to stdout instead of stderr.
@@ -33,6 +35,7 @@ function Pack-CondaRecipe() {
     } catch {
         Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
     } finally {
+        $ErrorActionPreference = $OldPreference;
         $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $PackagePath = (conda build (Resolve-Path $Path) --output);
