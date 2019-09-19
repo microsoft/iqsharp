@@ -77,4 +77,6 @@ Push-Location $TargetDirectory
 Pop-Location
 
 Write-Host "## Manifest of Installed Files ##"
-Get-ChildItem -Recurse $TargetDirectory | Write-Host;
+$ManifestFile = New-TemporaryFile;
+Get-ChildItem -Recurse $TargetDirectory | Out-File $ManifestFile;
+Write-Host "##vso[task.uploadfile]$($ManifestFile.FullName)"
