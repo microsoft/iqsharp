@@ -42,18 +42,21 @@ function Pack-CondaRecipe() {
         $ErrorActionPreference = $OldPreference;
         $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
-        $PackagePath = (conda build (Resolve-Path $Path) --output);
-        if (Test-Path $PackagePath) {
-            Copy-Item `
-                $PackagePath `
-                $TargetDir `
-                -ErrorAction Continue `
-                -Verbose;
-            Write-Host "##[info]Copied $PackagePath to $TargetDir.";
-        } else {
-            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
-            $script:all_ok = $False
-        }
+        $PythonVersions | `
+            ForEach-Object {
+                $PackagePath = (conda build (Resolve-Path $Path) --python=$_ --output);
+                if (Test-Path $PackagePath) {
+                    Copy-Item `
+                        $PackagePath `
+                        $TargetDir `
+                        -ErrorAction Continue `
+                        -Verbose;
+                    Write-Host "##[info]Copied $PackagePath to $TargetDir.";
+                } else {
+                    Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path (Python $_)."
+                    $script:all_ok = $False
+                }
+            }
     }
 }
 
