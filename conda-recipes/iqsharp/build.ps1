@@ -7,12 +7,9 @@ param(
     $DotNetPath = $null
 );
 
-# On Windows PowerShell, we don't have the nice $IsWindows / $IsLinux / $IsMacOS
-# variables. Since Windows PowerShell is the only PowerShell variant that
-# has "Desktop" as its PSEdition, we can check for that and create the
-# $IsWindows variable if need be.
+# This script is only designed to work on PowerShell Core or PowerShell 7 and later.
 if ($PSVersionTable.PSEdition -eq "Desktop") {
-    $IsWindows = $true;
+    Write-Error "##vso[task.logissue type=error;]conda recipe for iqsharp requires PowerShell Core or PowerShell 7.";
 }
 
 # If we weren't given a path, find dotnet now.
@@ -41,10 +38,7 @@ if ($IsWindows) {
     $RuntimeID = "osx-x$Env:ARCH";
 }
 
-# On PowerShell 6 (Core) and later, Join-Path takes multiple child paths,
-# but we don't use that for compatability with Windows PowerShell (5.1 and
-# earlier).
-$TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
+$TargetDirectory = (Join-Path $Env:PREFIX "opt" "iqsharp");
 $RepoRoot = Resolve-Path iqsharp;
 
 Write-Host "## Diagnostic Information ##"
@@ -62,7 +56,10 @@ Write-Host "## Diagnostic Information ##"
 # due to https://github.com/dotnet/cli/issues/10607. This should
 # be resolved with .NET Core SDK 3.0 and later.
 Write-Host "## Patching IQ# for Standalone Deployment. ##"
-Copy-Item (Join-Path $PSScriptRoot "ToolStandalone.csproj") (Join-Path (Join-Path (Join-Path $RepoRoot "src") "Tool") "Tool.csproj");
+Copy-Item `
+    (Join-Path $PSScriptRoot "ToolStandalone.csproj") `
+    (Join-Path $RepoRoot "src" "Tool" "Tool.csproj") `
+    -Verbose;
 
 Write-Host "## Building IQ#. ##"
 Push-Location (Join-Path $RepoRoot src/Tool)
@@ -78,3 +75,6 @@ Push-Location $TargetDirectory
     $PathToTool = Resolve-Path "./$BaseName";
     & $PathToTool install --path-to-tool $PathToTool --sys-prefix
 Pop-Location
+
+Write-Host "## Manifest of Installed Files ##"
+Get-ChildItem -Recurse $TargetDirectory | Write-Host;
