@@ -25,26 +25,23 @@ function Pack-CondaRecipe() {
     # conda-build prints some warnings to stderr, which can lead to false positives.
     # We wrap in a try-finally to make sure we can condition on the built file being there, and not on
     # writing to stderr.
-    try {
-        Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
-        conda build (Resolve-Path $Path) *>&1;
-    } catch {
-        Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
-    } finally {
-        $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
-        New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
-        $PackagePath = (conda build (Resolve-Path $Path) --output);
-        if (Test-Path $PackagePath) {
-            Copy-Item `
-                $PackagePath `
-                $TargetDir `
-                -ErrorAction Continue `
-                -Verbose;
-            Write-Host "##[info]Copied $PackagePath to $TargetDir.";
-        } else {
-            Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
-            $script:all_ok = $False
-        }
+    Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
+    # See https://stackoverflow.com/a/20950421/267841 for why this works to force conda
+    # to output all log messages to stdout instead of stderr.
+    conda build (Resolve-Path $Path) *>&1 | ForEach-Object { "$_" };
+    $TargetDir = (Join-Path $Env:CONDA_OUTDIR $CondaPlatform);
+    New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
+    $PackagePath = (conda build (Resolve-Path $Path) --output);
+    if (Test-Path $PackagePath) {
+        Copy-Item `
+            $PackagePath `
+            $TargetDir `
+            -ErrorAction Continue `
+            -Verbose;
+        Write-Host "##[info]Copied $PackagePath to $TargetDir.";
+    } else {
+        Write-Host "##vso[task.logissue type=error;]Failed to create conda package for $Path."
+        $script:all_ok = $False
     }
 }
 
