@@ -8,6 +8,10 @@ source:
   - path:    ../../
     folder:  iqsharp
 
+build:
+  binary_relocation: False
+  detect_binary_files_with_prefix: False
+
 requirements:
   build:
     - python
