@@ -29,7 +29,7 @@ function Pack-CondaRecipe() {
         Write-Host "##[info]Running: conda build $(Resolve-Path $Path)"
         # See https://stackoverflow.com/a/20950421/267841 for why this works to force conda
         # to output all log messages to stdout instead of stderr.
-        conda build (Resolve-Path $Path) *>&1 | ForEach-Object { "$_" };
+        conda build (Resolve-Path $Path) 2>&1 | ForEach-Object { "$_" };
     } catch {
         Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
     } finally {
