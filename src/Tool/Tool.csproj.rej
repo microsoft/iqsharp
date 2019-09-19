@@ -1,0 +1,11 @@
+--- src/Tool/Tool.csproj
++++ src/Tool/Tool.csproj
+@@ -18,7 +18,7 @@
+     <PackageProjectUrl>https://github.com/Microsoft/Quantum</PackageProjectUrl>
+     <PackageIconUrl>https://secure.gravatar.com/avatar/bd1f02955b2853ba0a3b1cdc2434e8ec.png</PackageIconUrl>
+     <PackageTags>Quantum Q# Qsharp</PackageTags>
+-    <PackAsTool>true</PackAsTool>
++    <PackAsTool>false</PackAsTool>
+     <ToolCommandName>dotnet-iqsharp</ToolCommandName>
+     <PackageId>Microsoft.Quantum.IQSharp</PackageId>
+     <ContentTargetFolders>\</ContentTargetFolders>

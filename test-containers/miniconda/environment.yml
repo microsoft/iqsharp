@@ -1,0 +1,5 @@
+name: qsharp
+channels:
+- quantum-engineering
+dependencies:
+- qsharp
