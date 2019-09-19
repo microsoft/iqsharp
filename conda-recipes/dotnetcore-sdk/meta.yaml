@@ -4,9 +4,9 @@ package:
 
 source:
   - url: https://dot.net/v1/dotnet-install.sh  # [not win]
-    sha256: b5b2340b159fa644e6a77ed54afc7fa9667fa6947caedf71c1e8c2d667e0632e # [not win]
+    sha256: 06e2b78d74ea347261ce3f2a73cda9d2360f68068cd26f4ec23c0d0ba16ed216 # [not win]
   - url: https://dot.net/v1/dotnet-install.ps1 # [win]
-    sha256: a0b41e631cfd67cdf07a97a68be9b7da22df002a0e60110685c8a4ab5e2eb883 # [win]
+    sha256: 81730e9c831c3b2e43bf3d06e3018f9e67bbf90659a716a3ce0a64866f90ecd4 # [win]
 
 # test:
 #   imports:
