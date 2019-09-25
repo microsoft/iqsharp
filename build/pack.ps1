@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
@@ -92,7 +91,3 @@ Pack-Wheel '../src/Python/'
 
 Write-Host "##[info]Packing Docker image..."
 Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
-
-if (-not $all_ok) {
-    throw "At least one package failed to build. Check the logs."
-}

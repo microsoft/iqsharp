@@ -21,6 +21,9 @@ If (-not (Test-Path -Path $Env:NUGET_OUTDIR)) { [IO.Directory]::CreateDirectory(
 If ($Env:PYTHON_OUTDIR -eq $null) { $Env:PYTHON_OUTDIR =  (Join-Path $Env:DROPS_DIR "wheels") }
 If (-not (Test-Path -Path $Env:PYTHON_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:PYTHON_OUTDIR) }
 
+If ($Env:CONDA_OUTDIR -eq $null) { $Env:CONDA_OUTDIR =  (Join-Path $Env:DROPS_DIR "conda") }
+If (-not (Test-Path -Path $Env:CONDA_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:CONDA_OUTDIR) }
+
 If ($Env:DOCS_OUTDIR -eq $null) { $Env:DOCS_OUTDIR =  (Join-Path $Env:DROPS_DIR "docs") }
 If (-not (Test-Path -Path $Env:DOCS_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:DOCS_OUTDIR) }
 

@@ -4,6 +4,14 @@ The `qsharp` package for Python provides interoperability with the Quantum Devel
 
 For details on how to get started with Python and Q#, please see the [Getting Started with Python guide](https://docs.microsoft.com/quantum/install-guide/python).
 
+## Installing with Anaconda ##
+
+If you use Anaconda or Miniconda, installing the `qsharp` package will automatically include all dependencies:
+
+```bash
+conda install -c quantum-engineering qsharp
+```
+
 ## Installing from Source ##
 
 If you'd like to contribute to or experiment with the Python interoperability feature, it may be useful to install from source rather than from the `qsharp` package on the Python Package Index (PyPI).
@@ -18,7 +26,6 @@ python setup.py install
 
 The Python interoperability feature uses a standard `setuptools`-based packaging strategy.
 To build a platform-independent wheel, run the setup script with `bdist_wheel` instead:
-
 
 ```bash
 cd iqsharp/src/Python/

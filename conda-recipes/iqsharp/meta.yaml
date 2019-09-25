@@ -1,0 +1,47 @@
+{% set version = environ.get('PYTHON_VERSION', '0.0.0.1') %}
+
+package:
+  name: iqsharp
+  version: "{{ version }}"
+
+source:
+  - path:    ../../
+    folder:  iqsharp
+
+build:
+  binary_relocation: False
+  detect_binary_files_with_prefix: False
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - jupyter
+
+  run:
+    - python
+    - jupyter
+
+test:
+  requires:
+    - jupyter
+    - python>=3.6
+    - jupyter_client
+    - pip
+
+  source_files:
+    - iqsharp/conda-recipes/iqsharp/test.ps1
+    - iqsharp/conda-recipes/iqsharp/test.py
+
+  commands:
+    - powershell -NoProfile iqsharp/conda-recipes/iqsharp/test.ps1 # [win]
+    - pwsh iqsharp/conda-recipes/iqsharp/test.ps1 # [not win]
+    - pip install jupyter_kernel_test
+    - python iqsharp/conda-recipes/iqsharp/test.py
+
+about:
+  home: https://docs.microsoft.com/quantum
+  license: MIT
+  summary: Microsoft's IQ# Server.
+  dev_url: https://github.com/microsoft/iqsharp
+

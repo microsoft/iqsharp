@@ -1,33 +1,30 @@
 ##
 # Build and test IQ#.
 ##
+
 steps:
 
 ##
 # Pre-reqs
 ##
-- task: UsePythonVersion@0
+- task: CondaEnvironment@1
   inputs:
-    versionSpec: '3.6'
-    architecture: 'x64'
-  displayName: 'Use Python 3.6'
-    
-- script: pip install setuptools wheel pytest jupyter
-  displayName: 'Install Python tools'
+    packageSpecs: "python=3.6 pip setuptools pytest jupyter"
+  displayName: 'Use conda environment w/ Python 3.6'
 
 ##
 # Build, test & pack
 ##
-- powershell: .\build.ps1
+- pwsh: .\build.ps1
   displayName: "Building IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
-- powershell: .\test.ps1
+- pwsh: .\test.ps1
   displayName: "Testing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
-- powershell: .\pack.ps1
+- pwsh: .\pack.ps1
   displayName: "Packing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
