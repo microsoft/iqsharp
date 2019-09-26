@@ -24,6 +24,10 @@ if (-not (Get-Command $DotNetPath)) {
     exit -1;
 }
 
+# Set defaults for environment variables set from the host.
+if ($null -eq $Env:ASSEMBLY_CONSTANTS) { $Env:ASSEMBLY_CONSTANTS = ""; }
+if ($null -eq $Env:ASSEMBLY_VERSION) { $Env:ASSEMBLY_VERSION = "0.0.0.1"; }
+
 # The user may not have run .NET Core SDK before, so we disable first-time
 # experience to avoid capturing the NuGet cache.
 $Env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true";
@@ -50,6 +54,8 @@ Write-Host "## Diagnostic Information ##"
     "Target directory" = $TargetDirectory;
     "Path to Jupyter" = (Get-Command jupyter -ErrorAction SilentlyContinue).Source;
     "Repo root" = $RepoRoot;
+    "Assembly constants" = $Env:ASSEMBLY_CONSTANTS;
+    "Assembly version" = $Env:ASSEMBLY_VERSION;
 } | Format-Table | Out-String | Write-Host
 
 # We need to disable <PackAsTool>true</PackAsTool> when publishing
@@ -65,7 +71,13 @@ Write-Host "## Publishing IQ#. ##"
 # Use dotnet publish to make a self-contained deployment of the IQ# tool.
 Push-Location (Join-Path $RepoRoot src/Tool)
     # Check whether we need to rebuild or not.
-    & $DotNetPath publish --self-contained -c $Configuration -r $RuntimeID -o $TargetDirectory
+    & $DotNetPath publish `
+        --self-contained `
+        -c $Configuration `
+        -r $RuntimeID `
+        /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:Version=$Env:ASSEMBLY_VERSION `
+        -o $TargetDirectory
 Pop-Location
 
 # Copy any DLLs in the dll-overrides directory into the target directory, allowing them
