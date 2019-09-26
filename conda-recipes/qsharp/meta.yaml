@@ -13,12 +13,12 @@ requirements:
     - python
     - setuptools
     - jupyter
-    - jupyter_client
+    - jupyter_client<5.3.3
     - iqsharp={{ version }}
 
   run:
     - python
-    - jupyter_client
+    - jupyter_client<5.3.3
     - iqsharp
 
 build:

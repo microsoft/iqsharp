@@ -61,10 +61,23 @@ Copy-Item `
     (Join-Path $RepoRoot "src" "Tool" "Tool.csproj") `
     -Verbose;
 
-Write-Host "## Building IQ#. ##"
+Write-Host "## Publishing IQ#. ##"
+# Use dotnet publish to make a self-contained deployment of the IQ# tool.
 Push-Location (Join-Path $RepoRoot src/Tool)
+    # Check whether we need to rebuild or not.
     & $DotNetPath publish --self-contained -c $Configuration -r $RuntimeID -o $TargetDirectory
 Pop-Location
+
+# Copy any DLLs in the dll-overrides directory into the target directory, allowing them
+# to override the published versions.
+$OverridePath = (Join-Path $PSScriptRoot "dll-overrides");
+if (Test-Path $OverridePath -ErrorAction SilentlyContinue) {
+    Get-ChildItem $OverridePath -Filter *.dll `
+        | ForEach-Object {
+            Write-Host "Overriding DLL: $_";
+            Copy-Item -Verbose $_ $TargetDirectory;
+        }
+}
 
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";

@@ -61,8 +61,8 @@ function Pack-CondaRecipe() {
 }
 
 Write-Host "##[info]Packing conda recipes..."
-Pack-CondaRecipe -Path "../conda-recipes/iqsharp"
-Pack-CondaRecipe -Path "../conda-recipes/qsharp"
+Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/iqsharp")
+Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/qsharp")
 
 if (-not $all_ok) {
     throw "At least one package failed to build. Check the logs."
