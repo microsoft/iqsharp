@@ -61,9 +61,15 @@ Copy-Item `
     (Join-Path $RepoRoot "src" "Tool" "Tool.csproj") `
     -Verbose;
 
-Write-Host "## Building IQ#. ##"
+Write-Host "## Publishing IQ#. ##"
 Push-Location (Join-Path $RepoRoot src/Tool)
-    & $DotNetPath publish --self-contained -c $Configuration -r $RuntimeID -o $TargetDirectory
+    # Only republish if we need to.
+    $PublishPath = Join-Path "." "bin" $Configuration "netcoreapp2.2" $RuntimeID "publish";
+    if (-not (Test-Path (Join-Path $PublishPath "Microsoft.Quantum.IQSharp.dll") -ErrorAction SilentlyContinue)) {
+        & $DotNetPath publish --self-contained -c $Configuration -r $RuntimeID
+    }
+    # In either case, copy the published version to the right output directory.
+    Copy-Item -Recurse $PublishPath $TargetDirectory;
 Pop-Location
 
 Write-Host "## Installing IQ# into Jupyter. ##"
