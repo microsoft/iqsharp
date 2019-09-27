@@ -24,9 +24,9 @@ requirements:
 
 test:
   requires:
-    - jupyter
+    - notebook=6.0.1
     - python>=3.6
-    - jupyter_client
+    - jupyter_client<5.3.3
     - pip
 
   source_files:
