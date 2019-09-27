@@ -68,16 +68,18 @@ Copy-Item `
     -Verbose;
 
 Write-Host "## Publishing IQ#. ##"
+# Run the publish from the script root for this script, so that we can
+# include the nuget.config that comes with this recipe.
+Push-Location $PSScriptRoot
 # Use dotnet publish to make a self-contained deployment of the IQ# tool.
-Push-Location (Join-Path $RepoRoot src/Tool)
-    # Check whether we need to rebuild or not.
-    & $DotNetPath publish `
-        --self-contained `
-        -c $Configuration `
-        -r $RuntimeID `
-        /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
-        /property:Version=$Env:ASSEMBLY_VERSION `
-        -o $TargetDirectory
+& $DotNetPath publish `
+    (Join-Path $RepoRoot src/Tool) `
+    --self-contained `
+    -c $Configuration `
+    -r $RuntimeID `
+    /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+    /property:Version=$Env:ASSEMBLY_VERSION `
+    -o $TargetDirectory
 Pop-Location
 
 # Copy any DLLs in the dll-overrides directory into the target directory, allowing them
