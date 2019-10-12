@@ -17,18 +17,21 @@ jobs:
       failOnAlert: true
 
 - job: "pack_conda_linux"
+  dependsOn: "iqsharp"
   pool:
     vmImage: ubuntu-16.04
   steps:
   - template: steps-conda.yml
 
 - job: "pack_conda_macos"
+  dependsOn: "iqsharp"
   pool:
     vmImage: macOS-10.14
   steps:
   - template: steps-conda.yml
 
 - job: "pack_conda_win"
+  dependsOn: "iqsharp"
   pool:
     vmImage: windows-2019
   steps:
