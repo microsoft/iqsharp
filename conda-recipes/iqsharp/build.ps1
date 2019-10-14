@@ -24,7 +24,7 @@ Write-Host "## Artifact manifest: ##"
 Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
 
 Write-Host "## Copying IQ# into $TargetDirectory... ##"
-Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory;
+Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory -Verbose;
 
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";
