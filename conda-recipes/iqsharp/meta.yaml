@@ -1,5 +1,4 @@
 {% set version = environ.get('PYTHON_VERSION', '0.0.0.1') %}
-{% set drops = environ.get('DROPS_DIR', '../../drops') %}
 
 package:
   name: iqsharp
