@@ -10,7 +10,11 @@ steps:
 - task: DownloadBuildArtifacts@0
   inputs:
     artifactName: iqsharp
-    downloadPath: '$(System.DefaultWorkingDirectory)/drops'
+    downloadPath: '$(System.DefaultWorkingDirectory)/artifact'
+
+- pwsh: |
+    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
+  displayName: "Copy build artifacts to IQ# working directory"
 
 - task: CondaEnvironment@1
   inputs:
