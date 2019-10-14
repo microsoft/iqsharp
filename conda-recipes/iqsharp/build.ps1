@@ -33,5 +33,9 @@ if ($IsWindows) {
 }
 Push-Location $TargetDirectory
     $PathToTool = Resolve-Path "./$BaseName";
-    & $PathToTool install --path-to-tool $PathToTool --sys-prefix
+    Write-Host "Path to IQ# kernel: $PathToTool";
+
+    Set-PSDebug -Trace 1
+        & $PathToTool install --path-to-tool $PathToTool --sys-prefix
+    Set-PSDebug -Off
 Pop-Location
