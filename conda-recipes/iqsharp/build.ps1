@@ -18,7 +18,15 @@ $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." "..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
 
 # Find where in the temporary environment we should install IQ# into.
-$TargetDirectory = (Join-Path $Env:PREFIX "bin");
+if ($IsWindows) {
+    $TargetDirectory = $Env:LIBRARY_BIN;
+} else {
+    $TargetDirectory = (Join-Path $Env:PREFIX "bin");
+}
+
+# If the target directory doesn't exist, create it before proceeding.
+New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirectory;
+
 
 Write-Host "## Artifact manifest: ##"
 Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
