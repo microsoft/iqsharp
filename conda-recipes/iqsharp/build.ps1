@@ -13,8 +13,12 @@ if ($IsWindows) {
     $RuntimeID = "osx-x$Env:ARCH";
 }
 
+# Find the repo root relative to this script.
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." "..");
+$ArtifactRoot = Join-Path $RepoRoot "drops";
+
+# Find where in the temporary environment we should install IQ# into.
 $TargetDirectory = (Join-Path $Env:PREFIX "bin");
-$ArtifactRoot = Resolve-Path drops;
 
 Write-Host "## Artifact manifest: ##"
 Get-ChildItem -Recurse $ArtifactRoot | Write-Host;

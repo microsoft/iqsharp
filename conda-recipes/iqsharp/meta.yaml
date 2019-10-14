@@ -8,14 +8,12 @@ package:
 source:
   - path:    ../../
     folder:  src
-  - path: "{{ drops }}"
-    folder: drops
 
 build:
   binary_relocation: False
   detect_binary_files_with_prefix: False
   script: |
-    powershell -NoProfile src/conda-recipes/iqsharp/build.ps1 # [win]
+    pwsh -NoProfile src/conda-recipes/iqsharp/build.ps1 # [win]
     pwsh src/conda-recipes/iqsharp/build.ps1 # [not win]
 
 requirements:
