@@ -33,8 +33,8 @@ test:
     - pip
 
   source_files:
-    - iqsharp/conda-recipes/iqsharp/test.ps1
-    - iqsharp/conda-recipes/iqsharp/test.py
+    - src/conda-recipes/iqsharp/test.ps1
+    - src/conda-recipes/iqsharp/test.py
 
   commands:
     - powershell -NoProfile iqsharp/conda-recipes/iqsharp/test.ps1 # [win]
@@ -47,4 +47,3 @@ about:
   license: MIT
   summary: Microsoft's IQ# Server.
   dev_url: https://github.com/microsoft/iqsharp
-
