@@ -34,6 +34,7 @@ Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
 Write-Host "## Copying IQ# into $TargetDirectory... ##"
 Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory -Verbose;
 
+
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";
 if ($IsWindows) {
@@ -42,7 +43,12 @@ if ($IsWindows) {
 Push-Location $TargetDirectory
     $PathToTool = Resolve-Path "./$BaseName";
     Write-Host "Path to IQ# kernel: $PathToTool";
+    # Report the item as copied to the target directory.
+    Get-Item $PathToTool;
 
-    & $PathToTool --version
-    & $PathToTool install --path-to-tool $PathToTool --sys-prefix
+    # Build up an install command to execute.
+    & "./$BaseName" --version;
+    $InstallCmd = "./$BaseName install --path-to-tool $(Resolve-Path $PathToTool) --sys-prefix";
+    Write-Host "$ $InstallCmd";
+    Invoke-Expression $InstallCmd;
 Pop-Location
