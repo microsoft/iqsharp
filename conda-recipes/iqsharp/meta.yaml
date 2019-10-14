@@ -37,8 +37,8 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - powershell -NoProfile iqsharp/conda-recipes/iqsharp/test.ps1 # [win]
-    - pwsh iqsharp/conda-recipes/iqsharp/test.ps1 # [not win]
+    - pwsh -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
+    - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
     - pip install jupyter_kernel_test
     - python iqsharp/conda-recipes/iqsharp/test.py
 
