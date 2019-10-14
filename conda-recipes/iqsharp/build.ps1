@@ -43,6 +43,14 @@ if ($IsWindows) {
 Push-Location $TargetDirectory
     $PathToTool = Resolve-Path "./$BaseName";
     Write-Host "Path to IQ# kernel: $PathToTool";
+
+    # If we're not on Windows, we need to make sure that the program is marked
+    # as executable.
+    if (-not $IsWindows) {
+        Write-Host "Setting IQ# kernel to be executable.";
+        chmod +x $PathToTool;
+    }
+
     # Report the item as copied to the target directory.
     Get-Item $PathToTool;
 
