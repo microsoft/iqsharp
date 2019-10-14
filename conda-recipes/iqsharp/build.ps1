@@ -16,6 +16,9 @@ if ($IsWindows) {
 $TargetDirectory = (Join-Path $Env:PREFIX "bin");
 $ArtifactRoot = Resolve-Path drops;
 
+Write-Host "## Artifact manifest: ##"
+Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
+
 Write-Host "## Copying IQ# into $TargetDirectory... ##"
 Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory;
 
