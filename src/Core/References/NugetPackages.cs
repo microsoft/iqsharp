@@ -44,8 +44,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         // The framework used to find packages.
-        // We only use netcoreapp2.1, as IQSharp is built against this moniker.
-        public static NuGetFramework NETCOREAPP2_1 = NuGetFramework.ParseFolder("netcoreapp2.1");
+        public static NuGetFramework NETCOREAPP3_0 = NuGetFramework.ParseFolder("netcoreapp3.0");
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
@@ -282,7 +281,7 @@ namespace Microsoft.Quantum.IQSharp
                 return files.ToArray();
             }
 
-            var names = CheckOnFramework(NETCOREAPP2_1);
+            var names = CheckOnFramework(NETCOREAPP3_0);
 
             Assembly LoadAssembly(string path)
             {
@@ -380,7 +379,7 @@ namespace Microsoft.Quantum.IQSharp
                 dependencyBehavior: DependencyBehavior.Lowest,
                 targetIds: new[] { pkgId.Id },
                 requiredPackageIds: Enumerable.Empty<string>(),
-                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP2_1, true)),
+                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_0, true)),
                 preferredVersions: Enumerable.Empty<PackageIdentity>(),
                 availablePackages: dependencies,
                 packageSources: Repositories.Select(s => s.PackageSource),
@@ -410,7 +409,7 @@ namespace Microsoft.Quantum.IQSharp
                     var dependencyInfoResource = await repo.GetResourceAsync<DependencyInfoResource>();
                     if (dependencyInfoResource == null) continue;
 
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP2_1, context, this.Logger, CancellationToken.None);
+                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_0, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
 
                     dependencies.Add(dependencyInfo);

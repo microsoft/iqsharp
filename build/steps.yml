@@ -12,6 +12,12 @@ steps:
     packageSpecs: "python=3.6 pip setuptools pytest jupyter"
   displayName: 'Use conda environment w/ Python 3.6'
 
+- task: UseDotNet@2
+  displayName: 'Use .NET Core SDK 3.0.100'
+  inputs:
+    packageType: sdk
+    version: '3.0.100'
+
 ##
 # Build, test & pack
 ##

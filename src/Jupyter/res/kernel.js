@@ -31,7 +31,7 @@ define(
                         },
                         {
                             token: "keyword",
-                            regex: /\W(?:if|elif|else|repeat|until|fixup|for|in|return|fail)\b/
+                            regex: /\W(?:if|elif|else|repeat|until|fixup|for|in|return|fail|within|apply)\b/
                         },
                         {
                             token: "keyword",

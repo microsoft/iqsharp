@@ -39,7 +39,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-2.2 && \
+    apt-get -y install dotnet-sdk-3.0 && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # create user with a home directory
@@ -93,7 +93,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.9.1909.3002" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.9.1910.1305-alpha" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
