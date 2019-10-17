@@ -4,7 +4,7 @@ trigger:
 
 variables:
   Build.Major: 0
-  Build.Minor: 9
+  Build.Minor: 10
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
     vmImage: ubuntu-16.04
   steps:
   - template: steps-conda.yml
+  condition: eq(variables['Conda.Enable'], 'true')
 
 - job: "pack_conda_macos"
   dependsOn: "iqsharp"
@@ -29,6 +30,7 @@ jobs:
     vmImage: macOS-10.14
   steps:
   - template: steps-conda.yml
+  condition: eq(variables['Conda.Enable'], 'true')
 
 - job: "pack_conda_win"
   dependsOn: "iqsharp"
@@ -36,3 +38,4 @@ jobs:
     vmImage: windows-2019
   steps:
   - template: steps-conda.yml
+  condition: eq(variables['Conda.Enable'], 'true')
