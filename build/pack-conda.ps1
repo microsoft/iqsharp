@@ -4,6 +4,11 @@ $ErrorActionPreference = 'Stop'
 
 & "$PSScriptRoot/set-env.ps1"
 $all_ok = $True
+
+if ("true" -eq $Env:SYSTEM_DEBUG) {
+    Set-PSDebug -Trace 1;
+}
+
 $CondaPlatform = (conda info --json) `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
