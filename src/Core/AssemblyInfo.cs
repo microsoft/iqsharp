@@ -72,16 +72,15 @@ namespace Microsoft.Quantum.IQSharp
             var logger = new QSharpLogger(null); 
             var refs = ProjectManager.LoadReferencedAssemblies(new[] { Location }, d => logger.Log(d), ex => logger.Log(ex));
 
-            System.Diagnostics.Debug.Assert(refs.Declarations.Count == 1);
-            var headers = refs.Declarations.Values.First();
+            var callables = refs.SelectMany(pair => pair.Value.Callables);
 
             var ops = new List<OperationInfo>();
-            foreach (var header in headers.Callables)
+            foreach (var callable in callables)
             {
                 // Find the associated type.
-                var fullName = header.QualifiedName.ToFullName();
+                var fullName = callable.QualifiedName.ToFullName();
                 var type = Assembly.GetType(fullName);
-                var info = new OperationInfo(type, header);
+                var info = new OperationInfo(type, callable);
                 ops.Add(info);
             }
 
