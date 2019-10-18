@@ -29,6 +29,14 @@ steps:
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 ##
+# Test conda packages
+##
+- pwsh: .\test-conda.ps1
+  displayName: "Testing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+
+##
 # Publish build artifacts.
 ##
 - task: PublishBuildArtifacts@1
