@@ -82,5 +82,13 @@ namespace Microsoft.Quantum.IQSharp
 
             return counts;
         }
+
+        public static bool GetOptional(this IRuntimeSettings settings, string name, bool defaultValue = false)
+        {
+            var current = settings?[name];
+            if (current == null) return defaultValue;
+
+            return (bool.TryParse(current, out bool result)) ? result : defaultValue;
+        }
     }
 }

@@ -20,19 +20,6 @@ namespace Tests.IQSharp
         public KernelContext Value => new KernelContext();
     }
 
-    public class MockNugetOptions : IOptions<NugetPackages.Settings>
-    {
-        public MockNugetOptions(string[] versions)
-        {
-            this.Value = new NugetPackages.Settings()
-            {
-                DefaultPackageVersions = versions
-            };
-        }
-
-        public NugetPackages.Settings Value { get; }
-    }
-
 
 
     public class MockShell : IShellServer

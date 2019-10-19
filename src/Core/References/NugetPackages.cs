@@ -33,18 +33,17 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class NugetPackages
     {
+        public static readonly string SETTING_DEFAULT_PACKAGE_VERSIONS = "DefaultPackageVersions";
+
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
 
-        // The list of settings for this class. It extends Workspace.Settings so it can get things
-        // list root and cache folder. 
-        public class Settings : Workspace.Settings
-        {
-            public string[] DefaultPackageVersions { get; set; }
-        }
+        public string[] DefaultPackageVersions { get; set; }
 
         // The framework used to find packages.
         public static NuGetFramework NETCOREAPP3_0 = NuGetFramework.ParseFolder("netcoreapp3.0");
+
+        public IRuntimeSettings Settings { get; }
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
@@ -92,16 +91,30 @@ namespace Microsoft.Quantum.IQSharp
         // Keeps track of what package version to use for certain packages specified in the packageVersion.json.
         // This way we can better control what the correct version of Microsoft.Quantum
         // packages to use, since all of them need to be in-sync.
-        public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
+        public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; private set; }
 
-        public NugetPackages(IOptions<Settings> config, Microsoft.Extensions.Logging.ILogger logger)
+        public NugetPackages(IRuntimeSettings config, Microsoft.Extensions.Logging.ILogger logger)
         {
             this.Logger = new NuGetLogger(logger);
 
-            this.NugetSettings = NuGet.Configuration.Settings.LoadDefaultSettings(root: config?.Value.Workspace);
-            this.DefaultVersions = InitDefaultVersions(config?.Value.DefaultPackageVersions);
+            this.Settings = config;
+            this.NugetSettings = NuGet.Configuration.Settings.LoadDefaultSettings(root: Directory.GetCurrentDirectory());
+            this.DefaultVersions = InitDefaultVersions(config?[SETTING_DEFAULT_PACKAGE_VERSIONS]);
             this.Items = Enumerable.Empty<PackageIdentity>();
             this.Assemblies = Enumerable.Empty<AssemblyInfo>();
+
+            if (config != null)
+            {
+                config.SettingSet += OnSettingChanged;
+            }
+        }
+
+        private void OnSettingChanged(object source, SettingSetEventArgs args)
+        {
+            if (string.Compare(args.Key, SETTING_DEFAULT_PACKAGE_VERSIONS, StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                this.DefaultVersions = InitDefaultVersions(this.Settings?[SETTING_DEFAULT_PACKAGE_VERSIONS]);
+            }
         }
 
         /// <summary>
@@ -109,13 +122,13 @@ namespace Microsoft.Quantum.IQSharp
         /// Each element on the config array is expected to be a package; all packages are expected to have a version
         /// thus the name is checked for package delimiter (::)
         /// </summary>
-        public IReadOnlyDictionary<string, NuGetVersion> InitDefaultVersions(string[] config)
+        public IReadOnlyDictionary<string, NuGetVersion> InitDefaultVersions(string value)
         {
             var versions = new Dictionary<string, NuGetVersion>(StringComparer.OrdinalIgnoreCase);
 
-            if (config != null)
+            if (!string.IsNullOrWhiteSpace(value?.Trim()))
             {
-                foreach (var info in config)
+                foreach (var info in value?.Trim().Split(';'))
                 {
                     var index = info.IndexOf(PACKAGE_VERSION_DELIMITER);
                     Debug.Assert(index > 0);

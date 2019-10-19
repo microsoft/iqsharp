@@ -57,14 +57,17 @@ namespace Tests.IQSharp
             var version = "0.0.1101.3104-alpha";
             var nuVersion = NuGetVersion.Parse(version);
 
-            var versions = new string[]
-            {
-                $"Microsoft.Quantum.Standard::{version}",
-                $"Microsoft.Quantum.Quantum.Development.Kit::{version}",
-                $"Microsoft.Quantum.Chemistry::{version}"
-            };
+            var settings = new RuntimeSettings(null);
+            settings[NugetPackages.SETTING_DEFAULT_PACKAGE_VERSIONS] = string.Join(";",
+                new string[]
+                {
+                    $"Microsoft.Quantum.Standard::{version}",
+                    $"Microsoft.Quantum.Quantum.Development.Kit::{version}",
+                    $"Microsoft.Quantum.Chemistry::{version}"
+                }
+            );
 
-            var mgr = new NugetPackages(new MockNugetOptions(versions), null);
+            var mgr = new NugetPackages(settings, null);
 
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Standard"));
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Chemistry"));

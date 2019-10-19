@@ -15,6 +15,9 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class RuntimeSettings : IRuntimeSettings
     {
+        public static readonly string SETTING_USER_AGENT = "USER_AGENT";
+        public static readonly string SETTING_HOSTING_ENV = "HOSTING_ENV";
+
         private readonly Dictionary<string, string> _storage = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public RuntimeSettings(IConfiguration settings)

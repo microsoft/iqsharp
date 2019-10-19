@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 Configuration = new ConfigurationBuilder()
-                    .AddEnvironmentVariables()
+                    .AddEnvironmentVariables("IQSHARP_")
                     .AddJsonFile("appsettings.json")
                     .AddCommandLine(
                         args,
@@ -37,8 +37,8 @@ namespace Microsoft.Quantum.IQSharp
                         // the placeholder options that we define below.
                         new Dictionary<string, string>()
                         {
-                            ["--user-agent"] = "IQSHARP_USER_AGENT",
-                            ["--hosting-env"] = "IQSHARP_HOSTING_ENV"
+                            ["--user-agent"] = "USER_AGENT",
+                            ["--hosting-env"] = "HOSTING_ENV"
                         }
                     )
                     .Build();

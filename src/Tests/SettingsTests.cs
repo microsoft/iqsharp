@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tests.IQSharp;
-using Startup = Tests.IQSharp.Startup;
 
-namespace Tests.IQsharp
+namespace Tests.IQSharp
 {
     [TestClass]
     public class SettingsTests

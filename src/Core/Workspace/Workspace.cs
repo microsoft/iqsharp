@@ -20,34 +20,9 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class Workspace : IWorkspace
     {
-        /// <summary>
-        /// Settings that can be configured via command line or parameters.
-        /// </summary>
-        public class Settings
-        {
-            private string _workspace;
-            private string _cacheFolder;
-
-            /// <summary>
-            /// The Workspace's root folder
-            /// </summary>
-            public string Workspace
-            {
-                get => _workspace ?? Directory.GetCurrentDirectory();
-                set { _workspace = value; }
-            }
-
-            /// <summary>
-            /// The folder where the assembly is permanently saved for cache.
-            /// </summary>
-            public string CacheFolder
-            {
-                get => _cacheFolder ?? Path.Combine(Workspace, "obj");
-                set { _cacheFolder = value; }
-            }
-
-            public bool MonitorWorkspace { get; set; }
-        }
+        public static readonly string SETTING_WORKSPACE = "Workspace";
+        public static readonly string SETTING_CACHE_FOLDER = "CacheFolder";
+        public static readonly string SETTING_MONITOR_WORKSPACE = "MonitorWorkspace";
 
         // We use this to keep track of file changes in the workspace and trigger a reload.
         private FileSystemWatcher Watcher;
@@ -107,18 +82,31 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         /// <param name="logger">Used to log messages to the console.</param>
         /// <param name="references">List of references to use to compile the workspace.</param>
-        public Workspace(IOptions<Settings> config, ICompilerService compiler, IReferences references, ILogger<Workspace> logger, IOptions<ClientInformation> clientInfo)
+        public Workspace(IRuntimeSettings config, ICompilerService compiler, IReferences references, ILogger<Workspace> logger)
         {
             Compiler = compiler;
             GlobalReferences = references;
             Logger = logger;
 
-            Root = config?.Value.Workspace;
-            CacheFolder = config?.Value.CacheFolder;
+            if (config != null)
+            {
+                config.SettingSet += OnSettingChanged;
+            }
 
-            var monitor = config?.Value.MonitorWorkspace == true;
+            Root = config?[SETTING_WORKSPACE] ?? Directory.GetCurrentDirectory();
+            CacheFolder = config?[SETTING_CACHE_FOLDER] ?? Path.Combine(Root, "obj");
 
-            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {monitor}\nUser agent: {clientInfo?.Value?.UserAgent ?? "<unknown>"}\nHosting environment: {clientInfo?.Value?.HostingEnvironment ?? "<unknown>"}\n----------------");
+            var monitor = config.GetOptional(SETTING_MONITOR_WORKSPACE);
+
+            logger?.LogInformation(
+                $"Starting IQ# Workspace:\n" +
+                $"----------------\n" +
+                $"Root: {Root}\n" +
+                $"Cache folder:{CacheFolder}\n" +
+                $"Monitoring changes: {monitor}\n" +
+                $"User agent: {config?[RuntimeSettings.SETTING_USER_AGENT] ?? " <unknown> "}\n" +
+                $"Hosting environment: {config?[RuntimeSettings.SETTING_HOSTING_ENV] ?? " <unknown> "}\n" +
+                $"----------------");
 
             if (!LoadFromCache())
             {
@@ -155,6 +143,35 @@ namespace Microsoft.Quantum.IQSharp
         private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload();
 
         private void OnFilesRenamed(object source, RenamedEventArgs e) => Reload();
+
+        private void OnSettingChanged(object source, SettingSetEventArgs args)
+        {
+            if (string.Compare(args.Key, SETTING_WORKSPACE, StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                // For security reasons, only change the Root folder
+                // if it's within the current working directory and it exists.
+                var wanted = args.Value;
+                var fullPath = Path.GetFullPath(wanted);
+
+                if (fullPath.StartsWith(Directory.GetCurrentDirectory()))
+                {
+                    if (Directory.Exists(fullPath))
+                    {
+                        Root = fullPath; 
+                        CacheFolder = Path.Combine(Root, "obj");
+                        Reload();
+
+                        return;
+                    }
+
+                    Logger.LogError($"Trying to set workspace root folder to a path that doesn't exist. Requested path: {fullPath}");
+                }
+                else
+                {
+                    Logger.LogError($"Trying to set workspace root folder to a path outside the current working directory. Working directory: {Directory.GetCurrentDirectory()}. New path: {wanted}");
+                }
+            }
+        }
 
         /// <summary>
         /// Tries to load the Workspace's information from cache. 
