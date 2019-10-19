@@ -29,6 +29,8 @@ namespace Tests.IQSharp
             services.Configure<Workspace.Settings>(config);
             services.Configure<NugetPackages.Settings>(config);
 
+            services.AddSingleton<IConfiguration>(config);
+
             services.AddLogging();
             services.AddMocks();
             services.AddIQSharp();

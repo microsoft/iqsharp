@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -20,6 +21,8 @@ namespace Microsoft.Quantum.IQSharp
             services.Configure<Workspace.Settings>(Program.Configuration);
             services.Configure<NugetPackages.Settings>(Program.Configuration);
             services.Configure<ClientInformation>(Program.Configuration);
+
+            services.AddSingleton<IConfiguration>(Program.Configuration);
 
             services.AddIQSharp();
             services.AddIQSharpKernel();
