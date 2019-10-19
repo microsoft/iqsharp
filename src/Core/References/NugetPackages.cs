@@ -37,9 +37,7 @@ namespace Microsoft.Quantum.IQSharp
 
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
-
-        public string[] DefaultPackageVersions { get; set; }
-
+        
         // The framework used to find packages.
         public static NuGetFramework NETCOREAPP3_0 = NuGetFramework.ParseFolder("netcoreapp3.0");
 
