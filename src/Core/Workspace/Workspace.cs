@@ -164,11 +164,11 @@ namespace Microsoft.Quantum.IQSharp
                         return;
                     }
 
-                    Logger.LogError($"Trying to set workspace root folder to a path that doesn't exist. Requested path: {fullPath}");
+                    Logger?.LogError($"Trying to set workspace root folder to a path that doesn't exist. Requested path: {fullPath}");
                 }
                 else
                 {
-                    Logger.LogError($"Trying to set workspace root folder to a path outside the current working directory. Working directory: {Directory.GetCurrentDirectory()}. New path: {wanted}");
+                    Logger?.LogError($"Trying to set workspace root folder to a path outside the current working directory. Working directory: {Directory.GetCurrentDirectory()}. New path: {wanted}");
                 }
             }
         }
