@@ -55,10 +55,10 @@ namespace Tests.IQSharp
             Assert.IsTrue(response.result[0].StartsWith("Microsoft.Quantum.Standard"));
             Assert.IsTrue(response.result[1].StartsWith("Microsoft.Quantum.Chemistry"));
 
-            response = await controller.Add("Microsoft.Quantum.Research::0.9.1910.1401-alpha");
+            response = await controller.Add("Microsoft.Quantum.Research::0.10.1910.1804-beta");
             Assert.AreEqual(0, response.messages.Length);
             Assert.IsTrue(response.result.Length == 3);
-            Assert.AreEqual("Microsoft.Quantum.Research::0.9.1910.1401-alpha", response.result[2]);
+            Assert.AreEqual("Microsoft.Quantum.Research::0.10.1910.1804-beta", response.result[2]);
         }
     }
 }

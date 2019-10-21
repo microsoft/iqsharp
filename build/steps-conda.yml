@@ -7,16 +7,19 @@ steps:
 ##
 # Pre-reqs
 ##
+- task: DownloadBuildArtifacts@0
+  inputs:
+    artifactName: iqsharp
+    downloadPath: '$(System.DefaultWorkingDirectory)/artifact'
+
+- pwsh: |
+    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
+  displayName: "Copy build artifacts to IQ# working directory"
+
 - task: CondaEnvironment@1
   inputs:
     packageSpecs: "python=3.6 pip setuptools pytest jupyter conda-build=3.18.8 conda-package-handling=1.3.11"
   displayName: 'Use conda environment w/ Python 3.6'
-
-- task: UseDotNet@2
-  displayName: 'Use .NET Core sdk'
-  inputs:
-    packageType: sdk
-    version: 2.2.401
 
 ##
 # Pack conda packages
@@ -24,6 +27,14 @@ steps:
 - pwsh: .\pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+##
+# Test conda packages
+##
+- pwsh: .\test-conda.ps1
+  displayName: "Testing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
 ##
 # Publish build artifacts.
