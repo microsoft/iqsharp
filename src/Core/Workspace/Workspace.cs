@@ -222,7 +222,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
 
-                files = Directory.EnumerateFiles(Root, "*.qs", SearchOption.AllDirectories).ToArray();
+                files = Directory.EnumerateFiles(Root, "*.qs", SearchOption.TopDirectoryOnly).ToArray();
 
                 if (files.Length > 0)
                 {
