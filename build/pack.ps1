@@ -96,9 +96,12 @@ function Pack-Exe() {
         -r $Runtime `
         --self-contained true `
         -o $OutputPath `
-        /p:PublishSingleFile=true `
-        /p:PackAsTool=false `
-        /p:CopyOutputSymbolsToPublishDirectory=false
+        -v $Env:BUILD_VERBOSITY `
+        /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:PublishSingleFile=true `
+        /property:PackAsTool=false `
+        /property:CopyOutputSymbolsToPublishDirectory=false
 
 }
 
