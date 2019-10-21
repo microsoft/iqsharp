@@ -6,11 +6,14 @@ package:
 
 source:
   - path:    ../../
-    folder:  iqsharp
+    folder:  src
 
 build:
   binary_relocation: False
   detect_binary_files_with_prefix: False
+  script: |
+    pwsh -NoProfile src/conda-recipes/iqsharp/build.ps1 # [win]
+    pwsh src/conda-recipes/iqsharp/build.ps1 # [not win]
 
 requirements:
   build:
@@ -30,18 +33,17 @@ test:
     - pip
 
   source_files:
-    - iqsharp/conda-recipes/iqsharp/test.ps1
-    - iqsharp/conda-recipes/iqsharp/test.py
+    - src/conda-recipes/iqsharp/test.ps1
+    - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - powershell -NoProfile iqsharp/conda-recipes/iqsharp/test.ps1 # [win]
-    - pwsh iqsharp/conda-recipes/iqsharp/test.ps1 # [not win]
+    - pwsh -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
+    - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
     - pip install jupyter_kernel_test
-    - python iqsharp/conda-recipes/iqsharp/test.py
+    - python src/conda-recipes/iqsharp/test.py
 
 about:
   home: https://docs.microsoft.com/quantum
   license: MIT
   summary: Microsoft's IQ# Server.
   dev_url: https://github.com/microsoft/iqsharp
-
