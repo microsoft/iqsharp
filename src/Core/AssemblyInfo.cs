@@ -8,7 +8,7 @@ using System.Reflection;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
-
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -84,7 +84,10 @@ namespace Microsoft.Quantum.IQSharp
                 ops.Add(info);
             }
 
-            return ops.ToArray();
+            // Makes sure Deprecated operations are pushed to the bottom say they are resolved second:
+            return ops
+                .OrderBy(op => op.Header.Attributes.Any(BuiltIn.MarksDeprecation) ? 1 : 0)
+                .ToArray();
         }
 
         #region Equals
