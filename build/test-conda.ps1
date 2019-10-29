@@ -37,7 +37,7 @@ function Test-CondaPackage {
 
 }
 
-Get-ChildItem $Env:CONDA_OUTDIR -Filter "*.tar.bz2" -Recurse | Test-CondaPackage;
+Get-ChildItem $Env:CONDA_OUTDIR -Filter "*.tar.bz2" -Recurse | %{ Test-CondaPackage $_.FullName }
 
 
 if (-not $script:AllOk) {
