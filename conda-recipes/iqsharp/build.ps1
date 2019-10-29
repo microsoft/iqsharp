@@ -5,7 +5,6 @@ if ($PSVersionTable.PSEdition -eq "Desktop") {
 }
 
 if ($IsWindows) {
-    # NOTE: Building this package is ★only★ supported for Windows 10.
     $RuntimeID = "win10-x$Env:ARCH";
 } elseif ($IsLinux) {
     $RuntimeID = "linux-x$Env:ARCH";
@@ -14,8 +13,9 @@ if ($IsWindows) {
 }
 
 # Find the repo root relative to this script.
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." "..");
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
+$BlobsDirectory = Join-Path $ArtifactRoot (Join-Path "blobs" $RuntimeID)
 
 # Find where in the temporary environment we should install IQ# into.
 if ($IsWindows) {
@@ -27,12 +27,11 @@ if ($IsWindows) {
 # If the target directory doesn't exist, create it before proceeding.
 New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirectory;
 
+Write-Host "## Artifact manifest ($ArtifactRoot): ##"
+Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 
-Write-Host "## Artifact manifest: ##"
-Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
-
-Write-Host "## Copying IQ# into $TargetDirectory... ##"
-Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory -Verbose;
+Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
+Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose;
 
 
 Write-Host "## Installing IQ# into Jupyter. ##"
