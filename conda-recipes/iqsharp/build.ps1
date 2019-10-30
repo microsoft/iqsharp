@@ -1,4 +1,5 @@
-#!/usr/bin/env pwsh
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 if ($PSVersionTable.PSEdition -eq "Desktop") {
     $IsWindows = $true;

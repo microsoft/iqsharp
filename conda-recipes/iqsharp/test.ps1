@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 $failed = $false;
 
 # Check that iqsharp is installed as a Jupyter kernel.

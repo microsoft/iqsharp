@@ -24,6 +24,7 @@ requirements:
   run:
     - python
     - jupyter_client
+    - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
   requires:
