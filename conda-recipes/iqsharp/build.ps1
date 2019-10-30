@@ -17,6 +17,8 @@ if ($IsWindows) {
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
 $BlobsDirectory = Join-Path $ArtifactRoot (Join-Path "blobs" $RuntimeID)
+$NugetsDirectory = Join-Path $ArtifactRoot "nugets"
+$NugetConfig = Resolve-Path (Join-Path $PSScriptRoot "NuGet.config");
 
 # Find where in the temporary environment we should install IQ# into.
 if ($IsWindows) {
@@ -33,6 +35,12 @@ Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 
 Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
 Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose;
+
+Write-Host "## Copying NuGet packages from '$NugetsDirectory' into '$TargetDirectory...' ##"
+Copy-Item (Join-Path $NugetsDirectory "*") $TargetDirectory -Verbose;
+
+Write-Host "## Copying '$NugetConfig' into '$TargetDirectory...' ##"
+Copy-Item $NugetConfig $TargetDirectory -Verbose;
 
 
 Write-Host "## Installing IQ# into Jupyter. ##"
