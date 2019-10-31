@@ -31,11 +31,16 @@ test:
     - iqsharp={{ version }}
     - pytest
 
+  script_env:
+    - NUGET_OUTDIR
+    
   source_files:
+    - src/conda-recipes/qsharp/test.ps1
     - src/conda-recipes/qsharp/tests.py
 
   commands:
-    - pytest --junitxml=junit/test-results.xml  src/conda-recipes/qsharp/tests.py
+    - powershell -NoProfile src/conda-recipes/qsharp/test.ps1 # [win]
+    - pwsh src/conda-recipes/qsharp/test.ps1 # [not win]
 
 about:
   home: https://docs.microsoft.com/quantum

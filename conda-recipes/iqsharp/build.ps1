@@ -31,13 +31,6 @@ Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
 Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
 
-Write-Host "## Copying NuGet packages from '$NugetsDirectory' into '$TargetDirectory...' ##"
-Copy-Item (Join-Path $NugetsDirectory "*") $TargetDirectory -Verbose;
-
-Write-Host "## Copying '$NugetConfig' into '$TargetDirectory...' ##"
-Copy-Item $NugetConfig $TargetDirectory -Verbose;
-
-
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";
 if ($IsWindows) {

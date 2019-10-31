@@ -99,6 +99,7 @@ function Pack-Exe() {
         -v $Env:BUILD_VERBOSITY `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
         /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:PublishSingleFile=true `
         /property:PackAsTool=false `
         /property:CopyOutputSymbolsToPublishDirectory=false
 
