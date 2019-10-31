@@ -5,6 +5,9 @@ $ErrorActionPreference = 'Stop'
 & "$PSScriptRoot/set-env.ps1"
 $script:AllOk = $True
 
+conda activate
+conda install conda-build -y
+
 function Test-CondaPackage {
     [CmdletBinding()]
     param (
@@ -39,6 +42,7 @@ function Test-CondaPackage {
 
 Get-ChildItem $Env:CONDA_OUTDIR -Filter "*.tar.bz2" -Recurse | %{ Test-CondaPackage $_.FullName }
 
+conda deactivate
 
 if (-not $script:AllOk) {
     throw "At least one package failed to build. Check the logs."
