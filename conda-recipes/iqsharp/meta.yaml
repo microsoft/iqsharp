@@ -11,8 +11,10 @@ source:
 build:
   binary_relocation: False
   detect_binary_files_with_prefix: False
+  has_prefix_files:
+    - share/jupyter/kernels/iqsharp/kernel.json
   script: |
-    pwsh -NoProfile src/conda-recipes/iqsharp/build.ps1 # [win]
+    powershell -NoProfile src/conda-recipes/iqsharp/build.ps1 # [win]
     pwsh src/conda-recipes/iqsharp/build.ps1 # [not win]
 
 requirements:
@@ -23,7 +25,8 @@ requirements:
 
   run:
     - python
-    - jupyter
+    - jupyter_client
+    - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
   requires:
@@ -37,10 +40,9 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pwsh -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
-    - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
     - pip install jupyter_kernel_test
-    - python src/conda-recipes/iqsharp/test.py
+    - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
+    - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 
 about:
   home: https://docs.microsoft.com/quantum
