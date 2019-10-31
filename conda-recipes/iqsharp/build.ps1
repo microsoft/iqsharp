@@ -20,12 +20,7 @@ $BlobsDirectory = Join-Path $ArtifactRoot (Join-Path "blobs" $RuntimeID)
 $NugetsDirectory = Join-Path $ArtifactRoot "nugets"
 $NugetConfig = Resolve-Path (Join-Path $PSScriptRoot "NuGet.config");
 
-# Find where in the temporary environment we should install IQ# into.
-if ($IsWindows) {
-    $TargetDirectory = $Env:LIBRARY_BIN;
-} else {
-    $TargetDirectory = (Join-Path $Env:PREFIX "bin");
-}
+$TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
 
 # If the target directory doesn't exist, create it before proceeding.
 New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirectory;
@@ -34,7 +29,7 @@ Write-Host "## Artifact manifest ($ArtifactRoot): ##"
 Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 
 Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
-Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose;
+Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
 
 Write-Host "## Copying NuGet packages from '$NugetsDirectory' into '$TargetDirectory...' ##"
 Copy-Item (Join-Path $NugetsDirectory "*") $TargetDirectory -Verbose;

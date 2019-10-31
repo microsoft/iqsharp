@@ -61,6 +61,11 @@ namespace Microsoft.Quantum.IQSharp
         {
             get
             {
+                // Add the path where the executable is, when packages are distributed as part of the kernel.
+                var startupFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                Logger?.LogDebug($"Using nuget global packages cache from: {startupFolder }");
+                yield return Repository.CreateSource(Repository.Provider.GetCoreV3(), startupFolder);
+
                 // global packages (i.e. ~/.nuget/packages)
                 var globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(NugetSettings);
                 Logger?.LogDebug($"Using nuget global packages cache from: {globalPackagesFolder}");
