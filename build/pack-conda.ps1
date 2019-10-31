@@ -9,9 +9,6 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
     Set-PSDebug -Trace 1;
 }
 
-conda activate
-conda install conda-build -y
-
 $CondaPlatform = (conda info --json) `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
@@ -73,9 +70,6 @@ Write-Host "##[info]Packing conda recipes..."
 Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/iqsharp")
 Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/qsharp")
 
-conda deactivate
-
 if (-not $all_ok) {
     throw "At least one package failed to build. Check the logs."
 }
-
