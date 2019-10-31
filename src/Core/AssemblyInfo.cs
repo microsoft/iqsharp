@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp
                 ops.Add(info);
             }
 
-            // Makes sure Deprecated operations are pushed to the bottom say they are resolved second:
+            // Makes sure Deprecated operations are pushed to the bottom so that they are resolved second:
             return ops
                 .OrderBy(op => op.Header.Attributes.Any(BuiltIn.MarksDeprecation) ? 1 : 0)
                 .ToArray();
