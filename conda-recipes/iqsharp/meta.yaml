@@ -39,9 +39,6 @@ test:
     - src/conda-recipes/iqsharp/test.ps1
     - src/conda-recipes/iqsharp/test.py
 
-  script_env:
-    - NUGET_OUTDIR
-    
   commands:
     - pip install jupyter_kernel_test
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]

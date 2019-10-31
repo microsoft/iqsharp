@@ -31,9 +31,6 @@ test:
     - iqsharp={{ version }}
     - pytest
 
-  script_env:
-    - NUGET_OUTDIR
-    
   source_files:
     - src/conda-recipes/qsharp/test.ps1
     - src/conda-recipes/qsharp/tests.py
