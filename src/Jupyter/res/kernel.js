@@ -18,7 +18,7 @@ define(
                         {
                             token: "comment",
                             // include % to support kata special commands
-                            regex: /(\/\/|%).*/
+                            regex: /(\/\/|%kata).*/
                         },
                         {
                             token: "string",
@@ -27,7 +27,7 @@ define(
                         {
                             // a group of keywords that can typically occur in the beginning of the line but not in the end of a phrase
                             token: "keyword",
-                            regex: /(^|\W)(?:namespace|open|as|operation|function|body|adjoint|controlled)\b/
+                            regex: /(^|\W)(?:namespace|open|as|operation|function|body|adjoint|newtype|controlled)\b/
                         },
                         {
                             token: "keyword",
@@ -43,7 +43,7 @@ define(
                         },
                         {
                             token: "meta",
-                            regex: /\W(?:Int|BigInt|Double|Bool|Qubit|Pauli|Result|Range|String|Unit)\b/
+                            regex: /[^\w(\s]*(?:Int|BigInt|Double|Bool|Qubit|Pauli|Result|Range|String|Unit)\b/
                         },
                         {
                             token: "atom",
