@@ -18,7 +18,7 @@ define(
                         {
                             token: "comment",
                             // include % to support kata special commands
-                            regex: /(\/\/|%kata|%version|%simulate).*/
+                            regex: /(\/\/|%kata|%version|%simulate|%package|%workspace|%check_kata).*/
                         },
                         {
                             token: "string",
