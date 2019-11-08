@@ -25,6 +25,11 @@ def _start_client():
     elif client_name == "mock":
         import qsharp.clients.mock
         client = qsharp.clients.mock.MockClient()
+
+    if (client.is_installed() == False):
+        logger.info("IQ# client not installed. Q# operations will not be available.")
+        return
+
     client.start()
 
     # Check if the server is up and running:
@@ -39,7 +44,7 @@ def _start_client():
             else:
                 print(".", end='', flush=True)
             time.sleep(1)
-        except Exception as ex:
+        except TimeoutError as ex:
             logger.debug('Exception while checking Q# environment.', exc_info=ex)
             print("!", end='', flush=True)
             time.sleep(1)

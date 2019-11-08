@@ -14,6 +14,10 @@
 ## IMPORTS ##
 
 import sys
+import os
+import platform
+import shutil
+import subprocess
 from typing import List, Dict, Union
 from collections import defaultdict
 from distutils.version import LooseVersion
@@ -28,9 +32,16 @@ try:
 except:
     __version__ = "<unknown>"
 
+## LOGGING ##
+
+import logging
+logger = logging.getLogger(__name__)
+
+
 ## EXPORTS ##
 
 __all__ = [
+    'setup',
     'compile', 'reload',
     'get_available_operations', 'get_available_operations_by_namespace',
     'get_workspace_operations',
@@ -60,6 +71,49 @@ def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
     else:
         return ops
 
+def _download_iqsharp(system: str, exe: str, path: str) -> None:
+    # this should be replaced with a safe downloading from the blob store
+    # that also takes the version into consideration.
+    shutil.copy(f"../../drops/blobs/{system}/{exe}", path)
+
+
+def _register_kernel(path: str, exe: str) -> None:
+    cmd = os.path.join(path, exe)
+    args =  [
+        cmd,
+        'install',
+        '--user',
+        '--path-to-tool', cmd
+    ]
+
+    logger.debug(f"Executing {args}.")
+    subprocess.run(args)
+    
+
+def setup() -> int:
+    path = os.path.realpath(__file__)
+    path = os.path.dirname(path)
+    logger.info(f"Installing IQ# in {path}")
+
+    # copy from local folder... this needs to be changed to 
+    system = platform.system()
+    if (system == 'Windows'):
+        (system, exe) = ('win10-x64', 'Microsoft.Quantum.IQSharp.exe')
+    elif (system == 'Darwin'):
+        (system, exe) = ('osx-x64', 'Microsoft.Quantum.IQSharp')
+    elif (platform == 'Linux'):
+        (system, exe) = ('linux-x64', 'Microsoft.Quantum.IQSharp')
+    else: 
+        raise IQSharpError([f"IQ# is not supported on this platform ({platform})."])
+
+    logger.debug(f"Identified source file: {exe}.")
+    _download_iqsharp(system, exe, path)
+    _register_kernel(path, exe)
+
+    logger.info(f"IQ# kernel installed successfully.")
+
+    return 0
+    
 
 def reload() -> None:
     """
@@ -116,6 +170,7 @@ def component_versions() -> Dict[str, LooseVersion]:
 
 ## STARTUP ##
 
+# TODO: Change the client to start on first call and not when the module is loaded.
 client = _start_client()
 packages = Packages(client)
 

@@ -23,6 +23,7 @@ from collections import defaultdict
 from typing import List, Dict, Callable, Any
 from pathlib import Path
 from distutils.version import LooseVersion
+from jupyter_client.kernelspec import NoSuchKernel
 
 from qsharp.serialization import map_tuples, unmap_tuples
 
@@ -64,11 +65,20 @@ class IQSharpClient(object):
     kernel_manager = None
     kernel_client = None
     _busy : bool = False
+    _kernel_name = 'iqsharp'
 
     def __init__(self):
-        self.kernel_manager = jupyter_client.KernelManager(kernel_name='iqsharp')
+        self.kernel_manager = jupyter_client.KernelManager(kernel_name=self._kernel_name)
 
     ## Server Lifecycle ##
+    def is_installed(self):
+        logger.debug("Checking if iq# is installed.")
+        try:
+            spec = jupyter_client.kernelspec.get_kernel_spec(self._kernel_name)
+            return (spec != None)
+        except NoSuchKernel:
+            logger.debug(f"Kernel {self._kernel_name} not found.")
+            return False
 
     def start(self):
         logger.info("Starting IQ# kernel...")
@@ -84,12 +94,8 @@ class IQSharpClient(object):
             pass
 
     def is_ready(self):
-        try:
-            result = self.component_versions(timeout=6)
-            logger.info(f"Q# version\n{result}")
-        except Exception as ex:
-            logger.info('Exception while checking if IQ# is ready.', exc_info=ex)
-            return
+        result = self.component_versions(timeout=6)
+        logger.info(f"Q# version\n{result}")
         return True
 
     def check_status(self):
@@ -163,6 +169,9 @@ class IQSharpClient(object):
 
     def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, **kwargs):
         logger.debug(f"sending:\n{input}")
+
+        if (self.kernel_manager == None):
+            raise IQSharpError(["IQ# is not installed. Run qsharp.setup() first."])
 
         # make sure the server is still running:
         try:

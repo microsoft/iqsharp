@@ -28,6 +28,10 @@ class MockClient(object):
 
     ## Server Lifecycle ##
 
+    def is_installed(self):
+        logger.debug("MockClient.is_installed called.")
+        return True
+
     def start(self):
         logger.debug("MockClient.start called.")
         atexit.register(self.stop)
