@@ -32,13 +32,13 @@ namespace Microsoft.Quantum.IQSharp
     {
         private QSharpLogger Logger;
         private readonly CompilationUnitManager CompilationManager;
-        private ImmutableHashSet<NonNullable<string>> CachedReferences;
+        private CompilationUnitManager.Compilation CachedState;
 
         public CompilerService ()
         {
             this.Logger = new QSharpLogger(null);
             this.CompilationManager = new CompilationUnitManager(ex => this.Logger?.Log(ex));
-            this.CachedReferences = ImmutableHashSet<NonNullable<string>>.Empty;
+            this.CachedState = null;
         }
 
         /// <summary>
@@ -66,18 +66,20 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, bool generateFunctorSupport = false) 
         {
-            if (references != null && this.CachedReferences.SymmetricExcept(references.Declarations.Keys).Any())
+            var currentSources = this.CachedState?.SourceFiles ?? ImmutableHashSet<NonNullable<string>>.Empty;
+            var currentReferences = this.CachedState?.References ?? ImmutableHashSet<NonNullable<string>>.Empty;
+
+            this.CompilationManager.TryRemoveSourceFilesAsync(currentSources.Select(id => new Uri(id.Value)), suppressVerification: true);
+            if (references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any())
             {
                 this.CompilationManager.UpdateReferencesAsync(references);
-                this.CachedReferences = references.Declarations.Keys.ToImmutableHashSet();
             }
-            var currentSources = this.CompilationManager.GetSourceFiles();
-            this.CompilationManager.TryRemoveSourceFilesAsync(currentSources);
+
             var newSources = CompilationUnitManager.InitializeFileManagers(sources);
             this.CompilationManager.AddOrUpdateSourceFilesAsync(newSources);
 
-            var built = this.CompilationManager.Build();
-            var compilation = built.BuiltCompilation; 
+            this.CachedState = this.CompilationManager.Build();
+            var compilation = this.CachedState.BuiltCompilation; 
             if (generateFunctorSupport)
             {
                 CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
@@ -101,7 +103,7 @@ namespace Microsoft.Quantum.IQSharp
             var snippetNs = Snippets.SNIPPETS_NAMESPACE;
             this.Logger = new QSharpLogger(null);
 
-            var sources = new Dictionary<Uri, string>() { { new Uri($"file:///temp"), $"namespace {snippetNs} {{ {source} }}" } }.ToImmutableDictionary();
+            var sources = new Dictionary<Uri, string>() { { Snippets.SNIPPET_FILE_URI, $"namespace {snippetNs} {{ {source} }}" } }.ToImmutableDictionary();
             var loaded = this.UpdateCompilation(sources);
             return loaded.FirstOrDefault(ns => ns.Name.Value == snippetNs)?.Elements;
         }
@@ -129,7 +131,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Builds the Q# syntax tree from the given files/source paris.
+        /// Builds the Q# syntax tree from the given files/source pairs.
         /// </summary>
         private QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger)
         {

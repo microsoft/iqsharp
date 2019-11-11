@@ -156,14 +156,10 @@ namespace Tests.IQSharp
 @"
     /// # Summary
     ///     This script has an operation can't have adjoint since it has a measurement inside.
-    operation InvalidFunctor(q: Qubit) : Unit {
-        body(...) {
-            let m = M(q);
+    operation InvalidFunctor(q: Qubit) : Unit is Adj {
 
-            if (m) { X(q); }
-        }
-
-        adjoint auto;
+        let m = M(q);
+        if (m == Zero) { X(q); }
     }
 ";
 
