@@ -17,6 +17,7 @@ using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
+using Microsoft.Quantum.QsCompiler.Diagnostics;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 
 
@@ -79,16 +80,17 @@ namespace Microsoft.Quantum.IQSharp
             this.CompilationManager.AddOrUpdateSourceFilesAsync(newSources);
 
             this.CachedState = this.CompilationManager.Build();
-            var compilation = this.CachedState.BuiltCompilation; 
-            if (generateFunctorSupport)
-            {
-                CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
-            }
-
             var diagnostics = this.CompilationManager.GetDiagnostics().SelectMany(d => d.Diagnostics);
             foreach (var msg in diagnostics)
             {
                 this.Logger?.Log(msg);
+            }
+
+            var compilation = this.CachedState.BuiltCompilation; 
+            if (generateFunctorSupport)
+            {
+                var succeeded = CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
+                if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
             }
 
             return compilation.Namespaces;
