@@ -67,10 +67,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, bool generateFunctorSupport = false) 
         {
-            var currentSources = this.CachedState?.SourceFiles ?? ImmutableHashSet<NonNullable<string>>.Empty;
             var currentReferences = this.CachedState?.References ?? ImmutableHashSet<NonNullable<string>>.Empty;
-
-            this.CompilationManager.TryRemoveSourceFilesAsync(currentSources.Select(id => new Uri(id.Value)), suppressVerification: true);
             if (references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any())
             {
                 this.CompilationManager.UpdateReferencesAsync(references);
@@ -80,8 +77,8 @@ namespace Microsoft.Quantum.IQSharp
             this.CompilationManager.AddOrUpdateSourceFilesAsync(newSources);
 
             this.CachedState = this.CompilationManager.Build();
-            var diagnostics = this.CompilationManager.GetDiagnostics().SelectMany(d => d.Diagnostics);
-            foreach (var msg in diagnostics)
+            var diagnostics = this.CompilationManager.GetDiagnostics();
+            foreach (var msg in diagnostics.SelectMany(d => d.Diagnostics))
             {
                 this.Logger?.Log(msg);
             }
@@ -93,6 +90,7 @@ namespace Microsoft.Quantum.IQSharp
                 if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
             }
 
+            this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys);
             return compilation.Namespaces;
         }
 
