@@ -23,6 +23,9 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class Snippets : ISnippets
     {
+        // caches the Q# compiler metadata
+        private Lazy<CompilerMetadata> _metadata;
+
         /// <summary>
         /// Namespace that all Snippets gets compiled into.
         /// </summary>
@@ -42,7 +45,27 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyInfo = new AssemblyInfo(null);
             Items = new Snippet[0];
 
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            Workspace.Reloaded += OnWorkspaceReloaded;
+            GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
+
             AssemblyLoadContext.Default.Resolving += Resolve;
+        }
+
+        /// <summary>
+        /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
+        /// </summary>
+        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
+        {
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+        }
+
+        /// <summary>
+        /// Triggered when the Workspace has been reloaded. Needs to reset the CompilerMetadata
+        /// </summary>
+        private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e)
+        {
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
         }
 
         /// <summary>
@@ -96,6 +119,14 @@ namespace Microsoft.Quantum.IQSharp
             );
 
         /// <summary>
+        /// Loads the compiler metadata, either from the GlobalReferences or includes the Workspace if available
+        /// </summary>
+        private CompilerMetadata LoadCompilerMetadata() =>
+            Workspace.HasErrors
+                    ? GlobalReferences?.CompilerMetadata
+                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.AssemblyInfo);
+
+        /// <summary>
         /// Compiles the given code. 
         /// If the operations defined in this code are already defined
         /// in existing Snippets, those Snippets are skipped. 
@@ -117,10 +148,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 var snippets = SelectSnippetsToCompile(code).ToArray();
-                var references = Workspace.HasErrors
-                    ? GlobalReferences.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.AssemblyInfo);
-                var assembly = Compiler.BuildSnippets(snippets, references, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)
                 {
