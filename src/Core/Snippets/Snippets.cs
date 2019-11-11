@@ -126,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
                 Snippet populate(Snippet s) =>
                     new Snippet()
                     {
-                        id = string.IsNullOrWhiteSpace(s.id) ? System.Guid.NewGuid().ToString() : s.id,
+                        id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
                         warnings = logger.Logs.Where(m => m.Source == s.Uri.AbsolutePath).Select(logger.Format).ToArray(),
                         Elements = assembly?.SyntaxTree?
