@@ -42,8 +42,17 @@ namespace Microsoft.Quantum.IQSharp
 
             _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
             Workspace.Reloaded += OnWorkspaceReloaded;
+            GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
+        }
+
+        /// <summary>
+        /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
+        /// </summary>
+        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
+        {
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
         }
 
         /// <summary>
