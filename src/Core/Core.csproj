@@ -34,9 +34,9 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.10.1910.2802-beta" />
-    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.10.1910.2802-beta" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.10.1910.2802-beta" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.10.1911.1101-alpha" />
+    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.10.1911.1201-alpha" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.10.1911.1201-alpha" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
