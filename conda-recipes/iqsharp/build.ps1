@@ -1,11 +1,11 @@
-#!/usr/bin/env pwsh
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 if ($PSVersionTable.PSEdition -eq "Desktop") {
     $IsWindows = $true;
 }
 
 if ($IsWindows) {
-    # NOTE: Building this package is ★only★ supported for Windows 10.
     $RuntimeID = "win10-x$Env:ARCH";
 } elseif ($IsLinux) {
     $RuntimeID = "linux-x$Env:ARCH";
@@ -14,26 +14,22 @@ if ($IsWindows) {
 }
 
 # Find the repo root relative to this script.
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot ".." "..");
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
+$BlobsDirectory = Join-Path $ArtifactRoot (Join-Path "blobs" $RuntimeID)
+$NugetsDirectory = Join-Path $ArtifactRoot "nugets"
+$NugetConfig = Resolve-Path (Join-Path $PSScriptRoot "NuGet.config");
 
-# Find where in the temporary environment we should install IQ# into.
-if ($IsWindows) {
-    $TargetDirectory = $Env:LIBRARY_BIN;
-} else {
-    $TargetDirectory = (Join-Path $Env:PREFIX "bin");
-}
+$TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
 
 # If the target directory doesn't exist, create it before proceeding.
 New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirectory;
 
+Write-Host "## Artifact manifest ($ArtifactRoot): ##"
+Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 
-Write-Host "## Artifact manifest: ##"
-Get-ChildItem -Recurse $ArtifactRoot | Write-Host;
-
-Write-Host "## Copying IQ# into $TargetDirectory... ##"
-Copy-Item (Join-Path $ArtifactRoot "blobs" $RuntimeID "*") $TargetDirectory -Verbose;
-
+Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
+Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
 
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";

@@ -58,10 +58,21 @@ namespace Microsoft.Quantum.IQSharp
         {
             get
             {
-                // global packages (i.e. ~/.nuget/packages)
+                // global packages (i.e. ~/.nuget/packages).
+                // This must always be the first one, as this is where packages get expanded.
                 var globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(NugetSettings);
                 Logger?.LogDebug($"Using nuget global packages cache from: {globalPackagesFolder}");
                 yield return Repository.CreateSource(Repository.Provider.GetCoreV3(), globalPackagesFolder);
+
+                // Look for the IQSHARP_PACKAGE_SOURCE environemnt variable for an additional package source.
+                // This is used by conda tests when it's not possible to configure the local packages via a nuget.config
+                var extraPackagesSource = System.Environment.GetEnvironmentVariable("IQSHARP_PACKAGE_SOURCE");
+                Logger?.LogDebug($"Environment IQSHARP_PACKAGE_SOURCE: {extraPackagesSource}");
+                if (!string.IsNullOrWhiteSpace(extraPackagesSource))
+                {
+                    Logger?.LogDebug($"Using {extraPackagesSource} to look up for nuget packages");
+                    yield return Repository.CreateSource(Repository.Provider.GetCoreV3(), extraPackagesSource);
+                }
 
                 // fallback folders (i.e. /dotnet/sdk/NugetFallbackFolder)
                 foreach (var folder in SettingsUtility.GetFallbackPackageFolders(NugetSettings))
