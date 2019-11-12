@@ -10,12 +10,12 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
-    public class SettingsMagic : AbstractMagic
+    public class ConfigMagic : AbstractMagic
     {
-        public SettingsMagic(IRuntimeSettings settings) : base(
-            "settings", 
+        public ConfigMagic(IRuntimeSettings settings) : base(
+            "config", 
             new Documentation {
-                Summary = "Allows to users to control runtime settings from jupyter."
+                Summary = "Allows to users to control runtime configuration settings from jupyter."
             })
         {
             this.Settings = settings;

@@ -11,11 +11,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests.IQSharp
 {
     [TestClass]
-    public class SettingsTests
+    public class ConfigTests
     {
-        public SettingsMagic Init(string workspace = "Workspace")
+        public ConfigMagic Init(string workspace = "Workspace")
         {
-            return Startup.Create<SettingsMagic>(workspace);
+            return Startup.Create<ConfigMagic>(workspace);
         }
 
 
@@ -105,6 +105,19 @@ Workspace=c:\my\location
             Assert.AreEqual("1;2;3", result["andres"]);
             Assert.AreEqual(" whatever  ", result["trimmed"]);
             Assert.IsNotNull(result["DefaultPackageVersions"]);
+        }
+
+        [TestMethod]
+        public void ConfigMagic()
+        {
+            var engine = Startup.Create<IQSharpEngine>("Workspace");
+            var channel = new MockChannel();
+            var response = engine.Execute("%config", channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            var result = (response.Output as IEnumerable<(string, string)>).ToDictionary(s => s.Item1, s => s.Item2);
+            Assert.AreEqual(2, result.Count());
+            Assert.AreEqual(Path.GetFullPath("Workspace"), result["Workspace"]);
         }
     }
 }
