@@ -90,7 +90,7 @@ namespace Microsoft.Quantum.IQSharp
                 if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
             }
 
-            this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys);
+            this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys, suppressVerification:true);
             return compilation.Namespaces;
         }
 
