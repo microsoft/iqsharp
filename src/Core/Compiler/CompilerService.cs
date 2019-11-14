@@ -37,8 +37,8 @@ namespace Microsoft.Quantum.IQSharp
         {
             string WrapInNamespace(Snippet s) => $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
-            var sources = snippets.ToDictionary(s => s.Uri,  WrapInNamespace);
-            var syntaxTree = BuildQsSyntaxTree(sources.ToImmutableDictionary(), metadatas.QsMetadatas, logger);
+            var sources = snippets.ToDictionary(s => s.Uri, WrapInNamespace);
+            var syntaxTree = BuildQsSyntaxTree(sources.ToImmutableDictionary(), metadatas.QsMetadatas, logger, dllName);
             var assembly = BuildAssembly(sources.Keys.ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
 
             return assembly;
@@ -66,9 +66,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
-            var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger);
+            var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger, dllName);
             Uri FileUri(string f) => CompilationUnitManager.TryGetUri(NonNullable<string>.New(f), out var uri) ? uri : null;
-            var assembly = BuildAssembly(files.Select(FileUri) .ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
+            var assembly = BuildAssembly(files.Select(FileUri).ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
 
             return assembly;
         }
@@ -79,18 +79,25 @@ namespace Microsoft.Quantum.IQSharp
         /// the <see cref="Microsoft.Quantum.QsCompiler.CompilationBuilder.ProjectManager.LoadSourceFiles(IEnumerable{string}, Action{VisualStudio.LanguageServer.Protocol.Diagnostic}, Action{Exception})" />
         /// method.
         /// </summary>
-        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger)
+        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger, string dllName)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildQsSyntaxTree(sources, references, logger);
+            return BuildQsSyntaxTree(sources, references, logger, dllName);
         }
 
         /// <summary>
         /// Builds the Q# syntax tree from the given files/source paris.
         /// </summary>
-        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger)
+        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger, string dllName)
         {
-            var loadOptions = new QsCompiler.CompilationLoader.Configuration { GenerateFunctorSupport = true }; 
+            var outFolder = Path.GetDirectoryName(dllName);
+            var outFile = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName) + ".bson");
+            var loadOptions = new QsCompiler.CompilationLoader.Configuration
+            {
+                GenerateFunctorSupport = true,
+                BuildOutputFolder = ".",
+                ProjectName = outFile
+            };
             var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.GeneratedSyntaxTree?.ToArray();
         }
@@ -130,7 +137,16 @@ namespace Microsoft.Quantum.IQSharp
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
                 {
-                    EmitResult result = compilation.Emit(ms);
+                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(targetDll), Path.GetFileNameWithoutExtension(targetDll) + ".bson");
+                    var resourceDescription = new ResourceDescription
+                    (
+                        resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
+                        dataProvider: () => File.OpenRead(syntaxTreeFile),
+                        isPublic: true
+                    );
+
+
+                    var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
 
                     if (!result.Success)
                     {
