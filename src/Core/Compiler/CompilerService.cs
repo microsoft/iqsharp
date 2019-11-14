@@ -18,9 +18,10 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.Diagnostics;
+using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
-
-
+using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
+using Newtonsoft.Json.Bson;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
@@ -51,7 +52,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             string WrapInNamespace(Snippet s) => $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
-            var sources = snippets.ToDictionary(s => s.Uri,  WrapInNamespace);
+            var sources = snippets.ToDictionary(s => s.Uri, WrapInNamespace);
             var syntaxTree = BuildQsSyntaxTree(sources.ToImmutableDictionary(), metadatas.QsMetadatas, logger);
             var assembly = BuildAssembly(sources.Keys.ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
 
@@ -65,7 +66,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Returns an enumerable of all namespaces, including the content from both source files and references. 
         /// If generateFunctorSupport is set to true, replaces all auto-generation directives in the built syntax tree with the generated implementation.
         /// </summary>
-        private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, bool generateFunctorSupport = false) 
+        private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references) 
         {
             var currentReferences = this.CachedState?.References ?? ImmutableHashSet<NonNullable<string>>.Empty;
             if (references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any())
@@ -84,11 +85,8 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             var compilation = this.CachedState.BuiltCompilation; 
-            if (generateFunctorSupport)
-            {
-                var succeeded = CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
-                if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
-            }
+            var succeeded = CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
+            if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
 
             this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys, suppressVerification:true);
             return compilation.Namespaces;
@@ -137,7 +135,7 @@ namespace Microsoft.Quantum.IQSharp
         private QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger)
         {
             this.Logger = logger;
-            return this.UpdateCompilation(sources, references, true).ToArray();
+            return this.UpdateCompilation(sources, references).ToArray();
         }
 
         /// <summary>
@@ -174,12 +172,16 @@ namespace Microsoft.Quantum.IQSharp
 
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
+                using (var bsonStream = new MemoryStream())
                 {
-                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(targetDll), Path.GetFileNameWithoutExtension(targetDll) + ".bson");
+                    using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
+                    var fromSources = syntaxTree.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
+                    Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), ImmutableArray<QsQualifiedName>.Empty));
+
                     var resourceDescription = new ResourceDescription
                     (
                         resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
-                        dataProvider: () => File.OpenRead(syntaxTreeFile),
+                        dataProvider: () => bsonStream,
                         isPublic: true
                     );
 
