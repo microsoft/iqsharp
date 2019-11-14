@@ -11,13 +11,11 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
-
-
+using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
@@ -48,17 +46,14 @@ namespace Microsoft.Quantum.IQSharp
         /// Compiles the given Q# code and returns the list of elements found in it.
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
         /// </summary>
-        public IEnumerable<QsCompiler.SyntaxTree.QsNamespaceElement> IdentifyElements(string source)
+        public IEnumerable<QsQualifiedName> IdentifyElements(string source)
         {
-            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            var logger = new QSharpLogger(null);
-
-            var sources = new Dictionary<Uri, string>() { { new Uri($"file:///temp"), $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
-            var references = QsReferences.Empty;
-
-            var loadOptions = new QsCompiler.CompilationLoader.Configuration(); // do not generate functor support
-            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
-            return loaded.VerifiedCompilation?.SyntaxTree[ns].Elements;
+            var nsName = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
+            var content = $"namespace {nsName.Value} {{ {source} }}";
+            var fileManager = CompilationUnitManager.InitializeFileManager(Snippets.SNIPPET_FILE_URI, content);
+            var definedCallables = fileManager.GetCallableDeclarations();
+            var definedTypes = fileManager.GetTypeDeclarations();
+            return definedCallables.Concat(definedTypes).Select(decl => new QsQualifiedName(nsName, decl.Item1));
         }
 
         /// <summary>
@@ -76,10 +71,10 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the Q# syntax tree from the given files.
         /// The files are given as a list of filenames, as per the format expected by
-        /// the <see cref="Microsoft.Quantum.QsCompiler.CompilationBuilder.ProjectManager.LoadSourceFiles(IEnumerable{string}, Action{VisualStudio.LanguageServer.Protocol.Diagnostic}, Action{Exception})" />
+        /// the <see cref="ProjectManager.LoadSourceFiles(IEnumerable{string}, Action{VisualStudio.LanguageServer.Protocol.Diagnostic}, Action{Exception})" />
         /// method.
         /// </summary>
-        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger, string dllName)
+        private static QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger, string dllName)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
             return BuildQsSyntaxTree(sources, references, logger, dllName);
@@ -88,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the Q# syntax tree from the given files/source paris.
         /// </summary>
-        private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger, string dllName)
+        private static QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger, string dllName)
         {
             var outFolder = Path.GetDirectoryName(dllName);
             var outFile = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName) + ".bson");

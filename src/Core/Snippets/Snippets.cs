@@ -31,6 +31,11 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public static readonly string SNIPPETS_NAMESPACE = "SNIPPET";
 
+        /// <summary> 
+        /// Uri used for code snippets.  
+        /// </summary> 
+        public static readonly Uri SNIPPET_FILE_URI = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
+
         public Snippets(ICompilerService compiler, IWorkspace workspace, IReferences references, ILogger<Snippets> logger)
         {
             Compiler = compiler;
@@ -154,7 +159,7 @@ namespace Microsoft.Quantum.IQSharp
                 Snippet populate(Snippet s) =>
                     new Snippet()
                     {
-                        id = string.IsNullOrWhiteSpace(s.id) ? System.Guid.NewGuid().ToString() : s.id,
+                        id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
                         warnings = logger.Logs.Where(m => m.Source == s.Uri.AbsolutePath).Select(logger.Format).ToArray(),
                         Elements = assembly?.SyntaxTree?
