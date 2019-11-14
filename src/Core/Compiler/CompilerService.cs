@@ -27,20 +27,6 @@ namespace Microsoft.Quantum.IQSharp
     public class CompilerService : ICompilerService
     {
         /// <summary>
-        /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
-        /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
-        /// with the same name as the snippet id.
-        /// </summary>
-        public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
-        {
-            string WrapInNamespace(Snippet s) => $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
-
-            var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
-            var syntaxTree = BuildQsSyntaxTree(sources, metadatas.QsMetadatas, logger, dllName);
-            return BuildAssembly(syntaxTree, sources, metadatas, logger, dllName);
-        }
-
-        /// <summary>
         /// Compiles the given Q# code and returns the list of elements found in it.
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
         /// </summary>
@@ -55,20 +41,35 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
+        /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
+        /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
+        /// with the same name as the snippet id.
+        /// </summary>
+        public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
+        {
+            string WrapInNamespace(Snippet s) =>
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
+
+            var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
+            return BuildAssembly(sources, metadatas, logger, dllName);
+        }
+
+        /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            var syntaxTree = BuildQsSyntaxTree(sources, metadatas.QsMetadatas, logger, dllName); 
-            return BuildAssembly(syntaxTree, sources, metadatas, logger, dllName);
+            return BuildAssembly(sources, metadatas, logger, dllName);
         }
 
         /// <summary>
-        /// Builds the Q# syntax tree from the given files/source paris.
+        /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private static QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger, string dllName)
+        private static AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
         {
+            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
+
             var outFolder = Path.GetDirectoryName(dllName);
             var outFile = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName) + ".bson");
             var loadOptions = new QsCompiler.CompilationLoader.Configuration
@@ -77,19 +78,10 @@ namespace Microsoft.Quantum.IQSharp
                 BuildOutputFolder = ".",
                 ProjectName = outFile
             };
-            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
-            return loaded.GeneratedSyntaxTree?.ToArray();
-        }
+            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => metadata.QsMetadatas, loadOptions, logger);
+            var syntaxTree = loaded.GeneratedSyntaxTree?.ToArray();
 
-        /// <summary>
-        /// Builds the corresponding .net core assembly from the Q# syntax tree.
-        /// </summary>
-        private static AssemblyInfo BuildAssembly(QsNamespace[] syntaxTree,
-            ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
-        {
             if (logger.HasErrors) return null;
-
-            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             try
             {
