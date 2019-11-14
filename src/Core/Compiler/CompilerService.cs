@@ -175,7 +175,16 @@ namespace Microsoft.Quantum.IQSharp
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
                 {
-                    EmitResult result = compilation.Emit(ms);
+                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(targetDll), Path.GetFileNameWithoutExtension(targetDll) + ".bson");
+                    var resourceDescription = new ResourceDescription
+                    (
+                        resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
+                        dataProvider: () => File.OpenRead(syntaxTreeFile),
+                        isPublic: true
+                    );
+
+
+                    EmitResult result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
 
                     if (!result.Success)
                     {
