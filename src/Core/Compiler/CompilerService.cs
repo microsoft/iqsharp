@@ -112,7 +112,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
-            var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger);
+            var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger, dllName);
             Uri FileUri(string f) => CompilationUnitManager.TryGetUri(NonNullable<string>.New(f), out var uri) ? uri : null;
             return BuildAssembly(files.Select(FileUri).ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
         }
@@ -126,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
         private QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildQsSyntaxTree(sources, references, logger);
+            return BuildQsSyntaxTree(sources, references, logger, dllName);
         }
 
         /// <summary>
