@@ -95,17 +95,18 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Compiles the given Q# code and returns the list of elements found in it.
-        /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
+        /// Returns the names of all declared callables and types.
+        /// The compiler does this on a best effort, and in particular without relying on any context and/or type information,
+        /// so it will return the elements even if the compilation fails.
         /// </summary>
-        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        public IEnumerable<QsQualifiedName> IdentifyElements(string source)
         {
-            var snippetNs = Snippets.SNIPPETS_NAMESPACE;
-            this.Logger = new QSharpLogger(null);
-
-            var sources = new Dictionary<Uri, string>() { { Snippets.SNIPPET_FILE_URI, $"namespace {snippetNs} {{ {source} }}" } }.ToImmutableDictionary();
-            var loaded = this.UpdateCompilation(sources);
-            return loaded.FirstOrDefault(ns => ns.Name.Value == snippetNs)?.Elements;
+            var nsName = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
+            var content = $"namespace {nsName.Value} {{ {source} }}";
+            var fileManager = CompilationUnitManager.InitializeFileManager(Snippets.SNIPPET_FILE_URI, content);
+            var definedCallables = fileManager.GetCallableDeclarations();
+            var definedTypes = fileManager.GetTypeDeclarations();
+            return definedCallables.Concat(definedTypes).Select(decl => new QsQualifiedName(nsName, decl.Item1));
         }
 
         /// <summary>
