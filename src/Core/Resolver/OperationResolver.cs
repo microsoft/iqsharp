@@ -74,8 +74,8 @@ namespace Microsoft.Quantum.IQSharp
         public OperationInfo Resolve(string name)
         {
             var isQualified = name.Contains('.');
-            
-            foreach (var operation in RelevantAssemblies().SelectMany(asm => asm.Operations))
+            var relevant = RelevantAssemblies();
+            foreach (var operation in relevant.SelectMany(asm => asm.Operations))
             {
                 if (name == (isQualified ? operation.FullName : operation.Header.QualifiedName.Name.Value))
                 {
