@@ -146,7 +146,7 @@ namespace Microsoft.Quantum.IQSharp
                     );
 
 
-                    EmitResult result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
+                    var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
 
                     if (!result.Success)
                     {
