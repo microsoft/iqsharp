@@ -35,11 +35,9 @@ namespace Microsoft.Quantum.IQSharp
         {
             string WrapInNamespace(Snippet s) => $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
-            var sources = snippets.ToDictionary(s => s.Uri, WrapInNamespace);
-            var syntaxTree = BuildQsSyntaxTree(sources.ToImmutableDictionary(), metadatas.QsMetadatas, logger, dllName);
-            var assembly = BuildAssembly(sources.Keys.ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
-
-            return assembly;
+            var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
+            var syntaxTree = BuildQsSyntaxTree(sources, metadatas.QsMetadatas, logger, dllName);
+            return BuildAssembly(syntaxTree, sources, metadatas, logger, dllName);
         }
 
         /// <summary>
@@ -61,23 +59,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
-            var syntaxTree = BuildQsSyntaxTree(files, metadatas.QsMetadatas, logger, dllName);
-            Uri FileUri(string f) => CompilationUnitManager.TryGetUri(NonNullable<string>.New(f), out var uri) ? uri : null;
-            var assembly = BuildAssembly(files.Select(FileUri).ToArray(), syntaxTree, metadatas.RoslynMetadatas, logger, dllName);
-
-            return assembly;
-        }
-
-        /// <summary>
-        /// Builds the Q# syntax tree from the given files.
-        /// The files are given as a list of filenames, as per the format expected by
-        /// the <see cref="ProjectManager.LoadSourceFiles(IEnumerable{string}, Action{VisualStudio.LanguageServer.Protocol.Diagnostic}, Action{Exception})" />
-        /// method.
-        /// </summary>
-        private static QsNamespace[] BuildQsSyntaxTree(string[] files, QsReferences references, QSharpLogger logger, string dllName)
-        {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildQsSyntaxTree(sources, references, logger, dllName);
+            var syntaxTree = BuildQsSyntaxTree(sources, metadatas.QsMetadatas, logger, dllName); 
+            return BuildAssembly(syntaxTree, sources, metadatas, logger, dllName);
         }
 
         /// <summary>
@@ -100,18 +84,19 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private static AssemblyInfo BuildAssembly(Uri[] fileNames, QsCompiler.SyntaxTree.QsNamespace[] syntaxTree, IEnumerable<MetadataReference> references, QSharpLogger logger, string targetDll)
+        private static AssemblyInfo BuildAssembly(QsNamespace[] syntaxTree,
+            ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
         {
             if (logger.HasErrors) return null;
 
-            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", fileNames.Select(f => f.LocalPath))}");
+            logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             try
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
                 var trees = new List<SyntaxTree>();
                 NonNullable<string> GetFileId(Uri uri) => CompilationUnitManager.TryGetFileId(uri, out var id) ? id : NonNullable<string>.New(uri.AbsolutePath);
-                foreach (var file in fileNames)
+                foreach (var file in sources.Keys)
                 {
                     var sourceFile = GetFileId(file);
                     var code = SimulationCode.generate(sourceFile, syntaxTree);
@@ -124,15 +109,15 @@ namespace Microsoft.Quantum.IQSharp
                 var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
 
                 var compilation = CSharpCompilation.Create(
-                    Path.GetFileNameWithoutExtension(targetDll),
+                    Path.GetFileNameWithoutExtension(dllName),
                     trees,
-                    references,
+                    metadata.RoslynMetadatas,
                     options);
 
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
                 {
-                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(targetDll), Path.GetFileNameWithoutExtension(targetDll) + ".bson");
+                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(dllName), Path.GetFileNameWithoutExtension(dllName) + ".bson");
                     var resourceDescription = new ResourceDescription
                     (
                         resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
@@ -160,19 +145,19 @@ namespace Microsoft.Quantum.IQSharp
                     }
                     else
                     {
-                        logger.LogDebug($"Assembly successfully generated. Caching at {targetDll}.");
+                        logger.LogDebug($"Assembly successfully generated. Caching at {dllName}.");
                         var data = ms.ToArray();
 
                         try
                         {
-                            File.WriteAllBytes(targetDll, data);
+                            File.WriteAllBytes(dllName, data);
                         }
                         catch (Exception e)
                         {
                             logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
                         }
 
-                        return new AssemblyInfo(Assembly.Load(data), targetDll, syntaxTree);
+                        return new AssemblyInfo(Assembly.Load(data), dllName, syntaxTree);
                     }
                 }
             }
