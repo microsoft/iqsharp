@@ -57,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         ///      Formats a qualified name using dotted-name syntax.
         /// <summary>
-        internal static string ToFullName(this QsQualifiedName name) =>
+        public static string ToFullName(this QsQualifiedName name) =>
             name?.Namespace.Value + "." + name?.Name.Value;
 
         /// <summary>
