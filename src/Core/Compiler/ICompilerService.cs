@@ -27,6 +27,6 @@ namespace Microsoft.Quantum.IQSharp
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails. 
         /// The compiler does this on a best effort, and in particular without relying on any context and/or type information, 
         /// so it will return the elements even if the compilation fails.
-        IEnumerable<QsQualifiedName> IdentifyElements(string source);
+        IEnumerable<QsNamespaceElement> IdentifyElements(string source);
     }
 }

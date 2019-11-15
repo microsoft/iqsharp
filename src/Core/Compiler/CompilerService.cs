@@ -46,14 +46,23 @@ namespace Microsoft.Quantum.IQSharp
         /// Compiles the given Q# code and returns the list of elements found in it.
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
         /// </summary>
-        public IEnumerable<QsQualifiedName> IdentifyElements(string source)
+        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
         {
-            var nsName = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            var content = $"namespace {nsName.Value} {{ {source} }}";
-            var fileManager = CompilationUnitManager.InitializeFileManager(Snippets.SNIPPET_FILE_URI, content);
-            var definedCallables = fileManager.GetCallableDeclarations();
-            var definedTypes = fileManager.GetTypeDeclarations();
-            return definedCallables.Concat(definedTypes).Select(decl => new QsQualifiedName(nsName, decl.Item1));
+            // TODO: we should adapt the ICompilerService interface 
+            // to have IdentifyElements only return an IEnumerable<QsQuanlifiedName>, and then we can use the code below:
+            //
+            //var nsName = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
+            //var content = $"namespace {nsName.Value} {{ {source} }}";
+            //var fileManager = CompilationUnitManager.InitializeFileManager(Snippets.SNIPPET_FILE_URI, content);
+            //var definedCallables = fileManager.GetCallableDeclarations();
+            //var definedTypes = fileManager.GetTypeDeclarations();
+            //return definedCallables.Concat(definedTypes).Select(decl => new QsQualifiedName(nsName, decl.Item1));
+
+            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
+            var sources = new Dictionary<Uri, string>() { { new Uri($"file:///temp"), $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
+            var loadOptions = new CompilationLoader.Configuration();
+            var loaded = new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
+            return loaded.VerifiedCompilation?.SyntaxTree[ns].Elements;
         }
 
         /// <summary> 
@@ -62,9 +71,10 @@ namespace Microsoft.Quantum.IQSharp
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails. 
         /// If the given references are not null, reloads the references loaded in by the CompilationManager  
         /// if the keys of the given references differ from the currently loaded ones. 
-        /// Returns an enumerable of all namespaces, including the content from both source files and references.  
+        /// Unless generateFunctorSupport is set to false, replaces all auto-generation directives in the built syntax tree with the generated implementation.
+        /// Returns the built compilation, including the content from both source files and references.  
         /// </summary> 
-        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null)
+        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, bool generateFunctorSupport = true)
         {
             static Uri GetUri(FileContentManager m) => CompilationUnitManager.TryGetUri(m.FileName, out var uri) ? uri : null;
             var currentSources = this.LoadedFileManagers ?? ImmutableHashSet<Uri>.Empty;
@@ -85,12 +95,14 @@ namespace Microsoft.Quantum.IQSharp
             // generate functor support and log diagnostics
             var diagnostics = compilation.Diagnostics();
             this.Logger?.Log(diagnostics.ToArray());
-            if (!CodeGeneration.GenerateFunctorSpecializations(compilation.BuiltCompilation, out var built))
+            if (generateFunctorSupport && CodeGeneration.GenerateFunctorSpecializations(compilation.BuiltCompilation, out var built))
             {
-                this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
+                return built;
             }
-
-            return built;
+            else { 
+                if (generateFunctorSupport) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
+                return compilation.BuiltCompilation;
+            }
         }
 
         /// <summary>
