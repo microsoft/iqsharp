@@ -12,14 +12,16 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
+using Microsoft.Quantum.QsCompiler.Diagnostics;
 using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Newtonsoft.Json.Bson;
-
+using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -29,6 +31,17 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class CompilerService : ICompilerService
     {
+        private QSharpLogger Logger;
+        private readonly CompilationUnitManager CompilationManager;
+        private CompilationUnitManager.Compilation CachedState;
+
+        public CompilerService()
+        {
+            this.Logger = new QSharpLogger(null);
+            this.CompilationManager = new CompilationUnitManager(ex => this.Logger?.Log(ex));
+            this.CachedState = null;
+        }
+
         /// <summary>
         /// Compiles the given Q# code and returns the list of elements found in it.
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
@@ -41,6 +54,42 @@ namespace Microsoft.Quantum.IQSharp
             var definedCallables = fileManager.GetCallableDeclarations();
             var definedTypes = fileManager.GetTypeDeclarations();
             return definedCallables.Concat(definedTypes).Select(decl => new QsQualifiedName(nsName, decl.Item1));
+        }
+
+        /// <summary> 
+        /// Compiles the given Q# code and returns the list of elements found in it. 
+        /// Removes all currently tracked source files in the CompilationManager and replaces them with the given ones.  
+        /// The compiler does this on a best effort, so it will return the elements even if the compilation fails. 
+        /// If the given references are not null, reloads the references loaded in by the CompilationManager  
+        /// if the keys of the given references differ from the currently loaded ones. 
+        /// Returns an enumerable of all namespaces, including the content from both source files and references.  
+        /// If generateFunctorSupport is set to true, replaces all auto-generation directives in the built syntax tree with the generated implementation. 
+        /// </summary> 
+        private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references)
+        {
+            var currentReferences = this.CachedState?.References ?? ImmutableHashSet<NonNullable<string>>.Empty;
+            var logger = new QSharpLogger(null);
+            if (references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any())
+            {
+                this.CompilationManager.UpdateReferencesAsync(references);
+            }
+
+            var newSources = CompilationUnitManager.InitializeFileManagers(sources);
+            this.CompilationManager.AddOrUpdateSourceFilesAsync(newSources);
+            this.CachedState = this.CompilationManager.Build();
+
+            var diagnostics = this.CompilationManager.GetDiagnostics();
+            foreach (var msg in diagnostics.SelectMany(d => d.Diagnostics))
+            {
+                this.Logger?.Log(msg);
+            }
+
+            var compilation = this.CachedState.BuiltCompilation;
+            var succeeded = CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
+            if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
+
+            this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys, suppressVerification: true);
+            return compilation.Namespaces;
         }
 
         /// <summary>
@@ -69,19 +118,12 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private static AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
+        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
         {
+            this.Logger = logger;
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
-            var outFolder = Path.GetDirectoryName(dllName);
-            var outFile = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName) + ".bson");
-            var loadOptions = new QsCompiler.CompilationLoader.Configuration
-            {
-                GenerateFunctorSupport = true,
-            };
-            var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => metadata.QsMetadatas, loadOptions, logger);
-            var syntaxTree = loaded.GeneratedSyntaxTree?.ToArray();
-
+            var syntaxTree = this.UpdateCompilation(sources, metadata.QsMetadatas)?.ToArray();
             if (logger.HasErrors) return null;
 
             try
