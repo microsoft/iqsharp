@@ -33,13 +33,13 @@ namespace Microsoft.Quantum.IQSharp
     {
         private QSharpLogger Logger;
         private readonly CompilationUnitManager CompilationManager;
-        private CompilationUnitManager.Compilation CachedState;
+        private ImmutableHashSet<Uri> LoadedFileManagers;
+        private ImmutableHashSet<NonNullable<string>> LoadedReferences;
 
         public CompilerService()
         {
             this.Logger = new QSharpLogger(null);
             this.CompilationManager = new CompilationUnitManager(ex => this.Logger?.Log(ex));
-            this.CachedState = null;
         }
 
         /// <summary>
@@ -65,31 +65,33 @@ namespace Microsoft.Quantum.IQSharp
         /// Returns an enumerable of all namespaces, including the content from both source files and references.  
         /// If generateFunctorSupport is set to true, replaces all auto-generation directives in the built syntax tree with the generated implementation. 
         /// </summary> 
-        private IEnumerable<QsNamespace> UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references)
+        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null)
         {
-            var currentReferences = this.CachedState?.References ?? ImmutableHashSet<NonNullable<string>>.Empty;
-            var logger = new QSharpLogger(null);
-            if (references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any())
+            static Uri GetUri(FileContentManager m) => CompilationUnitManager.TryGetUri(m.FileName, out var uri) ? uri : null;
+            var currentSources = this.LoadedFileManagers ?? ImmutableHashSet<Uri>.Empty;
+            var currentReferences = this.LoadedReferences ?? ImmutableHashSet<NonNullable<string>>.Empty;
+            var updatedRefs = references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any();
+
+            // update source files 
+            var files = CompilationUnitManager.InitializeFileManagers(sources, onException: ex => this.Logger?.Log(ex));
+            this.CompilationManager.TryRemoveSourceFilesAsync(currentSources.Except(sources.Keys), suppressVerification: true);
+            this.CompilationManager.AddOrUpdateSourceFilesAsync(files, suppressVerification: updatedRefs);
+            this.LoadedFileManagers = files.Select(GetUri).ToImmutableHashSet();
+
+            // update references
+            if (updatedRefs) this.CompilationManager.UpdateReferencesAsync(references);
+            var compilation = this.CompilationManager.Build();
+            this.LoadedReferences = compilation.References;
+
+            // generate functor support and log diagnostics
+            var diagnostics = compilation.Diagnostics();
+            this.Logger?.Log(diagnostics.ToArray());
+            if (!CodeGeneration.GenerateFunctorSpecializations(compilation.BuiltCompilation, out var built))
             {
-                this.CompilationManager.UpdateReferencesAsync(references);
+                this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
             }
 
-            var newSources = CompilationUnitManager.InitializeFileManagers(sources);
-            this.CompilationManager.AddOrUpdateSourceFilesAsync(newSources);
-            this.CachedState = this.CompilationManager.Build();
-
-            var diagnostics = this.CompilationManager.GetDiagnostics();
-            foreach (var msg in diagnostics.SelectMany(d => d.Diagnostics))
-            {
-                this.Logger?.Log(msg);
-            }
-
-            var compilation = this.CachedState.BuiltCompilation;
-            var succeeded = CodeGeneration.GenerateFunctorSpecializations(compilation, out compilation);
-            if (!succeeded) this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
-
-            this.CompilationManager.TryRemoveSourceFilesAsync(sources.Keys, suppressVerification: true);
-            return compilation.Namespaces;
+            return built;
         }
 
         /// <summary>
@@ -123,7 +125,7 @@ namespace Microsoft.Quantum.IQSharp
             this.Logger = logger;
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
-            var syntaxTree = this.UpdateCompilation(sources, metadata.QsMetadatas)?.ToArray();
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas);
             if (logger.HasErrors) return null;
 
             try
@@ -134,7 +136,7 @@ namespace Microsoft.Quantum.IQSharp
                 foreach (var file in sources.Keys)
                 {
                     var sourceFile = GetFileId(file);
-                    var code = SimulationCode.generate(sourceFile, syntaxTree);
+                    var code = SimulationCode.generate(sourceFile, qsCompilation.Namespaces);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
                     logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");
@@ -154,8 +156,8 @@ namespace Microsoft.Quantum.IQSharp
                 using (var bsonStream = new MemoryStream())
                 {
                     using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
-                    var fromSources = syntaxTree.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
-                    Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), ImmutableArray<QsQualifiedName>.Empty));
+                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
+                    Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints));
 
                     var resourceDescription = new ResourceDescription
                     (
@@ -196,7 +198,7 @@ namespace Microsoft.Quantum.IQSharp
                             logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
                         }
 
-                        return new AssemblyInfo(Assembly.Load(data), dllName, syntaxTree);
+                        return new AssemblyInfo(Assembly.Load(data), dllName, qsCompilation.Namespaces.ToArray());
                     }
                 }
             }
