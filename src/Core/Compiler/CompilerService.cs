@@ -63,7 +63,6 @@ namespace Microsoft.Quantum.IQSharp
         /// If the given references are not null, reloads the references loaded in by the CompilationManager  
         /// if the keys of the given references differ from the currently loaded ones. 
         /// Returns an enumerable of all namespaces, including the content from both source files and references.  
-        /// If generateFunctorSupport is set to true, replaces all auto-generation directives in the built syntax tree with the generated implementation. 
         /// </summary> 
         private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null)
         {
