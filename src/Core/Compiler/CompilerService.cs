@@ -15,8 +15,11 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
+using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
-using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
+using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
+using Newtonsoft.Json.Bson;
+
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -75,8 +78,6 @@ namespace Microsoft.Quantum.IQSharp
             var loadOptions = new QsCompiler.CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
-                BuildOutputFolder = ".",
-                ProjectName = outFile
             };
             var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => metadata.QsMetadatas, loadOptions, logger);
             var syntaxTree = loaded.GeneratedSyntaxTree?.ToArray();
@@ -108,12 +109,16 @@ namespace Microsoft.Quantum.IQSharp
 
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
+                using (var bsonStream = new MemoryStream())
                 {
-                    var syntaxTreeFile = Path.Combine(Path.GetDirectoryName(dllName), Path.GetFileNameWithoutExtension(dllName) + ".bson");
+                    using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
+                    var fromSources = syntaxTree.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
+                    Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), ImmutableArray<QsQualifiedName>.Empty));
+
                     var resourceDescription = new ResourceDescription
                     (
                         resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
-                        dataProvider: () => File.OpenRead(syntaxTreeFile),
+                        dataProvider: () => new MemoryStream(bsonStream.ToArray()), 
                         isPublic: true
                     );
 
