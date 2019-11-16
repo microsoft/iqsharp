@@ -31,11 +31,6 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public static readonly string SNIPPETS_NAMESPACE = "SNIPPET";
 
-        /// <summary> 
-        /// Uri used for code snippets.  
-        /// </summary> 
-        public static readonly Uri SNIPPET_FILE_URI = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
-
         public Snippets(ICompilerService compiler, IWorkspace workspace, IReferences references, ILogger<Snippets> logger)
         {
             Compiler = compiler;
