@@ -90,12 +90,12 @@ namespace Microsoft.Quantum.IQSharp
         private static QsCompiler.SyntaxTree.QsNamespace[] BuildQsSyntaxTree(ImmutableDictionary<Uri, string> sources, QsReferences references, QSharpLogger logger, string dllName)
         {
             var outFolder = Path.GetDirectoryName(dllName);
-            var outFile = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName) + ".bson");
+            var project = Path.Combine(outFolder, Path.GetFileNameWithoutExtension(dllName));
             var loadOptions = new QsCompiler.CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
                 BuildOutputFolder = ".",
-                ProjectName = outFile
+                ProjectName = project
             };
             var loaded = new QsCompiler.CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.GeneratedSyntaxTree?.ToArray();
