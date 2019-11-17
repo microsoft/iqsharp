@@ -42,7 +42,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <summary>
         ///     The compiler needs an actual URI for each piece of Q# code
-        //      that it is going to compile.
+        ///      that it is going to compile.
         /// </summary>
         [JsonIgnore]
         public Uri Uri => new Uri(Path.GetFullPath(Path.Combine("/", $"snippet_{id}.qs")));
