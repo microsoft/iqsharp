@@ -23,6 +23,7 @@ using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Newtonsoft.Json.Bson;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
+
 namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
@@ -35,7 +36,7 @@ namespace Microsoft.Quantum.IQSharp
         private readonly CompilationUnitManager CompilationManager;
         private ImmutableHashSet<Uri> LoadedFileManagers;
         private ImmutableHashSet<NonNullable<string>> LoadedReferences;
-
+        
         public CompilerService()
         {
             this.Logger = new QSharpLogger(null);
@@ -48,9 +49,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public IEnumerable<QsQualifiedName> IdentifyElements(string source)
         {
+            var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
             var nsName = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
             var content = $"namespace {nsName.Value} {{ {source} }}";
-            var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
             var fileManager = CompilationUnitManager.InitializeFileManager(uri, content);
             var definedCallables = fileManager.GetCallableDeclarations();
             var definedTypes = fileManager.GetTypeDeclarations();
@@ -65,23 +66,24 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones. 
         /// Returns an enumerable of all namespaces, including the content from both source files and references.  
         /// </summary> 
-        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null)
+        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, QSharpLogger logger = null)
         {
+            this.Logger = logger;
             var currentSources = this.LoadedFileManagers ?? ImmutableHashSet<Uri>.Empty;
             var currentReferences = this.LoadedReferences ?? ImmutableHashSet<NonNullable<string>>.Empty;
             var updatedRefs = references != null && currentReferences.SymmetricExcept(references.Declarations.Keys).Any();
-
+            
             // update source files 
             var files = CompilationUnitManager.InitializeFileManagers(sources, onException: ex => this.Logger?.Log(ex));
             this.CompilationManager.TryRemoveSourceFilesAsync(currentSources.Except(sources.Keys), suppressVerification: true);
             this.CompilationManager.AddOrUpdateSourceFilesAsync(files, suppressVerification: updatedRefs);
             this.LoadedFileManagers = sources.Keys.ToImmutableHashSet();
-
+            
             // update references
             if (updatedRefs) this.CompilationManager.UpdateReferencesAsync(references);
             var compilation = this.CompilationManager.Build();
             this.LoadedReferences = compilation.References;
-
+            
             // generate functor support and log diagnostics
             var diagnostics = compilation.Diagnostics();
             this.Logger?.Log(diagnostics.ToArray());
@@ -89,7 +91,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 this.Logger?.Log(Errors.LoadError(ErrorCode.FunctorGenerationFailed, new string[0], null));
             }
-
+            
             return built;
         }
 
@@ -121,10 +123,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
         {
-            this.Logger = logger;
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger);
             if (logger.HasErrors) return null;
 
             try

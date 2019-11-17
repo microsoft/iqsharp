@@ -70,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp
 
             // Parse the assembly headers to find which types are operation or function types.
             var logger = new QSharpLogger(null); 
-            var refs = ProjectManager.LoadReferencedAssemblies(new[] { Location }, d => logger.Log(d), ex => logger.Log(ex));
+            var refs = ProjectManager.LoadReferencedAssemblies(new[] { Location }, d => logger.Log(d), ex => logger.Log(ex), ignoreDllResources:CompilerMetadata.LoadFromCsharp);
 
             var callables = refs.SelectMany(pair => pair.Value.Callables);
 
