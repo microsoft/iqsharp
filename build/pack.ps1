@@ -111,14 +111,18 @@ Pack-Nuget '../src/Core/Core.csproj'
 Write-Host "##[info]Packing IQ# tool..."
 Pack-Nuget '../src/Tool/Tool.csproj'
 
-if ($Env:ENABLE_PYTHON -eq "false") {
-    Write-Host "##vso[task.logissue type=warning;]Skipping Creating Python packages. Env:ENABLE_PYTHON was set to 'false'."
-} else {
+if ($Env:ENABLE_CONDA -eq "true") {
     Write-Host "##[info]Packing IQ# as self-contained executables."
     Pack-Exe "../src/Tool/Tool.csproj" -Runtime win10-x64
     Pack-Exe "../src/Tool/Tool.csproj" -Runtime osx-x64
     Pack-Exe "../src/Tool/Tool.csproj" -Runtime linux-x64
+} else {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Creating self-contained executables. Env:ENABLE_CONDA was set to 'false'."
+}
 
+if ($Env:ENABLE_PYTHON -eq "false") {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Creating Python packages. Env:ENABLE_PYTHON was set to 'false'."
+} else {
     Write-Host "##[info]Packing Python wheel..."
     python --version
     Pack-Wheel '../src/Python/'
