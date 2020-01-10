@@ -11,7 +11,7 @@ if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("
     dotnet add  $project `
         package $pkg `
         --no-restore `
-        --version "$Env:BUILD_ARIA_VERSION"
+        --version "0.92.6"
 }
 
 
