@@ -41,12 +41,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         return $@"
                             <tr>
                                 <td>$\left|{basisLabel}\right\rangle$</td>
-                                <td>${amplitude.Real:F4} {(amplitude.Imaginary > 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
+                                <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
                                 <td>
                                     <progress
                                         max=""100""
                                         value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
-                                        style=""width: 100%""
+                                        style=""width: 100%;""
                                     >
                                 </td>
                                 <td style=""{StyleForAngle(amplitude.Phase)}"">
