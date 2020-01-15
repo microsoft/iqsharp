@@ -33,11 +33,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            using (var qsim = new QuantumSimulator())
+            using (var qsim = new JupyterSimulator(channel))
             {
-                qsim.DisableLogToConsole();
-                qsim.OnLog += channel.Stdout;
-
                 var value = await symbol.Operation.RunAsync(qsim, args);
 
                 return value.ToExecutionResult();
