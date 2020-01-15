@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -45,6 +46,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder());
             RegisterDisplayEncoder(new StateVectorToTextResultEncoder());
             RegisterJsonEncoder(TupleConverters.Converters);
+            RegisterJsonEncoder(new StringEnumConverter());
 
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);

@@ -12,8 +12,16 @@ using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    public enum BasisStateLabelingConvention
+    {
+        Bitstring,
+        LittleEndian,
+        BigEndian
+    }
+
     public class DisplayableState
     {
+        public IEnumerable<int>? QubitIds { get; set; }
         public int NQubits { get; set; }
         public Complex[]? Amplitudes { get; set; }
 
@@ -22,16 +30,45 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public bool TruncateSmallAmplitudes { get; set; }
         public double TruncationThreshold { get; set; }
 
+        public BasisStateLabelingConvention BasisStateLabelingConvention { get; set; }
+
         #endregion
 
-        public IEnumerable<(Complex, int)> SignificantAmplitudes =>
-            TruncateSmallAmplitudes
+        public IEnumerable<(Complex, string)> SignificantAmplitudes =>
+            (
+                TruncateSmallAmplitudes
                 ? Amplitudes
                     .Select((amplitude, idx) => (amplitude, idx))
                     .Where(item =>
                         System.Math.Pow(item.amplitude.Magnitude, 2.0) >= this.TruncationThreshold
                     )
-                : Amplitudes.Select((amplitude, idx) => (amplitude, idx));
+                : Amplitudes.Select((amplitude, idx) => (amplitude, idx))
+            )
+            .Select(
+                item => (item.amplitude, BasisStateLabel(item.idx))
+            )
+            .OrderBy(
+                item => item.Item2
+            );
+
+        public string BasisStateLabel(
+            int index
+        ) => BasisStateLabelingConvention switch
+            {
+                BasisStateLabelingConvention.Bitstring =>
+                    System.Convert.ToString(index, 2).PadLeft(NQubits, '0'),
+                BasisStateLabelingConvention.LittleEndian =>
+                    System.Convert.ToInt64(
+                        String.Concat(
+                            System.Convert.ToString(index, 2).PadLeft(NQubits, '0').Reverse()
+                        ),
+                        fromBase: 2
+                    )
+                    .ToString(),
+                BasisStateLabelingConvention.BigEndian =>
+                    index.ToString(),
+                _ => throw new ArgumentException($"Invalid basis state labeling convention {BasisStateLabelingConvention}.")
+            };
 
     }
 
@@ -48,14 +85,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             if (displayable is DisplayableState vector)
             {
+                // First, print out any qubit IDs if we have them.
+                var qubitIdsRow = vector.QubitIds == null
+                    ? ""
+                    : $@"
+                        <tr>
+                            <th>Qubit IDs</th>
+                            <td span=""3"">{String.Join(", ", vector.QubitIds.Select(id => id.ToString()))}</td>
+                        </tr>
+                    ";
                 // Next, make the body by formatting everything as individual rows.
                 var formattedData = String.Join("\n",
                     vector.SignificantAmplitudes.Select(item =>
                     {
-                        var (amplitude, idx) = item;
-                        var basisLabel = System.Convert
-                            .ToString(idx, 2)
-                            .PadLeft(vector.NQubits, '0');
+                        var (amplitude, basisLabel) = item;
 
                         return $@"
                             <tr>
@@ -78,11 +121,19 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
                 // Finish by packing everything into the table template.
                 var basisWidth = System.Math.Max(6 + vector.NQubits, 20);
+                var basisStateMnemonic = vector.BasisStateLabelingConvention switch
+                {
+                    BasisStateLabelingConvention.Bitstring => " (bitstring)",
+                    BasisStateLabelingConvention.LittleEndian => " (little endian)",
+                    BasisStateLabelingConvention.BigEndian => " (big endian)",
+                    _ => ""
+                };
                 var outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
                         <thead>
+                            {qubitIdsRow}
                             <tr>
-                                <th style=""width: {basisWidth}ch)"">Basis state</th>
+                                <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
                                 <th style=""width: 20ch"">Amplitude</th>
                                 <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
                                 <th style=""width: 6ch"">Phase</th>
@@ -119,10 +170,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     vector.SignificantAmplitudes.Select(
                         item =>
                         {
-                            var (amplitude, idx) = item;
-                            var basisLabel = System.Convert
-                                .ToString(idx, 2)
-                                .PadLeft(vector.NQubits, '0');
+                            var (amplitude, basisLabel) = item;
                             return $"|{basisLabel}⟩\t{amplitude.Real} + {amplitude.Imaginary}𝑖";
                         }
                     )

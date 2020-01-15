@@ -58,18 +58,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             public bool TruncateSmallAmplitudes { get; set; } = false;
             public double TruncationThreshold { get; set; } = 1e-10;
+            public BasisStateLabelingConvention BasisStateLabelingConvention { get; set; } = BasisStateLabelingConvention.Bitstring;
 
 
 
             public JupyterDisplayDumper Configure(IConfigurationSource configurationSource)
             {
-                foreach (var key in configurationSource.Configuration.Keys)
-                {
-                    System.Console.WriteLine($"Found configuration key '{key}'.");
-                }
                 configurationSource
                     .ApplyConfiguration<bool>("dump.truncateSmallAmplitudes", value => TruncateSmallAmplitudes = value)
-                    .ApplyConfiguration<double>("dump.truncationThreshold", value => TruncationThreshold = value);
+                    .ApplyConfiguration<double>("dump.truncationThreshold", value => TruncationThreshold = value)
+                    .ApplyConfiguration<BasisStateLabelingConvention>(
+                        "dump.basisStateLabelingConvention", value => BasisStateLabelingConvention = value
+                    );
                 return this;
             }
 
@@ -100,11 +100,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 {
                     // We cast here as we don't support a large enough number
                     // of qubits to saturate an int.
+                    QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
                     NQubits = (int)_count,
                     Amplitudes = _data,
 
                     TruncateSmallAmplitudes = TruncateSmallAmplitudes,
-                    TruncationThreshold = TruncationThreshold
+                    TruncationThreshold = TruncationThreshold,
+                    BasisStateLabelingConvention = BasisStateLabelingConvention
                 });
 
                 // Clean up the state vector buffer.
