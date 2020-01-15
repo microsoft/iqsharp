@@ -10,13 +10,20 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    public interface IConfigurationSource
+    {
+        IDictionary<string, JToken> Configuration { get; }
+    }
+
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
     /// </summary>
-    public class IQSharpEngine : BaseEngine
+    public class IQSharpEngine : BaseEngine, IConfigurationSource
     {
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
@@ -38,7 +45,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder());
             RegisterDisplayEncoder(new StateVectorToTextResultEncoder());
             RegisterJsonEncoder(TupleConverters.Converters);
-            
+
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
         }
@@ -48,6 +55,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         internal ISymbolResolver SymbolsResolver { get; }
 
         internal ISymbolResolver MagicResolver { get; }
+
+        public IDictionary<string, JToken> Configuration { get; } = new Dictionary<string, JToken>();
 
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal

@@ -3,6 +3,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Microsoft.Jupyter.Core;
@@ -11,10 +12,27 @@ using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
-    public struct StateVector
+    public class DisplayableState
     {
         public int NQubits { get; set; }
-        public Complex[] Amplitudes { get; set; }
+        public Complex[]? Amplitudes { get; set; }
+
+        #region display preferences
+
+        public bool TruncateSmallAmplitudes { get; set; }
+        public double TruncationThreshold { get; set; }
+
+        #endregion
+
+        public IEnumerable<(Complex, int)> SignificantAmplitudes =>
+            TruncateSmallAmplitudes
+                ? Amplitudes
+                    .Select((amplitude, idx) => (amplitude, idx))
+                    .Where(item =>
+                        System.Math.Pow(item.amplitude.Magnitude, 2.0) >= this.TruncationThreshold
+                    )
+                : Amplitudes.Select((amplitude, idx) => (amplitude, idx));
+
     }
 
     public class StateVectorToHtmlResultEncoder : IResultEncoder
@@ -28,12 +46,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
                    text-align: center;";
 
-            if (displayable is StateVector vector)
+            if (displayable is DisplayableState vector)
             {
                 // Next, make the body by formatting everything as individual rows.
                 var formattedData = String.Join("\n",
-                    vector.Amplitudes.Select((amplitude, idx) =>
+                    vector.SignificantAmplitudes.Select(item =>
                     {
+                        var (amplitude, idx) = item;
                         var basisLabel = System.Convert
                             .ToString(idx, 2)
                             .PadLeft(vector.NQubits, '0');
@@ -80,21 +99,27 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             else return null;
         }
     }
-    
+
     public class StateVectorToTextResultEncoder : IResultEncoder
     {
         public string MimeType => MimeTypes.PlainText;
 
         public EncodedData? Encode(object displayable)
         {
-            if (displayable is StateVector vector)
+            if (displayable is DisplayableState vector)
             {
                 // TODO: refactor to use fancy printing logic from QuantumSimulator.
                 //       for now, we do something basic as a placeholder.
+                if (vector.Amplitudes == null)
+                {
+                    // We can't display a state without any amplitudes!
+                    return null;
+                }
                 return String.Join("\n",
-                    vector.Amplitudes.Select(
-                        (amplitude, idx) =>
+                    vector.SignificantAmplitudes.Select(
+                        item =>
                         {
+                            var (amplitude, idx) = item;
                             var basisLabel = System.Convert
                                 .ToString(idx, 2)
                                 .PadLeft(vector.NQubits, '0');
