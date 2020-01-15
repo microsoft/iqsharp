@@ -24,20 +24,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         public EncodedData? Encode(object displayable)
         {
+            string StyleForAngle(double angle) =>
+                $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
+                   text-align: center;";
+
             if (displayable is StateVector vector)
             {
-                // First, make a header row.
-                var header = @"
-                    <thead>
-                        <tr>
-                            <th>Basis state</th>
-                            <th>Amplitude</th>
-                            <th>Meas. Pr.</th>
-                            <th>Phase</th>
-                        </tr>
-                    </thead>
-                ";
-
                 // Next, make the body by formatting everything as individual rows.
                 var formattedData = String.Join("\n",
                     vector.Amplitudes.Select((amplitude, idx) =>
@@ -51,9 +43,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                 <td>$\left|{basisLabel}\right\rangle$</td>
                                 <td>${amplitude.Real:F4} + {amplitude.Imaginary:F4} i$</td>
                                 <td>
-                                    <progress max=""100"" value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
+                                    <progress
+                                        max=""100""
+                                        value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
+                                        style=""width: 100%""
+                                    >
                                 </td>
-                                <td style=""transform: rotate({amplitude.Phase * 360.0 / TWO_PI}deg)"">
+                                <td style=""{StyleForAngle(amplitude.Phase)}"">
                                     ↑
                                 </td>
                             </tr>
@@ -62,7 +58,23 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 );
 
                 // Finish by packing everything into the table template.
-                var outputTable = $"<table>{header}<tbody>{formattedData}</tbody></table>";
+                var basisWidth = System.Math.Max(6 + vector.NQubits, 20);
+                var outputTable = $@"
+                    <table style=""table-layout: fixed; width: 100%"">
+                        <thead>
+                            <tr>
+                                <th style=""width: {basisWidth}ch)"">Basis state</th>
+                                <th style=""width: 20ch"">Amplitude</th>
+                                <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
+                                <th style=""width: 6ch"">Phase</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {formattedData}
+                        </tbody>
+                    </table>
+                ";
                 return outputTable.ToEncodedData();
             }
             else return null;
