@@ -35,7 +35,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 {
                     Columns = new List<(string, Func<KeyValuePair<string, JToken>, string>)>
                     {
-                        ("key", row => row.Key),
+                        ("Configuration key", row => row.Key),
                         ("Value", row => JsonConvert.SerializeObject(row.Value))
                     },
                     Rows = ConfigurationSource.Configuration.ToList()
