@@ -53,7 +53,7 @@ namespace Tests.IQSharp
 
         public static string AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
-            var simMagic = new SimulateMagic(engine.SymbolsResolver);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver, engine);
             var channel = new MockChannel();
             var response = simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);
@@ -92,7 +92,7 @@ namespace Tests.IQSharp
         public void CompileAndSimulate()
         {
             var engine = Init();
-            var simMagic = new SimulateMagic(engine.SymbolsResolver);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver, engine);
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
