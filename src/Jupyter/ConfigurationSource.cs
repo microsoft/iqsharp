@@ -41,11 +41,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         private string ConfigPath =>
             Path.Join(Directory.GetCurrentDirectory(), ".iqsharp-config.json");
 
-        public ConfigurationSource()
+        public ConfigurationSource(bool skipLoading = false)
         {
             // Try loading configuration from a JSON file in the current working
             // directory.
-            if (File.Exists(ConfigPath))
+            if (!skipLoading && File.Exists(ConfigPath))
             {
                 var configContents = File.ReadAllText(ConfigPath);
                 _Configuration = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(
