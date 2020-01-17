@@ -25,35 +25,37 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public int NQubits { get; set; }
         public Complex[]? Amplitudes { get; set; }
 
-        #region display preferences
+        public IEnumerable<(Complex, string)> SignificantAmplitudes(
+            IConfigurationSource configurationSource
+        ) => SignificantAmplitudes(
+            configurationSource.BasisStateLabelingConvention,
+            configurationSource.TruncateSmallAmplitudes,
+            configurationSource.TruncationThreshold
+        );
 
-        public bool TruncateSmallAmplitudes { get; set; }
-        public double TruncationThreshold { get; set; }
-
-        public BasisStateLabelingConvention BasisStateLabelingConvention { get; set; }
-
-        #endregion
-
-        public IEnumerable<(Complex, string)> SignificantAmplitudes =>
+        public IEnumerable<(Complex, string)> SignificantAmplitudes(
+            BasisStateLabelingConvention convention,
+            bool truncateSmallAmplitudes, double truncationThreshold
+        ) =>
             (
-                TruncateSmallAmplitudes
+                truncateSmallAmplitudes
                 ? Amplitudes
                     .Select((amplitude, idx) => (amplitude, idx))
                     .Where(item =>
-                        System.Math.Pow(item.amplitude.Magnitude, 2.0) >= this.TruncationThreshold
+                        System.Math.Pow(item.amplitude.Magnitude, 2.0) >= truncationThreshold
                     )
                 : Amplitudes.Select((amplitude, idx) => (amplitude, idx))
             )
             .Select(
-                item => (item.amplitude, BasisStateLabel(item.idx))
+                item => (item.amplitude, BasisStateLabel(convention, item.idx))
             )
             .OrderBy(
                 item => item.Item2
             );
 
         public string BasisStateLabel(
-            int index
-        ) => BasisStateLabelingConvention switch
+            BasisStateLabelingConvention convention, int index
+        ) => convention switch
             {
                 BasisStateLabelingConvention.Bitstring =>
                     System.Convert.ToString(index, 2).PadLeft(NQubits, '0'),
@@ -67,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     .ToString(),
                 BasisStateLabelingConvention.BigEndian =>
                     index.ToString(),
-                _ => throw new ArgumentException($"Invalid basis state labeling convention {BasisStateLabelingConvention}.")
+                _ => throw new ArgumentException($"Invalid basis state labeling convention {convention}.")
             };
 
     }
@@ -76,6 +78,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
         public string MimeType => MimeTypes.Html;
+        private IConfigurationSource ConfigurationSource;
+        public StateVectorToHtmlResultEncoder(IConfigurationSource configurationSource)
+        {
+            ConfigurationSource = configurationSource;
+        }
 
         public EncodedData? Encode(object displayable)
         {
@@ -96,7 +103,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     ";
                 // Next, make the body by formatting everything as individual rows.
                 var formattedData = String.Join("\n",
-                    vector.SignificantAmplitudes.Select(item =>
+                    vector.SignificantAmplitudes(ConfigurationSource).Select(item =>
                     {
                         var (amplitude, basisLabel) = item;
 
@@ -121,7 +128,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
                 // Finish by packing everything into the table template.
                 var basisWidth = System.Math.Max(6 + vector.NQubits, 20);
-                var basisStateMnemonic = vector.BasisStateLabelingConvention switch
+                var basisStateMnemonic = ConfigurationSource.BasisStateLabelingConvention switch
                 {
                     BasisStateLabelingConvention.Bitstring => " (bitstring)",
                     BasisStateLabelingConvention.LittleEndian => " (little endian)",
@@ -154,6 +161,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class StateVectorToTextResultEncoder : IResultEncoder
     {
         public string MimeType => MimeTypes.PlainText;
+        private IConfigurationSource ConfigurationSource;
+        public StateVectorToTextResultEncoder(IConfigurationSource configurationSource)
+        {
+            ConfigurationSource = configurationSource;
+        }
 
         public EncodedData? Encode(object displayable)
         {
@@ -167,7 +179,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     return null;
                 }
                 return String.Join("\n",
-                    vector.SignificantAmplitudes.Select(
+                    vector.SignificantAmplitudes(ConfigurationSource).Select(
                         item =>
                         {
                             var (amplitude, basisLabel) = item;

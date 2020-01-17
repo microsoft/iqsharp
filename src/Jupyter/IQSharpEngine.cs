@@ -16,10 +16,6 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
-    public interface IConfigurationSource
-    {
-        IDictionary<string, JToken> Configuration { get; }
-    }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
@@ -34,7 +30,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IShellServer shell,
             IOptions<KernelContext> context,
             ILogger<IQSharpEngine> logger,
-            IServiceProvider services
+            IServiceProvider services,
+            IConfigurationSource configurationSource
         ) : base(shell, context, logger)
         {
             this.Snippets = services.GetService<ISnippets>();
@@ -43,8 +40,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
-            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder());
-            RegisterDisplayEncoder(new StateVectorToTextResultEncoder());
+            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
+            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
             RegisterJsonEncoder(TupleConverters.Converters);
 
             RegisterSymbolResolver(this.SymbolsResolver);

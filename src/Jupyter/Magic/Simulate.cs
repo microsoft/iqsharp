@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
@@ -35,12 +36,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            using (var qsim = new JupyterSimulator(channel, ConfigurationSource))
-            {
-                var value = await symbol.Operation.RunAsync(qsim, args);
-
-                return value.ToExecutionResult();
-            }
+            using var qsim = new QuantumSimulator().WithJupyterDisplay(channel, ConfigurationSource);
+            var value = await symbol.Operation.RunAsync(qsim, args);
+            return value.ToExecutionResult();
         }
     }
 }
