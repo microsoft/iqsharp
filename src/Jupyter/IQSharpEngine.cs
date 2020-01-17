@@ -24,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
     /// </summary>
-    public class IQSharpEngine : BaseEngine, IConfigurationSource
+    public class IQSharpEngine : BaseEngine
     {
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
@@ -57,8 +57,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         internal ISymbolResolver SymbolsResolver { get; }
 
         internal ISymbolResolver MagicResolver { get; }
-
-        public IDictionary<string, JToken> Configuration { get; } = new Dictionary<string, JToken>();
 
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal

@@ -23,9 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
             services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
             services.AddSingleton<IExecutionEngine, Jupyter.IQSharpEngine>();
-            services.AddSingleton<IConfigurationSource, Jupyter.IQSharpEngine>(
-                provider => provider.GetService<IExecutionEngine>() as IQSharpEngine
-            );
+            services.AddSingleton<IConfigurationSource, ConfigurationSource>();
         }
 
         internal static IConfigurationSource ApplyConfiguration<T>(
