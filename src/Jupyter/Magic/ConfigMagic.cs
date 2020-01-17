@@ -42,6 +42,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 };
                 return configTable.ToExecutionResult();
             }
+            else if (input.Trim().ToLowerInvariant() == "--save")
+            {
+                ConfigurationSource.Persist();
+                return ExecuteStatus.Ok.ToExecutionResult();
+            }
             else
             {
                 // We got an input, so expect it to be of the form

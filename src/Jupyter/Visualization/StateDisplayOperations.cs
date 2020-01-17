@@ -108,12 +108,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             Debug.Assert(
                 Channel != null,
-                "No Jupyter display channel was provided when this operation was registered." +
+                "No Jupyter display channel was provided when this operation was registered. " +
                 "This is an internal error, and should never occur."
             );
             Debug.Assert(
                 ConfigurationSource != null,
-                "No configuration source was provided when this operation was registered." +
+                "No configuration source was provided when this operation was registered. " +
                 "This is an internal error, and should never occur."
             );
             return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, ConfigurationSource);
