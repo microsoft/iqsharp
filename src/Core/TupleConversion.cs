@@ -11,6 +11,7 @@ using Microsoft.Quantum.Simulation.Core;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -25,7 +26,11 @@ namespace Microsoft.Quantum.IQSharp
                 new QTupleConverter(),
                 new QVoidConverter(),
                 new UDTConverter(),
-                new ResultConverter()
+                new ResultConverter(),
+                // We use the StringEnumConverter provided with Newtonsoft.Json
+                // to allow us to handle enum-valued configuration preferences
+                // and display data.
+                new StringEnumConverter()
             }.ToImmutableList();
         }
 

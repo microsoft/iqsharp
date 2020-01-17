@@ -46,7 +46,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder());
             RegisterDisplayEncoder(new StateVectorToTextResultEncoder());
             RegisterJsonEncoder(TupleConverters.Converters);
-            RegisterJsonEncoder(new StringEnumConverter());
 
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
