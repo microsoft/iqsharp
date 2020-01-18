@@ -51,7 +51,7 @@ function Pack-Image() {
     );
 
     if (($Env:AGENT_OS -ne $null) -and ($Env:AGENT_OS.StartsWith("Win"))) {
-        Write-Host "##vso[task.logissue type=warning;]cannot create docker image on Windows."
+        Write-Host "--> Cannot create docker image on Windows."
         return
     }
 
@@ -111,14 +111,26 @@ Pack-Nuget '../src/Core/Core.csproj'
 Write-Host "##[info]Packing IQ# tool..."
 Pack-Nuget '../src/Tool/Tool.csproj'
 
-Write-Host "##[info]Packing IQ# as self-contained executables."
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime win10-x64
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime osx-x64
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime linux-x64
+if ($Env:ENABLE_CONDA -eq "true") {
+    Write-Host "##[info]Packing IQ# as self-contained executables."
+    Pack-Exe "../src/Tool/Tool.csproj" -Runtime win10-x64
+    Pack-Exe "../src/Tool/Tool.csproj" -Runtime osx-x64
+    Pack-Exe "../src/Tool/Tool.csproj" -Runtime linux-x64
+} else {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Creating self-contained executables. Env:ENABLE_CONDA was set to 'false'."
+}
 
-Write-Host "##[info]Packing Python wheel..."
-python --version
-Pack-Wheel '../src/Python/'
+if ($Env:ENABLE_PYTHON -eq "false") {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Creating Python packages. Env:ENABLE_PYTHON was set to 'false'."
+} else {
+    Write-Host "##[info]Packing Python wheel..."
+    python --version
+    Pack-Wheel '../src/Python/'
+}
 
-Write-Host "##[info]Packing Docker image..."
-Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+if ($Env:ENABLE_DOCKER -eq "false") {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Creating Docker Image. Env:ENABLE_DOCKER was set to 'false'."
+} else {
+    Write-Host "##[info]Packing Docker image..."
+    Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+}
