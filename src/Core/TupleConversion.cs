@@ -11,6 +11,7 @@ using Microsoft.Quantum.Simulation.Core;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp
 {
