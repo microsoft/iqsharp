@@ -26,11 +26,7 @@ namespace Microsoft.Quantum.IQSharp
                 new QTupleConverter(),
                 new QVoidConverter(),
                 new UDTConverter(),
-                new ResultConverter(),
-                // We use the StringEnumConverter provided with Newtonsoft.Json
-                // to allow us to handle enum-valued configuration preferences
-                // and display data.
-                new StringEnumConverter()
+                new ResultConverter()
             }.ToImmutableList();
         }
 

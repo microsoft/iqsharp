@@ -9,9 +9,12 @@ using System.Numerics;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum BasisStateLabelingConvention
     {
         Bitstring,
