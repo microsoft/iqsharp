@@ -110,8 +110,8 @@ namespace Microsoft.Quantum.IQSharp
             LogManager.SetSharedContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version.ToString());
             LogManager.SetSharedContext("Root".WithTelemetryNamespace(), Path.GetFileName(Directory.GetCurrentDirectory()), PiiKind.GenericData);
             LogManager.SetSharedContext("DeviceId".WithTelemetryNamespace(), GetDeviceId(), PiiKind.GenericData);
-            LogManager.SetSharedContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("IQSHARP_USER_AGENT"));
-            LogManager.SetSharedContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("IQSHARP_HOSTING_ENV"));
+            LogManager.SetSharedContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
+            LogManager.SetSharedContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("HostingEnvironment"));
         }
 
         /// <summary>
