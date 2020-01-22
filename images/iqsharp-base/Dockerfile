@@ -1,5 +1,5 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim-stretch
+FROM python:3.7-slim-buster
 
 # install the notebook package
 RUN pip install --no-cache --upgrade pip && \
@@ -7,6 +7,9 @@ RUN pip install --no-cache --upgrade pip && \
 
 # Install APT prerequisites.
 RUN apt-get update && \
+    apt-get -y upgrade \
+                       # Make sure SSL packages are up to date.
+                       libsasl2-2 && \
     apt-get -y install \
                        # Dependencies for the .NET Core SDK.
                        wget \
