@@ -74,7 +74,7 @@ namespace Microsoft.Quantum.IQSharp
                 throw new ArgumentNullException(nameof(app));
             }
 
-            if (!string.IsNullOrWhiteSpace(config?.GetValue<string>("IQSHARP_TELEMETRY_OPT_OUT")))
+            if (!string.IsNullOrWhiteSpace(config?.GetValue<string>("TELEMETRY_OPT_OUT")))
             {
                 Console.WriteLine("--> IQ# Telemetry opted-out. No telemetry data will be generated.");
                 return;
