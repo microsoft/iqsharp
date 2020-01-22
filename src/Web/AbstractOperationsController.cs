@@ -20,6 +20,8 @@ namespace Microsoft.Quantum.IQSharp
 {
     public abstract class AbstractOperationsController : ControllerBase
     {
+        // TODO: This class may be exposing many more actions than required. Investigate making these protected or using [NonAction].
+
         // The list of operations available in the workspace.
         public abstract IEnumerable<OperationInfo> Operations { get; }
 
@@ -27,6 +29,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Simulates the execution of the given operation using the given arguments
         /// to formulate an input tuple.
         /// </summary>
+        [NonAction]
         public async Task<object> Simulate(string id, IDictionary<string, string> args, Action<string> logger) =>
             await IfReady(async () =>
             {
@@ -45,6 +48,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Returns an estimation of how many resources are needed to run the given operation on a quantum computer
         /// with the given arguments.
         /// </summary>
+        [NonAction]
         public async Task<Dictionary<string, double>> Estimate(string id, IDictionary<string, string> args, Action<string> logger) =>
             await IfReady(async () =>
             {
@@ -62,6 +66,7 @@ namespace Microsoft.Quantum.IQSharp
         /// If an Exception is caught, it returns an error response with the Exception as the
         /// corresponding error message.
         /// </summary>
+        [NonAction]
         public virtual async Task<Response<T>> AsResponse<T>(Func<Action<string>, Task<T>> action)
         {
             try
