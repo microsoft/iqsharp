@@ -7,6 +7,10 @@ RUN pip install --no-cache --upgrade pip && \
 
 # Install APT prerequisites.
 RUN apt-get update && \
+    apt-get -y upgrade \
+                       # Make sure SSL packages are up to date.
+                       cyrus-sasl \
+                       openssl1.0 && \
     apt-get -y install \
                        # Dependencies for the .NET Core SDK.
                        wget \
