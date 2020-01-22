@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp
         public string UserAgent { get; set; }
 
         /// <summary>
-        ///     A string passed by the client representing the enviornment in which
+        ///     A string passed by the client representing the environment in which
         ///     the client is running (e.g.: continuous integration, a hosted
         ///     notebook service, etc.).
         /// </summary>

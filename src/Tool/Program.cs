@@ -1,14 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using McMaster.Extensions.CommandLineUtils;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp
@@ -21,14 +23,18 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class Program
     {
-        public static IConfiguration Configuration;
+        public static IConfiguration? Configuration;
+
+        public class LoggingOptions
+        {
+            public string? LogPath { get; set; }
+        }
 
         public static int Main(string[] args)
         {
             try
             {
                 Configuration = new ConfigurationBuilder()
-                    .AddEnvironmentVariables()
                     .AddJsonFile("appsettings.json")
                     .AddCommandLine(
                         args,
@@ -37,14 +43,40 @@ namespace Microsoft.Quantum.IQSharp
                         // the placeholder options that we define below.
                         new Dictionary<string, string>()
                         {
-                            ["--user-agent"] = "IQSHARP_USER_AGENT",
-                            ["--hosting-env"] = "IQSHARP_HOSTING_ENV"
+                            ["--user-agent"] = "UserAgent",
+                            ["--hosting-env"] = "HostingEnvironment"
                         }
                     )
+                    .Add(new NormalizedEnvironmentVariableConfigurationSource
+                    {
+                        Prefix = "IQSHARP_",
+                        Aliases = new Dictionary<string, string>
+                        {
+                            ["USER_AGENT"] = "UserAgent",
+                            ["HOSTING_ENV"] = "HostingEnvironment",
+                            ["LOG_PATH"] = "LogPath"
+                        }
+                    })
                     .Build();
 
                 var app = new KernelApplication(
                     Jupyter.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
+                )
+                .ConfigureLogging(
+                    loggingBuilder => {
+                        // As per https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-3.1#access-configuration-during-startup,
+                        // we need to use an IConfiguration instance directly during
+                        // startup, rather than using the nice binding methods
+                        // like serviceCollection.Configure<TOptions>(configuration).
+                        var options = Configuration.Get<LoggingOptions>();
+                        if (options?.LogPath != null && options.LogPath.Length != 0)
+                        {
+                            loggingBuilder.AddFile(
+                                options.LogPath,
+                                minimumLevel: LogLevel.Debug
+                            );
+                        }
+                    }
                 )
                 .WithKernelSpecResources<Jupyter.IQSharpEngine>(
                     new Dictionary<string, string>
