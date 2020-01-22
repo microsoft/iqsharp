@@ -10,14 +10,20 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
+        private readonly PerformanceMonitor performanceMonitor;
+
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
         /// of compiling and keeping track of the code Snippets provided by users.
@@ -26,19 +32,33 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IShellServer shell,
             IOptions<KernelContext> context,
             ILogger<IQSharpEngine> logger,
-            IServiceProvider services
+            IServiceProvider services,
+            IConfigurationSource configurationSource,
+            PerformanceMonitor performanceMonitor
         ) : base(shell, context, logger)
         {
+            this.performanceMonitor = performanceMonitor;
+            performanceMonitor.Start();
+
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = new MagicSymbolResolver(services, logger);
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
+            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
+            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
             RegisterJsonEncoder(TupleConverters.Converters);
-            
+
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
+
+            // Report performance after completing startup.
+            performanceMonitor.Report();
+            logger.LogInformation(
+                "IQ# engine started successfully as process {Process}.",
+                Process.GetCurrentProcess().Id
+            );
         }
 
         internal ISnippets Snippets { get; }
@@ -81,6 +101,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 channel.Stderr(e.Message);
                 return ExecuteStatus.Error.ToExecutionResult();
+            }
+            finally
+            {
+                performanceMonitor.Report();
             }
         }
     }

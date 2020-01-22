@@ -136,7 +136,7 @@ namespace Microsoft.Quantum.IQSharp
                 foreach (var file in sources.Keys)
                 {
                     var sourceFile = GetFileId(file);
-                    var code = SimulationCode.generate(sourceFile, qsCompilation.Namespaces);
+                    var code = SimulationCode.generate(sourceFile, CodegenContext.Create(qsCompilation.Namespaces));
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
                     logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");

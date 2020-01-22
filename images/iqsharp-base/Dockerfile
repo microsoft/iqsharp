@@ -1,5 +1,5 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim-stretch
+FROM python:3.7-slim-buster
 
 # install the notebook package
 RUN pip install --no-cache --upgrade pip && \
@@ -7,6 +7,9 @@ RUN pip install --no-cache --upgrade pip && \
 
 # Install APT prerequisites.
 RUN apt-get update && \
+    apt-get -y upgrade \
+                       # Make sure SSL packages are up to date.
+                       libsasl2-2 && \
     apt-get -y install \
                        # Dependencies for the .NET Core SDK.
                        wget \
@@ -40,6 +43,13 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
     apt-get -y install dotnet-sdk-3.0 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/
+
+# Install prerequisites needed for integration with Live Share and VS Online.
+# TODO: Consider splitting this out into a new "extended" IQ# image.
+RUN wget -O /tmp/vsls-reqs https://aka.ms/vsls-linux-prereq-script && \
+    chmod +x /tmp/vsls-reqs && /tmp/vsls-reqs && \
+    rm /tmp/vsls-reqs && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # create user with a home directory
@@ -93,7 +103,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.10.1910.2802-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.10.2001.525-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
