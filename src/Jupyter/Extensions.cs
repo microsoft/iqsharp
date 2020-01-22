@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
@@ -38,6 +39,29 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 action(value.ToObject<T>());
             }
             return configurationSource;
+        }
+
+        private static readonly IImmutableList<(long, string)> byteSuffixes = new List<(long, string)>
+        {
+            (1L << 50, "PiB"),
+            (1L << 40, "TiB"),
+            (1L << 30, "GiB"),
+            (1L << 20, "MiB"),
+            (1L << 10, "KiB")
+        }.ToImmutableList();
+
+        public static string ToHumanReadableBytes(this long nBytes)
+        {
+            foreach (var (scale, suffix) in byteSuffixes)
+            {
+                if (nBytes >= scale)
+                {
+                    var coefficient = ((double)nBytes) / scale;
+                    return $"{coefficient.ToString("0.###")} {suffix}";
+                }
+            }
+            // Fall through to just bytes.
+            return $"{nBytes} B";
         }
 
         public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, IConfigurationSource configurationSource)
