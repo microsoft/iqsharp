@@ -101,7 +101,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             var magicTypes = assm.Assembly
                 .GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(MagicSymbol)));
+                .Where(t =>
+                {
+                    if (!t.IsClass && t.IsAbstract) { return false; }
+                    var matched = t.IsSubclassOf(typeof(MagicSymbol));
+                    this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
+                    return matched;
+                });
 
             var allMagic = new List<MagicSymbol>();
             foreach(var t in magicTypes)

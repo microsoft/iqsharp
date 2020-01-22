@@ -99,6 +99,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
             catch (Exception e)
             {
+                Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
                 channel.Stderr(e.Message);
                 return ExecuteStatus.Error.ToExecutionResult();
             }
