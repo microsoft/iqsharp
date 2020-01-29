@@ -1,15 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using McMaster.Extensions.CommandLineUtils;
-
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Jupyter.Core;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -61,11 +59,7 @@ namespace Microsoft.Quantum.IQSharp
                         cmd.Description = $"Runs IQSharp as an HTTP server.";
                         cmd.OnExecute(() =>
                         {
-                            WebHost.CreateDefaultBuilder(args)
-                                .UseUrls("http://localhost:8888")
-                                .UseStartup<Startup>()
-                                .Build()
-                                .Run();
+                            GetHttpServer(args).Run();
                             return 0;
                         });
                     }
@@ -104,6 +98,14 @@ namespace Microsoft.Quantum.IQSharp
             {
                 return 1;
             }
+        }
+
+        public static IWebHost GetHttpServer(string[] args)
+        {
+           return WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://localhost:8888")
+                .UseStartup<Startup>()
+                .Build();
         }
 
         // Adds the Workspace settings to the "server" and "kernel" commands:

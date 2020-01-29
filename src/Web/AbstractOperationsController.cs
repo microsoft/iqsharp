@@ -1,17 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.Simulation.Simulators;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.Simulation.Simulators;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -73,19 +72,19 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var messages = new List<string>();
                 var result = await action(messages.Add);
-                return new Response<T>(Status.success, messages.ToArray(), result);
+                return new Response<T>(Status.Success, messages.ToArray(), result);
             }
             catch (InvalidWorkspaceException ws)
             {
-                return new Response<T>(Status.error, ws.Errors);
+                return new Response<T>(Status.Error, ws.Errors);
             }
             catch (CompilationErrorsException c)
             {
-                return new Response<T>(Status.error, c.Errors);
+                return new Response<T>(Status.Error, c.Errors);
             }
             catch (Exception e)
             {
-                return new Response<T>(Status.error, new string[] { e.Message });
+                return new Response<T>(Status.Error, new string[] { e.Message });
             }
         }
 
@@ -94,7 +93,7 @@ namespace Microsoft.Quantum.IQSharp
         /// it checks if the Workspace is avaialble and in a success (no errors) state.
         /// The method throws Exceptions if it finds it is not ready to execute.
         /// </summary>
-        public abstract void CheckIfReady();
+        protected abstract void CheckIfReady();
 
         /// <summary>
         /// Executes the given `action` only if the controller is ready, namely if after calling `CheckIfReady`.
