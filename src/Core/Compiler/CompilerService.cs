@@ -42,7 +42,10 @@ namespace Microsoft.Quantum.IQSharp
             var sources = new Dictionary<Uri, string>() { { uri, $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
             var loadOptions = new CompilationLoader.Configuration();
             var loaded = new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
-            return loaded.VerifiedCompilation?.SyntaxTree[ns].Elements;
+            if (loaded.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
+            return loaded.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
+                   ? tree.Elements
+                   : ImmutableArray<QsNamespaceElement>.Empty;
         }
 
         /// <summary> 

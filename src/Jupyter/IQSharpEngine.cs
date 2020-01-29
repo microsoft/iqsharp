@@ -22,6 +22,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
+        private readonly PerformanceMonitor performanceMonitor;
+
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
         /// of compiling and keeping track of the code Snippets provided by users.
@@ -31,9 +33,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IOptions<KernelContext> context,
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
-            IConfigurationSource configurationSource
+            IConfigurationSource configurationSource,
+            PerformanceMonitor performanceMonitor
         ) : base(shell, context, logger)
         {
+            this.performanceMonitor = performanceMonitor;
+            performanceMonitor.Start();
+
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = new MagicSymbolResolver(services, logger);
@@ -46,6 +52,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
+
+            // Report performance after completing startup.
+            performanceMonitor.Report();
+            logger.LogInformation(
+                "IQ# engine started successfully as process {Process}.",
+                Process.GetCurrentProcess().Id
+            );
         }
 
         internal ISnippets Snippets { get; }
@@ -86,8 +99,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
             catch (Exception e)
             {
+                Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
                 channel.Stderr(e.Message);
                 return ExecuteStatus.Error.ToExecutionResult();
+            }
+            finally
+            {
+                performanceMonitor.Report();
             }
         }
     }
