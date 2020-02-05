@@ -35,7 +35,7 @@ namespace Tests.IQSharp
         public async Task SerializeFlatUdtInstance()
         {
             var complex = new Complex((12.0, 1.4));
-            var token = JToken.Parse(JsonConvert.SerializeObject(complex, TupleConverters.Converters));
+            var token = JToken.Parse(JsonConvert.SerializeObject(complex, JsonConverters.TupleConverters));
             Assert.AreEqual(typeof(Complex).FullName, token["@type"].Value<string>());
             Assert.AreEqual(12, token["Item1"].Value<double>());
             Assert.AreEqual(1.4, token["Item2"].Value<double>());
@@ -51,7 +51,7 @@ namespace Tests.IQSharp
                     ""Item2"": 1.4
                 }
             ".Replace("COMPLEX", typeof(Complex).FullName);
-            var complex = JsonConvert.DeserializeObject<Complex>(jsonData, TupleConverters.Converters);
+            var complex = JsonConvert.DeserializeObject<Complex>(jsonData, JsonConverters.TupleConverters);
             Assert.AreEqual(new Complex((12.0, 1.4)), complex);
         }
 
@@ -59,7 +59,7 @@ namespace Tests.IQSharp
         public async Task SerializeNestedUdtInstance()
         {
             var testValue = new QubitState((new Complex((0.1, 0.2)), new Complex((0.3, 0.4))));
-            var jsonData = JsonConvert.SerializeObject(testValue, TupleConverters.Converters);
+            var jsonData = JsonConvert.SerializeObject(testValue, JsonConverters.TupleConverters);
             System.Console.WriteLine(jsonData);
             var token = JToken.Parse(jsonData);
             Assert.AreEqual(typeof(QubitState).FullName, token["@type"].Value<string>());
@@ -91,7 +91,7 @@ namespace Tests.IQSharp
             "
             .Replace("COMPLEX", typeof(Complex).FullName)
             .Replace("STATE", typeof(QubitState).FullName);
-            var deserialized = JsonConvert.DeserializeObject<QubitState>(jsonData, TupleConverters.Converters);
+            var deserialized = JsonConvert.DeserializeObject<QubitState>(jsonData, JsonConverters.TupleConverters);
             Assert.AreEqual(
                 new QubitState((new Complex((0.1, 0.2)), new Complex((0.3, 0.4)))),
                 deserialized
@@ -103,12 +103,12 @@ namespace Tests.IQSharp
         {
             {
                 Result result = new ResultConst(ResultValue.One);
-                var token = JToken.Parse(JsonConvert.SerializeObject(result, TupleConverters.Converters));
+                var token = JToken.Parse(JsonConvert.SerializeObject(result, JsonConverters.TupleConverters));
                 Assert.AreEqual(1, token.Value<int>());
             }
             {
                 Result result = new ResultConst(ResultValue.Zero);
-                var token = JToken.Parse(JsonConvert.SerializeObject(result, TupleConverters.Converters));
+                var token = JToken.Parse(JsonConvert.SerializeObject(result, JsonConverters.TupleConverters));
                 Assert.AreEqual(0, token.Value<int>());
             }
         }

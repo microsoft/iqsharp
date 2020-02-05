@@ -153,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp
                 using (var body = new StreamReader(request.Body))
                 {
                     var json = await body.ReadToEndAsync();
-                    return TupleConverters.JsonToDict(json);
+                    return JsonConverters.JsonToDict(json);
                 }
             }
 

@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp
                 return QVoid.Instance;
             }
 
-            var value = Newtonsoft.Json.JsonConvert.DeserializeObject(p, t, TupleConverters.Converters);
+            var value = Newtonsoft.Json.JsonConvert.DeserializeObject(p, t, JsonConverters.TupleConverters);
             return value;
         }
 

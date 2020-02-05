@@ -12,22 +12,30 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using Newtonsoft.Json.Converters;
+using Microsoft.Quantum.Simulation.Simulators;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Quantum.IQSharp
 {
-    public static class TupleConverters
+    public static class JsonConverters
     {
-        private static readonly ImmutableList<JsonConverter> converters;
-        public static JsonConverter[] Converters => converters.ToArray();
+        private static readonly ImmutableList<JsonConverter> tupleConverters;
+        private static readonly ImmutableList<JsonConverter> otherConverters;
+        public static JsonConverter[] TupleConverters => tupleConverters.ToArray();
 
-        static TupleConverters()
+        public static JsonConverter[] AllConverters => tupleConverters.Concat(otherConverters).ToArray();
+
+        static JsonConverters()
         {
-            converters = new JsonConverter[] {
+            tupleConverters = new JsonConverter[] {
                 new QTupleConverter(),
                 new QVoidConverter(),
                 new UDTConverter(),
                 new ResultConverter()
             }.ToImmutableList();
+            otherConverters = ImmutableList.Create<JsonConverter>(
+                new ResourcesEstimatorConverter()
+            );
         }
 
         /// <summary>
@@ -130,6 +138,19 @@ namespace Microsoft.Quantum.IQSharp
             var token = JToken.FromObject(tokenData, serializer);
             token.WriteTo(writer);
         }
+    }
+
+    public class ResourcesEstimatorConverter : JsonConverter<ResourcesEstimator>
+    {
+        public override ResourcesEstimator ReadJson(JsonReader reader, Type objectType, [AllowNull] ResourcesEstimator existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, [AllowNull] ResourcesEstimator value, JsonSerializer serializer) =>
+            JToken
+            .FromObject(value.AsDictionary())
+            .WriteTo(writer);
     }
 
     public class QVoidConverter : JsonConverter<QVoid>
