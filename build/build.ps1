@@ -27,6 +27,11 @@ function Build-One {
     }
 }
 
+# Fetch TypeScript definitions
+Push-Location src/Jupyter
+    npm install
+Pop-Location
+
 Build-One build '../iqsharp.sln'
 
 if (-not $all_ok) 
