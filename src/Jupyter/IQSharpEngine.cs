@@ -36,8 +36,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
-            PerformanceMonitor performanceMonitor
-            , ICustomShellRouter shellRouter
+            PerformanceMonitor performanceMonitor,
+            IShellRouter shellRouter
         ) : base(shell, context, logger)
         {
             this.performanceMonitor = performanceMonitor;
@@ -57,7 +57,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             RegisterSymbolResolver(this.MagicResolver);
 
             // Handle new shell messages.
-            shell.CustomRequest += shellRouter.Handle;
             shellRouter.RegisterHandlers<IQSharpEngine>();
 
             // Report performance after completing startup.

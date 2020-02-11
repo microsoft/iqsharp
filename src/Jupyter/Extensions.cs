@@ -16,28 +16,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     public static class Extensions
     {
-        public static Message AsReplyTo(this Message child, Message parent)
-        {
-            // No parent, just return
-            if (parent == null) return child;
-
-            var reply = new Message
-            {
-                Content = child.Content,
-                Header = new MessageHeader
-                {
-                    Id = child.Header.Id,
-                    MessageType = child.Header.MessageType,
-                    ProtocolVersion = child.Header.ProtocolVersion,
-                    Session = parent.Header.Session,
-                    Username = child.Header.Username
-                },
-                Metadata = child.Metadata,
-                ParentHeader = parent.Header,
-                ZmqIdentities = parent.ZmqIdentities
-            };
-            return reply;
-        }
 
         /// <summary>
         /// Creates a wrapper of an IChannel that adds new lines to every message
@@ -51,7 +29,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
             services.AddSingleton<IExecutionEngine, Jupyter.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
-            services.AddSingleton<ICustomShellRouter, CustomShellRouter>();
         }
 
         internal static IConfigurationSource ApplyConfiguration<T>(

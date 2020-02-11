@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public string Value { get; set; }
     }
 
-    public class HeartbeatHandler : ICustomShellHandler
+    public class HeartbeatHandler : IShellHandler
     {
         private readonly IShellServer shellServer;
         private readonly ILogger<HeartbeatHandler> logger;
