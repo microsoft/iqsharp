@@ -5,6 +5,7 @@
 ///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
+declare var IPython : IPython;
 
 export function onload() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -58,6 +59,33 @@ export function onload() {
         ]
     });
     codeMirror.defineMIME("text/x-qsharp", "qsharp");
+
+    // Try writing out a heartbeat to the kernel.
+    IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
+        let value = "heartbeat";
+        IPython.notebook.kernel.register_iopub_handler("iqsharp_heartbeat_output", message => {
+            console.log("Got ♥beat output:", message);
+        });
+        IPython.notebook.kernel.send_shell_message(
+            "iqsharp_heartbeat_request",
+            {value: value},
+            {
+                shell: {
+                    reply: (message) => {
+                        console.log("Got ♥beat reply:", message);
+                    }
+                }
+            }
+        );
+
+        IPython.notebook.kernel.send_shell_message(
+            "iqsharp_client_info",
+            {
+                "user_agent": navigator.userAgent
+            }
+        );
+    });
+
     console.log("Loaded IQ# kernel-specific extension!");
 }
 

@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -15,6 +16,29 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     public static class Extensions
     {
+        public static Message AsReplyTo(this Message child, Message parent)
+        {
+            // No parent, just return
+            if (parent == null) return child;
+
+            var reply = new Message
+            {
+                Content = child.Content,
+                Header = new MessageHeader
+                {
+                    Id = child.Header.Id,
+                    MessageType = child.Header.MessageType,
+                    ProtocolVersion = child.Header.ProtocolVersion,
+                    Session = parent.Header.Session,
+                    Username = child.Header.Username
+                },
+                Metadata = child.Metadata,
+                ParentHeader = parent.Header,
+                ZmqIdentities = parent.ZmqIdentities
+            };
+            return reply;
+        }
+
         /// <summary>
         /// Creates a wrapper of an IChannel that adds new lines to every message
         /// sent to stdout and stderr
@@ -27,6 +51,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
             services.AddSingleton<IExecutionEngine, Jupyter.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
+            services.AddSingleton<ICustomShellRouter, CustomShellRouter>();
         }
 
         internal static IConfigurationSource ApplyConfiguration<T>(

@@ -82,7 +82,7 @@ namespace Microsoft.Quantum.IQSharp
                     new Dictionary<string, string>
                     {
                         ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Jupyter.res.logo-64x64.png",
-                        ["kernel.js"]      = "Microsoft.Quantum.IQSharp.Jupyter.res.kernel.js"
+                        ["kernel.js"]      = "Microsoft.Quantum.IQSharp.Jupyter.res.kernel.js",
                     }
                 );
                 app.Command(
