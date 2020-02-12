@@ -94,7 +94,6 @@ namespace Microsoft.Quantum.IQSharp
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            statusAction?.Invoke($"Adding {name}");
             var pkg = await Nugets.Add(name, statusAction);
 
             Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();

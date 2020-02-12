@@ -26,24 +26,35 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public override ExecutionResult Run(string input, IChannel channel)
         {
             var (name, _) = ParseInput(input);
-            var status = $"Adding package {name}";
+            var statusHead = $"Adding package {name}";
+            var status = "";
             var statusUpdater = channel.DisplayUpdatable(status);
             var dots = ".";
+            void Update() => statusUpdater.Update(
+                statusHead + (status.Length > 0 ? ": " : "") + status + dots
+            );
+
             var task = RunAsync(name, channel, (newStatus) =>
             {
                 dots = ".";
                 status = newStatus;
-                statusUpdater.Update(status + dots);
+                Update();
             });
-            Observable
-                .Interval(TimeSpan.FromSeconds(1))
-                .TakeUntil((idx) => task.IsCompleted)
-                .Do(idx =>
-                {
-                    dots += ".";
-                    statusUpdater.Update(status + dots);
-                })
-                .Subscribe();
+            using (Observable
+                   .Interval(TimeSpan.FromSeconds(1))
+                   .TakeUntil((idx) => task.IsCompleted)
+                   .Do(idx =>
+                   {
+                       dots += ".";
+                       Update();
+                   })
+                   .Subscribe())
+            {
+                task.Wait();
+            }
+            status = "done";
+            dots = "!";
+            Update();
             return task.Result;
         }
 

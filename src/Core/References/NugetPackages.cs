@@ -184,6 +184,7 @@ namespace Microsoft.Quantum.IQSharp
                 throw new InvalidOperationException("Please provide a name of a package.");
             }
 
+            statusAction?.Invoke("finding latest version");
             var pkgId = await ParsePackageId(package);
             await Add(pkgId, statusAction);
 
@@ -197,10 +198,10 @@ namespace Microsoft.Quantum.IQSharp
         {
             // Already added:
             if (Items.Contains(pkgId)) return;
-            statusAction?.Invoke($"Adding package {pkgId.Id}!");
 
             using (var sourceCacheContext = new SourceCacheContext())
             {
+                statusAction?.Invoke("getting dependencies");
                 var packages = await GetPackageDependencies(pkgId, sourceCacheContext);
 
                 await DownloadPackages(sourceCacheContext, packages, statusAction);
@@ -237,7 +238,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (!IsInstalled(pkg))
                 {
-                    statusAction?.Invoke($"Downloading {pkg.Id}");
+                    statusAction?.Invoke($"downloading {pkg.Id}");
                     var downloadResource = await pkg.Source.GetResourceAsync<DownloadResource>(CancellationToken.None);
                     var downloadResult = await downloadResource.GetDownloadResourceResultAsync(
                         pkg,
