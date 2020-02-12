@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -75,16 +76,16 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Nuget Packages that are available for compilation and execution.
         /// </summary>
-        public virtual IEnumerable<string> Packages =>
-            Nugets?
-                .Items
-                .Select(p => $"{p.Id}::{p.Version}");
+        public virtual IEnumerable<string>? Packages =>
+            Nugets
+                ?.Items
+                ?.Select(p => $"{p.Id}::{p.Version}");
 
         /// <summary>
         /// Adds the libraries from the given nuget package to the list of assemblies.
         /// If version is not provided. It automatically picks up the latest version.
         /// </summary>
-        public async Task AddPackage(string name)
+        public async Task AddPackage(string name, Action<string>? statusAction = null)
         {
             var duration = Stopwatch.StartNew();
 
@@ -93,7 +94,8 @@ namespace Microsoft.Quantum.IQSharp
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            var pkg = await Nugets.Add(name);
+            statusAction?.Invoke($"Adding {name}");
+            var pkg = await Nugets.Add(name, statusAction);
 
             Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();
             Reset();
@@ -111,7 +113,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name) =>
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) =>
             Assemblies.FirstOrDefault(a => a.Assembly.FullName == name.FullName)?.Assembly;
     }
 }

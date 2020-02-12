@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,7 +42,7 @@ namespace Microsoft.Quantum.IQSharp
         // list root and cache folder. 
         public class Settings : Workspace.Settings
         {
-            public string[] DefaultPackageVersions { get; set; }
+            public string[]? DefaultPackageVersions { get; set; } = null;
         }
 
         // The framework used to find packages.
@@ -105,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
         // packages to use, since all of them need to be in-sync.
         public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
-        public NugetPackages(IOptions<Settings> config, Microsoft.Extensions.Logging.ILogger logger)
+        public NugetPackages(IOptions<Settings>? config, Microsoft.Extensions.Logging.ILogger logger)
         {
             this.Logger = new NuGetLogger(logger);
 
@@ -120,7 +122,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Each element on the config array is expected to be a package; all packages are expected to have a version
         /// thus the name is checked for package delimiter (::)
         /// </summary>
-        public IReadOnlyDictionary<string, NuGetVersion> InitDefaultVersions(string[] config)
+        public IReadOnlyDictionary<string, NuGetVersion> InitDefaultVersions(string[]? config)
         {
             var versions = new Dictionary<string, NuGetVersion>(StringComparer.OrdinalIgnoreCase);
 
@@ -175,7 +177,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds a new package given the name and version as strings.
         /// </summary>
-        public async Task<PackageIdentity> Add(string package)
+        public async Task<PackageIdentity> Add(string package, Action<string>? statusAction = null)
         {
             if (string.IsNullOrWhiteSpace(package))
             {
@@ -183,7 +185,7 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             var pkgId = await ParsePackageId(package);
-            await Add(pkgId);
+            await Add(pkgId, statusAction);
 
             return pkgId;
         }
@@ -191,16 +193,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds the given package.
         /// </summary>
-        public async Task Add(PackageIdentity pkgId)
+        public async Task Add(PackageIdentity pkgId, Action<string>? statusAction = null)
         {
             // Already added:
             if (Items.Contains(pkgId)) return;
+            statusAction?.Invoke($"Adding package {pkgId.Id}!");
 
             using (var sourceCacheContext = new SourceCacheContext())
             {
                 var packages = await GetPackageDependencies(pkgId, sourceCacheContext);
 
-                await DownloadPackages(sourceCacheContext, packages);
+                await DownloadPackages(sourceCacheContext, packages, statusAction);
 
                 this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
                 this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
@@ -225,7 +228,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Downloads and extracts a package into the GlobalPackages folder.
         /// </summary>
-        public async Task DownloadPackages(SourceCacheContext context, IEnumerable<SourcePackageDependencyInfo> packagesToInstall)
+        public async Task DownloadPackages(SourceCacheContext context, IEnumerable<SourcePackageDependencyInfo> packagesToInstall, Action<string>? statusAction = null)
         {
             foreach (var pkg in packagesToInstall)
             {
@@ -234,6 +237,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (!IsInstalled(pkg))
                 {
+                    statusAction?.Invoke($"Downloading {pkg.Id}");
                     var downloadResource = await pkg.Source.GetResourceAsync<DownloadResource>(CancellationToken.None);
                     var downloadResult = await downloadResource.GetDownloadResourceResultAsync(
                         pkg,
@@ -294,7 +298,7 @@ namespace Microsoft.Quantum.IQSharp
 
             var names = CheckOnFramework(NETCOREAPP3_0);
 
-            Assembly LoadAssembly(string path)
+            Assembly? LoadAssembly(string path)
             {
                 try
                 {
@@ -306,6 +310,7 @@ namespace Microsoft.Quantum.IQSharp
                     return null;
                 }
             }
+
             return names
                 .Select(LoadAssembly)
                 .Select(AssemblyInfo.Create)
@@ -321,29 +326,30 @@ namespace Microsoft.Quantum.IQSharp
         {
             package = package?.Trim() ?? throw new ArgumentNullException(nameof(package));
 
-            NuGetVersion found = null;
+            NuGetVersion? found = null;
 
             if (DefaultVersions.TryGetValue(package, out found))
             {
                 return found;
             }
 
+
             foreach (var repo in this.Repositories)
             {
                 try
                 {
-                    var feed = await repo.GetResourceAsync<ListResource>();
-                    if (feed == null) continue;
+                    var metadatas = repo.SearchPackagesByIdAsync(
+                        package, false, Logger
+                    );
 
-                    var metadatas = await feed.ListAsync(package, prerelease: false, allVersions: false, includeDelisted: false, log: Logger, token: CancellationToken.None);
+                    // var metadatas = await feed.ListAsync(package, prerelease: false, allVersions: false, includeDelisted: false, log: Logger, token: CancellationToken.None);
                     if (metadatas == null) continue;
 
-                    var e = metadatas.GetEnumeratorAsync();
-                    while (await e.MoveNextAsync())
+                    await foreach (var e in metadatas)
                     {
-                        if (string.Equals(e.Current.Identity.Id, package, StringComparison.InvariantCultureIgnoreCase) && e.Current.Identity.HasVersion)
+                        if (string.Equals(e.Identity.Id, package, StringComparison.InvariantCultureIgnoreCase) && e.Identity.HasVersion)
                         {
-                            var current = e.Current.Identity.Version;
+                            var current = e.Identity.Version;
                             if (found == null || found < current)
                             {
                                 found = current;
