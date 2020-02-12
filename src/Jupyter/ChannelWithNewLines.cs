@@ -29,5 +29,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public void Stderr(string message) => BaseChannel?.Stderr(Format(message));
 
         public void Display(object displayable) => BaseChannel?.Display(displayable);
+
+        public IUpdatableDisplay DisplayUpdatable(object displayable) => BaseChannel?.DisplayUpdatable(displayable);
     }
 }
