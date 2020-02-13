@@ -28,7 +28,7 @@ function Build-One {
 }
 
 # Fetch TypeScript definitions
-Push-Location src/Jupyter
+Push-Location (Join-Path $PSScriptRoot ../src/Jupyter)
     npm install
 Pop-Location
 
