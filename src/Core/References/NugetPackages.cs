@@ -177,16 +177,16 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds a new package given the name and version as strings.
         /// </summary>
-        public async Task<PackageIdentity> Add(string package, Action<string>? statusAction = null)
+        public async Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
         {
             if (string.IsNullOrWhiteSpace(package))
             {
                 throw new InvalidOperationException("Please provide a name of a package.");
             }
 
-            statusAction?.Invoke("finding latest version");
+            statusCallback?.Invoke("finding latest version");
             var pkgId = await ParsePackageId(package);
-            await Add(pkgId, statusAction);
+            await Add(pkgId, statusCallback);
 
             return pkgId;
         }
@@ -194,17 +194,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds the given package.
         /// </summary>
-        public async Task Add(PackageIdentity pkgId, Action<string>? statusAction = null)
+        public async Task Add(PackageIdentity pkgId, Action<string>? statusCallback = null)
         {
             // Already added:
             if (Items.Contains(pkgId)) return;
 
             using (var sourceCacheContext = new SourceCacheContext())
             {
-                statusAction?.Invoke("getting dependencies");
+                statusCallback?.Invoke("getting dependencies");
                 var packages = await GetPackageDependencies(pkgId, sourceCacheContext);
 
-                await DownloadPackages(sourceCacheContext, packages, statusAction);
+                await DownloadPackages(sourceCacheContext, packages, statusCallback);
 
                 this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
                 this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
@@ -229,7 +229,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Downloads and extracts a package into the GlobalPackages folder.
         /// </summary>
-        public async Task DownloadPackages(SourceCacheContext context, IEnumerable<SourcePackageDependencyInfo> packagesToInstall, Action<string>? statusAction = null)
+        public async Task DownloadPackages(SourceCacheContext context, IEnumerable<SourcePackageDependencyInfo> packagesToInstall, Action<string>? statusCallback = null)
         {
             foreach (var pkg in packagesToInstall)
             {
@@ -238,7 +238,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (!IsInstalled(pkg))
                 {
-                    statusAction?.Invoke($"downloading {pkg.Id}");
+                    statusCallback?.Invoke($"downloading {pkg.Id}");
                     var downloadResource = await pkg.Source.GetResourceAsync<DownloadResource>(CancellationToken.None);
                     var downloadResult = await downloadResource.GetDownloadResourceResultAsync(
                         pkg,

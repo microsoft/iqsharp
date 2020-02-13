@@ -69,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds a nuget package and its corresponding assemblies to the list of references.
         /// </summary>
-        Task AddPackage(string name, Action<string>? statusAction = null);
+        Task AddPackage(string name, Action<string>? statusCallback = null);
 
     }
 }

@@ -85,7 +85,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Adds the libraries from the given nuget package to the list of assemblies.
         /// If version is not provided. It automatically picks up the latest version.
         /// </summary>
-        public async Task AddPackage(string name, Action<string>? statusAction = null)
+        public async Task AddPackage(string name, Action<string>? statusCallback = null)
         {
             var duration = Stopwatch.StartNew();
 
@@ -94,7 +94,7 @@ namespace Microsoft.Quantum.IQSharp
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            var pkg = await Nugets.Add(name, statusAction);
+            var pkg = await Nugets.Add(name, statusCallback);
 
             Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();
             Reset();
