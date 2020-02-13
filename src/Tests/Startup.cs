@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
@@ -43,6 +43,7 @@ namespace Tests.IQSharp
         public static void AddMocks(this IServiceCollection services)
         {
             services.AddSingleton<IShellServer>(new MockShell());
+            services.AddSingleton<IShellRouter>(new MockShellRouter());
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());
         }
     }

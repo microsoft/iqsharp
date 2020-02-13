@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -57,12 +57,40 @@ namespace Tests.IQSharp
         }
     }
 
+    public class MockShellRouter : IShellRouter
+    {
+        public void Handle(Message message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterFallback(Action<Message> fallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterHandler(string messageType, Action<Message> handler)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterHandlers<TAssembly>()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class MockChannel : IChannel
     {
         public List<string> errors = new List<string>();
         public List<string> msgs = new List<string>();
 
         public void Display(object displayable)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IUpdatableDisplay DisplayUpdatable(object displayable)
         {
             throw new NotImplementedException();
         }
