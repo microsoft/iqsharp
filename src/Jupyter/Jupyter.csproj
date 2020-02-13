@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.2.36130-1" />
+    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.2.36130" />
   </ItemGroup>
 
   <ItemGroup>
