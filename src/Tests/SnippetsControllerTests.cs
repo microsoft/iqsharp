@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Microsoft.Quantum.IQSharp;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.IQSharp.Web.Models;
+using Microsoft.Quantum.Simulation.Core;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.Simulation.Core;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using Newtonsoft.Json;
-
 using Extensions = Microsoft.Quantum.IQSharp.Extensions;
 
 
@@ -30,23 +28,26 @@ namespace Tests.IQSharp
 
         public static async Task<string[]> AssertCompile(SnippetsController controller, string source, params string[] ops)
         {
-            var response = await controller.Compile(source);
+            var response = await controller.Compile(new CompileSnippetModel
+            {
+                Code = source
+            });
             Console.WriteLine(JsonConvert.SerializeObject(response));
-            Assert.AreEqual(Status.success, response.status);
-            Assert.AreEqual(0, response.messages.Length);
-            foreach (var op in ops.OrderBy(o => o).Zip(response.result.OrderBy(o => o), (expected, actual) => new { expected, actual })) { Assert.AreEqual(op.expected, op.actual); }
+            Assert.AreEqual(Status.Success, response.Status);
+            Assert.AreEqual(0, response.Messages.Length);
+            foreach (var op in ops.OrderBy(o => o).Zip(response.Result.OrderBy(o => o), (expected, actual) => new { expected, actual })) { Assert.AreEqual(op.expected, op.actual); }
 
-            return response.result;
+            return response.Result;
         }
 
         public static async Task<object> AssertSimulate(SnippetsController controller, string snippetName, params string[] messages)
         {
             var response = await controller.Simulate(snippetName);
             Console.WriteLine(JsonConvert.SerializeObject(response));
-            Assert.AreEqual(Status.success, response.status);
-            foreach (var m in messages.Zip(response.messages, (expected, actual) => new { expected, actual })) { Assert.AreEqual(m.expected, m.actual); }
+            Assert.AreEqual(Status.Success, response.Status);
+            foreach (var m in messages.Zip(response.Messages, (expected, actual) => new { expected, actual })) { Assert.AreEqual(m.expected, m.actual); }
 
-            return response.result;
+            return response.Result;
         }
 
         [TestMethod]
@@ -64,9 +65,9 @@ namespace Tests.IQSharp
 
             // Try running without compiling it, fails:
             var response = await controller.Simulate("_snippet_.HelloQ");
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(1, response.messages.Length);
-            Assert.AreEqual($"Invalid operation name: _snippet_.HelloQ", response.messages[0]);
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(1, response.Messages.Length);
+            Assert.AreEqual($"Invalid operation name: _snippet_.HelloQ", response.Messages[0]);
 
             // Compile it:
             await AssertCompile(controller, SNIPPETS.HelloQ, "HelloQ");
@@ -80,10 +81,13 @@ namespace Tests.IQSharp
         {
             var controller = Init();
 
-            var response = await controller.Compile(SNIPPETS.InvalidFunctor);
+            var response = await controller.Compile(new CompileSnippetModel
+            {
+                Code = SNIPPETS.InvalidFunctor
+            });
             Console.WriteLine(JsonConvert.SerializeObject(response));
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(5, response.messages.Length);
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(5, response.Messages.Length);
         }
 
         [TestMethod]
