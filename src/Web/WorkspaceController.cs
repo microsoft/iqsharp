@@ -66,12 +66,12 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 Workspace?.Reload();
-                if (Workspace.HasErrors) return new Response<string[]>(Status.error, Workspace.ErrorMessages.ToArray());
+                if (Workspace.HasErrors) return new Response<string[]>(Status.Error, Workspace.ErrorMessages.ToArray());
                 return await GetMany();
             }
             catch (Exception e)
             {
-                return new Response<string[]>(Status.error, new string[] { e.Message });
+                return new Response<string[]>(Status.Error, new string[] { e.Message });
             }
         }
 
@@ -105,7 +105,7 @@ namespace Microsoft.Quantum.IQSharp
         /// it checks if the Workspace is avaialble and in a success (no errors) state.
         /// The method throws Exceptions if it finds it is not ready to execute.
         /// </summary>
-        public override void CheckIfReady()
+        protected override void CheckIfReady()
         {
             if (Workspace == null)
             {

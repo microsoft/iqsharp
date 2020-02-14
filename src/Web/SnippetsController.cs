@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.IQSharp.Web.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Quantum.IQSharp.Common;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -59,11 +58,11 @@ namespace Microsoft.Quantum.IQSharp
         /// found and those operations then become available for simulation.
         /// </summary>
         [HttpPost("compile")]
-        public async Task<Response<string[]>> Compile(string code) =>
+        public async Task<Response<string[]>> Compile([FromBody] CompileSnippetModel model) =>
             await AsResponse(async (logger) =>
             await IfReady(async () =>
             {
-                var result = Snippets.Compile(code);
+                var result = Snippets.Compile(model.Code);
 
                 // log warnings:
                 foreach (var m in result.warnings) { logger(m); }
@@ -109,7 +108,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Overrides CheckIfReady by not checking if the Workspace is actually available.
         /// It should be possible to build and run self-contained snippets.
         /// </summary>
-        public override void CheckIfReady() { }
+        protected override void CheckIfReady() { }
     }
 }
 
