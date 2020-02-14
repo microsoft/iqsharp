@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -34,9 +34,9 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.10.2001.525-beta" />
-    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.10.2001.525-beta" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.10.2001.525-beta" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.10.2001.2831" />
+    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.10.2001.2831" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.10.2001.2831" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
