@@ -39,7 +39,17 @@ namespace Tests.IQSharp
     {
         public event Action<Message> KernelInfoRequest;
         public event Action<Message> ExecuteRequest;
-        public event Action<Message> ShutdownRequest;
+        public event Action<Message> ShutdownRequest; 
+
+        internal void Handle(Message message)
+        {
+            (message.Header.MessageType switch {
+                "kernel_info_request" => KernelInfoRequest,
+                "execute_request" => ExecuteRequest,
+                "shutdown_request" => ShutdownRequest,
+                _ => null
+            })?.Invoke(message);
+        }
 
         public void SendIoPubMessage(Message message)
         {
@@ -57,6 +67,42 @@ namespace Tests.IQSharp
         }
     }
 
+    public class MockShellRouter : IShellRouter
+    {
+        private MockShell shell;
+        public MockShellRouter(MockShell shell)
+        {
+            this.shell = shell;
+        }
+
+        public void Handle(Message message)
+        {
+            shell.Handle(message);
+        }
+
+        public void RegisterFallback(Action<Message> fallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterHandler(string messageType, Action<Message> handler)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterHandlers<TAssembly>()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MockUpdatableDisplay : IUpdatableDisplay
+    {
+        public void Update(object displayable)
+        {
+        }
+    }
+
     public class MockChannel : IChannel
     {
         public List<string> errors = new List<string>();
@@ -64,7 +110,12 @@ namespace Tests.IQSharp
 
         public void Display(object displayable)
         {
-            throw new NotImplementedException();
+            
+        }
+
+        public IUpdatableDisplay DisplayUpdatable(object displayable)
+        {
+            return new MockUpdatableDisplay();
         }
 
         public IUpdatableDisplay DisplayUpdatable(object displayable)
