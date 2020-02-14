@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -32,9 +29,9 @@ namespace Tests.IQSharp
             var controller = Init();
             var response = await controller.GetMany();
 
-            Assert.AreEqual(Status.success, response.status);
-            Assert.AreEqual(0, response.messages.Length);
-            Assert.IsTrue(response.result.Length > 1);
+            Assert.AreEqual(Status.Success, response.Status);
+            Assert.AreEqual(0, response.Messages.Length);
+            Assert.IsTrue(response.Result.Length > 1);
         }
 
         [TestMethod]
@@ -43,15 +40,15 @@ namespace Tests.IQSharp
             var controller = Init();
             var response = await controller.GetOne("Tests.qss.NoOp");
 
-            Assert.AreEqual(Status.success, response.status);
-            Assert.AreEqual(0, response.messages.Length);
-            Assert.AreEqual("Tests.qss.NoOp", response.result.FullName);
+            Assert.AreEqual(Status.Success, response.Status);
+            Assert.AreEqual(0, response.Messages.Length);
+            Assert.AreEqual("Tests.qss.NoOp", response.Result.FullName);
 
             response = await controller.GetOne("Tests.qss.HelloAgain");
 
-            Assert.AreEqual(Status.success, response.status);
-            Assert.AreEqual(0, response.messages.Length);
-            Assert.AreEqual("Tests.qss.HelloAgain", response.result.FullName);
+            Assert.AreEqual(Status.Success, response.Status);
+            Assert.AreEqual(0, response.Messages.Length);
+            Assert.AreEqual("Tests.qss.HelloAgain", response.Result.FullName);
         }
 
         [TestMethod]
@@ -60,10 +57,10 @@ namespace Tests.IQSharp
             var controller = Init();
             var response = await controller.Simulate("Tests.qss.HelloQ");
 
-            Assert.AreEqual(Status.success, response.status);
-            Assert.AreEqual(1, response.messages.Length);
-            Assert.AreEqual("Hello from quantum world!", response.messages[0]);
-            Assert.AreEqual(QVoid.Instance, response.result);
+            Assert.AreEqual(Status.Success, response.Status);
+            Assert.AreEqual(1, response.Messages.Length);
+            Assert.AreEqual("Hello from quantum world!", response.Messages[0]);
+            Assert.AreEqual(QVoid.Instance, response.Result);
         }
 
         [TestMethod]
@@ -103,9 +100,9 @@ namespace Tests.IQSharp
 
             var response = await controller.Estimate("Tests.qss.CCNOTDriver");
 
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(1, response.messages.Length);
-            Assert.AreEqual($"Received invalid parameters. Please fix and try again:\n applyT: missing.", response.messages[0]);
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(1, response.Messages.Length);
+            Assert.AreEqual($"Received invalid parameters. Please fix and try again:\n applyT: missing.", response.Messages[0]);
         }
 
         [TestMethod]
@@ -115,9 +112,9 @@ namespace Tests.IQSharp
 
             var response = await controller.Simulate("Foo.Q");
 
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(1, response.messages.Length);
-            Assert.AreEqual($"Invalid operation name: Foo.Q", response.messages[0]);
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(1, response.Messages.Length);
+            Assert.AreEqual($"Invalid operation name: Foo.Q", response.Messages[0]);
         }
 
 
@@ -129,9 +126,9 @@ namespace Tests.IQSharp
 
             var response = await controller.Simulate("Foo.Q");
 
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(1, response.messages.Length);
-            Assert.AreEqual($"Workspace is not ready. Try again.", response.messages[0]);
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(1, response.Messages.Length);
+            Assert.AreEqual($"Workspace is not ready. Try again.", response.Messages[0]);
         }
 
 
@@ -142,10 +139,10 @@ namespace Tests.IQSharp
 
             var response = await controller.Simulate("Tests.qss.NoOp");
 
-            Assert.AreEqual(Status.error, response.status);
-            Assert.AreEqual(2, response.messages.Length);
-            Assert.IsNotNull(response.messages.First(m => m.Contains("QS6301")));
-            Assert.IsNotNull(response.messages.First(m => m.Contains("QS5022")));
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(2, response.Messages.Length);
+            Assert.IsNotNull(response.Messages.First(m => m.Contains("QS6301")));
+            Assert.IsNotNull(response.Messages.First(m => m.Contains("QS5022")));
         }
 
 

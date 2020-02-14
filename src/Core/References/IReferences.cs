@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -64,12 +64,12 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Nuget Packages that are installed for compilation and execution.
         /// </summary>
-        IEnumerable<string> Packages { get; }
+        IEnumerable<string>? Packages { get; }
 
         /// <summary>
         /// Adds a nuget package and its corresponding assemblies to the list of references.
         /// </summary>
-        Task AddPackage(string name);
+        Task AddPackage(string name, Action<string>? statusCallback = null);
 
     }
 }
