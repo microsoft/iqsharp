@@ -26,6 +26,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     {
         public IEnumerable<int>? QubitIds { get; set; }
         public int NQubits { get; set; }
+        
+        /// <remarks>
+        ///     These amplitudes represent the computational basis states
+        ///     labeled in little-endian order, as per the behavior of 
+        ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
+        /// </remarks>
         public Complex[]? Amplitudes { get; set; }
 
         public IEnumerable<(Complex, string)> SignificantAmplitudes(
