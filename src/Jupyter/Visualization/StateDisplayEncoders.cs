@@ -61,7 +61,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ) => convention switch
             {
                 BasisStateLabelingConvention.Bitstring =>
-                    System.Convert.ToString(index, 2).PadLeft(NQubits, '0'),
+                    String.Concat(
+                        System
+                            .Convert
+                            .ToString(index, 2)
+                            .PadLeft(NQubits, '0')
+                            .Reverse()
+                    ),
                 BasisStateLabelingConvention.BigEndian =>
                     System.Convert.ToInt64(
                         String.Concat(
