@@ -62,7 +62,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 BasisStateLabelingConvention.Bitstring =>
                     System.Convert.ToString(index, 2).PadLeft(NQubits, '0'),
-                BasisStateLabelingConvention.LittleEndian =>
+                BasisStateLabelingConvention.BigEndian =>
                     System.Convert.ToInt64(
                         String.Concat(
                             System.Convert.ToString(index, 2).PadLeft(NQubits, '0').Reverse()
@@ -70,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         fromBase: 2
                     )
                     .ToString(),
-                BasisStateLabelingConvention.BigEndian =>
+                BasisStateLabelingConvention.LittleEndian =>
                     index.ToString(),
                 _ => throw new ArgumentException($"Invalid basis state labeling convention {convention}.")
             };
