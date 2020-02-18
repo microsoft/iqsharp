@@ -34,6 +34,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         public IEnumerable<int>? QubitIds { get; set; }
         public int NQubits { get; set; }
+        
+        /// <remarks>
+        ///     These amplitudes represent the computational basis states
+        ///     labeled in little-endian order, as per the behavior of 
+        ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
+        /// </remarks>
         public Complex[]? Amplitudes { get; set; }
 
         public IEnumerable<(Complex, string)> SignificantAmplitudes(
@@ -76,8 +82,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ) => convention switch
             {
                 BasisStateLabelingConvention.Bitstring =>
-                    System.Convert.ToString(index, 2).PadLeft(NQubits, '0'),
-                BasisStateLabelingConvention.LittleEndian =>
+                    String.Concat(
+                        System
+                            .Convert
+                            .ToString(index, 2)
+                            .PadLeft(NQubits, '0')
+                            .Reverse()
+                    ),
+                BasisStateLabelingConvention.BigEndian =>
                     System.Convert.ToInt64(
                         String.Concat(
                             System.Convert.ToString(index, 2).PadLeft(NQubits, '0').Reverse()
@@ -85,7 +97,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         fromBase: 2
                     )
                     .ToString(),
-                BasisStateLabelingConvention.BigEndian =>
+                BasisStateLabelingConvention.LittleEndian =>
                     index.ToString(),
                 _ => throw new ArgumentException($"Invalid basis state labeling convention {convention}.")
             };
