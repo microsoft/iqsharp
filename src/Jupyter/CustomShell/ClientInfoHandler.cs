@@ -10,13 +10,19 @@ using Newtonsoft.Json;
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 
+    /// <summary>
+    ///     Shell handler that registers new information received from the
+    ///     client with an appropriate metadata controller. This allows for
+    ///     the client to provide metadata not initially available when the
+    ///     kernel starts, such as the browser's user agent string.
+    /// </summary>
     public class ClientInfoHandler : IShellHandler
     {
         public string UserAgent { get; private set; }
-        private readonly ILogger<HeartbeatHandler> logger;
+        private readonly ILogger<EchoHandler> logger;
         private readonly IMetadataController metadata;
         public ClientInfoHandler(
-            ILogger<HeartbeatHandler> logger,
+            ILogger<EchoHandler> logger,
             IMetadataController metadata
         )
         {

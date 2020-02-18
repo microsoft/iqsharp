@@ -7,6 +7,12 @@ using Microsoft.Extensions.Options;
 namespace Microsoft.Quantum.IQSharp
 {
 
+    /// <summary>
+    ///      Service that controls client-side metadata, whether that metadata
+    ///      comes via initial configuration (e.g. environment variables,
+    ///      command-line arguments, or JSON config files), or from runtime
+    ///      communication with the client.
+    /// </summary>
     public interface IMetadataController
     {
         /// <summary>
@@ -21,6 +27,10 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public string? HostingEnvironment { get; set; }
 
+        /// <summary>
+        ///     Raised when the available metadata has changed (e.g.: the client
+        ///     sends its user agent to the kernel).
+        /// </summary>
         public event Action MetadataChanged;
     }
 
@@ -51,9 +61,14 @@ namespace Microsoft.Quantum.IQSharp
         public event Action? MetadataChanged;
 
         public MetadataController(
+            // We take an options instance with the client information initially
+            // available when the service collection is first constructed (e.g.:
+            // through environment variables set at kernel start).
             IOptions<ClientInformation> options
         )
         {
+            // NB: we set the private backing fields explicitly so that we don't
+            //     fire off change events when constructing the controller.
             userAgent = options.Value.UserAgent;
             hostingEnvironment = options.Value.HostingEnvironment;
         }

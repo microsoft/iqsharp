@@ -60,24 +60,41 @@ export function onload() {
     });
     codeMirror.defineMIME("text/x-qsharp", "qsharp");
 
-    // Try writing out a heartbeat to the kernel.
     IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
-        let value = "heartbeat";
-        IPython.notebook.kernel.register_iopub_handler("iqsharp_heartbeat_output", message => {
-            console.log("Got ♥beat output:", message);
-        });
+        // Try sending something for the kernel to echo back in order to test
+        // communiates with the kernel. Note that iqsharp_echo_request will get
+        // two responses: an output over iopub, and a reply over shell. We thus
+        // subscribe both callbacks in order to make sure that both work
+        // correctly.
+        let value = "hello!";
+        // The output callback is registered with the kernel object itself,
+        // since outputs aren't a reply to any particular message.
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_echo_output",
+            message => {
+                console.log("Got echo output:", message);
+            }
+        );
+        // By contrast, callbacks for replies are associated with the message
+        // itself, since we don't want the callback to pick up echo replies that
+        // are replies to other messages.
         IPython.notebook.kernel.send_shell_message(
-            "iqsharp_heartbeat_request",
+            "iqsharp_echo_request",
             {value: value},
             {
                 shell: {
                     reply: (message) => {
-                        console.log("Got ♥beat reply:", message);
+                        console.log("Got echo reply:", message);
                     }
                 }
             }
         );
 
+        // The other thing we will want to do as the kernel starts up is to
+        // pass along information from the client that would not otherwise be
+        // available. For example, the browser user agent isn't exposed to the
+        // kernel by the Jupyter protocol, since the client may not even be in a
+        // browser at all.
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_client_info",
             {

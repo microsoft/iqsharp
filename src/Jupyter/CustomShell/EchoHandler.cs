@@ -9,18 +9,22 @@ using Newtonsoft.Json;
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 
-    public class HeartbeatReplyContent : MessageContent
+    public class EchoReplyContent : MessageContent
     {
         [JsonProperty("value")]
         public string Value { get; set; }
     }
 
-    public class HeartbeatHandler : IShellHandler
+    /// <summary>
+    ///     Allows clients to send "echo" messages to test shell and iopub
+    ///     communications with the kernel.
+    /// </summary>
+    public class EchoHandler : IShellHandler
     {
         private readonly IShellServer shellServer;
-        private readonly ILogger<HeartbeatHandler> logger;
-        public HeartbeatHandler(
-            ILogger<HeartbeatHandler> logger,
+        private readonly ILogger<EchoHandler> logger;
+        public EchoHandler(
+            ILogger<EchoHandler> logger,
             IShellServer shellServer
         )
         {
@@ -28,20 +32,22 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.shellServer = shellServer;
         }
 
-        public string MessageType => "iqsharp_heartbeat_request";
+        public string MessageType => "iqsharp_echo_request";
 
         public void Handle(Message message)
         {
             // Find out the thing we need to echo back.
             var value = (message.Content as UnknownContent).Data["value"] as string;
+            // Send the echo both as an output and as a reply so that clients
+            // can test both kinds of callbacks.
             shellServer.SendIoPubMessage(
                 new Message
                 {
                     Header = new MessageHeader
                     {
-                        MessageType = "iqsharp_heartbeat_output"
+                        MessageType = "iqsharp_echo_output"
                     },
-                    Content = new HeartbeatReplyContent
+                    Content = new EchoReplyContent
                     {
                         Value = value
                     }
@@ -52,9 +58,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 {
                     Header = new MessageHeader
                     {
-                        MessageType = "iqsharp_heartbeat_reply"
+                        MessageType = "iqsharp_echo_reply"
                     },
-                    Content = new HeartbeatReplyContent
+                    Content = new EchoReplyContent
                     {
                         Value = value
                     }
