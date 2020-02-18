@@ -41,7 +41,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             await symbol.Operation.RunAsync(qsim, args);
 
-            return qsim.ToExecutionResult();
+            return qsim.Data.ToExecutionResult();
         }
     }
 }
