@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -20,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         private T GetOptionOrDefault<T>(string optionName, T defaultValue) =>
             Configuration.TryGetValue(optionName, out var token)
-            ? token.ToObject<T>()
+            ? token.ToObject<T>() ?? defaultValue
             : defaultValue;
 
         public BasisStateLabelingConvention BasisStateLabelingConvention =>
@@ -48,10 +49,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             if (!skipLoading && File.Exists(ConfigPath))
             {
                 var configContents = File.ReadAllText(ConfigPath);
-                _Configuration = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(
+                var config = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(
                     configContents,
                     JsonConverters.TupleConverters
                 );
+                Debug.Assert(
+                    config != null,
+                    "Deserializing JSON configuration resulted in a null value, but no exception was thrown."
+                );
+                _Configuration = config;
             }
             else
             {
