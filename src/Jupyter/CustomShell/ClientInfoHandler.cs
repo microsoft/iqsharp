@@ -11,6 +11,25 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 
     /// <summary>
+    ///     Represents information returned to the client about the current
+    ///     kernel instance, such as the current hosting environment.
+    /// </summary>
+    public class ClientInfoContent : MessageContent
+    {
+        [JsonProperty("hosting_environment")]
+        public string HostingEnvironment { get; set; }
+    }
+
+    internal static class MetadataExtensions
+    {
+        internal static ClientInfoContent AsClientInfoContent(this IMetadataController metadata) =>
+            new ClientInfoContent
+            {
+                HostingEnvironment = metadata.HostingEnvironment
+            };
+    }
+
+    /// <summary>
     ///     Shell handler that registers new information received from the
     ///     client with an appropriate metadata controller. This allows for
     ///     the client to provide metadata not initially available when the
@@ -21,20 +40,34 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public string UserAgent { get; private set; }
         private readonly ILogger<EchoHandler> logger;
         private readonly IMetadataController metadata;
+        private readonly IShellServer shellServer;
         public ClientInfoHandler(
             ILogger<EchoHandler> logger,
-            IMetadataController metadata
+            IMetadataController metadata,
+            IShellServer shellServer
         )
         {
             this.logger = logger;
             this.metadata = metadata;
+            this.shellServer = shellServer;
         }
 
-        public string MessageType => "iqsharp_client_info";
+        public string MessageType => "iqsharp_clientinfo_request";
 
         public void Handle(Message message)
         {
             metadata.UserAgent = (message.Content as UnknownContent).Data["user_agent"] as string;
+            shellServer.SendShellMessage(
+                new Message
+                {
+                    Header = new MessageHeader
+                    {
+                        MessageType = "iqsharp_clientinfo_reply"
+                    },
+                    Content = metadata.AsClientInfoContent()
+                }
+                .AsReplyTo(message)
+            );
         }
     }
 }

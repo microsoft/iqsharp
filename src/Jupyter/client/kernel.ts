@@ -96,7 +96,7 @@ export function onload() {
         // kernel by the Jupyter protocol, since the client may not even be in a
         // browser at all.
         IPython.notebook.kernel.send_shell_message(
-            "iqsharp_client_info",
+            "iqsharp_clientinfo_request",
             {
                 "user_agent": navigator.userAgent
             }
