@@ -18,6 +18,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     {
         [JsonProperty("hosting_environment")]
         public string HostingEnvironment { get; set; }
+
+        [JsonProperty("iqsharp_version")]
+        public string IQSharpVersion { get; set; } =
+            typeof(ClientInfoContent).Assembly.GetName().Version.ToString();
     }
 
     internal static class MetadataExtensions

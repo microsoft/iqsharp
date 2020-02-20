@@ -7,7 +7,7 @@
 import { IPython } from "./ipython";
 declare var IPython : IPython;
 
-export function onload() {
+function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
     // NB: The TypeScript definitions for CodeMirror don't currently understand
     //     the simple mode plugin.
@@ -59,10 +59,22 @@ export function onload() {
         ]
     });
     codeMirror.defineMIME("text/x-qsharp", "qsharp");
+}
 
-    IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
+class Kernel {
+    hostingEnvironment : string | undefined;
+    iqsharpVersion : string | undefined;
+
+    constructor() {
+        IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
+            this.requestEcho();
+            this.requestClientInfo();
+        });
+    }
+
+    requestEcho() {
         // Try sending something for the kernel to echo back in order to test
-        // communiates with the kernel. Note that iqsharp_echo_request will get
+        // communicates with the kernel. Note that iqsharp_echo_request will get
         // two responses: an output over iopub, and a reply over shell. We thus
         // subscribe both callbacks in order to make sure that both work
         // correctly.
@@ -89,7 +101,9 @@ export function onload() {
                 }
             }
         );
+    }
 
+    requestClientInfo() {
         // The other thing we will want to do as the kernel starts up is to
         // pass along information from the client that would not otherwise be
         // available. For example, the browser user agent isn't exposed to the
@@ -99,10 +113,25 @@ export function onload() {
             "iqsharp_clientinfo_request",
             {
                 "user_agent": navigator.userAgent
+            },
+            {
+                shell: {
+                    reply: (message) => {
+                        let content = message?.content;
+                        console.log("clientinfo_reply message and content", message, content);
+                        this.hostingEnvironment = content?.hosting_environment;
+                        this.iqsharpVersion = content?.iqsharp_version;
+                        console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
+                    }
+                }
             }
         );
-    });
+    }
+}
 
+export function onload() {
+    defineQSharpMode();
+    let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
 
