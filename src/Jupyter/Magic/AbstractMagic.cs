@@ -55,7 +55,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var inputParts = input.Split(BLANK_SPACE, 2, StringSplitOptions.RemoveEmptyEntries);
             var name = inputParts.Length > 0 ? inputParts[0] : string.Empty;
             var args = inputParts.Length > 1
-                    ? TupleConverters.JsonToDict(inputParts[1])
+                    ? JsonConverters.JsonToDict(inputParts[1])
                     : new Dictionary<string, string> { };
 
             return (name, args);

@@ -50,7 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 var configContents = File.ReadAllText(ConfigPath);
                 _Configuration = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(
                     configContents,
-                    TupleConverters.Converters
+                    JsonConverters.TupleConverters
                 );
             }
             else
@@ -64,7 +64,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // Try writing the configuration back to JSON.
             File.WriteAllText(
                 ConfigPath,
-                JsonConvert.SerializeObject(_Configuration, TupleConverters.Converters)
+                JsonConvert.SerializeObject(_Configuration, JsonConverters.TupleConverters)
             );
             System.Console.Out.WriteLine($"Wrote config preferences to {ConfigPath}.");
         }

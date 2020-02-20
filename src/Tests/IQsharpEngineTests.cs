@@ -12,6 +12,7 @@ using Microsoft.Quantum.Simulation.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
+using System.Data;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -69,13 +70,14 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
             var estimateMagic = new EstimateMagic(engine.SymbolsResolver);
             var response = estimateMagic.Execute(snippetName, channel);
-            var result = response.Output as Dictionary<string, double>;
+            var result = response.Output as DataTable;
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.IsNotNull(result);
-            Assert.AreEqual(8, result.Count);
-            CollectionAssert.Contains(result.Keys, "T");
-            CollectionAssert.Contains(result.Keys, "CNOT");
+            Assert.AreEqual(8, result.Rows.Count);
+            var keys = result.Rows.Cast<DataRow>().Select(row => row.ItemArray[0]).ToList();
+            CollectionAssert.Contains(keys, "T");
+            CollectionAssert.Contains(keys, "CNOT");
             CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
 
             return response.Output?.ToString();
