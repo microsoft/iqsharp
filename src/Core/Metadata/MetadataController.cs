@@ -8,6 +8,16 @@ namespace Microsoft.Quantum.IQSharp
 {
 
     /// <summary>
+    ///     Raised when the available metadata has changed (e.g.: the client
+    ///     sends its user agent to the kernel).
+    /// </summary>
+    /// <param name="propertyName">
+    ///     Name of the metadata property whose value changed. May possibly
+    ///     be <c>null</c> if the property name is not known.
+    /// </param>
+    public delegate void OnMetadataChanged(string? propertyName);
+
+    /// <summary>
     ///      Service that controls client-side metadata, whether that metadata
     ///      comes via initial configuration (e.g. environment variables,
     ///      command-line arguments, or JSON config files), or from runtime
@@ -27,11 +37,12 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public string? HostingEnvironment { get; set; }
 
+
         /// <summary>
         ///     Raised when the available metadata has changed (e.g.: the client
         ///     sends its user agent to the kernel).
         /// </summary>
-        public event Action MetadataChanged;
+        public event OnMetadataChanged? MetadataChanged;
     }
 
     public class MetadataController : IMetadataController
@@ -42,23 +53,24 @@ namespace Microsoft.Quantum.IQSharp
         public string? UserAgent
         {
             get => userAgent;
-            set
-            {
-                userAgent = value;
-                MetadataChanged?.Invoke();
-            }
+            set => SetPropertyAndNotifyChange(ref userAgent, value);
         }
         public string? HostingEnvironment
         {
             get => hostingEnvironment;
-            set
+            set => SetPropertyAndNotifyChange(ref hostingEnvironment, value);
+        }
+
+        protected void SetPropertyAndNotifyChange<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        {
+            if (!object.Equals(field, value))
             {
-                hostingEnvironment = value;
-                MetadataChanged?.Invoke();
+                field = value;
+                MetadataChanged?.Invoke(propertyName);
             }
         }
 
-        public event Action? MetadataChanged;
+        public event OnMetadataChanged? MetadataChanged;
 
         public MetadataController(
             // We take an options instance with the client information initially
@@ -67,10 +79,8 @@ namespace Microsoft.Quantum.IQSharp
             IOptions<ClientInformation> options
         )
         {
-            // NB: we set the private backing fields explicitly so that we don't
-            //     fire off change events when constructing the controller.
-            userAgent = options.Value.UserAgent;
-            hostingEnvironment = options.Value.HostingEnvironment;
+            UserAgent = options.Value.UserAgent;
+            HostingEnvironment = options.Value.HostingEnvironment;
         }
     }
 
