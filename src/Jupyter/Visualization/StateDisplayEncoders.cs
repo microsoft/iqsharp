@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -24,6 +25,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
     public class DisplayableState
     {
+        private static readonly IComparer<string> ToIntComparer =
+            Comparer<string>.Create((label1, label2) =>
+                Comparer<int>.Default.Compare(
+                    Int32.Parse(label1), Int32.Parse(label2)
+                )
+            );
+
         public IEnumerable<int>? QubitIds { get; set; }
         public int NQubits { get; set; }
         
@@ -59,7 +67,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 item => (item.amplitude, BasisStateLabel(convention, item.idx))
             )
             .OrderBy(
-                item => item.Item2
+                item => item.Item2,
+                // If a basis state label is numeric, we want to compare
+                // numerically rather than lexographically.
+                convention switch {
+                    BasisStateLabelingConvention.BigEndian => ToIntComparer,
+                    BasisStateLabelingConvention.LittleEndian => ToIntComparer,
+                    _ => Comparer<string>.Default
+                }
             );
 
         public string BasisStateLabel(

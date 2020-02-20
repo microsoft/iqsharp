@@ -132,11 +132,17 @@ class IQSharpClient(object):
 
     def estimate(self, op, **params) -> Dict[str, int]:
         raw_counts = self._execute_callable_magic('estimate', op, **params)
-        # Convert counts to ints, since they get turned to floats by JSON serialization.
-        return {
-            operation_name: int(count)
-            for operation_name, count in raw_counts.items()
-        }
+        # Note that raw_counts will have the form:
+        # [
+        #     {"Metric": "<name>", "Sum": "<value>"},
+        #     ...
+        # ]
+        # We thus need to convert it into a dict. As we do so, we convert counts
+        # to ints, since they get turned to floats by JSON serialization.
+        counts = {}
+        for row in raw_counts:
+            counts[row["Metric"]] = int(row["Sum"])
+        return counts
 
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """

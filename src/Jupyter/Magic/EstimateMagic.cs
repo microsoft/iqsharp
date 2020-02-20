@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -13,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class EstimateMagic : AbstractMagic
     {
         public EstimateMagic(ISymbolResolver resolver) : base(
-            "estimate", 
+            "estimate",
             new Documentation {
                 Summary = "Runs a given function or operation on the QuantumSimulator target machine"
             })
@@ -36,10 +38,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             var qsim = new ResourcesEstimator();
             qsim.DisableLogToConsole();
-            
+
             await symbol.Operation.RunAsync(qsim, args);
 
-            return qsim.AsDictionary().ToExecutionResult();
+            return qsim.Data.ToExecutionResult();
         }
     }
 }

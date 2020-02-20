@@ -162,7 +162,7 @@ namespace Tests.IQSharp
             };
 
             var json = JsonConvert.SerializeObject(arg);
-            var result = TupleConverters.JsonToDict(json);
+            var result = JsonConverters.JsonToDict(json);
 
             Assert.AreEqual(4, result.Count);
             Assert.AreEqual(JsonConvert.SerializeObject(s), result["s"]);
