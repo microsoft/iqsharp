@@ -87,12 +87,10 @@ namespace Tests.IQSharp
 
         public void RegisterHandler(string messageType, Action<Message> handler)
         {
-            throw new NotImplementedException();
         }
 
         public void RegisterHandlers<TAssembly>()
         {
-            throw new NotImplementedException();
         }
     }
 
