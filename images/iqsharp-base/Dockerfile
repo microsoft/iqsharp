@@ -25,6 +25,8 @@ RUN apt-get update && \
                        # well. Thankfully, Git is a small dependency (~3 MiB)
                        # given what we have already installed.
                        git && \
+    # Upgrade optional dependencies brought in by the previous step.
+    apt-get -y upgrade libidn2-0 && \
     # We clean the apt cache at the end of each apt command so that the caches
     # don't get stored in each layer.
     apt-get clean && rm -rf /var/lib/apt/lists/
