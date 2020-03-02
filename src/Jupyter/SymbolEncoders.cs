@@ -13,8 +13,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public class IQSharpSymbolToTextResultEncoder : IResultEncoder
     {
+        /// <inheritdoc />
         public string MimeType => MimeTypes.PlainText;
 
+        /// <summary>
+        ///     Checks if a displayable object is an IQ# symbol, and if so,
+        ///     returns an encoding of that symbol into plain text.
+        /// </summary>
         public EncodedData? Encode(object displayable)
         {
             if (displayable is IQSharpSymbol symbol)
@@ -33,8 +38,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public class IQSharpSymbolToHtmlResultEncoder : IResultEncoder
     {
+        /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
 
+        /// <summary>
+        ///     Checks if a displayable object is an IQ# symbol, and if so,
+        ///     returns an encoding of that symbol into HTML.
+        /// </summary>
         public EncodedData? Encode(object displayable)
         {
             if (displayable is IQSharpSymbol symbol)

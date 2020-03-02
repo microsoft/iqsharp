@@ -10,6 +10,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public static class Constants
     {
+        /// <summary>
+        ///     The properties for this kernel (e.g. versions, language name,
+        ///     etc.).
+        /// </summary>
         public static readonly KernelProperties IQSharpKernelProperties = new KernelProperties
         {
             FriendlyName = "Q#",
@@ -18,7 +22,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             DisplayName = "Q#",
 
             LanguageName = "qsharp",
-            LanguageVersion = "0.4",
+            LanguageVersion = "0.10",
             LanguageMimeType = "text/x-qsharp",
             LanguageFileExtension = ".qs",
 

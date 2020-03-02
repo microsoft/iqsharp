@@ -13,8 +13,15 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     A magic command that sets or queries configuration options.
+    /// </summary>
     public class ConfigMagic : AbstractMagic
     {
+        /// <summary>
+        ///     Constructs a magic command that sets or queries configuration
+        ///     options using a given configuration source.
+        /// </summary>
         public ConfigMagic(IConfigurationSource configurationSource) : base(
             "config",
             new Documentation {
@@ -24,8 +31,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.ConfigurationSource = configurationSource;
         }
 
+        /// <summary>
+        ///     The configuration source which this magic command queries or
+        ///     sets configuration options in.
+        /// </summary>
         public IConfigurationSource ConfigurationSource { get; }
 
+
+        /// <inheritdoc />
         public override ExecutionResult Run(string? input, IChannel channel)
         {
             // If we didn't get any input, treat it as a query.
