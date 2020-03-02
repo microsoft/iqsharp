@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp
     ///     Name of the metadata property whose value changed. May possibly
     ///     be <c>null</c> if the property name is not known.
     /// </param>
-    public delegate void OnMetadataChanged(string? propertyName);
+    public delegate void OnMetadataChanged(IMetadataController sender, string? propertyName);
 
     /// <summary>
     ///      Service that controls client-side metadata, whether that metadata
@@ -66,7 +66,7 @@ namespace Microsoft.Quantum.IQSharp
             if (!object.Equals(field, value))
             {
                 field = value;
-                MetadataChanged?.Invoke(propertyName);
+                MetadataChanged?.Invoke(this, propertyName);
             }
         }
 
