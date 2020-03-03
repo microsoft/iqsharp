@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="res\kernel.js" />
     <EmbeddedResource Include="res\logo-64x64.png" />
   </ItemGroup>
 
@@ -29,6 +28,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
+  <!-- TypeScript compilation -->
+  <ItemGroup>
+    <EmbeddedResource Include="res\kernel.js" />
+    <Content Include="tsconfig.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.7.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

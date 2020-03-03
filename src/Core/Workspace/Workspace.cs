@@ -107,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         /// <param name="logger">Used to log messages to the console.</param>
         /// <param name="references">List of references to use to compile the workspace.</param>
-        public Workspace(IOptions<Settings> config, ICompilerService compiler, IReferences references, ILogger<Workspace> logger, IOptions<ClientInformation> clientInfo)
+        public Workspace(IOptions<Settings> config, ICompilerService compiler, IReferences references, ILogger<Workspace> logger, IMetadataController metadata)
         {
             Compiler = compiler;
             GlobalReferences = references;
@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp
 
             var monitor = config?.Value.MonitorWorkspace == true;
 
-            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {monitor}\nUser agent: {clientInfo?.Value?.UserAgent ?? "<unknown>"}\nHosting environment: {clientInfo?.Value?.HostingEnvironment ?? "<unknown>"}\n----------------");
+            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {monitor}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
             if (!LoadFromCache())
             {

@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -18,6 +19,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public static class Extensions
     {
+
         /// <summary>
         /// Creates a wrapper of an IChannel that adds new lines to every message
         /// sent to stdout and stderr

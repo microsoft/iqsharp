@@ -13,6 +13,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
+using Microsoft.Jupyter.Core.Protocol;
+using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -34,7 +36,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
-            PerformanceMonitor performanceMonitor
+            PerformanceMonitor performanceMonitor,
+            IShellRouter shellRouter
         ) : base(shell, context, logger)
         {
             this.performanceMonitor = performanceMonitor;
@@ -55,6 +58,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
+
+            // Handle new shell messages.
+            shellRouter.RegisterHandlers<IQSharpEngine>();
 
             // Report performance after completing startup.
             performanceMonitor.Report();
