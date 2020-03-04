@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
@@ -97,6 +98,21 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             ((JupyterDumpRegister<string>)concreteOp).Channel = channel;
             ((JupyterDumpRegister<string>)concreteOp).ConfigurationSource = configurationSource;
 
+            return simulator;
+        }
+
+        public static T WithStackTraceDisplay<T>(this T simulator, IChannel channel)
+        where T: SimulatorBase
+        {
+            simulator.DisableDefaultStackTraceHandling();
+            simulator.OnException += (exception, stackTrace) =>
+            {
+                channel.Display(new DisplayableException
+                {
+                    Exception = exception,
+                    StackTrace = stackTrace
+                });
+            };
             return simulator;
         }
     }
