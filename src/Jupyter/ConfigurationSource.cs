@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         /// <summary>
         ///     The labeling convention to be used when labeling computational
-        ///     basis states.
+        ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
         public BasisStateLabelingConvention BasisStateLabelingConvention =>
             GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
