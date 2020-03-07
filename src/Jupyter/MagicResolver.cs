@@ -28,6 +28,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         private IReferences references;
         private ILogger logger;
 
+        /// <summary>
+        ///     Constructs a new magic symbol resolver using the provided
+        ///     services to search assembly references for subclasses of
+        ///     <see cref="Microsoft.Jupyter.Core.MagicSymbol" />.
+        /// </summary>
         public MagicSymbolResolver(IServiceProvider services, ILogger<IQSharpEngine> logger)
         {
             this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
