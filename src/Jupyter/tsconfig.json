@@ -5,8 +5,9 @@
     "removeComments": false,
     "sourceMap": false,
     "target": "ES5",
+    "baseUrl": ".",
     "outDir": "res",
-    "lib": ["DOM", "ES2015"],
+    "lib": [ "DOM", "ES2015" ],
     "module": "AMD"
   },
   "exclude": ["node_modules", "wwwroot"],

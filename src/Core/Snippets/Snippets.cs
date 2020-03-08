@@ -31,7 +31,13 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public static readonly string SNIPPETS_NAMESPACE = "SNIPPET";
 
-        public Snippets(ICompilerService compiler, IWorkspace workspace, IReferences references, ILogger<Snippets> logger)
+        public Snippets(
+            ICompilerService compiler, 
+            IWorkspace workspace, 
+            IReferences references, 
+            ILogger<Snippets> logger,
+            IEventService eventService,
+            ITelemetryService _)
         {
             Compiler = compiler;
             Workspace = workspace;
@@ -45,6 +51,8 @@ namespace Microsoft.Quantum.IQSharp
             GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
+
+            eventService?.TriggerServiceInitialized<ISnippets>(this);
         }
 
         /// <summary>

@@ -20,5 +20,15 @@ namespace Microsoft.Quantum.IQSharp
         ///     notebook service, etc.).
         /// </summary>
         public string HostingEnvironment { get; set; }
+
+        /// <summary>
+        ///     A string that is set to turn off the telemetry
+        /// </summary>
+        public string TelemetryOptOut { get; set; }
+
+        /// <summary>
+        ///     A boolean, based on the TelemetryOptOut string property
+        /// </summary>
+        public bool IsTelemetryOptOut => !string.IsNullOrEmpty(TelemetryOptOut);
     }
 }

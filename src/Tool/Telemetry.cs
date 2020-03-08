@@ -9,101 +9,72 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using Microsoft.Applications.Events;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.Simulation.Simulators;
-
 using static Microsoft.Jupyter.Core.BaseEngine;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp
 {
-
-    public class Telemetry
+    public class TelemetryService : ITelemetryService
     {
-        public Telemetry(ILogger logger)
+        private const string TOKEN = "55aee962ee9445f3a86af864fc0fa766-48882422-3439-40de-8030-228042bd9089-7794";
+
+        public TelemetryService(
+            ILogger<TelemetryService> logger,
+            IEventService eventService)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
-
-            this.Logger = logger;
-        }
-
-        public ILogger Logger { get; }
-
-        public void InitServices(IServiceProvider services, IConfiguration config)
-        {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
+            var config = Program.Configuration;
+            Logger = logger;
+            Logger.LogInformation("Starting Telemetry.");
+            Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
             InitLogManager(config);
 
-            var console = services.GetService<Microsoft.Extensions.Logging.ILogger<Telemetry>>();
-            Microsoft.Extensions.Logging.LoggerExtensions.LogInformation(console, "Starting Telemetry.");
-            Microsoft.Extensions.Logging.LoggerExtensions.LogDebug(console, $"DeviceId: {GetDeviceId()}.");
-
-            var snippets = services.GetService<ISnippets>();
-            var workspace = services.GetService<IWorkspace>();
-            var references = services.GetService<IReferences>();
-            var executionEngine = services.GetService<IExecutionEngine>();
-
-            snippets.SnippetCompiled += (_, info) => this.Logger.LogEvent(info.AsTelemetryEvent());
-            workspace.Reloaded += (_, info) => this.Logger.LogEvent(info.AsTelemetryEvent());
-            references.PackageLoaded += (_, info) => this.Logger.LogEvent(info.AsTelemetryEvent());
-
-            if (executionEngine is BaseEngine engine)
+            eventService.OnKernelStarted().On += (kernelApp) =>
             {
-                engine.MagicExecuted += (_, info) => this.Logger.LogEvent(info.AsTelemetryEvent());
-                engine.HelpExecuted += (_, info) => this.Logger.LogEvent(info.AsTelemetryEvent());
-            }
+                TelemetryLogger.LogEvent("SessionStart".AsTelemetryEvent());
+            };
+            eventService.OnKernelStopped().On += (kernelApp) =>
+            {
+                TelemetryLogger.LogEvent("SessionEnd".AsTelemetryEvent());
+                LogManager.Teardown();
+            };
+
+            eventService.OnServiceInitialized<IMetadataController>().On += (metadataController) =>
+                metadataController.MetadataChanged += (metadataController, propertyChanged) =>
+                    SetSharedContextIfChanged(metadataController, propertyChanged,
+                                                nameof(metadataController.ClientId),
+                                                nameof(metadataController.UserAgent),
+                                                nameof(metadataController.ClientCountry),
+                                                nameof(metadataController.ClientLanguage),
+                                                nameof(metadataController.ClientHost),
+                                                nameof(metadataController.ClientIsNew));
+            eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
+                snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+            eventService.OnServiceInitialized<IWorkspace>().On += (workspace) =>
+                workspace.Reloaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+            eventService.OnServiceInitialized<IReferences>().On += (references) =>
+                references.PackageLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+            eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
+            {
+                if (executionEngine is BaseEngine engine)
+                {
+                    engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                    engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                }
+            };
         }
 
-        private readonly static string TOKEN = "55aee962ee9445f3a86af864fc0fa766-48882422-3439-40de-8030-228042bd9089-7794";
-        
-        public static Telemetry _instance;
-        private static IConfiguration _config;
+        public Applications.Events.ILogger TelemetryLogger { get; private set; }
+        public ILogger<TelemetryService> Logger { get; }
 
-        public static void Start(KernelApplication app, IConfiguration config)
-        {
-            if (app == null)
-            {
-                throw new ArgumentNullException(nameof(app));
-            }
-
-            if (!string.IsNullOrWhiteSpace(config?.GetValue<string>("TELEMETRY_OPT_OUT")))
-            {
-                Console.WriteLine("--> IQ# Telemetry opted-out. No telemetry data will be generated.");
-                return;
-            }
-
-            _config = config;
-
-            app.KernelStarted += OnKenerlStart;
-            app.KernelStopped += OnKernelStop;
-        }
-
-        public static void OnKenerlStart(ServiceProvider services)
+        public void InitLogManager(IConfiguration config)
         {
             LogManager.Start(new LogConfiguration());
-
-            _instance = new Telemetry(LogManager.GetLogger(TOKEN, out EVTStatus value));
-            _instance.InitServices(services, _config);
-            _instance.Logger.LogEvent("SessionStart".AsTelemetryEvent());
-        }
-
-        public static void OnKernelStop()
-        {
-            _instance.Logger.LogEvent("SessionEnd".AsTelemetryEvent());
-
-            LogManager.Teardown();
-        }
-
-        public static void InitLogManager(IConfiguration config)
-        {
+            TelemetryLogger = LogManager.GetLogger(TOKEN, out _);
             LogManager.SetSharedContext("AppInfo.Id", "iq#");
             LogManager.SetSharedContext("AppInfo.Version", Jupyter.Constants.IQSharpKernelProperties.KernelVersion);
             LogManager.SetSharedContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version.ToString());
@@ -122,6 +93,23 @@ namespace Microsoft.Quantum.IQSharp
                 .Select(n => n?.GetPhysicalAddress()?.ToString())
                 .Where(address => address != null && !string.IsNullOrWhiteSpace(address) && !address.StartsWith("000000"))
                 .FirstOrDefault();
+
+        public void SetSharedContextIfChanged(IMetadataController metadataController, string propertyChanged, params string[] propertyWhitelist)
+        {
+            if (propertyWhitelist == null
+                || !propertyWhitelist.Contains(propertyChanged)) return;
+            var property = typeof(IMetadataController)
+                            .GetProperties()
+                            .Where(p => p.Name == propertyChanged && p.CanRead)
+                            .FirstOrDefault();
+            if (property != null)
+            {
+                var value = $"{property.GetValue(metadataController)}";
+                Logger.LogInformation($"ClientMetadataChanged: {property.Name}={value}");
+                LogManager.SetSharedContext(property.Name, value);
+                TelemetryLogger.LogEvent($"ClientMetadataChanged".AsTelemetryEvent());
+            }
+        }
     }
 
     public static class TelemetryExtensions
@@ -180,7 +168,7 @@ namespace Microsoft.Quantum.IQSharp
         }
     }
 
- 
+
 }
 
 #endif

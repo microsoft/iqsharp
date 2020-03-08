@@ -7,6 +7,8 @@
 import { IPython } from "./ipython";
 declare var IPython : IPython;
 
+import { Telemetry, ClientInfo } from "./telemetry.js";
+
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
     // NB: The TypeScript definitions for CodeMirror don't currently understand
@@ -64,6 +66,7 @@ function defineQSharpMode() {
 class Kernel {
     hostingEnvironment : string | undefined;
     iqsharpVersion : string | undefined;
+    telemetryOptOut? : boolean | null;
 
     constructor() {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
@@ -112,7 +115,9 @@ class Kernel {
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_clientinfo_request",
             {
-                "user_agent": navigator.userAgent
+                "user_agent": navigator.userAgent,
+                "client_language": navigator.language,
+                "client_host": location.hostname,
             },
             {
                 shell: {
@@ -121,11 +126,33 @@ class Kernel {
                         console.log("clientinfo_reply message and content", message, content);
                         this.hostingEnvironment = content?.hosting_environment;
                         this.iqsharpVersion = content?.iqsharp_version;
+                        this.telemetryOptOut = content?.telemetry_opt_out;
                         console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
+
+                        if (this.telemetryOptOut) {
+                            console.log("Telemetry is turned-off");
+                        }
+                        else {
+                            this.initTelemetry();
+                        }
                     }
                 }
             }
         );
+    }
+
+    initTelemetry() {
+        Telemetry.clientInfoAvailable.on((clientInfo: ClientInfo) => {
+            IPython.notebook.kernel.send_shell_message(
+                "iqsharp_clientinfo_request",
+                {
+                    "client_country": clientInfo.CountryCode,
+                    "client_id": clientInfo.Id,
+                    "client_isnew": clientInfo.IsNew
+                }
+            );
+        });
+        Telemetry.initAsync();
     }
 }
 

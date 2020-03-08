@@ -45,10 +45,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
-        public References(IOptions<NugetPackages.Settings> options, ILogger<References> logger)
+        public References(
+            IOptions<NugetPackages.Settings> options, 
+            ILogger<References> logger,
+            IEventService eventService,
+            ITelemetryService _
+            )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = new NugetPackages(options, logger);
+
+            eventService?.TriggerServiceInitialized<IReferences>(this);
 
             foreach (var pkg in BUILT_IN_PACKAGES)
             {

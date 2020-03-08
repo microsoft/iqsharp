@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -20,8 +19,28 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public string HostingEnvironment { get; set; }
 
         [JsonProperty("iqsharp_version")]
-        public string IQSharpVersion { get; set; } =
-            typeof(ClientInfoContent).Assembly.GetName().Version.ToString();
+        public string IQSharpVersion { get; set; }
+
+        [JsonProperty("user_agent")]
+        public string UserAgent { get; set; }
+
+        [JsonProperty("client_id")]
+        public string ClientId { get; set; }
+
+        [JsonProperty("client_isnew")]
+        public bool? ClientIsNew { get; set; }
+
+        [JsonProperty("client_host")]
+        public string ClientHost { get; set; }
+
+        [JsonProperty("client_language")]
+        public string ClientLanguage { get; set; }
+
+        [JsonProperty("client_country")]
+        public string ClientCountry { get; set; }
+
+        [JsonProperty("telemetry_opt_out")]
+        public bool? TelemetryOptOut { get; set; }
     }
 
     internal static class MetadataExtensions
@@ -29,7 +48,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         internal static ClientInfoContent AsClientInfoContent(this IMetadataController metadata) =>
             new ClientInfoContent
             {
-                HostingEnvironment = metadata.HostingEnvironment
+                HostingEnvironment = metadata.HostingEnvironment,
+                IQSharpVersion = metadata.IQSharpVersion,
+                TelemetryOptOut = metadata.TelemetryOptOut
             };
     }
 
@@ -42,11 +63,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class ClientInfoHandler : IShellHandler
     {
         public string UserAgent { get; private set; }
-        private readonly ILogger<EchoHandler> logger;
+        private readonly ILogger<ClientInfoHandler> logger;
         private readonly IMetadataController metadata;
         private readonly IShellServer shellServer;
         public ClientInfoHandler(
-            ILogger<EchoHandler> logger,
+            ILogger<ClientInfoHandler> logger,
             IMetadataController metadata,
             IShellServer shellServer
         )
@@ -60,7 +81,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         public void Handle(Message message)
         {
-            metadata.UserAgent = (message.Content as UnknownContent).Data["user_agent"] as string;
+            var content = message.To<ClientInfoContent>();
+            metadata.UserAgent = content.UserAgent ?? metadata.UserAgent;
+            metadata.ClientId = content.ClientId ?? metadata.ClientId;
+            metadata.ClientIsNew = content.ClientIsNew ?? metadata.ClientIsNew;
+            metadata.ClientCountry = content.ClientCountry ?? metadata.ClientCountry;
+            metadata.ClientLanguage = content.ClientLanguage ?? metadata.ClientLanguage;
+            metadata.ClientHost = content.ClientHost ?? metadata.ClientHost;
             shellServer.SendShellMessage(
                 new Message
                 {
