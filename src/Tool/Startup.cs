@@ -34,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             return
 #if TELEMETRY
-                Program.TelemetryOptOut ? typeof(DummyTelemetryService) : typeof(TelemetryService);
+                Program.TelemetryOptOut ? typeof(NullTelemetryService) : typeof(TelemetryService);
 #else
                 typeof(NullTelemetryService);
 #endif

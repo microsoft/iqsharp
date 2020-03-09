@@ -29,7 +29,11 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         public static bool TelemetryOptOut
+#if TELEMETRY
             => !string.IsNullOrEmpty(Configuration?[nameof(TelemetryOptOut)]);
+#else
+            => true;
+#endif
 
         public static int Main(string[] args)
         {
