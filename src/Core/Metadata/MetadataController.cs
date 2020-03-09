@@ -156,6 +156,8 @@ namespace Microsoft.Quantum.IQSharp
             // through environment variables set at kernel start).
             IOptions<ClientInformation> clientInformation,
             IEventService eventService,
+            //Even though it's not directly used, we have the TelemetryService here to make
+            //sure it gets instantiate by the Dependency Injection framework.
             ITelemetryService _
         )
         {

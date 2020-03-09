@@ -49,6 +49,8 @@ namespace Microsoft.Quantum.IQSharp
             IOptions<NugetPackages.Settings> options, 
             ILogger<References> logger,
             IEventService eventService,
+            //Even though it's not directly used, we have the TelemetryService here to make
+            //sure it gets instantiate by the Dependency Injection framework.
             ITelemetryService _
             )
         {
