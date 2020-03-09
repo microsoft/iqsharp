@@ -94,10 +94,10 @@ namespace Microsoft.Quantum.IQSharp
                 .Where(address => address != null && !string.IsNullOrWhiteSpace(address) && !address.StartsWith("000000"))
                 .FirstOrDefault();
 
-        public void SetSharedContextIfChanged(IMetadataController metadataController, string propertyChanged, params string[] propertyWhitelist)
+        public void SetSharedContextIfChanged(IMetadataController metadataController, string propertyChanged, params string[] propertyAllowlist)
         {
-            if (propertyWhitelist == null
-                || !propertyWhitelist.Contains(propertyChanged)) return;
+            if (propertyAllowlist == null
+                || !propertyAllowlist.Contains(propertyChanged)) return;
             var property = typeof(IMetadataController)
                             .GetProperties()
                             .Where(p => p.Name == propertyChanged && p.CanRead)
