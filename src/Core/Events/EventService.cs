@@ -36,32 +36,36 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Add a new subscriber action to the Subscriber list for the give event type.
         /// </summary>
-        /// <param name="eventType">The type of the event</param>
+        /// <typeparam name="TEvent">The type of the event</typeparam>
+        /// <typeparam name="TArgs">The type of the arguments of the event</typeparam>
         /// <param name="action">The action (of type Action<TArg>) to be executed when the event is triggered</param>
-        public void Subscribe(Type eventType, object action)
+        public void Subscribe<TEvent, TArgs>(Action<TArgs> action)
+            where TEvent : Event<TArgs>
         {
-            var subscribers = _Subscribers.GetOrAdd(eventType, (_) => new Collection<object>());
+            var subscribers = _Subscribers.GetOrAdd(typeof(TEvent), (_) => new Collection<object>());
             lock (subscribers)
             {
                 subscribers.Add(action);
             }
-            Logger.LogInformation($"Event Subscription Added to '{eventType.Name}'");
+            Logger.LogInformation($"Event Subscription Added to '{typeof(TEvent).Name}'");
         }
 
         /// <summary>
         /// Remove a subscriber action from the Subscriber list for the give event type.
         /// </summary>
-        /// <param name="eventType">The type of the event</param>
+        /// <typeparam name="TEvent">The type of the event</typeparam>
+        /// <typeparam name="TArgs">The type of the arguments of the event</typeparam>
         /// <param name="action">The action (of type Action<TArg>) to be removed</param>
-        public void Unsubscribe(Type eventType, object action)
+        public void Unsubscribe<TEvent, TArgs>(Action<TArgs> action)
+            where TEvent : Event<TArgs>
         {
-            if (_Subscribers.TryGetValue(eventType, out var subscribers))
+            if (_Subscribers.TryGetValue(typeof(TEvent), out var subscribers))
             {
                 lock (subscribers)
                 {
                     subscribers.Remove(action);
                 }
-                Logger.LogInformation($"Event Subscription Removed from '{eventType.Name}'");
+                Logger.LogInformation($"Event Subscription Removed from '{typeof(TEvent).Name}'");
             }
         }
 
@@ -117,11 +121,11 @@ namespace Microsoft.Quantum.IQSharp
         {
             add
             {
-                EventPubsub.Subscribe(typeof(TEvent), value);
+                EventPubsub.Subscribe<TEvent, TArgs>(value);
             }
             remove
             {
-                EventPubsub.Unsubscribe(typeof(TEvent), value);
+                EventPubsub.Unsubscribe<TEvent, TArgs>(value);
             }
         }
 
