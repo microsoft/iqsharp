@@ -42,16 +42,23 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <summary>
         ///      A string passed by the client representing the client's country.
+        ///      The value can come from a ReverseIP lookup, and is in the
+        ///      <see href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">ISO 3166-1 alpha-2</see>
+        ///      format ("US", for example).
         /// </summary>
         public string? ClientCountry { get; set; }
 
         /// <summary>
         ///      A string passed by the client representing the client's language.
+        ///      The value can come from the browser's <see href="https://developer.mozilla.org/en-US/docs/Web/API/NavigatorLanguage/language">navigator.language</see>
+        ///      in the <see href="https://tools.ietf.org/rfc/bcp/bcp47.txt">BCP 47</see> format ("en-US", for example).
         /// </summary>
         public string? ClientLanguage { get; set; }
 
         /// <summary>
-        ///      A string passed by the client representing the client's host.
+        ///      A string passed by the client representing the client's hostname.
+        ///      The value can come from the browser's <see href="https://developer.mozilla.org/en-US/docs/Web/API/Location">location.hostname</see>
+        ///      and containts the domain of the URL hosting the Jupyter Notebook (for example "localhost" or "mybinder.org").
         /// </summary>
         public string? ClientHost { get; set; }
 
