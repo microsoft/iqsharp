@@ -9,8 +9,15 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     A magic symbol that provides access to a given workspace.
+    /// </summary>
     public class WorkspaceMagic : AbstractMagic
     {
+        /// <summary>
+        ///      Given a workspace, constructs a new magic symbol to control
+        ///      that workspace.
+        /// </summary>
         public WorkspaceMagic(IWorkspace workspace) : base(
             "workspace", 
             new Documentation {
@@ -20,10 +27,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.Workspace = workspace;
         }
 
+        /// <summary>
+        ///     The workspace controlled by this magic symbol.
+        /// </summary>
         public IWorkspace Workspace { get; }
 
         /// <summary>
-        /// Performs checks to verify if the Workspace is avaialble and in a success (no errors) state.
+        /// Performs checks to verify if the Workspace is available and in a success (no errors) state.
         /// The method throws Exceptions if it finds it is not ready to execute.
         /// </summary>
         public void CheckIfReady()
@@ -38,6 +48,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
         }
 
+        /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
             var (command, _) = ParseInput(input);

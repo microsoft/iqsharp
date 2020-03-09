@@ -14,6 +14,9 @@ using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///      Extension methods to be used with various IQ# and Jupyter objects.
+    /// </summary>
     public static class Extensions
     {
 
@@ -24,6 +27,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public static ChannelWithNewLines WithNewLines(this IChannel original) =>
             (original is ChannelWithNewLines ch) ? ch : new ChannelWithNewLines(original);
 
+        /// <summary>
+        ///     Adds services required for the IQ# kernel to a given service
+        ///     collection.
+        /// </summary>
         public static void AddIQSharpKernel(this IServiceCollection services)
         {
             services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
@@ -31,6 +38,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
         }
 
+        /// <summary>
+        ///     Given a configuration source, applies an action if that
+        ///     configuration source defines a value for a particular
+        ///     configuration key.
+        /// </summary>
         internal static IConfigurationSource ApplyConfiguration<T>(
             this IConfigurationSource configurationSource,
             string keyName, Action<T> action
@@ -52,6 +64,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             (1L << 10, "KiB")
         }.ToImmutableList();
 
+        /// <summary>
+        ///      Given a number of bytes, formats that number as a human
+        ///      readable string by appending unit suffixes (i.e.: indicating
+        ///      kilobytes, megabytes, etc.).
+        /// </summary>
+        /// <param name="nBytes">A number of bytes to be formatted.</param>
+        /// <returns>
+        ///     The number of bytes formatted as a human-readable string.
+        /// </returns>
         public static string ToHumanReadableBytes(this long nBytes)
         {
             foreach (var (scale, suffix) in byteSuffixes)
@@ -66,11 +87,42 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return $"{nBytes} B";
         }
 
+        /// <summary>
+        ///     Adds functionality to a given quantum simulator to display
+        ///     diagnostic output with rich Jupyter formatting.
+        /// </summary>
+        /// <param name="simulator">
+        ///     The simulator to be augmented with Jupyter display
+        ///     functionality.
+        /// </param>
+        /// <param name="channel">
+        ///     The Jupyter display channel to be used to display diagnostic
+        ///     output.
+        /// </param>
+        /// <param name="configurationSource">
+        ///      A source of configuration options to be used to set display
+        ///      preferences. Typically, this will be provided by the service
+        ///      provider configured when an execution engine is constructed.
+        /// </param>
+        /// <returns>
+        ///     The value of <paramref name="simulator" />.
+        /// </returns>
         public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, IConfigurationSource configurationSource)
         {
+            // First, we disable console-based logging so as to not
+            // duplicate messages.
             simulator.DisableLogToConsole();
+            // Next, we attach the display channel's standard output handling
+            // to the log event.
             simulator.OnLog += channel.Stdout;
 
+            // Next, we register the generic version of the DumpMachine callable
+            // as an ICallable with the simulator. Below, we'll provide our
+            // implementation of DumpMachine with the channel and configuration
+            // source we got as arguments. At the moment, there's no direct
+            // way to do this when registering an implementation, so we instead
+            // get an instance of the newly registered callable and set its
+            // properties accordingly.
             simulator.Register(
                 typeof(Diagnostics.DumpMachine<>), typeof(JupyterDumpMachine<>),
                 signature: typeof(ICallable)
@@ -84,6 +136,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             ((JupyterDumpMachine<string>)concreteOp).Channel = channel;
             ((JupyterDumpMachine<string>)concreteOp).ConfigurationSource = configurationSource;
 
+            // Next, we repeat the whole process for DumpRegister instead of
+            // DumpMachine.
             simulator.Register(
                 typeof(Diagnostics.DumpRegister<>), typeof(JupyterDumpRegister<>),
                 signature: typeof(ICallable)

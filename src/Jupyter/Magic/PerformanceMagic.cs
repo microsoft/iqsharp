@@ -14,8 +14,15 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     A magic command that reports various performance metrics to the
+    ///     user.
+    /// </summary>
     public class PerformanceMagic : AbstractMagic
     {
+        /// <summary>
+        ///     Constructs a new performance command.
+        /// </summary>
         public PerformanceMagic() : base(
             "performance",
             new Documentation {
@@ -24,6 +31,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
         }
 
+    /// <inheritdoc />
         public override ExecutionResult Run(string? input, IChannel channel)
         {
             var currentProcess = Process.GetCurrentProcess();

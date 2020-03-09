@@ -10,8 +10,16 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     A magic command that can be used to add new NuGet packages to the
+    ///     current IQ# session.
+    /// </summary>
     public class PackageMagic : AbstractMagic
     {
+        /// <summary>
+        ///     Constructs a new magic command that adds package references to
+        ///     a given references collection.
+        /// </summary>
         public PackageMagic(IReferences references) : base(
             "package",
             new Documentation {
@@ -21,8 +29,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.References = references;
         }
 
+        /// <summary>
+        ///     The references collection that this magic command adds package
+        ///     references to.
+        /// </summary>
         public IReferences References { get; }
 
+        /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
             var (name, _) = ParseInput(input);
@@ -49,6 +62,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return task.Result;
         }
 
+        /// <summary>
+        ///     Adds a package given a string representing its name and returns
+        ///     a task that can be awaited on for the completion of the package
+        ///     download.
+        /// </summary>
         public async Task<ExecutionResult> RunAsync(string name, IChannel channel, Action<string> statusCallback)
         {
             if (!string.IsNullOrWhiteSpace(name))

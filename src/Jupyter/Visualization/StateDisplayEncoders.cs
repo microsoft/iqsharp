@@ -15,14 +15,47 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     The convention to be used in labeling computational basis states
+    ///     given their representations as strings of classical bits.
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     public enum BasisStateLabelingConvention
     {
+        /// <summary>
+        ///     Label computational states directly by their bit strings.
+        /// </summary>
+        /// <example>
+        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
+        ///     by |011⟩.
+        /// </example>
         Bitstring,
+
+        /// <summary>
+        ///     Label computational states directly by interpreting their bit
+        ///     strings as little-endian encoded integers.
+        /// </summary>
+        /// <example>
+        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
+        ///     by |6⟩.
+        /// </example>
         LittleEndian,
+
+        /// <summary>
+        ///     Label computational states directly by interpreting their bit
+        ///     strings as big-endian encoded integers.
+        /// </summary>
+        /// <example>
+        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
+        ///     by |3⟩.
+        /// </example>
         BigEndian
     }
 
+    /// <summary>
+    ///     Represents a quantum state vector and all metadata needed to display
+    ///     that state vector.
+    /// </summary>
     public class DisplayableState
     {
         private static readonly IComparer<string> ToIntComparer =
@@ -32,16 +65,29 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 )
             );
 
+        /// <summary>
+        ///     The indexes of each qubit on which this state is defined, or
+        ///     <c>null</c> if these indexes are not known.
+        /// </summary>
         public IEnumerable<int>? QubitIds { get; set; }
+
+        /// <summary>
+        ///     The number of qubits on which this state is defined.
+        /// </summary>
         public int NQubits { get; set; }
-        
+
         /// <remarks>
         ///     These amplitudes represent the computational basis states
-        ///     labeled in little-endian order, as per the behavior of 
+        ///     labeled in little-endian order, as per the behavior of
         ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
         /// </remarks>
         public Complex[]? Amplitudes { get; set; }
 
+        /// <summary>
+        ///     An enumerable source of the significant amplitudes of this state
+        ///     vector and their labels, where significance and labels are
+        ///     defined by the values loaded from <paramref name="configurationSource" />.
+        /// </summary>
         public IEnumerable<(Complex, string)> SignificantAmplitudes(
             IConfigurationSource configurationSource
         ) => SignificantAmplitudes(
@@ -50,6 +96,21 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             configurationSource.TruncationThreshold
         );
 
+        /// <summary>
+        ///     An enumerable source of the significant amplitudes of this state
+        ///     vector and their labels.
+        /// </summary>
+        /// <param name="convention">
+        ///     The convention to be used in labeling each computational basis state.
+        /// </param>
+        /// <param name="truncateSmallAmplitudes">
+        ///     Whether to truncate small amplitudes.
+        /// </param>
+        /// <param name="truncationThreshold">
+        ///     If <paramref name="truncateSmallAmplitudes" /> is <c>true</c>,
+        ///     then amplitudes whose absolute value squared are below this
+        ///     threshold are suppressed.
+        /// </param>
         public IEnumerable<(Complex, string)> SignificantAmplitudes(
             BasisStateLabelingConvention convention,
             bool truncateSmallAmplitudes, double truncationThreshold
@@ -77,6 +138,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 }
             );
 
+        /// <summary>
+        ///     Using the given labeling convention, returns the label for a
+        ///     computational basis state described by its bit string as encoded
+        ///     into an integer index in the little-endian encoding.
+        /// </summary>
         public string BasisStateLabel(
             BasisStateLabelingConvention convention, int index
         ) => convention switch
@@ -104,16 +170,30 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
     }
 
+    /// <summary>
+    ///     A result encoder that displays quantum state vectors as HTML tables.
+    /// </summary>
     public class StateVectorToHtmlResultEncoder : IResultEncoder
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
+
+        /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
         private IConfigurationSource ConfigurationSource;
+
+        /// <summary>
+        ///     Constructs a new result encoder using configuration settings
+        ///     provided by a given configuration source.
+        /// </summary>
         public StateVectorToHtmlResultEncoder(IConfigurationSource configurationSource)
         {
             ConfigurationSource = configurationSource;
         }
 
+        /// <summary>
+        ///     Checks if a given display object is a state vector, and if so,
+        ///     returns its encoding into an HTML table.
+        /// </summary>
         public EncodedData? Encode(object displayable)
         {
             string StyleForAngle(double angle) =>
@@ -188,15 +268,29 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
     }
 
+    /// <summary>
+    ///     A result encoder that displays quantum state vectors as plain-text
+    ///     tables.
+    /// </summary>
     public class StateVectorToTextResultEncoder : IResultEncoder
     {
+        /// <inheritdoc />
         public string MimeType => MimeTypes.PlainText;
         private IConfigurationSource ConfigurationSource;
+
+        /// <summary>
+        ///     Constructs a new result encoder using configuration settings
+        ///     provided by a given configuration source.
+        /// </summary>
         public StateVectorToTextResultEncoder(IConfigurationSource configurationSource)
         {
             ConfigurationSource = configurationSource;
         }
 
+        /// <summary>
+        ///     Checks if a given display object is a state vector, and if so,
+        ///     returns its encoding into a plain-text table.
+        /// </summary>
         public EncodedData? Encode(object displayable)
         {
             if (displayable is DisplayableState vector)
