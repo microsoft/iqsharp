@@ -51,7 +51,7 @@ interface ConsentMarkup {
 }
 
 interface MSCC {
-    on(eventName: string, handler: Function): void;
+    on(eventName: "consent", handler: ()=>void): void;
     hasConsent(): boolean;
     setConsent(): void;
 }
@@ -59,13 +59,10 @@ interface MSCC {
 declare var mscc: MSCC | null;
 
 class CookieConsentHelper {
-    private consentMarkup: ConsentMarkup;
-    private onConsentGranted: Function;
-    private countCssLoaded: number;
-    private countJsLoaded: number;
+    private onConsentGranted: () => void;
     private mscc: MSCC;
 
-    constructor(onConsentGranted: Function) {
+    constructor(onConsentGranted: () => void) {
         this.onConsentGranted = onConsentGranted;
     }
 
@@ -76,58 +73,53 @@ class CookieConsentHelper {
         }
     }
 
-    public requestConsent(consentMarkup: ConsentMarkup) {
-        this.consentMarkup = consentMarkup;
-        var consentHelper = this;
-        consentHelper.countCssLoaded = 0;
-        console.log(`Adding Cookie API CSSs to the document: ${consentHelper.consentMarkup.Stylesheets.length} files`);
-        for (let css of consentHelper.consentMarkup.Stylesheets) {
+    private addStylesheet(cssUrl: string): Promise<void> {
+        return new Promise((resolve, reject) => {
             var style = document.createElement('link');
-            style.onload = function () {
-                consentHelper.onCssLoaded(consentHelper);
-            };
-            style.href = css;
+            style.onload = () => { resolve(); };
+            style.href = cssUrl;
             style.type = 'text/css';
             style.rel = 'stylesheet';
             document.head.append(style);
-        }
+        });
     }
 
-    private onCssLoaded(consentHelper: CookieConsentHelper) {
-        consentHelper.countCssLoaded++;
-        console.log(`Cookie API CSS loaded (${consentHelper.countCssLoaded}/${consentHelper.consentMarkup.Stylesheets.length})`);
-        if (consentHelper.countCssLoaded == consentHelper.consentMarkup.Stylesheets.length) {
-            var div = document.createElement('div');
-            div.innerHTML = consentHelper.consentMarkup.Markup;
-            document.body.prepend(div);
-            console.log("Cookie API markup div added");
-
-            consentHelper.countJsLoaded = 0;
-            console.log(`Adding Cookie API JSs to the document: ${consentHelper.consentMarkup.Javascripts.length} files`);
-            for (let js of consentHelper.consentMarkup.Javascripts) {
-                var script = document.createElement('script');
-                script.onload = function () {
-                    consentHelper.onJsLoaded(consentHelper);
-                };
-                script.type = 'text/javascript';
-                script.src = js;
-                document.head.append(script);
-            }
-        }
+    private addJavascript(javascriptUrl: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            var script = document.createElement('script');
+            script.onload = () => { resolve(); };
+            script.type = 'text/javascript';
+            script.src = javascriptUrl;
+            document.head.append(script);
+        });
     }
 
-    private onJsLoaded(consentHelper: CookieConsentHelper) {
-        consentHelper.countJsLoaded++;
-        console.log(`Cookie API JS loaded (${consentHelper.countJsLoaded}/${consentHelper.consentMarkup.Javascripts.length})`);
-        if (consentHelper.countJsLoaded == consentHelper.consentMarkup.Javascripts.length) {
-            console.log("Calling Cookie API hasConsent");
-            this.mscc = mscc;
-            this.mscc.on('consent', consentHelper.onConsentGranted);
-            var hasConsent = this.mscc.hasConsent();
-            console.log(`HasConsent: ${hasConsent}`);
-            if (hasConsent) {
-                consentHelper.onConsentGranted();
-            }
+    public async requestConsent(consentMarkup: ConsentMarkup) {
+        console.log(`Adding Cookie API Stylesheets to the document: ${consentMarkup.Stylesheets.length} files`);
+        await Promise.all(consentMarkup.Stylesheets.map((css, _, __) => this.addStylesheet(css)));
+        console.log(`Cookie API Stylesheets loaded.`);
+
+        var div = document.createElement('div');
+        div.innerHTML = consentMarkup.Markup;
+        document.body.prepend(div);
+        console.log("Cookie API markup div added");
+
+        console.log(`Adding Cookie API Javascripts to the document: ${consentMarkup.Javascripts.length} files`);
+        await Promise.all(consentMarkup.Javascripts.map((javascript, _, __) => this.addJavascript(javascript)));
+        console.log(`Cookie API Javascripts loaded.`);
+
+        this.mscc = mscc;
+        if (this.mscc == null) {
+            console.log("Cookie API javascript was not loaded correctly. Consent cannot be obtained.");
+            return;
+        }
+
+        console.log("Calling Cookie API hasConsent");
+        this.mscc.on('consent', this.onConsentGranted);
+        var hasConsent = this.mscc.hasConsent();
+        console.log(`HasConsent: ${hasConsent}`);
+        if (hasConsent) {
+            this.onConsentGranted();
         }
     }
 }
@@ -160,25 +152,34 @@ class TelemetryHelper {
     private async getClientInfoAsync(setHasConsent: boolean = false): Promise<ClientInfo> {
         console.log("Getting ClientInfo");
         var url = CLIENT_INFO_API_URL + (setHasConsent ? "&hasconsent=1" : "")
-        var clientInfo = await this.fetchExt<ClientInfo>(url);
-        console.log(`ClientInfo: ${JSON.stringify(clientInfo)}`);
-        return clientInfo;
+        try {
+            var clientInfo = await this.fetchExt<ClientInfo>(url);
+            console.log(`ClientInfo: ${JSON.stringify(clientInfo)}`);
+            return clientInfo;
+        } catch (ex) {
+            console.log(`ClientInfo not available. Unable to fetch : ${url}.`);
+            return null;
+        }
     }
 
     private async consentGranted() {
         console.log("Consent granted from the client");
         var clientInfo = await this.getClientInfoAsync(true);
-        this._clientInfoAvailable.trigger(clientInfo);
+        if (clientInfo != null) {
+            this._clientInfoAvailable.trigger(clientInfo);
+        }
     }
 
     public async initAsync() {
         var clientInfo = await this.getClientInfoAsync();
-        if (!clientInfo.HasConsent
-            && clientInfo.CookieConsentMarkup != null) {
-            this.cookieConsentHelper.requestConsent(clientInfo.CookieConsentMarkup);
-        }
-        else {
-            this._clientInfoAvailable.trigger(clientInfo);
+        if (clientInfo != null) {
+            if (!clientInfo.HasConsent
+                && clientInfo.CookieConsentMarkup != null) {
+                this.cookieConsentHelper.requestConsent(clientInfo.CookieConsentMarkup);
+            }
+            else {
+                this._clientInfoAvailable.trigger(clientInfo);
+            }
         }
     }
 
