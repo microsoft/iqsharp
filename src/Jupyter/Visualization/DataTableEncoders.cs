@@ -29,22 +29,42 @@ namespace Microsoft.Quantum.IQSharp
             };
     }
 
+    /// <summary>
+    ///     Encodes <see cref="System.Data.DataTable" /> instances as HTML
+    ///     tables.
+    /// </summary>
     public class DataTableToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();
+
+        /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
 
+        /// <summary>
+        ///     Checks if a displayable object represents a data table, and if
+        ///     so, returns an encoding into an HTML table.
+        /// </summary>
         public EncodedData? Encode(object displayable) =>
             displayable is DataTable table
             ? tableEncoder.Encode(table.AsJupyterTable())
             : null;
     }
 
+    /// <summary>
+    ///     Encodes <see cref="System.Data.DataTable" /> instances as plain-text
+    ///     tables.
+    /// </summary>
     public class DataTableToTextEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToTextDisplayEncoder();
+
+        /// <inheritdoc />
         public string MimeType => MimeTypes.PlainText;
 
+        /// <summary>
+        ///     Checks if a displayable object represents a data table, and if
+        ///     so, returns an encoding into a plain-text table.
+        /// </summary>
         public EncodedData? Encode(object displayable) =>
             displayable is DataTable table
             ? tableEncoder.Encode(table.AsJupyterTable())

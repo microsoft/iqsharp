@@ -13,10 +13,23 @@ using Newtonsoft.Json.Linq;
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 
+    /// <summary>
+    ///     A service that controls configuration options, such as those set
+    ///     by preferences, the <c>%config</c> magic command, and so forth.
+    /// </summary>
     public interface IConfigurationSource
     {
+        /// <summary>
+        ///     A dictionary of configuration options available from this
+        ///     source.
+        /// </summary>
         IDictionary<string, JToken> Configuration { get; }
 
+        /// <summary>
+        ///     Persists the current configuration to disk such that a future
+        ///     kernel session launched for the same notebook has the given
+        ///     configuration.
+        /// </summary>
         void Persist();
 
         private T GetOptionOrDefault<T>(string optionName, T defaultValue) =>
@@ -24,24 +37,52 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             ? token.ToObject<T>() ?? defaultValue
             : defaultValue;
 
+        /// <summary>
+        ///     The labeling convention to be used when labeling computational
+        ///     basis states (bit string, little-endian or big-endian).
+        /// </summary>
         public BasisStateLabelingConvention BasisStateLabelingConvention =>
             GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
 
+        /// <summary>
+        ///     Whether small amplitudes should be truncated when dumping
+        ///     states.
+        /// </summary>
         public bool TruncateSmallAmplitudes =>
             GetOptionOrDefault("dump.truncateSmallAmplitudes", false);
 
+        /// <summary>
+        ///     The threshold for truncating measurement probabilities when
+        ///     dumping states. Computational basis states whose measurement
+        ///     probabilities (i.e: squared magnitudes) are below this threshold
+        ///     are subject to truncation when
+        ///     <see cref="Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource.TruncateSmallAmplitudes" />
+        ///     is <c>true</c>.
+        /// </summary>
         public double TruncationThreshold =>
             GetOptionOrDefault("dump.truncationThreshold", 1e-10);
     }
 
+    /// <summary>
+    ///     An implementation of the
+    ///     <see cref="Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource" />
+    ///     service interface that loads and persists configuration values from
+    ///     and to a local JSON file.
+    /// </summary>
     public class ConfigurationSource : IConfigurationSource
     {
+        /// <inheritdoc />
         public IDictionary<string, JToken> Configuration => _Configuration;
         private readonly IDictionary<string, JToken> _Configuration;
 
         private string ConfigPath =>
             Path.Join(Directory.GetCurrentDirectory(), ".iqsharp-config.json");
 
+        /// <summary>
+        ///     Constructs a new configuration source, loading initial
+        ///     configuration options from the file <c>.iqsharp-config.json</c>,
+        ///     if that file exists.
+        /// </summary>
         public ConfigurationSource(bool skipLoading = false)
         {
             // Try loading configuration from a JSON file in the current working
@@ -65,6 +106,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
         }
 
+        /// <summary>
+        ///     Persists the current configuration to
+        ///     <c>.iqsharp-config.json</c>.
+        /// </summary>
         public void Persist()
         {
             // Try writing the configuration back to JSON.

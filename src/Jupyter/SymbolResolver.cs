@@ -20,25 +20,44 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     [JsonObject(MemberSerialization.OptIn)]
     public class IQSharpSymbol : ISymbol
     {
+        /// <summary>
+        ///     The information provided by the compiler about the operation
+        ///     represented by this symbol.
+        /// </summary>
         [JsonIgnore]
         public OperationInfo Operation { get; }
 
+        /// <summary>
+        ///     The name of the operation represented by this symbol.
+        /// </summary>
         [JsonProperty("name")]
-        public string Name =>
-            Operation.FullName;
+        public string Name => Operation.FullName;
 
         // TODO: serialize as stringenum.
+        /// <inheritdoc />
         [JsonProperty("kind")]
         public SymbolKind Kind { get; private set; }
 
+        /// <summary>
+        ///     The source file in which the operation represented by this
+        ///     symbol was defined.
+        /// </summary>
         [JsonProperty("source")]
         public string Source => Operation.Header.SourceFile.Value;
 
+        /// <summary>
+        ///     The documentation for this symbol, as provided by its API
+        ///     documentation comments.
+        /// </summary>
         [JsonProperty("documentation")]
         public string Documentation => String.Join("\n", Operation.Header.Documentation);
 
         // TODO: expose documentation here.
 
+        /// <summary>
+        ///     Constructs a new symbol given information about an operation
+        ///     as provided by the Q# compiler.
+        /// </summary>
         public IQSharpSymbol(OperationInfo op)
         {
             if (op == null) { throw new ArgumentNullException(nameof(op)); }
@@ -59,8 +78,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Constructs a new resolver that looks for symbols in a given
         ///     collection of snippets.
         /// </summary>
-        /// <param name="snippets">
-        ///     The collection of snippets to be used when resolving symbols.
+        /// <param name="opsResolver">
+        ///     An object to be used to resolve operation names to symbols.
         /// </param>
         public SymbolResolver(IOperationResolver opsResolver)
         {

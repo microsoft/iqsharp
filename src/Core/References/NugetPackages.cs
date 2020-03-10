@@ -46,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         // The framework used to find packages.
-        public static NuGetFramework NETCOREAPP3_0 = NuGetFramework.ParseFolder("netcoreapp3.0");
+        public static NuGetFramework NETCOREAPP3_1 = NuGetFramework.ParseFolder("netcoreapp3.1");
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
@@ -297,7 +297,7 @@ namespace Microsoft.Quantum.IQSharp
                 return files.ToArray();
             }
 
-            var names = CheckOnFramework(NETCOREAPP3_0);
+            var names = CheckOnFramework(NETCOREAPP3_1);
 
             Assembly? LoadAssembly(string path)
             {
@@ -397,7 +397,7 @@ namespace Microsoft.Quantum.IQSharp
                 dependencyBehavior: DependencyBehavior.Lowest,
                 targetIds: new[] { pkgId.Id },
                 requiredPackageIds: Enumerable.Empty<string>(),
-                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_0, true)),
+                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_1, true)),
                 preferredVersions: Enumerable.Empty<PackageIdentity>(),
                 availablePackages: dependencies,
                 packageSources: Repositories.Select(s => s.PackageSource),
@@ -427,7 +427,7 @@ namespace Microsoft.Quantum.IQSharp
                     var dependencyInfoResource = await repo.GetResourceAsync<DependencyInfoResource>();
                     if (dependencyInfoResource == null) continue;
 
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_0, context, this.Logger, CancellationToken.None);
+                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_1, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
 
                     dependencies.Add(dependencyInfo);

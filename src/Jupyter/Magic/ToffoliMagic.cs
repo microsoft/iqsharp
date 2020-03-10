@@ -32,6 +32,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public ISymbolResolver SymbolResolver { get; }
 
+        /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel) =>
             RunAsync(input, channel).Result;
 
