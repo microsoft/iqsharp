@@ -43,10 +43,15 @@ namespace Microsoft.Quantum.IQSharp
             : $"<a href=\"{frame.GetBestSourceLocation()}\">{frame.SourceFile}:{frame.FailedLineNumber}</a>";
     }
 
+    /// <summary>
+    ///      Encodes exceptions augmented with Q# metadata into HTML tables.
+    /// </summary>
     public class DisplayableExceptionToHtmlEncoder : IResultEncoder
     {
+        /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
 
+        /// <inheritdoc />
         public EncodedData? Encode(object displayable)
         {
             if (displayable is DisplayableException ex)
@@ -83,10 +88,17 @@ namespace Microsoft.Quantum.IQSharp
             else return null;
         }
     }
+
+    /// <summary>
+    ///      Encodes exceptions augmented with Q# metadata into plain text
+    ///      tables.
+    /// </summary>
     public class DisplayableExceptionToTextEncoder : IResultEncoder
     {
+        /// <inheritdoc />
         public string MimeType => MimeTypes.PlainText;
 
+        /// <inheritdoc />
         public EncodedData? Encode(object displayable)
         {
             if (displayable is DisplayableException ex)
