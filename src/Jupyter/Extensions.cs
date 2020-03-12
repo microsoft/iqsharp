@@ -158,7 +158,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public static T WithStackTraceDisplay<T>(this T simulator, IChannel channel)
         where T: SimulatorBase
         {
-            simulator.DisableDefaultStackTraceHandling();
+            simulator.DisableExceptionPrinting();
             simulator.OnException += (exception, stackTrace) =>
             {
                 channel.Display(new DisplayableException

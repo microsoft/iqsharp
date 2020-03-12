@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var qsim = new ToffoliSimulator();
+            var qsim = new ToffoliSimulator().WithStackTraceDisplay(channel);
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
 

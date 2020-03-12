@@ -56,7 +56,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var qsim = new ResourcesEstimator();
+            var qsim = new ResourcesEstimator().WithStackTraceDisplay(channel);
             qsim.DisableLogToConsole();
 
             await symbol.Operation.RunAsync(qsim, args);
