@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -34,14 +34,16 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     returned execution function displays the given exceptions to its
         ///     display channel.
         /// </summary>
-        public Func<string, IChannel, ExecutionResult> SafeExecute(Func<string, IChannel, ExecutionResult> magic) =>
-            (input, channel) =>
+        public Func<string, IChannel, Task<ExecutionResult>> SafeExecute(
+                Func<string, IChannel, Task<ExecutionResult>> magic
+        ) =>
+            async (input, channel) =>
             {
                 channel = channel.WithNewLines();
 
                 try
                 {
-                    return magic(input, channel);
+                    return await magic(input, channel);
                 }
                 catch (InvalidWorkspaceException ws)
                 {
@@ -81,6 +83,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///     A method to be run when the magic command is executed.
         /// </summary>
-        public abstract ExecutionResult Run(string input, IChannel channel);
+        public abstract Task<ExecutionResult> Run(string input, IChannel channel);
     }
 }

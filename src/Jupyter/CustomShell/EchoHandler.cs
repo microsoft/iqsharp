@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -34,7 +35,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         public string MessageType => "iqsharp_echo_request";
 
-        public void Handle(Message message)
+        public void Handle(Message message) =>
+            HandleAsync(message).Wait();
+
+        public async Task HandleAsync(Message message)
         {
             // Find out the thing we need to echo back.
             var value = (message.Content as UnknownContent).Data["value"] as string;

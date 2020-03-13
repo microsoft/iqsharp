@@ -44,15 +44,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public IConfigurationSource ConfigurationSource { get; }
 
-        /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel) =>
-            RunAsync(input, channel).Result;
-
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
         ///     encoding of its arguments.
         /// </summary>
-        public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> Run(string input, IChannel channel)
         {
             var (name, args) = ParseInput(input);
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -57,8 +58,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         public string MessageType => "iqsharp_clientinfo_request";
+        
+        public void Handle(Message message) =>
+            HandleAsync(message).Wait();
 
-        public void Handle(Message message)
+        public async Task HandleAsync(Message message)
         {
             metadata.UserAgent = (message.Content as UnknownContent).Data["user_agent"] as string;
             shellServer.SendShellMessage(

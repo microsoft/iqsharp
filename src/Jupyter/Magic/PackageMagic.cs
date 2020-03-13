@@ -36,7 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public IReferences References { get; }
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel)
+        public override async Task<ExecutionResult> Run(string input, IChannel channel)
         {
             var (name, _) = ParseInput(input);
             var status = new TaskStatus($"Adding package {name}");

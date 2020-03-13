@@ -7,6 +7,15 @@
 import { IPython } from "./ipython";
 declare var IPython : IPython;
 
+declare global {
+    interface Window { IQSharp: IQSharp; }
+}
+
+interface IQSharp {
+    start_debug(session_id: string) : void;
+    advance_debug(session_id: string) : void;
+}
+
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
     // NB: The TypeScript definitions for CodeMirror don't currently understand
@@ -69,7 +78,17 @@ class Kernel {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
             this.requestEcho();
             this.requestClientInfo();
+            this.registerDebugIoPubEvents();
         });
+    }
+
+    registerDebugIoPubEvents() {
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_debug_opstart",
+            message => {
+                console.log("Starting operation", message.content.callable, message.content.args);
+            }
+        )
     }
 
     requestEcho() {
@@ -133,5 +152,27 @@ export function onload() {
     defineQSharpMode();
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
+    window.IQSharp = {
+        start_debug: (session_id) => {
+            IPython.notebook.kernel.send_shell_message(
+                "iqsharp_debug_request",
+                {debug_session: session_id},
+                {
+                    shell: {
+                        reply: (message) => {
+                            console.log("Got reply", message);
+                        }
+                    }
+                }
+            );
+        },
+
+        advance_debug: (session_id) => {
+            IPython.notebook.kernel.send_shell_message(
+                "iqsharp_debug_advance",
+                {debug_session: session_id}
+            );
+        }
+    };
 }
 
