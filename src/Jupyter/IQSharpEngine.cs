@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter
-        ) : base(shell, shellRouter, context, logger)
+        ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
             performanceMonitor.Start();

@@ -58,11 +58,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         public string MessageType => "iqsharp_clientinfo_request";
-        
-        public void Handle(Message message) =>
-            HandleAsync(message).Wait();
 
-        public async Task HandleAsync(Message message)
+        // Note that the order this message occurs in is insignificant, so we
+        // can handle the entire message asynchronously.
+        public async Task? HandleAsync(Message message)
         {
             metadata.UserAgent = (message.Content as UnknownContent).Data["user_agent"] as string;
             shellServer.SendShellMessage(

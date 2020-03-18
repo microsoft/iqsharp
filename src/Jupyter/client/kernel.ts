@@ -86,7 +86,9 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_debug_opstart",
             message => {
-                console.log("Starting operation", message.content.callable, message.content.args);
+                console.log("Starting operation", message.content.callable_name, message.content.callable_input);
+                let sessionId = message.content.debug_session;
+                $(`#iqsharp-current-${sessionId}`).text(message.content.callable_name);
             }
         )
     }
@@ -154,6 +156,10 @@ export function onload() {
     console.log("Loaded IQ# kernel-specific extension!");
     window.IQSharp = {
         start_debug: (session_id) => {
+            $(`#iqsharp-next-${session_id}`).on("click", () => {
+                window.IQSharp.advance_debug(`${session_id}`);
+            });
+
             IPython.notebook.kernel.send_shell_message(
                 "iqsharp_debug_request",
                 {debug_session: session_id},

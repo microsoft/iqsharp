@@ -35,9 +35,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         public string MessageType => "iqsharp_echo_request";
 
-        public void Handle(Message message) =>
-            HandleAsync(message).Wait();
-
+        // Note that the order this message occurs in is insignificant, so we
+        // can handle the entire message asynchronously.
         public async Task HandleAsync(Message message)
         {
             // Find out the thing we need to echo back.

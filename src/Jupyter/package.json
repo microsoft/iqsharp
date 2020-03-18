@@ -1,5 +1,6 @@
 {
     "devDependencies": {
-        "@types/codemirror": "0.0.56"
+        "@types/codemirror": "0.0.56",
+        "@types/jquery": "^3.3.33"
     }
 }
