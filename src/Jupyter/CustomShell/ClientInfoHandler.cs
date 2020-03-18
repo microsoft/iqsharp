@@ -33,6 +33,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         [JsonProperty("client_host")]
         public string ClientHost { get; set; }
 
+        [JsonProperty("client_origin")]
+        public string ClientOrigin { get; set; }
+
+        [JsonProperty("client_first_origin")]
+        public string ClientFirstOrigin { get; set; }
+
         [JsonProperty("client_language")]
         public string ClientLanguage { get; set; }
 
@@ -88,6 +94,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             metadata.ClientCountry = content.ClientCountry ?? metadata.ClientCountry;
             metadata.ClientLanguage = content.ClientLanguage ?? metadata.ClientLanguage;
             metadata.ClientHost = content.ClientHost ?? metadata.ClientHost;
+            metadata.ClientOrigin = content.ClientOrigin ?? metadata.ClientOrigin;
+            metadata.ClientFirstOrigin = content.ClientFirstOrigin ?? metadata.ClientFirstOrigin;
             shellServer.SendShellMessage(
                 new Message
                 {

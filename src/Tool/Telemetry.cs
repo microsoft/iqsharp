@@ -40,6 +40,7 @@ namespace Microsoft.Quantum.IQSharp
             eventService.OnKernelStopped().On += (kernelApp) =>
             {
                 TelemetryLogger.LogEvent("SessionEnd".AsTelemetryEvent());
+                LogManager.UploadNow();
                 LogManager.Teardown();
             };
 
@@ -51,6 +52,8 @@ namespace Microsoft.Quantum.IQSharp
                                                 nameof(metadataController.ClientCountry),
                                                 nameof(metadataController.ClientLanguage),
                                                 nameof(metadataController.ClientHost),
+                                                nameof(metadataController.ClientOrigin),
+                                                nameof(metadataController.ClientFirstOrigin),
                                                 nameof(metadataController.ClientIsNew));
             eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
                 snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
@@ -73,7 +76,17 @@ namespace Microsoft.Quantum.IQSharp
 
         public void InitLogManager(IConfiguration config)
         {
-            LogManager.Start(new LogConfiguration());
+            LogManager.Start(new LogConfiguration() {
+                //await up to 1 second for the telemetry 
+                //to get uploaded before tearing down
+                MaxTeardownUploadTime = 1000 
+            });
+#if REALTIME_TELEMETRY
+            //Used for debugging telemetry, performing realtime uploads
+            LogManager.SetPowerState(PowerState.Charging);
+            LogManager.SetNetCost(NetCost.Low);
+            LogManager.SetTransmitProfile("RealTime");
+#endif
             TelemetryLogger = LogManager.GetLogger(TOKEN, out _);
             LogManager.SetSharedContext("AppInfo.Id", "iq#");
             LogManager.SetSharedContext("AppInfo.Version", Jupyter.Constants.IQSharpKernelProperties.KernelVersion);

@@ -63,6 +63,18 @@ namespace Microsoft.Quantum.IQSharp
         public string? ClientHost { get; set; }
 
         /// <summary>
+        ///      A string passed via the client query string 'origin' identifying the source of the traffic.
+        ///      This is used to track links that directed the user to IQ# hosted in the cloud.
+        /// </summary>
+        public string? ClientOrigin { get; set; }
+
+        /// <summary>
+        ///      The first origin ever for the user (see ClientOrigin).
+        ///      This is used to track which link that directed the user to IQ# hosted in the cloud for the first time.
+        /// </summary>
+        public string? ClientFirstOrigin { get; set; }
+
+        /// <summary>
         ///     A string passed by the client representing the environment in which
         ///     the client is running (e.g.: continuous integration, a hosted
         ///     notebook service, etc.).
@@ -95,6 +107,8 @@ namespace Microsoft.Quantum.IQSharp
         private string? clientCountry = null;
         private string? clientLanguage = null;
         private string? clientHost = null;
+        private string? clientOrigin = null;
+        private string? clientFirstOrigin = null;
         private bool? telemetryOptOut = null;
 
         public string? IQSharpVersion { get; }
@@ -137,6 +151,16 @@ namespace Microsoft.Quantum.IQSharp
         {
             get => clientHost;
             set => SetPropertyAndNotifyChange(ref clientHost, value);
+        }
+        public string? ClientOrigin
+        {
+            get => clientOrigin;
+            set => SetPropertyAndNotifyChange(ref clientOrigin, value);
+        }
+        public string? ClientFirstOrigin
+        {
+            get => clientFirstOrigin;
+            set => SetPropertyAndNotifyChange(ref clientFirstOrigin, value);
         }
 
         protected void SetPropertyAndNotifyChange<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)

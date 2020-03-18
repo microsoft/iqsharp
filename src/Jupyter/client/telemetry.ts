@@ -41,6 +41,7 @@ export interface ClientInfo {
     CountryCode: string;
     CookieConsentMarkup: ConsentMarkup;
     HasConsent: boolean;
+    FirstOrigin: string;
 }
 
 interface ConsentMarkup {
@@ -126,6 +127,8 @@ class CookieConsentHelper {
 class TelemetryHelper {
     private cookieConsentHelper: CookieConsentHelper;
 
+    public origin: string;
+
     constructor() {
         var telemetryHelper = this;
         this.cookieConsentHelper = new CookieConsentHelper(function () { telemetryHelper.consentGranted() });
@@ -150,7 +153,10 @@ class TelemetryHelper {
 
     private async getClientInfoAsync(setHasConsent: boolean = false): Promise<ClientInfo> {
         console.log("Getting ClientInfo");
-        var url = CLIENT_INFO_API_URL + (setHasConsent ? "&hasconsent=1" : "")
+        var url =
+            CLIENT_INFO_API_URL
+            + (setHasConsent ? "&hasconsent=1" : "")
+            + ((this.origin != null && this.origin != "") ? "&origin=" + this.origin : "");
         try {
             var clientInfo = await this.fetchExt<ClientInfo>(url);
             console.log(`ClientInfo: ${JSON.stringify(clientInfo)}`);

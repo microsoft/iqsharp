@@ -106,6 +106,10 @@ class Kernel {
         );
     }
 
+    getOriginQueryString() {
+        return (new URLSearchParams(window.location.search)).get("origin");
+    }
+
     requestClientInfo() {
         // The other thing we will want to do as the kernel starts up is to
         // pass along information from the client that would not otherwise be
@@ -118,6 +122,7 @@ class Kernel {
                 "user_agent": navigator.userAgent,
                 "client_language": navigator.language,
                 "client_host": location.hostname,
+                "client_origin": this.getOriginQueryString(),
             },
             {
                 shell: {
@@ -153,13 +158,15 @@ class Kernel {
             return;
         }
 
+        Telemetry.origin = this.getOriginQueryString();
         Telemetry.clientInfoAvailable.on((clientInfo: ClientInfo) => {
             IPython.notebook.kernel.send_shell_message(
                 "iqsharp_clientinfo_request",
                 {
                     "client_country": clientInfo.CountryCode,
                     "client_id": clientInfo.Id,
-                    "client_isnew": clientInfo.IsNew
+                    "client_isnew": clientInfo.IsNew,
+                    "client_first_origin": clientInfo.FirstOrigin,
                 }
             );
         });
