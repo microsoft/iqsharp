@@ -36,10 +36,7 @@ namespace Microsoft.Quantum.IQSharp
             IWorkspace workspace, 
             IReferences references, 
             ILogger<Snippets> logger,
-            IEventService eventService,
-            //Even though it's not directly used, we have the TelemetryService here to make
-            //sure it gets instantiate by the Dependency Injection framework.
-            ITelemetryService _)
+            IEventService eventService)
         {
             Compiler = compiler;
             Workspace = workspace;

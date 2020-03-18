@@ -7,29 +7,23 @@ using System;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
-    /// <summary>
-    /// A KernelApplication that trigger events in the Event Service 
-    /// </summary>
+    /// <inheritdoc />
     public class IQSharpKernelApp : KernelApplication
     {
-        /// <summary>
-        ///     Constructs a new application given properties describing a particular kernel,
-        ///     and an action to configure services.
-        /// </summary>
-        /// <param name="properties">
-        ///     Properties describing this kernel to clients.
-        /// </param>
-        /// <param name="configure">
-        ///     An action to configure services for the new kernel application. This action is
-        ///     called after all other kernel services have been configured, and is typically
-        ///     used to provide an implementation of Microsoft.Jupyter.Core.IExecutionEngine
-        ///     along with any services required by that engine.
-        ///</param>
+        /// <inheritdoc />
         public IQSharpKernelApp(KernelProperties properties, Action<ServiceCollection> configure) 
             : base(properties, configure)
         {
             KernelStarted += OnKernelStarted;
             KernelStopped += OnKernelStopped;
+        }
+
+        /// <inheritdoc />
+        public override ServiceProvider InitServiceProvider(IServiceCollection serviceCollection)
+        {
+            var serviceProvider = base.InitServiceProvider(serviceCollection);
+            serviceProvider.GetRequiredService<ITelemetryService>();
+            return serviceProvider;
         }
 
         private void OnKernelStopped()

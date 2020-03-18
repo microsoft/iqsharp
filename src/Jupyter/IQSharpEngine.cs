@@ -38,10 +38,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IEventService eventService,
-            //Even though it's not directly used, we have the TelemetryService here to make
-            //sure it gets instantiate by the Dependency Injection framework.
-            ITelemetryService _
+            IEventService eventService
         ) : base(shell, context, logger)
         {
             this.performanceMonitor = performanceMonitor;
