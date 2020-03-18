@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-//TODO: Update to production URL
-const CLIENT_INFO_API_URL = 'https://iqsharp-telemetry-test.azurewebsites.net/api/GetClientInfo?code=1kIsLwHdwLlH9n5LflhgVlafZaTH122yPK/3xezIjCQqC87MJrkdyQ==';
+const CLIENT_INFO_API_URL = 'https://iqsharp-telemetry.azurewebsites.net/api/GetClientInfo?code=1kIsLwHdwLlH9n5LflhgVlafZaTH122yPK/3xezIjCQqC87MJrkdyQ==';
 
 /*
 There are npm packages for this but I preferred to keep it small
