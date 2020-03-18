@@ -129,8 +129,17 @@ class Kernel {
                         this.telemetryOptOut = content?.telemetry_opt_out;
                         console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
 
+                        var isLocalEnvironment =
+                            location.hostname == "localhost"
+                            || location.hostname == "127.0.0.1"
+                            || this.hostingEnvironment == null
+                            || this.hostingEnvironment == "";
+
                         if (this.telemetryOptOut) {
                             console.log("Telemetry is turned-off");
+                        }
+                        else if (isLocalEnvironment) {
+                            console.log("Client telemetry not allowed on local environment");
                         }
                         else {
                             this.initTelemetry();
