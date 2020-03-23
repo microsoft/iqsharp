@@ -37,7 +37,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IServiceProvider services,
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
-            IShellRouter shellRouter
+            IShellRouter shellRouter,
+            IEventService eventService
         ) : base(shell, context, logger)
         {
             this.performanceMonitor = performanceMonitor;
@@ -70,6 +71,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 "IQ# engine started successfully as process {Process}.",
                 Process.GetCurrentProcess().Id
             );
+
+            eventService?.TriggerServiceInitialized<IExecutionEngine>(this);
         }
 
         internal ISnippets Snippets { get; }

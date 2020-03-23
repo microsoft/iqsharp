@@ -43,6 +43,7 @@ namespace Tests.IQSharp
         public static void AddMocks(this IServiceCollection services)
         {
             var shell = new MockShell();
+            services.AddSingleton<ITelemetryService, NullTelemetryService>();
             services.AddSingleton<IShellServer>(shell);
             services.AddSingleton<IShellRouter>(new MockShellRouter(shell));
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());

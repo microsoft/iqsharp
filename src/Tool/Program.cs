@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,6 +27,13 @@ namespace Microsoft.Quantum.IQSharp
         {
             public string? LogPath { get; set; }
         }
+
+        public static bool TelemetryOptOut
+#if TELEMETRY
+            => !string.IsNullOrEmpty(Configuration?[nameof(TelemetryOptOut)]);
+#else
+            => true;
+#endif
 
         public static int Main(string[] args)
         {
@@ -49,6 +57,7 @@ namespace Microsoft.Quantum.IQSharp
                         Prefix = "IQSHARP_",
                         Aliases = new Dictionary<string, string>
                         {
+                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
                             ["USER_AGENT"] = "UserAgent",
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath"
@@ -56,7 +65,7 @@ namespace Microsoft.Quantum.IQSharp
                     })
                     .Build();
 
-                var app = new KernelApplication(
+                var app = new IQSharpKernelApp(
                     Jupyter.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
                 )
                 .ConfigureLogging(
@@ -79,7 +88,8 @@ namespace Microsoft.Quantum.IQSharp
                     new Dictionary<string, string>
                     {
                         ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Jupyter.res.logo-64x64.png",
-                        ["kernel.js"]      = "Microsoft.Quantum.IQSharp.Jupyter.res.kernel.js",
+                        ["kernel.js"] = "Microsoft.Quantum.IQSharp.Jupyter.res.kernel.js",
+                        ["telemetry.js"] = "Microsoft.Quantum.IQSharp.Jupyter.res.telemetry.js",
                     }
                 );
                 app.Command(
@@ -119,10 +129,6 @@ namespace Microsoft.Quantum.IQSharp
                     )
                 );
 
-#if TELEMETRY
-                Telemetry.Start(app, Configuration);
-#endif
-
                 return app.Execute(args);
             }
             catch (CommandParsingException)
@@ -131,7 +137,7 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
-        public static IWebHost GetHttpServer(string[] args)
+        public static IWebHost GetHttpServer(string[]? args)
         {
            return WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://localhost:8888")

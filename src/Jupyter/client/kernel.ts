@@ -7,6 +7,8 @@
 import { IPython } from "./ipython";
 declare var IPython : IPython;
 
+import { Telemetry, ClientInfo } from "./telemetry.js";
+
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
     // NB: The TypeScript definitions for CodeMirror don't currently understand
@@ -64,6 +66,7 @@ function defineQSharpMode() {
 class Kernel {
     hostingEnvironment : string | undefined;
     iqsharpVersion : string | undefined;
+    telemetryOptOut? : boolean | null;
 
     constructor() {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
@@ -103,6 +106,10 @@ class Kernel {
         );
     }
 
+    getOriginQueryString() {
+        return (new URLSearchParams(window.location.search)).get("origin");
+    }
+
     requestClientInfo() {
         // The other thing we will want to do as the kernel starts up is to
         // pass along information from the client that would not otherwise be
@@ -112,7 +119,10 @@ class Kernel {
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_clientinfo_request",
             {
-                "user_agent": navigator.userAgent
+                "user_agent": navigator.userAgent,
+                "client_language": navigator.language,
+                "client_host": location.hostname,
+                "client_origin": this.getOriginQueryString(),
             },
             {
                 shell: {
@@ -121,11 +131,46 @@ class Kernel {
                         console.log("clientinfo_reply message and content", message, content);
                         this.hostingEnvironment = content?.hosting_environment;
                         this.iqsharpVersion = content?.iqsharp_version;
+                        this.telemetryOptOut = content?.telemetry_opt_out;
                         console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
+
+                        this.initTelemetry();
                     }
                 }
             }
         );
+    }
+
+    initTelemetry() {
+        if (this.telemetryOptOut) {
+            console.log("Telemetry is turned-off");
+            return;
+        }
+
+        var isLocalEnvironment =
+            location.hostname == "localhost"
+            || location.hostname == "127.0.0.1"
+            || this.hostingEnvironment == null
+            || this.hostingEnvironment == "";
+
+        if (isLocalEnvironment) {
+            console.log("Client telemetry disabled on local environment");
+            return;
+        }
+
+        Telemetry.origin = this.getOriginQueryString();
+        Telemetry.clientInfoAvailable.on((clientInfo: ClientInfo) => {
+            IPython.notebook.kernel.send_shell_message(
+                "iqsharp_clientinfo_request",
+                {
+                    "client_country": clientInfo.CountryCode,
+                    "client_id": clientInfo.Id,
+                    "client_isnew": clientInfo.IsNew,
+                    "client_first_origin": clientInfo.FirstOrigin,
+                }
+            );
+        });
+        Telemetry.initAsync();
     }
 }
 

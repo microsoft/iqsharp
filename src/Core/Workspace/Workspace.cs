@@ -107,7 +107,13 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         /// <param name="logger">Used to log messages to the console.</param>
         /// <param name="references">List of references to use to compile the workspace.</param>
-        public Workspace(IOptions<Settings> config, ICompilerService compiler, IReferences references, ILogger<Workspace> logger, IMetadataController metadata)
+        public Workspace(
+            IOptions<Settings> config, 
+            ICompilerService compiler, 
+            IReferences references, 
+            ILogger<Workspace> logger, 
+            IMetadataController metadata,
+            IEventService eventService)
         {
             Compiler = compiler;
             GlobalReferences = references;
@@ -129,6 +135,8 @@ namespace Microsoft.Quantum.IQSharp
             {
                 StartFileWatching();
             }
+
+            eventService?.TriggerServiceInitialized<IWorkspace>(this);
         }
 
         /// <summary>
