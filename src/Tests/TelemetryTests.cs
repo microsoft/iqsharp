@@ -1,16 +1,34 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#if !TELEMETRY
+using Microsoft.Quantum.IQSharp;
+using System;
+
+namespace Tests.IQSharp
+{
+    public static class TelemetryTests
+    {
+        public static readonly Type TelemetryServiceType = typeof(NullTelemetryService);
+    }
+}
+#endif
+
 #if TELEMETRY
 
 using System;
-
+using System.Collections.Generic;
+using System.IO;
 using Microsoft.Applications.Events;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler.CompilationBuilder;
+using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
@@ -18,22 +36,37 @@ namespace Tests.IQSharp
     [TestClass]
     public class TelemetryTests
     {
-        public (Telemetry, IServiceProvider) StartTelemetry(string workspace = "Workspace")
-        {
-            var services = Startup.CreateServiceProvider(workspace);
-            var telemetry = new Telemetry(new MockTelemetryLogger());
-            telemetry.InitServices(services, null);
+        public static readonly Type TelemetryServiceType = typeof(MockTelemetryService);
 
-            return (telemetry, services);
+        [TestMethod]
+        public void MockTelemetryService()
+        {
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            GetAppLogger(services);
+        }
+
+        private static MockTelemetryService.MockAppLogger GetAppLogger(ServiceProvider services)
+        {
+            var telemetryService = services.GetService<ITelemetryService>();
+            Assert.IsNotNull(telemetryService, "TelemetryService must not be null. It should be added in Startup.cs.");
+            Assert.IsInstanceOfType(telemetryService, typeof(MockTelemetryService), "TelemetryService should be of type MockTelemetryService as set in Startup.cs");
+            var mockTelemetryService = telemetryService as MockTelemetryService;
+            Assert.IsInstanceOfType(mockTelemetryService.TelemetryLogger, typeof(MockTelemetryService.MockAppLogger), "TelemetryService.TelemetryLogger should be of type MockTelemetryService.MockAppLogger, set by MockTelemetryService");
+            var mockAppLogger = mockTelemetryService.TelemetryLogger as MockTelemetryService.MockAppLogger;
+            return mockAppLogger;
         }
 
         [TestMethod]
         public void WorkspaceReload()
         {
-            var (telemetry, services) = StartTelemetry();
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
 
             var ws = services.GetService<IWorkspace>();
-            var logger = telemetry.Logger as MockTelemetryLogger;
+
+            logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
             ws.Reload();
@@ -48,10 +81,13 @@ namespace Tests.IQSharp
         [TestMethod]
         public void InvalidWorkspaceReload()
         {
-            var (telemetry, services) = StartTelemetry("Workspace.Broken");
+            var workspace = "Workspace.Broken";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
 
             var ws = services.GetService<IWorkspace>();
-            var logger = telemetry.Logger as MockTelemetryLogger;
+
+            logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
             ws.Reload();
@@ -66,10 +102,13 @@ namespace Tests.IQSharp
         [TestMethod]
         public void CompileCode()
         {
-            var (telemetry, services) = StartTelemetry();
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
 
             var snippets = services.GetService<ISnippets>();
-            var logger = telemetry.Logger as MockTelemetryLogger;
+
+            logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
             var count = 0;
@@ -111,10 +150,13 @@ namespace Tests.IQSharp
         [TestMethod]
         public void LoadPackage()
         {
-            var (telemetry, services) = StartTelemetry();
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
 
             var mgr = services.GetService<IReferences>();
-            var logger = telemetry.Logger as MockTelemetryLogger;
+
+            logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
             mgr.AddPackage("Microsoft.Quantum.Standard");
@@ -133,11 +175,14 @@ namespace Tests.IQSharp
         [TestMethod]
         public void JupyterActions()
         {
-            var (telemetry, services) = StartTelemetry();
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
 
             var engine = services.GetService<IExecutionEngine>() as IQSharpEngine;
             var channel = new MockChannel();
-            var logger = telemetry.Logger as MockTelemetryLogger;
+
+            logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
             var count = 0;
@@ -167,10 +212,142 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void GetDeviceId()
+        public void ContextVariables()
         {
-            var address = Telemetry.GetDeviceId();
-            Assert.IsTrue(!string.IsNullOrEmpty(address));
+            var dict = new Dictionary<string, string> 
+            {
+                { "UserAgent", "TestUserAgent" },
+                { "HostingEnvironment", "TestHostingEnvironment" }
+            };
+
+            Program.Configuration ??= new ConfigurationBuilder()
+                .AddInMemoryCollection(dict)
+                .Build();
+
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
+
+            logger.Context.TryGetValue("AppInfo.Id", out var value);
+            Assert.AreEqual("iq#", value);
+
+            logger.Context.TryGetValue("AppInfo.Version", out value);
+            Assert.AreEqual(Constants.IQSharpKernelProperties.KernelVersion, value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.CompilerVersion", out value);
+            Assert.AreEqual(typeof(CompilationUnitManager).Assembly.GetName().Version.ToString(), value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.SimulationVersion", out value);
+            Assert.AreEqual(typeof(QuantumSimulator).Assembly.GetName().Version.ToString(), value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.Root", out value);
+            Assert.AreEqual(Path.GetFileName(Directory.GetCurrentDirectory()), value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.DeviceId", out value);
+            Assert.AreEqual(TelemetryService.GetDeviceId(), value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.UserAgent", out value);
+            Assert.AreEqual(Program.Configuration["UserAgent"], value);
+
+            logger.Context.TryGetValue("Quantum.IQSharp.HostingEnvironment", out value);
+            Assert.AreEqual(Program.Configuration["HostingEnvironment"], value);
+        }
+    }
+
+    public class MockTelemetryService : TelemetryService
+    {
+        public class MockAppLogger : Microsoft.Applications.Events.ILogger
+        {
+            public List<EventProperties> Events { get; } = new List<EventProperties>();
+            public Dictionary<string, object> Context { get; } = new Dictionary<string, object>();
+
+            public EVTStatus LogEvent(EventProperties properties)
+            {
+                Events.Add(properties);
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, string value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, double value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, long value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, sbyte value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, short value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, int value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, byte value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, ushort value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, uint value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, bool value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, DateTime value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+
+            public EVTStatus SetContext(string name, Guid value, PiiKind piiKind = PiiKind.None)
+            {
+                Context[name] = value;
+                return EVTStatus.OK;
+            }
+        }
+
+        public MockTelemetryService(ILogger<TelemetryService> logger, IEventService eventService)
+            : base(logger, eventService)
+        {
+        }
+
+        public override Microsoft.Applications.Events.ILogger CreateLogManager(IConfiguration config)
+        {
+            return new MockAppLogger();
         }
     }
 }

@@ -31,7 +31,8 @@ namespace Microsoft.Quantum.IQSharp
             Logger.LogInformation("Starting Telemetry.");
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
-            InitLogManager(config);
+            TelemetryLogger = CreateLogManager(config);
+            InitTelemetryLogger(TelemetryLogger, config);
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
@@ -74,7 +75,7 @@ namespace Microsoft.Quantum.IQSharp
         public Applications.Events.ILogger TelemetryLogger { get; private set; }
         public ILogger<TelemetryService> Logger { get; }
 
-        public void InitLogManager(IConfiguration config)
+        public virtual Applications.Events.ILogger CreateLogManager(IConfiguration config)
         {
             LogManager.Start(new LogConfiguration() {
                 //await up to 1 second for the telemetry 
@@ -87,15 +88,19 @@ namespace Microsoft.Quantum.IQSharp
             LogManager.SetNetCost(NetCost.Low);
             LogManager.SetTransmitProfile("RealTime");
 #endif
-            TelemetryLogger = LogManager.GetLogger(TOKEN, out _);
-            LogManager.SetSharedContext("AppInfo.Id", "iq#");
-            LogManager.SetSharedContext("AppInfo.Version", Jupyter.Constants.IQSharpKernelProperties.KernelVersion);
-            LogManager.SetSharedContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version.ToString());
-            LogManager.SetSharedContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version.ToString());
-            LogManager.SetSharedContext("Root".WithTelemetryNamespace(), Path.GetFileName(Directory.GetCurrentDirectory()), PiiKind.GenericData);
-            LogManager.SetSharedContext("DeviceId".WithTelemetryNamespace(), GetDeviceId(), PiiKind.GenericData);
-            LogManager.SetSharedContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
-            LogManager.SetSharedContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("HostingEnvironment"));
+            return LogManager.GetLogger(TOKEN, out _);
+        }
+
+        private void InitTelemetryLogger(Applications.Events.ILogger telemetryLogger, IConfiguration config)
+        {
+            telemetryLogger.SetContext("AppInfo.Id", "iq#");
+            telemetryLogger.SetContext("AppInfo.Version", Jupyter.Constants.IQSharpKernelProperties.KernelVersion);
+            telemetryLogger.SetContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version.ToString());
+            telemetryLogger.SetContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version.ToString());
+            telemetryLogger.SetContext("Root".WithTelemetryNamespace(), Path.GetFileName(Directory.GetCurrentDirectory()), PiiKind.GenericData);
+            telemetryLogger.SetContext("DeviceId".WithTelemetryNamespace(), GetDeviceId(), PiiKind.GenericData);
+            telemetryLogger.SetContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
+            telemetryLogger.SetContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("HostingEnvironment"));
         }
 
         /// <summary>
