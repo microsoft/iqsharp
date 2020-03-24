@@ -19,6 +19,7 @@ namespace Tests.IQSharp
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Applications.Events;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -265,6 +266,12 @@ namespace Tests.IQSharp
             {
                 Events.Add(properties);
                 return EVTStatus.OK;
+            }
+
+            public Task<SendResult> LogEventAsync(EventProperties properties)
+            {
+                Events.Add(properties);
+                return Task.FromResult(new SendResult(ResultStatus.Send));
             }
 
             public EVTStatus SetContext(string name, string value, PiiKind piiKind = PiiKind.None)
