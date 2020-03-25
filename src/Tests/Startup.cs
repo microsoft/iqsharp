@@ -31,10 +31,13 @@ namespace Tests.IQSharp
 
             services.AddLogging();
             services.AddMocks();
+            services.AddTelemetry();
             services.AddIQSharp();
             services.AddIQSharpKernel();
 
-            return services.BuildServiceProvider();
+            var serviceProvider = services.BuildServiceProvider();
+            serviceProvider.GetRequiredService<ITelemetryService>();
+            return serviceProvider;
         }
 
         internal static T Create<T>(string workspaceFolder) =>
@@ -43,10 +46,14 @@ namespace Tests.IQSharp
         public static void AddMocks(this IServiceCollection services)
         {
             var shell = new MockShell();
-            services.AddSingleton<ITelemetryService, NullTelemetryService>();
             services.AddSingleton<IShellServer>(shell);
             services.AddSingleton<IShellRouter>(new MockShellRouter(shell));
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());
+        }
+
+        public static void AddTelemetry(this IServiceCollection services)
+        {
+            services.AddSingleton(typeof(ITelemetryService), TelemetryTests.TelemetryServiceType);
         }
     }
 }
