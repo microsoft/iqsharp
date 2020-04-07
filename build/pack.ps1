@@ -135,7 +135,9 @@ if ($Env:ENABLE_DOCKER -eq "false") {
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 }
 
-if (($Env:ENABLE_DOCKER -eq "true") -and ($Env:ENABLE_PYTHON -eq "true")) {
+if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {\
+    Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
+} else {
     # If we can, pack docs using the documentation build container.
     # We use the trick at https://blog.ropnop.com/plundering-docker-images/#extracting-files
     # to build a new image containing all the docs we care about, then `docker cp`
