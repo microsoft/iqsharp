@@ -88,7 +88,7 @@ namespace Tests.IQSharp
         public void CompileOne()
         {
             var engine = Init();
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
 
 
@@ -109,10 +109,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(ChannelWithNewLines.Format($"Invalid operation name: _snippet_.HelloQ"), channel.errors[0]);
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
+            await AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
         }
 
         [TestMethod]
@@ -136,10 +136,10 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            AssertEstimate(engine, "HelloQ");
+            await AssertEstimate(engine, "HelloQ");
         }
 
         [TestMethod]
@@ -167,10 +167,10 @@ namespace Tests.IQSharp
             var engine = Init();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.DependsOnWorkspace, "DependsOnWorkspace");
+            await AssertCompile(engine, SNIPPETS.DependsOnWorkspace, "DependsOnWorkspace");
 
             // Run:
-            var results = AssertSimulate(engine, "DependsOnWorkspace", "Hello Foo again!");
+            var results = await AssertSimulate(engine, "DependsOnWorkspace", "Hello Foo again!");
             Assert.AreEqual("[Zero,One,Zero,Zero,Zero]", results);
         }
 
@@ -180,16 +180,16 @@ namespace Tests.IQSharp
             var engine = Init();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Run:
-            AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
+            await AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
 
             // Compile it with a new code
-            AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
 
             // Run again:
-            AssertSimulate(engine, "HelloQ", "msg0", "msg1");
+            await AssertSimulate(engine, "HelloQ", "msg0", "msg1");
         }
 
         [TestMethod]
@@ -367,7 +367,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(3, result.Length);
 
             // Now compilation must work:
-            AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
+            await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
 
             // Check an invalid command
             response = await wsMagic.Execute("foo", channel);
