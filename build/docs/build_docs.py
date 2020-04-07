@@ -107,6 +107,7 @@ def format_as_document(magic, uid_base : str) -> str:
 ---
 {metadata_as_yaml.getvalue().rstrip()}
 ---
+
 <!--
     NB: This file has been automatically generated from {magic.get("AssemblyName", "<unknown>")}.dll,
         please do not manually edit it.
@@ -114,6 +115,7 @@ def format_as_document(magic, uid_base : str) -> str:
     [DEBUG] JSON source:
         {json.dumps(magic)}
 -->
+
 {header}
 {summary}
 {description}

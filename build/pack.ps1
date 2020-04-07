@@ -134,3 +134,14 @@ if ($Env:ENABLE_DOCKER -eq "false") {
     Write-Host "##[info]Packing Docker image..."
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 }
+
+if (($Env:ENABLE_DOCKER -eq "true") -and ($Env:ENABLE_PYTHON -eq "true")) {
+    # If we can, pack docs using the documentation build container.
+    # We use the trick at https://blog.ropnop.com/plundering-docker-images/#extracting-files
+    # to build a new image containing all the docs we care about, then `docker cp`
+    # them out.
+    $tempTag = New-Guid | Select-Object -ExpandProperty Guid;
+    docker build -t $tempTag (Join-Path $PSScriptRoot "docs");
+    $tempContainer = docker create $tempTag;
+    docker cp "${tempContainer}:/workdir/drops/docs/iqsharp-magic" (Join-Path $Env:DOCS_OUTDIR "iqsharp-magic")
+}
