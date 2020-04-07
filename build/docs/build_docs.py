@@ -8,9 +8,12 @@ from pathlib import Path
 import click
 
 try:
-    import ruamel.yaml as yaml
+    from ruamel.yaml import YAML
 except ImportError:
-    import ruamel_yaml as yaml
+    from ruamel_yaml import YAML
+
+yaml = YAML()
+yaml.indent(mapping=2, sequence=2)
 
 @click.command()
 @click.argument("OUTPUT_DIR")
@@ -102,7 +105,7 @@ def format_as_document(magic, uid_base : str) -> str:
 
     return cleanup_markdown(f"""
 ---
-{metadata_as_yaml.getvalue()}
+{metadata_as_yaml.getvalue().rstrip()}
 ---
 <!--
     NB: This file has been automatically generated from {magic.get("AssemblyName", "<unknown>")}.dll,
