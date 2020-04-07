@@ -71,17 +71,17 @@ namespace Tests.IQSharp
             this.shell = shell;
         }
 
-        public void Handle(Message message)
+        public async Task Handle(Message message)
         {
             shell.Handle(message);
         }
 
-        public void RegisterFallback(Action<Message> fallback)
+        public void RegisterFallback(Func<Message, Task?> fallback)
         {
             throw new NotImplementedException();
         }
 
-        public void RegisterHandler(string messageType, Action<Message> handler)
+        public void RegisterHandler(string messageType, Func<Message, Task?> handler)
         {
         }
 
