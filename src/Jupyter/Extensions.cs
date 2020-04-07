@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -170,5 +170,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             };
             return simulator;
         }
+
+        internal static string TrimLeadingWhitespace(this string s) =>
+            new Regex(@"^\s+", RegexOptions.Multiline)
+                .Replace(s, string.Empty);
     }
 }
