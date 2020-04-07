@@ -38,7 +38,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IEventService eventService
+            IEventService eventService,
+            IMagicSymbolResolver magicSymbolResolver
         ) : base(shell, context, logger)
         {
             this.performanceMonitor = performanceMonitor;
@@ -46,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
-            this.MagicResolver = new MagicSymbolResolver(services, logger);
+            this.MagicResolver = magicSymbolResolver;
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
