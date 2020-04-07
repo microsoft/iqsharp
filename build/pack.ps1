@@ -143,7 +143,26 @@ if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {\
     # to build a new image containing all the docs we care about, then `docker cp`
     # them out.
     $tempTag = New-Guid | Select-Object -ExpandProperty Guid;
-    docker build -t $tempTag (Join-Path $PSScriptRoot "docs");
+    # Note that we want to use a Dockerfile read from stdin so that we can more
+    # easily inject the right base image into the FROM line. In doing so,
+    # the build context should include the build_docs.py script that we need.
+    $dockerfile = @"
+FROM ${Env:DOCKER_PREFIX}iqsharp-base:${Env:BUILD_BUILDNUMBER}
+
+USER root
+RUN pip install click ruamel.yaml
+WORKDIR /workdir
+RUN chown -R `${USER} /workdir
+
+USER `${USER}
+ARG EXTRA_PACKAGES=
+COPY build_docs.py /workdir
+RUN python build_docs.py \
+        /workdir/drops/docs/iqsharp-magic \
+        microsoft.quantum.iqsharp.magic-ref \
+        `${EXTRA_PACKAGES}    
+"@;
+    $dockerfile | docker build -t $tempTag -f - (Join-Path $PSScriptRoot "docs");
     $tempContainer = docker create $tempTag;
     docker cp "${tempContainer}:/workdir/drops/docs/iqsharp-magic" (Join-Path $Env:DOCS_OUTDIR "iqsharp-magic")
 }
