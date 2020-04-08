@@ -25,7 +25,48 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public ConfigMagic(IConfigurationSource configurationSource) : base(
             "config",
             new Documentation {
-                Summary = "Allows setting or querying configuration options."
+                Summary = "Allows setting or querying configuration options.",
+                Description = @"
+                    This magic command allows for setting or querying
+                    configuration options used to control the behavior of the
+                    IQ# kernel (e.g.: state visualization options), and to
+                    save those options to a JSON file in the current working
+                    directory.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Print a list of all currently set configuration options:
+                        ```
+                        In []: %config
+                        Out[]: Configuration key                 Value
+                               --------------------------------- -----------
+                               dump.basisStateLabelingConvention ""BigEndian""
+                               dump.truncateSmallAmplitudes      true
+                        ```
+                    ",
+
+                    @"
+                        Configure the `DumpMachine` and `DumpRegister` callables
+                        to use big-endian convention:
+                        ```
+                        In []: %config dump.basisStateLabelingConvention = ""BigEndian""
+                        Out[]: ""BigEndian""
+                        ```
+                    ".Dedent(),
+
+                    @"
+                        Save current configuration options to `.iqsharp-config.json`
+                        in the current working directory:
+                        ```
+                        In []: %config --save
+                        Out[]: 
+                        ```
+                        Note that options saved this way will be applied automatically
+                        the next time a notebook in the current working
+                        directory is loaded.
+                    ".Dedent()
+                }
             })
         {
             this.ConfigurationSource = configurationSource;

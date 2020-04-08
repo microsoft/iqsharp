@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.Jupyter.Core;
@@ -40,10 +41,10 @@ namespace Tests.IQSharp
             foreach (var m in channel.msgs) Console.WriteLine($"  {m}");
         }
 
-        public static string AssertCompile(IQSharpEngine engine, string source, params string[] expectedOps)
+        public static async Task<string> AssertCompile(IQSharpEngine engine, string source, params string[] expectedOps)
         {
             var channel = new MockChannel();
-            var response = engine.ExecuteMundane(source, channel);
+            var response = await engine.ExecuteMundane(source, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -52,12 +53,12 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        public static string AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
+        public static async Task<string> AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             var configSource = new ConfigurationSource(skipLoading: true);
             var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource);
             var channel = new MockChannel();
-            var response = simMagic.Execute(snippetName, channel);
+            var response = await simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
@@ -65,11 +66,11 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        public static string AssertEstimate(IQSharpEngine engine, string snippetName, params string[] messages)
+        public static async Task<string> AssertEstimate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             var channel = new MockChannel();
             var estimateMagic = new EstimateMagic(engine.SymbolsResolver);
-            var response = estimateMagic.Execute(snippetName, channel);
+            var response = await estimateMagic.Execute(snippetName, channel);
             var result = response.Output as DataTable;
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -84,15 +85,15 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void CompileOne()
+        public async Task CompileOne()
         {
             var engine = Init();
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
 
 
         [TestMethod]
-        public void CompileAndSimulate()
+        public async Task CompileAndSimulate()
         {
             var engine = Init();
             var configSource = new ConfigurationSource(skipLoading: true);
@@ -100,7 +101,7 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
-            var response = simMagic.Execute("_snippet_.HelloQ", channel);
+            var response = await simMagic.Execute("_snippet_.HelloQ", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -108,51 +109,51 @@ namespace Tests.IQSharp
             Assert.AreEqual(ChannelWithNewLines.Format($"Invalid operation name: _snippet_.HelloQ"), channel.errors[0]);
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
+            await AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
         }
 
         [TestMethod]
-        public void SimulateWithArguments()
+        public async Task SimulateWithArguments()
         {
             var engine = Init();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.Reverse, "Reverse");
+            await AssertCompile(engine, SNIPPETS.Reverse, "Reverse");
 
             // Try running again:
-            var results = AssertSimulate(engine, "Reverse { \"array\": [2, 3, 4], \"name\": \"foo\" }", "Hello foo");
+            var results = await AssertSimulate(engine, "Reverse { \"array\": [2, 3, 4], \"name\": \"foo\" }", "Hello foo");
             Assert.AreEqual("[4,3,2]", results);
         }
 
 
         [TestMethod]
-        public void Estimate()
+        public async Task Estimate()
         {
             var engine = Init();
             var channel = new MockChannel();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            AssertEstimate(engine, "HelloQ");
+            await AssertEstimate(engine, "HelloQ");
         }
 
         [TestMethod]
-        public void Toffoli()
+        public async Task Toffoli()
         {
             var engine = Init();
             var channel = new MockChannel();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Run with toffoli simulator:
             var toffoliMagic = new ToffoliMagic(engine.SymbolsResolver);
-            var response = toffoliMagic.Execute("HelloQ", channel);
+            var response = await toffoliMagic.Execute("HelloQ", channel);
             var result = response.Output as Dictionary<string, double>;
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -161,62 +162,62 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void DependsOnWorkspace()
+        public async Task DependsOnWorkspace()
         {
             var engine = Init();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.DependsOnWorkspace, "DependsOnWorkspace");
+            await AssertCompile(engine, SNIPPETS.DependsOnWorkspace, "DependsOnWorkspace");
 
             // Run:
-            var results = AssertSimulate(engine, "DependsOnWorkspace", "Hello Foo again!");
+            var results = await AssertSimulate(engine, "DependsOnWorkspace", "Hello Foo again!");
             Assert.AreEqual("[Zero,One,Zero,Zero,Zero]", results);
         }
 
         [TestMethod]
-        public void UpdateSnippet()
+        public async Task UpdateSnippet()
         {
             var engine = Init();
 
             // Compile it:
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Run:
-            AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
+            await AssertSimulate(engine, "HelloQ", "Hello from quantum world!");
 
             // Compile it with a new code
-            AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
 
             // Run again:
-            AssertSimulate(engine, "HelloQ", "msg0", "msg1");
+            await AssertSimulate(engine, "HelloQ", "msg0", "msg1");
         }
 
         [TestMethod]
-        public void UpdateDependency()
+        public async Task UpdateDependency()
         {
             var engine = Init();
 
             // Compile HelloQ
-            AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Compile something that depends on it:
-            AssertCompile(engine, SNIPPETS.DependsOnHelloQ, "DependsOnHelloQ");
+            await AssertCompile(engine, SNIPPETS.DependsOnHelloQ, "DependsOnHelloQ");
 
             // Compile new version of HelloQ
-            AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
+            await AssertCompile(engine, SNIPPETS.HelloQ_2, "HelloQ");
 
             // Run dependency, it should reflect changes on HelloQ:
-            AssertSimulate(engine, "DependsOnHelloQ", "msg0", "msg1");
+            await AssertSimulate(engine, "DependsOnHelloQ", "msg0", "msg1");
         }
 
         [TestMethod]
-        public void ReportWarnings()
+        public async Task ReportWarnings()
         {
             var engine = Init();
 
             {
                 var channel = new MockChannel();
-                var response = engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
+                var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
                 PrintResult(response, channel);
                 Assert.AreEqual(ExecuteStatus.Ok, response.Status);
                 Assert.AreEqual(3, channel.msgs.Count);
@@ -226,7 +227,7 @@ namespace Tests.IQSharp
 
             {
                 var channel = new MockChannel();
-                var response = engine.ExecuteMundane(SNIPPETS.OneWarning, channel);
+                var response = await engine.ExecuteMundane(SNIPPETS.OneWarning, channel);
                 PrintResult(response, channel);
                 Assert.AreEqual(ExecuteStatus.Ok, response.Status);
                 Assert.AreEqual(1, channel.msgs.Count);
@@ -236,12 +237,12 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ReportErrors()
+        public async Task ReportErrors()
         {
             var engine = Init();
 
             var channel = new MockChannel();
-            var response = engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
+            var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -249,13 +250,13 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestPackages()
+        public async Task TestPackages()
         {
             var engine = Init();
             var snippets = engine.Snippets as Snippets;
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
-            var response = pkgMagic.Execute("", channel);
+            var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -265,11 +266,11 @@ namespace Tests.IQSharp
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
-            response = engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel);
+            response = await engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -278,19 +279,19 @@ namespace Tests.IQSharp
             Assert.AreEqual(2, result.Length);
 
             // Now it should compile:
-            AssertCompile(engine, SNIPPETS.TrotterEstimateEnergy, "TrotterEstimateEnergy");
+            await AssertCompile(engine, SNIPPETS.TrotterEstimateEnergy, "TrotterEstimateEnergy");
 
         }
 
         [TestMethod]
-        public void TestInvalidPackages()
+        public async Task TestInvalidPackages()
         {
             var engine = Init();
             var snippets = engine.Snippets as Snippets;
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
 
-            var response = pkgMagic.Execute("microsoft.quantum", channel);
+            var response = await pkgMagic.Execute("microsoft.quantum", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
@@ -301,7 +302,7 @@ namespace Tests.IQSharp
 
 
         [TestMethod]
-        public void TestWho()
+        public async Task TestWho()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
             snippets.Compile(SNIPPETS.HelloQ);
@@ -310,7 +311,7 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             // Check the workspace, it should be in error state:
-            var response = whoMagic.Execute("", channel);
+            var response = await whoMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -320,7 +321,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestWorkspace()
+        public async Task TestWorkspace()
         {
             var engine = Init("Workspace.Chemistry");
             var snippets = engine.Snippets as Snippets;
@@ -332,49 +333,49 @@ namespace Tests.IQSharp
             var result = new string[0];
 
             // Check the workspace, it should be in error state:
-            var response = wsMagic.Execute("reload", channel);
+            var response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = wsMagic.Execute("", channel);
+            response = await wsMagic.Execute("", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
             // Try compiling a snippet that depends on a workspace that depends on the chemistry package:
-            response = engine.ExecuteMundane(SNIPPETS.DependsOnChemistryWorkspace, channel);
+            response = await engine.ExecuteMundane(SNIPPETS.DependsOnChemistryWorkspace, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
 
             // Add dependencies:
-            response = pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            response = pkgMagic.Execute("microsoft.quantum.research", channel);
+            response = await pkgMagic.Execute("microsoft.quantum.research", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
             // Reload workspace:
-            response = wsMagic.Execute("reload", channel);
+            response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
-            response = wsMagic.Execute("", channel);
+            response = await wsMagic.Execute("", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(3, result.Length);
 
             // Now compilation must work:
-            AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
+            await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
 
             // Check an invalid command
-            response = wsMagic.Execute("foo", channel);
+            response = await wsMagic.Execute("foo", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
             // Check that everything still works:
-            response = wsMagic.Execute("", channel);
+            response = await wsMagic.Execute("", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
         }

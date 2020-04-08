@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -83,9 +84,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.shellServer = shellServer;
         }
 
+        /// <inheritdoc />
         public string MessageType => "iqsharp_clientinfo_request";
 
-        public void Handle(Message message)
+        /// <inheritdoc />
+        public async Task HandleAsync(Message message)
         {
             var content = message.To<ClientInfoContent>();
             metadata.UserAgent = content.UserAgent ?? metadata.UserAgent;
