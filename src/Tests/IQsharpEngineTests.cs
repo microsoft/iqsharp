@@ -85,7 +85,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void CompileOne()
+        public async Task CompileOne()
         {
             var engine = Init();
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
@@ -130,7 +130,7 @@ namespace Tests.IQSharp
 
 
         [TestMethod]
-        public void Estimate()
+        public async Task Estimate()
         {
             var engine = Init();
             var channel = new MockChannel();
@@ -162,7 +162,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void DependsOnWorkspace()
+        public async Task DependsOnWorkspace()
         {
             var engine = Init();
 
@@ -175,7 +175,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void UpdateSnippet()
+        public async Task UpdateSnippet()
         {
             var engine = Init();
 
