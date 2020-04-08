@@ -1,8 +1,9 @@
 import json
 import datetime
+import dataclasses
 
 from io import StringIO
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pathlib import Path
 
 import click
@@ -14,6 +15,14 @@ except ImportError:
 
 yaml = YAML()
 yaml.indent(mapping=2, sequence=2)
+
+@dataclasses.dataclass
+class MagicReferenceDocument:
+    content: str
+    name: str
+    safe_name: str
+    uid: str
+    summary: str
 
 @click.command()
 @click.argument("OUTPUT_DIR")
@@ -32,10 +41,20 @@ def main(output_dir : str, uid_base : str, package : List[str]):
     
     print("Generating Markdown files...")
     magics = qsharp.client._execute(r"%lsmagic")
+    all_magics = {}
     for magic in magics:
         magic_doc = format_as_document(magic, uid_base)
-        with open(output_dir / f"{magic['Name'].replace('%', '')}.md", 'w', encoding='utf8') as f:
-            f.write(magic_doc)
+        all_magics[magic_doc.name] = magic_doc
+        with open(output_dir / f"{magic_doc.safe_name}.md", 'w', encoding='utf8') as f:
+            f.write(magic_doc.content)
+
+    toc_content = format_toc(all_magics)
+    with open(output_dir / "toc.yml", 'w', encoding='utf8') as f:
+        f.write(toc_content)
+    
+    index_content = format_index(all_magics, uid_base)
+    with open(output_dir / "index.md", 'w', encoding='utf8') as f:
+        f.write(index_content)
 
 def format_as_section(name : str, content : Optional[str]) -> str:
     content = content.strip() if content else None
@@ -68,20 +87,30 @@ def cleanup_markdown(content : str):
         _cleanup_markdown(content)
     ).strip() + "\n"
 
-def format_as_document(magic, uid_base : str) -> str:
+def as_yaml_header(metadata) -> str:
+    # Convert the metadata header to YAML.
+    metadata_as_yaml = StringIO()
+    yaml.dump(metadata, metadata_as_yaml)
+
+    return f"---\n{metadata_as_yaml.getvalue().rstrip()}\n---"""
+
+def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     # NB: this function supports both the old and new Documentation format.
     #     See https://github.com/microsoft/jupyter-core/pull/49.
     magic_name = magic['Name'].strip()
+    safe_name = magic_name.replace('%', '')
+    uid = f"{uid_base}.{safe_name}"
     metadata = {
         'title': f"{magic_name} (magic command)",
-        'uid': f"{uid_base}.{magic_name.replace('%', '')}",
+        'uid': uid,
         'ms.date': datetime.date.today().isoformat(),
         'ms.topic': 'article'
     }
     header = f"# `{magic_name}`"
     doc = magic['Documentation']
 
-    summary = format_as_section('Summary', doc.get('Summary', ""))
+    raw_summary = doc.get('Summary', "")
+    summary = format_as_section('Summary', raw_summary)
     description = format_as_section(
         'Description',
         doc.get('Description', doc.get('Full', ''))
@@ -99,14 +128,9 @@ def format_as_document(magic, uid_base : str) -> str:
         )
     )
 
-    # Convert the metadata header to YAML.
-    metadata_as_yaml = StringIO()
-    yaml.dump(metadata, metadata_as_yaml)
-
-    return cleanup_markdown(f"""
----
-{metadata_as_yaml.getvalue().rstrip()}
----
+    return MagicReferenceDocument(
+        content=cleanup_markdown(f"""
+{as_yaml_header(metadata)}
 
 <!--
     NB: This file has been automatically generated from {magic.get("AssemblyName", "<unknown>")}.dll,
@@ -122,6 +146,44 @@ def format_as_document(magic, uid_base : str) -> str:
 {remarks}
 {examples}
 {see_also}
+        """),
+        name=magic_name, safe_name=safe_name,
+        uid=uid,
+        summary=raw_summary
+    )
+
+def format_toc(all_magics : Dict[str, MagicReferenceDocument]) -> str:
+    toc_content = [
+        {
+            'href': f"{doc.safe_name}.md",
+            'name': f"{doc.name} magic command"
+        }
+        for magic_name, doc in sorted(all_magics.items(), key=lambda item: item[0])
+    ]
+    
+    as_yaml = StringIO()
+    yaml.dump(toc_content, as_yaml)
+
+    return as_yaml.getvalue()
+
+
+def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str) -> str:
+    index_content = "\n".join(
+        f"| [`{magic_name}`](xref:{doc.uid}) | {doc.summary} |"
+        for magic_name, doc in sorted(all_magics.items(), key=lambda item: item[0])
+    )
+    metadata = {
+        'title': "IQ# Magic Commands",
+        'uid': f"{uid_base}.index",
+        'ms.date': datetime.date.today().isoformat(),
+        'ms.topic': 'article'
+    }
+    return cleanup_markdown(f"""
+# IQ# Magic Commands
+
+| Magic Command | Summary |
+|---------------|---------|
+{index_content}
     """)
 
 if __name__ == "__main__":
