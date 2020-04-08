@@ -32,7 +32,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     IQ# kernel (e.g.: state visualization options), and to
                     save those options to a JSON file in the current working
                     directory.
-                ".TrimLeadingWhitespace(),
+                ".Dedent(),
                 Examples = new []
                 {
                     @"
@@ -53,7 +53,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         In []: %config dump.basisStateLabelingConvention = ""BigEndian""
                         Out[]: ""BigEndian""
                         ```
-                    ".TrimLeadingWhitespace(),
+                    ".Dedent(),
 
                     @"
                         Save current configuration options to `.iqsharp-config.json`
@@ -65,7 +65,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         Note that options saved this way will be applied automatically
                         the next time a notebook in the current working
                         directory is loaded.
-                    ".TrimLeadingWhitespace()
+                    ".Dedent()
                 }
             })
         {
