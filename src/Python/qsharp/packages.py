@@ -43,6 +43,6 @@ class Packages(object):
         session, downloading the package from NuGet.org or any other configured
         feeds as necessary.
         """
-        logger.info("Loading package: " + package_name)
-        pkgs=self._client.add_package(package_name)
+        logger.info(f"Loading package: {package_name}")
+        pkgs = self._client.add_package(package_name)
         logger.info("Loading complete: " + ';'.join(str(e) for e in pkgs))

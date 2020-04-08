@@ -62,12 +62,27 @@ function Pack-Image() {
         return
     }
 
+    
+    <# If we are building a non-release build, we need to inject the
+       prerelease feed as well.
+       Note that since this will appear as an argument to docker build, which
+       then evaluates the build argument using Bash, we
+       need \" to be in the value of $extraNugetSources so that the final XML
+       contains just a ". Thus the correct escape sequence is \`".
+    #>
+    if ("$Env:BUILD_RELEASETYPE" -ne "release") {
+        $extraNugetSources = "<add key=\`"prerelease\`" value=\`"https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha%40Local/nuget/v3/index.json\`" />";
+    } else {
+        $extraNugetSources = "";
+    }
+
     docker build `
         <# We treat $DROP_DIR as the build context, as we will need to ADD
            nuget packages into the image. #> `
         $Env:DROPS_DIR `
         <# This means that the Dockerfile lives outside the build context. #> `
         -f (Join-Path $PSScriptRoot $Dockerfile) `
+        --build-arg EXTRA_NUGET_SOURCES="$extraNugetSources" `
         <# Next, we tell Docker what version of IQ# to install. #> `
         --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
         <# Finally, we tag the image with the current build number. #> `
@@ -133,4 +148,42 @@ if ($Env:ENABLE_DOCKER -eq "false") {
 } else {
     Write-Host "##[info]Packing Docker image..."
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+}
+
+if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {\
+    Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
+} else {
+    # If we can, pack docs using the documentation build container.
+    # We use the trick at https://blog.ropnop.com/plundering-docker-images/#extracting-files
+    # to build a new image containing all the docs we care about, then `docker cp`
+    # them out.
+    $tempTag = New-Guid | Select-Object -ExpandProperty Guid;
+    # When building in release mode, we also want to document additional
+    # packages that contribute IQ# magic commands.
+    if ("$Env:BUILD_RELEASETYPE" -eq "release") {
+        $extraPackages = "--package Microsoft.Quantum.Katas --package Microsoft.Quantum.Chemistry.Jupyter";
+    } else {
+        $extraPackages = "";
+    }
+    # Note that we want to use a Dockerfile read from stdin so that we can more
+    # easily inject the right base image into the FROM line. In doing so,
+    # the build context should include the build_docs.py script that we need.
+    $dockerfile = @"
+FROM ${Env:DOCKER_PREFIX}iqsharp-base:${Env:BUILD_BUILDNUMBER}
+
+USER root
+RUN pip install click ruamel.yaml
+WORKDIR /workdir
+RUN chown -R `${USER} /workdir
+
+USER `${USER}
+COPY build_docs.py /workdir
+RUN python build_docs.py \
+        /workdir/drops/docs/iqsharp-magic \
+        microsoft.quantum.iqsharp.magic-ref \
+        $extraPackages
+"@;
+    $dockerfile | docker build -t $tempTag -f - (Join-Path $PSScriptRoot "docs");
+    $tempContainer = docker create $tempTag;
+    docker cp "${tempContainer}:/workdir/drops/docs/iqsharp-magic" (Join-Path $Env:DOCS_OUTDIR "iqsharp-magic")
 }

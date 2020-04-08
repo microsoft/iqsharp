@@ -35,6 +35,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public static void AddIQSharpKernel(this IServiceCollection services)
         {
             services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
+            services.AddSingleton<IMagicSymbolResolver, Jupyter.MagicSymbolResolver>();
             services.AddSingleton<IExecutionEngine, Jupyter.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
         }
