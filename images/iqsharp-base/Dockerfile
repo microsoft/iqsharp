@@ -87,7 +87,9 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
                   ${EXTRA_NUGET_SOURCES}\n\
               </packageSources>\n\
           </configuration>\n\
-    " > ${HOME}/.nuget/NuGet/NuGet.Config
+    " > ${HOME}/.nuget/NuGet/NuGet.Config && \
+    echo "Using NuGet.Config:" && \
+    cat ${HOME}/.nuget/NuGet/NuGet.Config
 # Add Python and NuGet packages from the build context
 ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
 ADD wheels/*.whl ${LOCAL_PACKAGES}/wheels/
