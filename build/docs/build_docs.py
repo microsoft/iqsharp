@@ -1,3 +1,21 @@
+#!/bin/env python
+# -*- coding: utf-8 -*-
+##
+# build_docs.py: Builds documentation for IQ# magic commands as
+#     DocFX-compatible Markdown and YAML files.
+##
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+##
+
+"""
+Builds documentation for IQ# magic commands as
+DocFX-compatible Markdown and YAML files.
+
+Note that this command requires the IQ# kernel and the qsharp package to
+be installed, as well as Python 3.7 or later, click, and ruamel.yaml.
+"""
+
 import json
 import datetime
 import dataclasses
