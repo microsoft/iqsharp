@@ -138,13 +138,14 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
         format_as_section("Example", example)
         for example in doc.get('Examples', [])
     )
+    raw_see_also = doc.get('SeeAlso', [])
     see_also = format_as_section(
         "See Also",
         "\n".join(
             f"- [{description}]({target})"
-            for description, target in doc.get('SeeAlso', [])
+            for description, target in raw_see_also
         )
-    )
+    ) if raw_see_also else ""
 
     return MagicReferenceDocument(
         content=cleanup_markdown(f"""
