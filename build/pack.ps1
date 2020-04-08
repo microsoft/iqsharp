@@ -64,9 +64,14 @@ function Pack-Image() {
 
     
     <# If we are building a non-release build, we need to inject the
-        prerelease feed as well. #>
+       prerelease feed as well.
+       Note that since this will appear as an argument to docker build, which
+       then evaluates the build argument using Bash, we
+       need \" to be in the value of $extraNugetSources so that the final XML
+       contains just a ". Thus the correct escape sequence is \`".
+    #>
     if ("$Env:BUILD_RELEASETYPE" -ne "release") {
-        $extraNugetSources = "<add key=`"prerelease`" value=`"https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha%40Local/nuget/v3/index.json`" />";
+        $extraNugetSources = "<add key=\`"prerelease\`" value=\`"https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha%40Local/nuget/v3/index.json\`" />";
     } else {
         $extraNugetSources = "";
     }
