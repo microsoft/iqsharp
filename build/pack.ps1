@@ -62,12 +62,22 @@ function Pack-Image() {
         return
     }
 
+    
+    <# If we are building a non-release build, we need to inject the
+        prerelease feed as well. #>
+    if ("$Env:BUILD_RELEASETYPE" -ne "release") {
+        $extraNugetSources = "<add key=`"prerelease`" value=`"https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha%40Local/nuget/v3/index.json`" />";
+    } else {
+        $extraNugetSources = "";
+    }
+
     docker build `
         <# We treat $DROP_DIR as the build context, as we will need to ADD
            nuget packages into the image. #> `
         $Env:DROPS_DIR `
         <# This means that the Dockerfile lives outside the build context. #> `
         -f (Join-Path $PSScriptRoot $Dockerfile) `
+        --build-arg EXTRA_NUGET_SOURCES="$extraNugetSources" `
         <# Next, we tell Docker what version of IQ# to install. #> `
         --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
         <# Finally, we tag the image with the current build number. #> `

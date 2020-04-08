@@ -76,6 +76,7 @@ WORKDIR ${HOME}
 
 # Provide local copies of all relevant packages.
 ENV LOCAL_PACKAGES=${HOME}/.packages
+ARG EXTRA_NUGET_SOURCES=
 # Add the local NuGet packages folder as a source.
 RUN mkdir -p ${HOME}/.nuget/NuGet && \
     echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
@@ -83,6 +84,7 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
               <packageSources>\n\
                   <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
                   <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
+                  ${EXTRA_NUGET_SOURCES}\n\
               </packageSources>\n\
           </configuration>\n\
     " > ${HOME}/.nuget/NuGet/NuGet.Config
