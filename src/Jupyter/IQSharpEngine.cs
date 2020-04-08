@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -39,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IEventService eventService
-        ) : base(shell, context, logger)
+        ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
             performanceMonitor.Start();
@@ -86,7 +87,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
         /// the operations found. These operations are then available for simulation and estimate.
         /// </summary>
-        public override ExecutionResult ExecuteMundane(string input, IChannel channel)
+        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
         {
             channel = channel.WithNewLines();
 
