@@ -150,7 +150,7 @@ if ($Env:ENABLE_DOCKER -eq "false") {
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 }
 
-if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {\
+if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {
     Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
 } else {
     # If we can, pack docs using the documentation build container.
