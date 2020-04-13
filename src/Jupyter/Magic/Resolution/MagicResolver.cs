@@ -80,7 +80,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             foreach (var magic in FindAllMagicSymbols())
             {
-                if (symbolName.StartsWith(magic.Name))
+                if (symbolName == magic.Name)
                 {
                     this.logger.LogDebug($"Using magic {magic.Name}");
                     return magic;
