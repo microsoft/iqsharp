@@ -9,9 +9,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.IQSharp;
 
-namespace Tests.IQsharp
+namespace Tests.IQSharp
 {
     [TestClass]
     public class HttpServerIntegrationTests
