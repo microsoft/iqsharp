@@ -175,7 +175,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///      Removes common indents from each line in a string,
         ///      similarly to Python's <c>textwrap.dedent()</c> function.
         /// </summary>
-        internal static string Dedent(this string text)
+        public static string Dedent(this string text)
         {
             // First, start by finding the length of common indents,
             // disregarding lines that are only whitespace.
