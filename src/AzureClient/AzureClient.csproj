@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <RootNamespace>Microsoft.Quantum.IQSharp.AzureClient</RootNamespace>
+    <AssemblyName>Microsoft.Quantum.IQSharp.AzureClient</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.11.2004.1014-beta" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.10.0" />
+    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.8.0-preview" />
+    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.3.52078.1002" />
+    <PackageReference Include="System.Reactive" Version="4.3.2" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
+</Project>
