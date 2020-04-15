@@ -10,6 +10,17 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
+    ///      Represents information about a single magic symbol returned
+    ///      by the <c>%lsmagic</c> magic command.
+    /// </summary>
+    internal struct MagicSymbolSummary
+    {
+        public string Name;
+        public Documentation Documentation;
+        public string AssemblyName;
+    }
+
+    /// <summary>
     ///     A magic command that lists what magic commands are currently
     ///     available.
     /// </summary>
@@ -20,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Given a given snippets collection, constructs a new magic command
         ///     that queries callables defined in that snippets collection.
         /// </summary>
-        public LsMagicMagic(IMagicSymbolResolver resolver) : base(
+        public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine) : base(
             "lsmagic",
             new Documentation
             {
@@ -28,14 +39,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             })
         {
             this.resolver = resolver;
+            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
+            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
         }
 
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel) =>
-            // TODO: format as something nicer than a table.
             resolver
                 .FindAllMagicSymbols()
-                .Select(magic => new
+                .Select(magic => new MagicSymbolSummary
                 {
                     Name = magic.Name,
                     Documentation = magic.Documentation,
