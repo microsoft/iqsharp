@@ -50,11 +50,6 @@ function Pack-Image() {
         [string] $Dockerfile
     );
 
-    if (($Env:AGENT_OS -ne $null) -and ($Env:AGENT_OS.StartsWith("Win"))) {
-        Write-Host "--> Cannot create docker image on Windows."
-        return
-    }
-
     Try {
         docker version
     } Catch {
@@ -143,47 +138,26 @@ if ($Env:ENABLE_PYTHON -eq "false") {
     Pack-Wheel '../src/Python/'
 }
 
+# Figure out if we can run Docker or not.
+
 if ($Env:ENABLE_DOCKER -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Creating Docker Image. Env:ENABLE_DOCKER was set to 'false'."
+    $runDocker = $false;
+} elseif (("$Env:AGENT_OS" -ne "") -and ($Env:AGENT_OS.StartsWith("Win"))) {
+    Write-Host "--> Cannot create docker image on Windows."
+    $runDocker = $false;
 } else {
+    $runDocker = $true;
+}
+
+if ($runDocker) {
     Write-Host "##[info]Packing Docker image..."
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
 }
 
-if (($Env:ENABLE_DOCKER -eq "false") -or ($Env:ENABLE_PYTHON -eq "false")) {
+if (-not $runDocker -or ($Env:ENABLE_PYTHON -eq "false")) {
     Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
 } else {
-    # If we can, pack docs using the documentation build container.
-    # We use the trick at https://blog.ropnop.com/plundering-docker-images/#extracting-files
-    # to build a new image containing all the docs we care about, then `docker cp`
-    # them out.
-    $tempTag = New-Guid | Select-Object -ExpandProperty Guid;
-    # When building in release mode, we also want to document additional
-    # packages that contribute IQ# magic commands.
-    if ("$Env:BUILD_RELEASETYPE" -eq "release") {
-        $extraPackages = "--package Microsoft.Quantum.Katas --package Microsoft.Quantum.Chemistry.Jupyter";
-    } else {
-        $extraPackages = "";
-    }
-    # Note that we want to use a Dockerfile read from stdin so that we can more
-    # easily inject the right base image into the FROM line. In doing so,
-    # the build context should include the build_docs.py script that we need.
-    $dockerfile = @"
-FROM ${Env:DOCKER_PREFIX}iqsharp-base:${Env:BUILD_BUILDNUMBER}
-
-USER root
-RUN pip install click ruamel.yaml
-WORKDIR /workdir
-RUN chown -R `${USER} /workdir
-
-USER `${USER}
-COPY build_docs.py /workdir
-RUN python build_docs.py \
-        /workdir/drops/docs/iqsharp-magic \
-        microsoft.quantum.iqsharp.magic-ref \
-        $extraPackages
-"@;
-    $dockerfile | docker build -t $tempTag -f - (Join-Path $PSScriptRoot "docs");
-    $tempContainer = docker create $tempTag;
-    docker cp "${tempContainer}:/workdir/drops/docs/iqsharp-magic" (Join-Path $Env:DOCS_OUTDIR "iqsharp-magic")
+    Write-Host "##[info]Packing IQ# reference docs..."
+    & (Join-Path $PSScriptRoot "pack-docs.ps1");
 }
