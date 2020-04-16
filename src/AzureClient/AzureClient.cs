@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
-using Microsoft.WindowsAzure.Storage;
 using System.Linq;
 using System.IO;
 using Microsoft.Azure.Quantum;
