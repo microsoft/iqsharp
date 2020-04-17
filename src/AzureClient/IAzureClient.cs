@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <summary>
-    /// This service is capable of connecting to Azure Quantum workspace
+    /// This service is capable of connecting to Azure Quantum workspaces
     /// and submitting jobs.
     /// </summary>
     public interface IAzureClient
