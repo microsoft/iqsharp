@@ -39,7 +39,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
             this.logger = logger;
 
-            this.kernelAssemblies = new[] {
+            this.kernelAssemblies = new[]
+            {
                 new AssemblyInfo(typeof(MagicSymbolResolver).Assembly),
                 new AssemblyInfo(typeof(AzureClient.AzureClient).Assembly)
             };
