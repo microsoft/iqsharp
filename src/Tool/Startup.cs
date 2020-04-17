@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.AzureClient;
 using System;
 
 namespace Microsoft.Quantum.IQSharp
@@ -24,6 +25,7 @@ namespace Microsoft.Quantum.IQSharp
             services.AddSingleton(typeof(ITelemetryService), GetTelemetryServiceType());
             services.AddIQSharp();
             services.AddIQSharpKernel();
+            services.AddAzureClient();
 
             var assembly = typeof(PackagesController).Assembly;
             services.AddControllers()

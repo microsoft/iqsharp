@@ -36,6 +36,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\AzureClient\AzureClient.csproj" />
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />

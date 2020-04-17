@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
@@ -22,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public class MagicSymbolResolver : IMagicSymbolResolver
     {
-        private AssemblyInfo kernelAssembly;
+        private AssemblyInfo[] kernelAssemblies;
         private Dictionary<AssemblyInfo, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
@@ -38,7 +39,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
             this.logger = logger;
 
-            this.kernelAssembly = new AssemblyInfo(typeof(MagicSymbolResolver).Assembly);
+            this.kernelAssemblies = new[]
+            {
+                new AssemblyInfo(typeof(MagicSymbolResolver).Assembly),
+                new AssemblyInfo(typeof(AzureClient.AzureClient).Assembly)
+            };
             this.services = services;
             this.references = services.GetService<IReferences>();
         }
@@ -50,7 +55,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
-            yield return this.kernelAssembly;
+            foreach (var asm in this.kernelAssemblies)
+            {
+                yield return asm;
+            }
 
             foreach (var asm in references.Assemblies)
             {
@@ -80,7 +88,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             foreach (var magic in FindAllMagicSymbols())
             {
-                if (symbolName.StartsWith(magic.Name))
+                if (symbolName == magic.Name)
                 {
                     this.logger.LogDebug($"Using magic {magic.Name}");
                     return magic;
