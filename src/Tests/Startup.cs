@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
+using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Tests.IQSharp
@@ -34,6 +35,7 @@ namespace Tests.IQSharp
             services.AddTelemetry();
             services.AddIQSharp();
             services.AddIQSharpKernel();
+            services.AddAzureClient();
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();
