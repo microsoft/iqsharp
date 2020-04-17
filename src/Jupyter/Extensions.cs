@@ -20,14 +20,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public static class Extensions
     {
-
-        /// <summary>
-        /// Creates a wrapper of an IChannel that adds new lines to every message
-        /// sent to stdout and stderr
-        /// </summary>
-        public static ChannelWithNewLines WithNewLines(this IChannel original) =>
-            (original is ChannelWithNewLines ch) ? ch : new ChannelWithNewLines(original);
-
         /// <summary>
         ///     Adds services required for the IQ# kernel to a given service
         ///     collection.
