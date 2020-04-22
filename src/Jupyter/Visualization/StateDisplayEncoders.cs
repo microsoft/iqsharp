@@ -217,7 +217,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         var (amplitude, basisLabel) = item;
 
-                        return $@"
+                        return FormattableString.Invariant($@"
                             <tr>
                                 <td>$\left|{basisLabel}\right\rangle$</td>
                                 <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
@@ -232,7 +232,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     ↑
                                 </td>
                             </tr>
-                        ";
+                        ");
                     })
                 );
 
