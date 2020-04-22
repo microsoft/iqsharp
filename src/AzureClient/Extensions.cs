@@ -26,23 +26,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <summary>
-        ///     Parses the input parameters for a given magic symbol and returns a
-        ///     <c>Dictionary</c> with the names and values of the parameters.
-        /// </summary>
-        public static Dictionary<string, string> ParseInput(this MagicSymbol magic, string input)
-        {
-            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
-            foreach (string arg in input.Split(null as char[], StringSplitOptions.RemoveEmptyEntries))
-            {
-                var tokens = arg.Split("=", 2);
-                var key = tokens[0].Trim();
-                var value = (tokens.Length == 1) ? string.Empty : tokens[1].Trim();
-                keyValuePairs[key] = value;
-            }
-            return keyValuePairs;
-        }
-
-        /// <summary>
         ///      Encapsulates a given <c>AzureClientError</c> as the result of an execution.
         /// </summary>
         /// <param name="azureClientError">
