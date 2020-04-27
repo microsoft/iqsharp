@@ -147,7 +147,9 @@ namespace Microsoft.Quantum.IQSharp
         {
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),
-                DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                (
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                ).ToString("o") // ← Format as ISO 8601.
             );
             return evt;
         }
