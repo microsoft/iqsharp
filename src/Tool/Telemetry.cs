@@ -147,9 +147,11 @@ namespace Microsoft.Quantum.IQSharp
         {
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),
+                // The "c" format converts using the "constant" format, which
+                // is stable across .NET cultures and versions.
                 (
                     DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
-                ).ToString("o") // ← Format as ISO 8601.
+                ).ToString("c")
             );
             return evt;
         }
