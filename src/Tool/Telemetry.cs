@@ -136,8 +136,17 @@ namespace Microsoft.Quantum.IQSharp
         public static string WithTelemetryNamespace(this string name) =>
             $"Quantum.IQSharp.{name}";
 
-        public static EventProperties AsTelemetryEvent(this string name) =>
-            new EventProperties() { Name = name.WithTelemetryNamespace() };
+        public static EventProperties AsTelemetryEvent(this string name)
+        {
+            var evt = new EventProperties() { Name = name.WithTelemetryNamespace() };
+
+            evt.SetProperty(
+                "TimeSinceStart".WithTelemetryNamespace(),
+                DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+            );
+
+            return evt;
+        }
 
         public static EventProperties AsTelemetryEvent(this ReloadedEventArgs info)
         {
