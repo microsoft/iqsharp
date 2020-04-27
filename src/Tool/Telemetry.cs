@@ -36,7 +36,9 @@ namespace Microsoft.Quantum.IQSharp
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
-                TelemetryLogger.LogEvent("SessionStart".AsTelemetryEvent());
+                TelemetryLogger.LogEvent(
+                    "SessionStart".AsTelemetryEvent().WithTimeSinceStart()
+                );
             };
             eventService.OnKernelStopped().On += (kernelApp) =>
             {
@@ -64,7 +66,9 @@ namespace Microsoft.Quantum.IQSharp
                 references.PackageLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
             {
-                TelemetryLogger.LogEvent("SessionReady".AsTelemetryEvent());
+                TelemetryLogger.LogEvent(
+                    "SessionReady".AsTelemetryEvent().WithTimeSinceStart()
+                );
                 if (executionEngine is BaseEngine engine)
                 {
                     engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
@@ -136,15 +140,15 @@ namespace Microsoft.Quantum.IQSharp
         public static string WithTelemetryNamespace(this string name) =>
             $"Quantum.IQSharp.{name}";
 
-        public static EventProperties AsTelemetryEvent(this string name)
-        {
-            var evt = new EventProperties() { Name = name.WithTelemetryNamespace() };
+        public static EventProperties AsTelemetryEvent(this string name) =>
+            new EventProperties() { Name = name.WithTelemetryNamespace() };
 
+        public static EventProperties WithTimeSinceStart(this EventProperties evt)
+        {
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),
                 DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
             );
-
             return evt;
         }
 
