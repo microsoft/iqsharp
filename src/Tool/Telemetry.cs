@@ -64,6 +64,7 @@ namespace Microsoft.Quantum.IQSharp
                 references.PackageLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
             {
+                TelemetryLogger.LogEvent("SessionReady".AsTelemetryEvent());
                 if (executionEngine is BaseEngine engine)
                 {
                     engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
