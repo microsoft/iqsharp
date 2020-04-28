@@ -115,3 +115,12 @@ RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.10.2001.525-beta" && \
            Microsoft.Quantum.IQSharp \
            --version ${IQSHARP_VERSION}
 RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
+# Ensure that the necessary NuGet packages are cached.
+ARG EXTRA_NUGET_PACKAGES=
+RUN echo "Adding standard packages..." && \
+    python -c "import qsharp;" && \
+    echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
+    for p in ${EXTRA_NUGET_PACKAGES}; do \
+        python -c "import qsharp; qsharp.packages.add('$p')" && \
+        echo "Added package: $p"; \
+    done
