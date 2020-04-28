@@ -32,12 +32,15 @@ namespace Microsoft.Quantum.IQSharp
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
             TelemetryLogger = CreateLogManager(config);
-            InitTelemetryLogger(TelemetryLogger, config);
+            InitTelemetryLogger(TelemetryLogger, config);            
+            TelemetryLogger.LogEvent(
+                "SessionStart".AsTelemetryEvent().WithTimeSinceStart()
+            );
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
                 TelemetryLogger.LogEvent(
-                    "SessionStart".AsTelemetryEvent().WithTimeSinceStart()
+                    "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
                 );
             };
             eventService.OnKernelStopped().On += (kernelApp) =>
@@ -67,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
             {
                 TelemetryLogger.LogEvent(
-                    "SessionReady".AsTelemetryEvent().WithTimeSinceStart()
+                    "ExecutionEngineInitialized".AsTelemetryEvent().WithTimeSinceStart()
                 );
                 if (executionEngine is BaseEngine engine)
                 {
