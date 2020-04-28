@@ -34,18 +34,18 @@ namespace Microsoft.Quantum.IQSharp
             TelemetryLogger = CreateLogManager(config);
             InitTelemetryLogger(TelemetryLogger, config);            
             TelemetryLogger.LogEvent(
-                "SessionStart".AsTelemetryEvent().WithTimeSinceStart()
+                "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
             );
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
                 TelemetryLogger.LogEvent(
-                    "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
+                    "KernelStarted".AsTelemetryEvent().WithTimeSinceStart()
                 );
             };
             eventService.OnKernelStopped().On += (kernelApp) =>
             {
-                TelemetryLogger.LogEvent("SessionEnd".AsTelemetryEvent());
+                TelemetryLogger.LogEvent("KernelStopped".AsTelemetryEvent());
                 LogManager.UploadNow();
                 LogManager.Teardown();
             };
