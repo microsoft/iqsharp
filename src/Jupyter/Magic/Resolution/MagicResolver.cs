@@ -20,7 +20,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     ///     and all the Assemblies in global references (including those
     ///     added via nuget Packages).
     /// </summary>
-    public class MagicSymbolResolver : ISymbolResolver
+    public class MagicSymbolResolver : IMagicSymbolResolver
     {
         private AssemblyInfo kernelAssembly;
         private Dictionary<AssemblyInfo, MagicSymbol[]> cache;
@@ -33,12 +33,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     services to search assembly references for subclasses of
         ///     <see cref="Microsoft.Jupyter.Core.MagicSymbol" />.
         /// </summary>
-        public MagicSymbolResolver(IServiceProvider services, ILogger<IQSharpEngine> logger)
+        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger)
         {
             this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
             this.logger = logger;
 
-            this.kernelAssembly = new AssemblyInfo(typeof(IQSharpEngine).Assembly);
+            this.kernelAssembly = new AssemblyInfo(typeof(MagicSymbolResolver).Assembly);
             this.services = services;
             this.references = services.GetService<IReferences>();
         }
@@ -72,13 +72,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public ISymbol Resolve(string symbolName)
+        public MagicSymbol Resolve(string symbolName)
         {
             if (symbolName == null || !symbolName.TrimStart().StartsWith("%")) return null;
 
             this.logger.LogDebug($"Looking for magic {symbolName}");
 
-            foreach (var magic in RelevantAssemblies().SelectMany(FindMagic))
+            foreach (var magic in FindAllMagicSymbols())
             {
                 if (symbolName.StartsWith(magic.Name))
                 {
@@ -134,5 +134,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             return result;
         }
+
+        /// <inheritdoc />
+        public IEnumerable<MagicSymbol> FindAllMagicSymbols() =>
+            RelevantAssemblies().SelectMany(FindMagic);
     }
 }

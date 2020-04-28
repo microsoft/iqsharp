@@ -50,16 +50,25 @@ function Pack-Image() {
         [string] $Dockerfile
     );
 
-    if (($Env:AGENT_OS -ne $null) -and ($Env:AGENT_OS.StartsWith("Win"))) {
-        Write-Host "--> Cannot create docker image on Windows."
-        return
-    }
-
     Try {
         docker version
     } Catch {
         Write-Host "##vso[task.logissue type=warning;]docker not installed. Will skip creation of image for $Dockerfile"
         return
+    }
+
+    
+    <# If we are building a non-release build, we need to inject the
+       prerelease feed as well.
+       Note that since this will appear as an argument to docker build, which
+       then evaluates the build argument using Bash, we
+       need \" to be in the value of $extraNugetSources so that the final XML
+       contains just a ". Thus the correct escape sequence is \`".
+    #>
+    if ("$Env:BUILD_RELEASETYPE" -ne "release") {
+        $extraNugetSources = "<add key=\`"prerelease\`" value=\`"https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha%40Local/nuget/v3/index.json\`" />";
+    } else {
+        $extraNugetSources = "";
     }
 
     docker build `
@@ -68,6 +77,7 @@ function Pack-Image() {
         $Env:DROPS_DIR `
         <# This means that the Dockerfile lives outside the build context. #> `
         -f (Join-Path $PSScriptRoot $Dockerfile) `
+        --build-arg EXTRA_NUGET_SOURCES="$extraNugetSources" `
         <# Next, we tell Docker what version of IQ# to install. #> `
         --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
         <# Finally, we tag the image with the current build number. #> `
@@ -128,9 +138,26 @@ if ($Env:ENABLE_PYTHON -eq "false") {
     Pack-Wheel '../src/Python/'
 }
 
+# Figure out if we can run Docker or not.
+
 if ($Env:ENABLE_DOCKER -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Creating Docker Image. Env:ENABLE_DOCKER was set to 'false'."
+    $runDocker = $false;
+} elseif (("$Env:AGENT_OS" -ne "") -and ($Env:AGENT_OS.StartsWith("Win"))) {
+    Write-Host "--> Cannot create docker image on Windows."
+    $runDocker = $false;
 } else {
+    $runDocker = $true;
+}
+
+if ($runDocker) {
     Write-Host "##[info]Packing Docker image..."
     Pack-Image -RepoName "iqsharp-base" -Dockerfile '../images/iqsharp-base/Dockerfile'
+}
+
+if (-not $runDocker -or ($Env:ENABLE_PYTHON -eq "false")) {
+    Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
+} else {
+    Write-Host "##[info]Packing IQ# reference docs..."
+    & (Join-Path $PSScriptRoot "pack-docs.ps1");
 }

@@ -26,6 +26,13 @@ of samples on how to use this kernel to run Q# in Jupyter Notebooks, or from Pyt
 
 ### Building IQ# from Source ###
 
+To obtain prerequisites, ensure that [Node.js](https://nodejs.org/) is installed, and then run `npm install` from the [src/Jupyter/](./src/Jupyter/) folder:
+
+```
+cd src/Jupyter/
+npm install
+```
+
 To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/master/iqsharp.sln) solution file.
 To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
 
