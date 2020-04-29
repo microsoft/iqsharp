@@ -185,21 +185,25 @@ namespace Tests.IQSharp
             {
                 var start = mgr.Items.Count();
 
-                await mgr.Add("Microsoft.Quantum.Research");
+                // Note that since we depend on the internal structure of a
+                // package for this test, and since that can change without
+                // breaking user code, we use a known-good version instead of
+                // the latest for the purpose of this test.
+                await mgr.Add("Microsoft.Quantum.Research::0.11.2003.3107");
                 var libsResearch = mgr.Assemblies.Select(s => s.Assembly.GetName().Name).ToArray();
                 Assert.AreEqual(start + 1, mgr.Items.Count());
                 CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Research");
                 CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Chemistry.DataModel");
                 CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Chemistry.Runtime");
 
-                await mgr.Add("Microsoft.Quantum.Chemistry");
+                await mgr.Add("Microsoft.Quantum.Chemistry::0.11.2003.3107");
                 var libsChem = mgr.Assemblies.Select(s => s.Assembly.GetName().Name).ToArray();
                 Assert.AreEqual(start + 2, mgr.Items.Count());
                 // Chemistry assembly was already by research, no new Assemblies should be added:
                 Assert.AreEqual(libsResearch.Length, libsChem.Length);
 
                 // Make sure we're case insensitive.
-                await mgr.Add("microsoft.quantum.chemistry  ");
+                await mgr.Add("microsoft.quantum.chemistry::0.11.2003.3107  ");
                 Assert.AreEqual(start + 2, mgr.Items.Count());
             }
         }
