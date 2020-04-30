@@ -53,14 +53,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }) {}
 
         /// <summary>
-        ///     The object used by this magic command to interact with Azure.
-        /// </summary>
-        public IAzureClient AzureClient { get; }
-
-        /// <summary>
         ///     Sets or views the target for job submission to the current Azure Quantum workspace.
         /// </summary>
-        public override async Task<AzureClientError> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             Dictionary<string, string> keyValuePairs = this.ParseInput(input);
             if (keyValuePairs.Keys.Count > 0)

@@ -56,7 +56,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Submits a new job to an Azure Quantum workspace given a Q# operation
         ///     name that is present in the current Q# Jupyter workspace.
         /// </summary>
-        public override async Task<AzureClientError> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             Dictionary<string, string> keyValuePairs = this.ParseInput(input);
             var operationName = keyValuePairs.Keys.FirstOrDefault();
