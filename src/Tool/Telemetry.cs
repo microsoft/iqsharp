@@ -32,15 +32,20 @@ namespace Microsoft.Quantum.IQSharp
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
             TelemetryLogger = CreateLogManager(config);
-            InitTelemetryLogger(TelemetryLogger, config);
+            InitTelemetryLogger(TelemetryLogger, config);            
+            TelemetryLogger.LogEvent(
+                "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
+            );
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
-                TelemetryLogger.LogEvent("SessionStart".AsTelemetryEvent());
+                TelemetryLogger.LogEvent(
+                    "KernelStarted".AsTelemetryEvent().WithTimeSinceStart()
+                );
             };
             eventService.OnKernelStopped().On += (kernelApp) =>
             {
-                TelemetryLogger.LogEvent("SessionEnd".AsTelemetryEvent());
+                TelemetryLogger.LogEvent("KernelStopped".AsTelemetryEvent());
                 LogManager.UploadNow();
                 LogManager.Teardown();
             };
@@ -64,6 +69,9 @@ namespace Microsoft.Quantum.IQSharp
                 references.PackageLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
             {
+                TelemetryLogger.LogEvent(
+                    "ExecutionEngineInitialized".AsTelemetryEvent().WithTimeSinceStart()
+                );
                 if (executionEngine is BaseEngine engine)
                 {
                     engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
@@ -137,6 +145,19 @@ namespace Microsoft.Quantum.IQSharp
 
         public static EventProperties AsTelemetryEvent(this string name) =>
             new EventProperties() { Name = name.WithTelemetryNamespace() };
+
+        public static EventProperties WithTimeSinceStart(this EventProperties evt)
+        {
+            evt.SetProperty(
+                "TimeSinceStart".WithTelemetryNamespace(),
+                // The "c" format converts using the "constant" format, which
+                // is stable across .NET cultures and versions.
+                (
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                ).ToString("c")
+            );
+            return evt;
+        }
 
         public static EventProperties AsTelemetryEvent(this ReloadedEventArgs info)
         {
