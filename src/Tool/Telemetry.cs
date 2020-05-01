@@ -14,7 +14,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.Simulation.Simulators;
 using static Microsoft.Jupyter.Core.BaseEngine;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 
 namespace Microsoft.Quantum.IQSharp
 {

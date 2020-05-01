@@ -9,8 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="res\kernel.js" />
-    <None Remove="res\logo-64x64.png" />
+    <Compile Remove="res\**" />
+    <EmbeddedResource Remove="res\**" />
+    <None Remove="res\**" />
+    <TypeScriptCompile Remove="res\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,29 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="res\logo-64x64.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.Jupyter.Core" Version="1.3.52077" />
-    <PackageReference Include="System.Reactive" Version="4.3.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
   <!-- TypeScript compilation -->
-  <ItemGroup>
-    <EmbeddedResource Include="res\kernel.js" />
-    <EmbeddedResource Include="res\telemetry.js" />
-    <Content Include="tsconfig.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.7.4">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
 </Project>
