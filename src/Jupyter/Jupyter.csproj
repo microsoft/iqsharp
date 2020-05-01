@@ -8,6 +8,21 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>0162</NoWarn>
+    <Authors>Microsoft</Authors>
+    <Description>Microsoft's IQ# Library with Jupyter Extensions.</Description>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Microsoft/IQSharp</PackageProjectUrl>
+    <PackageIconUrl>https://secure.gravatar.com/avatar/bd1f02955b2853ba0a3b1cdc2434e8ec.png</PackageIconUrl>
+    <PackageTags>Quantum Q# Qsharp</PackageTags>
+    <PackageId>Microsoft.Quantum.IQSharp.Jupyter</PackageId>
+    <ContentTargetFolders>\</ContentTargetFolders>
+    <ApplicationIcon />
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="res\**" />
     <EmbeddedResource Remove="res\**" />
