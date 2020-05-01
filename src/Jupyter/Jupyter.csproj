@@ -23,6 +23,10 @@
     <PackageReference Include="Microsoft.Jupyter.Core" Version="1.3.9294-CI-20200417-004906" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
   <!-- TypeScript compilation -->
 
 </Project>

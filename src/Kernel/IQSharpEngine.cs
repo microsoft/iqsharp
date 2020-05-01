@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Collections.Generic;

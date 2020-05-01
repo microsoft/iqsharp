@@ -13,7 +13,7 @@ using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     The convention to be used in labeling computational basis states

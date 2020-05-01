@@ -10,7 +10,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 
     /// <summary>
@@ -56,7 +56,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     dumping states. Computational basis states whose measurement
         ///     probabilities (i.e: squared magnitudes) are below this threshold
         ///     are subject to truncation when
-        ///     <see cref="Microsoft.Quantum.IQSharp.Kernel.IConfigurationSource.TruncateSmallAmplitudes" />
+        ///     <see cref="Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource.TruncateSmallAmplitudes" />
         ///     is <c>true</c>.
         /// </summary>
         public double TruncationThreshold =>
@@ -65,7 +65,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
     /// <summary>
     ///     An implementation of the
-    ///     <see cref="Microsoft.Quantum.IQSharp.Kernel.IConfigurationSource" />
+    ///     <see cref="Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource" />
     ///     service interface that loads and persists configuration values from
     ///     and to a local JSON file.
     /// </summary>

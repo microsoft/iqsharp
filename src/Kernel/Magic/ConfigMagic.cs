@@ -7,6 +7,7 @@ using System.Linq;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
