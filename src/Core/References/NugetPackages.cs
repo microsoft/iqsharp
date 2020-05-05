@@ -5,14 +5,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
@@ -59,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp
 
         // List of Nuget repositories. This is populated from NugetSettings.
         // It can't be cached otherwise we can't detect changes to repositores.
-        public IEnumerable<SourceRepository> Repositories 
+        public IEnumerable<SourceRepository> Repositories
         {
             get
             {
@@ -87,7 +85,7 @@ namespace Microsoft.Quantum.IQSharp
                 }
 
                 // Other sources as defined in Nuget.config:
-                foreach(var source in new SourceRepositoryProvider(NugetSettings, Repository.Provider.GetCoreV3()).GetRepositories())
+                foreach (var source in new SourceRepositoryProvider(NugetSettings, Repository.Provider.GetCoreV3()).GetRepositories())
                 {
                     Logger?.LogDebug($"Using nuget feed: {source.PackageSource.Name}");
                     yield return source;
@@ -95,9 +93,12 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        public SourceRepository GlobalPackagesSource =>
+            this.Repositories.First();
+
         // Nuget's way to find path of local packages
         public FindLocalPackagesResource LocalPackagesFinder =>
-            this.Repositories.First().GetResource<FindLocalPackagesResource>();
+            this.GlobalPackagesSource.GetResource<FindLocalPackagesResource>();
 
         // Nuget's global settings.
         public ISettings NugetSettings { get; }
@@ -221,9 +222,9 @@ namespace Microsoft.Quantum.IQSharp
         /// These packages will not be downloaded nor will we try to get their list of assemblies.
         /// </summary>
         public static bool IsSystemPackage(PackageIdentity pkg) =>
-            pkg.Id.StartsWith("System", StringComparison.InvariantCultureIgnoreCase) || 
-            pkg.Id.StartsWith("Microsoft.NET", StringComparison.InvariantCultureIgnoreCase) || 
-            pkg.Id.StartsWith("NETStandard", StringComparison.InvariantCultureIgnoreCase) || 
+            pkg.Id.StartsWith("System", StringComparison.InvariantCultureIgnoreCase) ||
+            pkg.Id.StartsWith("Microsoft.NET", StringComparison.InvariantCultureIgnoreCase) ||
+            pkg.Id.StartsWith("NETStandard", StringComparison.InvariantCultureIgnoreCase) ||
             pkg.Id.StartsWith("Microsoft.Win32", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
@@ -274,7 +275,7 @@ namespace Microsoft.Quantum.IQSharp
             var libs = packageReader?.GetLibItems();
 
             // If package contains no dlls:
-            if (libs == null) 
+            if (libs == null)
             {
                 Logger.LogWarning($"Could not find any dll for {pkg}");
                 return Enumerable.Empty<AssemblyInfo>();
@@ -405,8 +406,46 @@ namespace Microsoft.Quantum.IQSharp
 
             var resolver = new PackageResolver();
 
-            return resolver.Resolve(resolverContext, CancellationToken.None)
-                    .Select(p => dependencies.Single(x => PackageIdentityComparer.Default.Equals(x, p)));
+            try
+            {
+                return resolver.Resolve(resolverContext, CancellationToken.None)
+                        .Select(p => dependencies.Single(x => PackageIdentityComparer.Default.Equals(x, p)));
+            }
+            catch (NuGetResolverConstraintException exception)
+            {
+                Logger.LogWarning($"Exception caught when resolving package dependencies: {exception.Message}");
+            }
+
+            /*
+                First we try using the NuGet PackageResolver to resolve all package dependencies.
+                It's main purpose is to find which version of each package that needs to be loaded
+                that satisfies all dependencies.
+                But it may fail trying to find the perfect solution because some deeper package
+                dependency might not be available, even though that dependency might never be
+                needed in runtime.
+                So we are opting to try to load our target package and all the available 
+                dependencies that could be found using the latest versions that are available in
+                the local folders.                
+            */
+            var uniquePackageIds = dependencies.Select(pkg => pkg.Id).Distinct();
+            var uniqueAvailablePackages = uniquePackageIds.SelectMany(
+                    pkgId =>
+                        LocalPackagesFinder.FindPackagesById(pkgId, Logger, CancellationToken.None)
+                        .OrderByDescending(pkg => pkg.Identity.Version)
+                        .Take(1)
+                        .Select(
+                            pkg => new SourcePackageDependencyInfo(
+                                id: pkg.Identity.Id,
+                                version: pkg.Identity.Version,
+                                dependencies: dependencies
+                                                .Where(d => d.Id == pkg.Identity.Id)
+                                                .OrderByDescending(d => d.Version.Version)
+                                                .FirstOrDefault()
+                                                ?.Dependencies ?? new List<PackageDependency>(),
+                                listed: true,
+                                source: GlobalPackagesSource))
+                );
+            return uniqueAvailablePackages;
         }
 
         /// <summary>
