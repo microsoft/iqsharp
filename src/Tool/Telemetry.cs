@@ -102,7 +102,7 @@ namespace Microsoft.Quantum.IQSharp
         private void InitTelemetryLogger(Applications.Events.ILogger telemetryLogger, IConfiguration config)
         {
             telemetryLogger.SetContext("AppInfo.Id", "iq#");
-            telemetryLogger.SetContext("AppInfo.Version", Jupyter.Constants.IQSharpKernelProperties.KernelVersion);
+            telemetryLogger.SetContext("AppInfo.Version", Kernel.Constants.IQSharpKernelProperties.KernelVersion);
             telemetryLogger.SetContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version.ToString());
             telemetryLogger.SetContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version.ToString());
             telemetryLogger.SetContext("Root".WithTelemetryNamespace(), Path.GetFileName(Directory.GetCurrentDirectory()), PiiKind.GenericData);
