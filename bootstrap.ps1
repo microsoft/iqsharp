@@ -2,6 +2,12 @@
 # Licensed under the MIT License.
 
 
+# Fetch TypeScript definitions
+Push-Location (Join-Path $PSScriptRoot src/Jupyter)
+    npm install
+Pop-Location
+
+
 # If the compiler constants include TELEMETRY, explicitly add the Aria telemetry package to the iqsharp tool:
 if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("TELEMETRY"))) {
 
@@ -13,5 +19,4 @@ if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("
         --no-restore `
         --version "$Env:BUILD_ARIA_VERSION"
 }
-
 
