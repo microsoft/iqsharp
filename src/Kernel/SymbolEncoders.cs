@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Microsoft.Jupyter.Core;
 using Markdig;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///     Encodes Q# symbols into plain text, e.g. for printing to the console.
