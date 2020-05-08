@@ -13,9 +13,6 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using System.Linq;
 using System.IO;
-using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client;
-using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
