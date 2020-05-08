@@ -6,7 +6,7 @@ This repository contains the IQ# kernel for the [Quantum Development Kit](https:
 This kernel provides Q# support for the Jupyter platform, as well as the backend used by the Python client for Q#.
 
 - **[src/Core/](./src/Core/)**: Core of the IQ# kernel.
-- **[src/Jupyter/](./src/Jupyter/)**: Assembly used to interoperate between Jupyter and the rest of the IQ# kernel.
+- **[src/Kernel/](./src/Kernel/)**: Assembly used to interoperate between Jupyter and the rest of the IQ# kernel.
 - **[src/Python/](./src/Python)**: Python package for accessing IQ#.
 - **[src/Tests/](./src/Tests/)**: Unit tests for IQ#.
 - **[src/Tool/](./src/Tool/)**: .NET Core Global Tool used to install and launch IQ#.
@@ -26,10 +26,10 @@ of samples on how to use this kernel to run Q# in Jupyter Notebooks, or from Pyt
 
 ### Building IQ# from Source ###
 
-To obtain prerequisites, ensure that [Node.js](https://nodejs.org/) is installed, and then run `npm install` from the [src/Jupyter/](./src/Jupyter/) folder:
+To obtain prerequisites, ensure that [Node.js](https://nodejs.org/) is installed, and then run `npm install` from the [src/Kernel/](./src/Kernel/) folder:
 
 ```
-cd src/Jupyter/
+cd src/Kernel/
 npm install
 ```
 

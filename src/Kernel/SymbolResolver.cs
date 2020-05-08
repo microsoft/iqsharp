@@ -10,7 +10,7 @@ using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///     Represents a Q# code symbol (e.g. a function or operation name)

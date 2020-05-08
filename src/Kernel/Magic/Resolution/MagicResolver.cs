@@ -13,7 +13,7 @@ using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///     A specialized resolver for MagicSymbols. 

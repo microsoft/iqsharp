@@ -15,7 +15,7 @@
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Microsoft/Quantum</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Microsoft/IQSharp</PackageProjectUrl>
     <PackageIconUrl>https://secure.gravatar.com/avatar/bd1f02955b2853ba0a3b1cdc2434e8ec.png</PackageIconUrl>
     <PackageTags>Quantum Q# Qsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
@@ -39,6 +39,7 @@
     <ProjectReference Include="..\AzureClient\AzureClient.csproj" />
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Kernel\Kernel.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>
 

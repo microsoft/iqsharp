@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29920.165
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kernel", "src\Kernel\Kernel.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Core\Core.csproj", "{0ACA57A6-A8F6-497C-85D3-D547433BFACB}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "src\Web\Web.csproj", "{6431E92B-12AA-432C-8D53-C9A7A54BA21B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureClient", "src\AzureClient\AzureClient.csproj", "{E7B60C94-B666-4024-B53E-D12C142DE8DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,11 +99,23 @@ Global
 		{E7B60C94-B666-4024-B53E-D12C142DE8DC}.Release|x64.Build.0 = Release|Any CPU
 		{E7B60C94-B666-4024-B53E-D12C142DE8DC}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7B60C94-B666-4024-B53E-D12C142DE8DC}.Release|x86.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x64.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x86.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x64.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x64.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {9B439141-9EFD-47B2-BD10-41BD0C96316A}
+		SolutionGuid = {46F1047E-D0BC-4FF1-AC74-383480238965}
 	EndGlobalSection
 EndGlobal

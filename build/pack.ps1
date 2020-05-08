@@ -121,6 +121,9 @@ function Pack-Exe() {
 Write-Host "##[info]Packing IQ# library..."
 Pack-Nuget '../src/Core/Core.csproj'
 
+Write-Host "##[info]Packing IQ# library with Jupyter extensions..."
+Pack-Nuget '../src/Jupyter/Jupyter.csproj'
+
 Write-Host "##[info]Packing IQ# tool..."
 Pack-Nuget '../src/Tool/Tool.csproj'
 

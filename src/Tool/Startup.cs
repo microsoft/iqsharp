@@ -4,7 +4,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using System;
 
