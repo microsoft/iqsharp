@@ -5,9 +5,9 @@ using System.Linq;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///      Represents information about a single magic symbol returned
