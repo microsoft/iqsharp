@@ -17,19 +17,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public enum AzureClientError
     {
         /// <summary>
-        /// Method completed successfully.
-        /// </summary>
-        Success = 0,
-
-        /// <summary>
         /// Method completed with an unknown error.
         /// </summary>
-        UnknownError = 9999,
+        UnknownError = 0,
 
         /// <summary>
         /// No connection has been made to any Azure Quantum workspace.
         /// </summary>
-        NoWorkspace = 1,
+        NotConnected = 1,
 
         /// <summary>
         /// A target has not yet been configured for job submission.
@@ -45,6 +40,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// No Q# operation name was provided where one was required.
         /// </summary>
         NoOperationName = 4,
+
+        /// <summary>
+        /// Authentication with the Azure service failed.
+        /// </summary>
+        AuthenticationFailed = 5,
+
+        /// <summary>
+        /// A workspace meeting the specified criteria was not found.
+        /// </summary>
+        WorkspaceNotFound = 6,
     }
 
     /// <summary>
@@ -56,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.
         /// </summary>
-        public Task<AzureClientError> ConnectAsync(
+        public Task<ExecutionResult> ConnectAsync(
             IChannel channel,
             string subscriptionId,
             string resourceGroupName,
@@ -67,13 +72,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Prints a string describing the current connection status.
         /// </summary>
-        public Task<AzureClientError> PrintConnectionStatusAsync(
+        public Task<ExecutionResult> PrintConnectionStatusAsync(
             IChannel channel);
 
         /// <summary>
         /// Submits the specified Q# operation as a job to the currently active target.
         /// </summary>
-        public Task<AzureClientError> SubmitJobAsync(
+        public Task<ExecutionResult> SubmitJobAsync(
             IChannel channel,
             IOperationResolver operationResolver,
             string operationName);
@@ -81,33 +86,33 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Sets the specified target for job submission.
         /// </summary>
-        public Task<AzureClientError> SetActiveTargetAsync(
+        public Task<ExecutionResult> SetActiveTargetAsync(
             IChannel channel,
             string targetName);
         
         /// <summary>
         /// Prints the specified target for job submission.
         /// </summary>
-        public Task<AzureClientError> PrintActiveTargetAsync(
+        public Task<ExecutionResult> PrintActiveTargetAsync(
             IChannel channel);
 
         /// <summary>
         /// Prints the list of targets currently provisioned in the current workspace.
         /// </summary>
-        public Task<AzureClientError> PrintTargetListAsync(
+        public Task<ExecutionResult> PrintTargetListAsync(
             IChannel channel);
 
         /// <summary>
         /// Prints the job status corresponding to the given job ID.
         /// </summary>
-        public Task<AzureClientError> PrintJobStatusAsync(
+        public Task<ExecutionResult> PrintJobStatusAsync(
             IChannel channel, 
             string jobId);
 
         /// <summary>
         /// Prints a list of all jobs in the current workspace.
         /// </summary>
-        public Task<AzureClientError> PrintJobListAsync(
+        public Task<ExecutionResult> PrintJobListAsync(
             IChannel channel);
     }
 }

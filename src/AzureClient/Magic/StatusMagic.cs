@@ -55,7 +55,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Displays the status corresponding to a given job ID, if provided,
         ///     or all jobs in the active workspace.
         /// </summary>
-        public override async Task<AzureClientError> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             Dictionary<string, string> keyValuePairs = this.ParseInput(input);
             if (keyValuePairs.Keys.Count > 0)

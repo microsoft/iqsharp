@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
@@ -36,14 +38,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     and translates the result from <c>AzureClient.AzureClientError</c>
         ///     to <c>Jupyter.Core.ExecutionResult</c>.
         /// </summary>
-        public Func<string, IChannel, Task<ExecutionResult>> SafeExecute(Func<string, IChannel, Task<AzureClientError>> azureClientMagic) =>
+        public Func<string, IChannel, Task<ExecutionResult>> SafeExecute(Func<string, IChannel, Task<ExecutionResult>> azureClientMagic) =>
             async (input, channel) =>
             {
                 channel = channel.WithNewLines();
 
                 try
                 {
-                    return await azureClientMagic(input, channel).ToExecutionResult();
+                    return await azureClientMagic(input, channel);
                 }
                 catch (InvalidWorkspaceException ws)
                 {
@@ -75,13 +77,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 var key = tokens[0].Trim();
                 var value = (tokens.Length == 1) ? string.Empty : tokens[1].Trim();
                 keyValuePairs[key] = value;
-            }
+            }            
             return keyValuePairs;
         }
 
         /// <summary>
         ///     Executes the magic command functionality for the given input.
         /// </summary>
-        public abstract Task<AzureClientError> RunAsync(string input, IChannel channel);
+        public abstract Task<ExecutionResult> RunAsync(string input, IChannel channel);
     }
 }
