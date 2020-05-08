@@ -149,7 +149,15 @@ namespace Microsoft.Quantum.IQSharp
 
             try
             {
-                var snippets = SelectSnippetsToCompile(code, logger).ToArray();
+                // strip any @EntryPoint() attributes from the snippet
+                var entryPointPattern = @"@\s*EntryPoint\s*\(\s*\)";
+                if (Regex.IsMatch(code, entryPointPattern))
+                {
+                    code = Regex.Replace(code, entryPointPattern, string.Empty);
+                    logger.LogWarning("@EntryPoint()", "@EntryPoint() attributes are ignored when compiling Q# code in this workspace.");
+                }
+
+                var snippets = SelectSnippetsToCompile(code).ToArray();
                 var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)
@@ -190,17 +198,10 @@ namespace Microsoft.Quantum.IQSharp
         /// - either because they have the same id, or because they previously defined an operation
         /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
-        private IEnumerable<Snippet> SelectSnippetsToCompile(string code, QSharpLogger logger)
+        private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
         {
             var ops = Compiler.IdentifyElements(code).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
-
-            var entryPointPattern = @"@\s*EntryPoint\s*\(\s*\)";
-            if (Regex.IsMatch(code, entryPointPattern))
-            {
-                code = Regex.Replace(code, entryPointPattern, string.Empty);
-                logger.LogWarning("@EntryPoint()", "@EntryPoint() attributes are ignored when compiling Q# code in this workspace.");
-            }
 
             return snippetsWithNoOverlap.Append(new Snippet { code = code });
         }
