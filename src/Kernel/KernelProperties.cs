@@ -3,7 +3,7 @@
 
 using Microsoft.Jupyter.Core;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     /// These are the list of properties for the Q# Jupyter Kernel.

@@ -3,7 +3,7 @@
 
 
 # Fetch TypeScript definitions
-Push-Location (Join-Path $PSScriptRoot src/Jupyter)
+Push-Location (Join-Path $PSScriptRoot src/Kernel)
     npm install
 Pop-Location
 

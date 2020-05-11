@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -66,7 +66,7 @@ namespace Microsoft.Quantum.IQSharp
                     .Build();
 
                 var app = new IQSharpKernelApp(
-                    Jupyter.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
+                    Kernel.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
                 )
                 .ConfigureLogging(
                     loggingBuilder => {
@@ -84,12 +84,12 @@ namespace Microsoft.Quantum.IQSharp
                         }
                     }
                 )
-                .WithKernelSpecResources<Jupyter.IQSharpEngine>(
+                .WithKernelSpecResources<Kernel.IQSharpEngine>(
                     new Dictionary<string, string>
                     {
-                        ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Jupyter.res.logo-64x64.png",
-                        ["kernel.js"] = "Microsoft.Quantum.IQSharp.Jupyter.res.kernel.js",
-                        ["telemetry.js"] = "Microsoft.Quantum.IQSharp.Jupyter.res.telemetry.js",
+                        ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Kernel.res.logo-64x64.png",
+                        ["kernel.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.kernel.js",
+                        ["telemetry.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.telemetry.js",
                     }
                 );
                 app.Command(

@@ -1,17 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kernel", "src\Kernel\Kernel.csproj", "{B6F42099-DACD-472F-866C-BEF92DDDF754}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "src\Core\Core.csproj", "{0ACA57A6-A8F6-497C-85D3-D547433BFACB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Core\Core.csproj", "{0ACA57A6-A8F6-497C-85D3-D547433BFACB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.IQsharp", "src\Tests\Tests.IQsharp.csproj", "{756BE082-2E89-47F0-A48A-D7E762B0A82E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.IQsharp", "src\Tests\Tests.IQsharp.csproj", "{756BE082-2E89-47F0-A48A-D7E762B0A82E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tool", "src\Tool\Tool.csproj", "{7EB9C7E8-7D40-432E-9857-1DD6301B9F4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tool", "src\Tool\Tool.csproj", "{7EB9C7E8-7D40-432E-9857-1DD6301B9F4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "src\Web\Web.csproj", "{6431E92B-12AA-432C-8D53-C9A7A54BA21B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "src\Web\Web.csproj", "{6431E92B-12AA-432C-8D53-C9A7A54BA21B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B6F42099-DACD-472F-866C-BEF92DDDF754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -86,5 +85,23 @@ Global
 		{6431E92B-12AA-432C-8D53-C9A7A54BA21B}.Release|x64.Build.0 = Release|Any CPU
 		{6431E92B-12AA-432C-8D53-C9A7A54BA21B}.Release|x86.ActiveCfg = Release|Any CPU
 		{6431E92B-12AA-432C-8D53-C9A7A54BA21B}.Release|x86.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x64.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Debug|x86.Build.0 = Debug|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x64.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x64.Build.0 = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.ActiveCfg = Release|Any CPU
+		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46F1047E-D0BC-4FF1-AC74-383480238965}
 	EndGlobalSection
 EndGlobal

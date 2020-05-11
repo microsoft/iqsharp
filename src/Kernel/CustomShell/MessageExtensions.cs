@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Linq;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     /// Extensions for the Jupyter Core Message
