@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+#!/usr/bin/env pwsh
+#Requires -PSEdition Core
+
 & "$PSScriptRoot/set-env.ps1"
 
 @{
@@ -16,5 +19,5 @@
         ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Jupyter.dll",
         ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Kernel.dll",
         ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Web.dll"
-    ) | ForEach-Object { Get-Item (Join-Path $PSScriptRoot (Join-Path ".." $_)) };
+    ) | ForEach-Object { Get-Item (Join-Path $PSScriptRoot ".." $_) };
 } | Write-Output;
