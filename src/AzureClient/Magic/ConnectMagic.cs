@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -75,21 +76,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            Dictionary<string, string> keyValuePairs = ParseInput(input);
+            var inputParameters = ParseInputParameters(input);
 
-            string storageAccountConnectionString;
-            keyValuePairs.TryGetValue(ParamName_StorageAccountConnectionString, out storageAccountConnectionString);
+            var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParamName_StorageAccountConnectionString);
             if (string.IsNullOrEmpty(storageAccountConnectionString))
             {
                 return await AzureClient.PrintConnectionStatusAsync(channel);
             }
 
-            string subscriptionId, resourceGroupName, workspaceName;
-            keyValuePairs.TryGetValue(ParamName_SubscriptionId, out subscriptionId);
-            keyValuePairs.TryGetValue(ParamName_ResourceGroupName, out resourceGroupName);
-            keyValuePairs.TryGetValue(ParamName_WorkspaceName, out workspaceName);
-
-            bool forceLogin = keyValuePairs.ContainsKey(ParamName_Login);
+            var subscriptionId = inputParameters.DecodeParameter<string>(ParamName_SubscriptionId);
+            var resourceGroupName = inputParameters.DecodeParameter<string>(ParamName_ResourceGroupName);
+            var workspaceName = inputParameters.DecodeParameter<string>(ParamName_WorkspaceName);
+            var forceLogin = inputParameters.DecodeParameter<bool>(ParamName_Login);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,

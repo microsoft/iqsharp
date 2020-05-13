@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Jupyter.Core;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -19,36 +20,43 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Method completed with an unknown error.
         /// </summary>
+        [Description(Resources.AzureClientError_UnknownError)]
         UnknownError = 0,
 
         /// <summary>
         /// No connection has been made to any Azure Quantum workspace.
         /// </summary>
+        [Description(Resources.AzureClientError_NotConnected)]
         NotConnected = 1,
 
         /// <summary>
         /// A target has not yet been configured for job submission.
         /// </summary>
+        [Description(Resources.AzureClientError_NoTarget)]
         NoTarget = 2,
 
         /// <summary>
         /// A job meeting the specified criteria was not found.
         /// </summary>
+        [Description(Resources.AzureClientError_JobNotFound)]
         JobNotFound = 3,
 
         /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
+        [Description(Resources.AzureClientError_NoOperationName)]
         NoOperationName = 4,
 
         /// <summary>
         /// Authentication with the Azure service failed.
         /// </summary>
+        [Description(Resources.AzureClientError_AuthenticationFailed)]
         AuthenticationFailed = 5,
 
         /// <summary>
         /// A workspace meeting the specified criteria was not found.
         /// </summary>
+        [Description(Resources.AzureClientError_WorkspaceNotFound)]
         WorkspaceNotFound = 6,
     }
 

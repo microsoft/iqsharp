@@ -9,6 +9,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
+using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -173,6 +174,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // out common indenting.
             var leftTrimRegex = new Regex(@$"^[ \t]{{{minWhitespace}}}", RegexOptions.Multiline);
             return leftTrimRegex.Replace(text, "");
+        }
+
+        /// <summary>
+        ///      Retrieves and JSON-decodes the value for the given parameter name.
+        /// </summary>
+        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName)
+        {
+            if (!parameters.TryGetValue(parameterName, out string parameterValue))
+            {
+                return default(T);
+            }
+            return (T)(JsonConvert.DeserializeObject(parameterValue) ?? default(T));
         }
     }
 }

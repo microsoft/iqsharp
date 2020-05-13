@@ -57,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            Dictionary<string, string> keyValuePairs = this.ParseInput(input);
+            Dictionary<string, string> keyValuePairs = ParseInputParameters(input);
             if (keyValuePairs.Keys.Count > 0)
             {
                 var jobId = keyValuePairs.Keys.First();

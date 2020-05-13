@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -16,6 +17,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class TargetMagic : AzureClientMagicBase
     {
+        private const string
+            ParamName_TargetName = "name";
+
         /// <summary>
         ///     Constructs a new magic command given an IAzureClient object.
         /// </summary>
@@ -50,17 +54,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     }
-                }) {}
+                })
+        {
+        }
 
         /// <summary>
         ///     Sets or views the target for job submission to the current Azure Quantum workspace.
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            Dictionary<string, string> keyValuePairs = this.ParseInput(input);
-            if (keyValuePairs.Keys.Count > 0)
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_TargetName);
+            if (inputParameters.Count() > 0)
             {
-                var targetName = keyValuePairs.Keys.First();
+                var targetName = inputParameters.DecodeParameter<string>(ParamName_TargetName);
                 return await AzureClient.SetActiveTargetAsync(channel, targetName);
             }
 
