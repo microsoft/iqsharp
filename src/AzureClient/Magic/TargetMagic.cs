@@ -64,9 +64,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_TargetName);
-            if (inputParameters.Count() > 0)
+            if (inputParameters.ContainsKey(ParamName_TargetName))
             {
-                var targetName = inputParameters.DecodeParameter<string>(ParamName_TargetName);
+                string targetName = inputParameters.DecodeParameter<string>(ParamName_TargetName);
                 return await AzureClient.SetActiveTargetAsync(channel, targetName);
             }
 

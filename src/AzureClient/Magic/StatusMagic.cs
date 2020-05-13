@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -16,6 +17,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class StatusMagic : AzureClientMagicBase
     {
+        private const string
+            ParamName_JobId = "jobId";
+
         /// <summary>
         ///     Constructs a new magic command given an IAzureClient object.
         /// </summary>
@@ -28,8 +32,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Description = @"
                         This magic command allows for displaying status of jobs in the current 
                         Azure Quantum workspace. If a valid job ID is provided as an argument, the
-                        detailed status of that job will be displayed; otherwise, a list of jobs
-                        in the current workspace will be displayed.
+                        detailed status of that job will be displayed; otherwise, a list of all jobs
+                        created in the current session will be displayed.
                     ".Dedent(),
                     Examples = new[]
                     {
@@ -42,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
 
                         @"
-                            Print status about all jobs in the current Azure Quantum workspace:
+                            Print status about all jobs created in the current session:
                             ```
                             In []: %status
                             Out[]: <status for each job>
@@ -57,10 +61,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            Dictionary<string, string> keyValuePairs = ParseInputParameters(input);
-            if (keyValuePairs.Keys.Count > 0)
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_JobId);
+            if (inputParameters.ContainsKey(ParamName_JobId))
             {
-                var jobId = keyValuePairs.Keys.First();
+                string jobId = inputParameters.DecodeParameter<string>(ParamName_JobId);
                 return await AzureClient.PrintJobStatusAsync(channel, jobId);
             }
 

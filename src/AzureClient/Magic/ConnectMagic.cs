@@ -35,8 +35,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Summary = "Connects to an Azure workspace or displays current connection status.",
                     Description = @"
                             This magic command allows for connecting to an Azure Quantum workspace
-                            as specified by a valid connection string OR a valid combination of
-                            subscription ID, resource group name, and workspace name.
+                            as specified by a valid subscription ID, resource group name, workspace name,
+                            and storage account connection string.
                         ".Dedent(),
                     Examples = new[]
                         {
@@ -49,9 +49,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ".Dedent(),
 
                             $@"
-                                Connect to an Azure Quantum workspace using a connection string:
+                                Connect to an Azure Quantum workspace:
                                 ```
-                                In []: %connect {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
+                                In []: %connect {ParamName_SubscriptionId}=SUBSCRIPTION_ID
+                                                {ParamName_ResourceGroupName}=RESOURCE_GROUP_NAME
+                                                {ParamName_WorkspaceName}=WORKSPACE_NAME
+                                                {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: Connected to WORKSPACE_NAME
                                 ```
                             ".Dedent(),
@@ -59,7 +62,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             $@"
                                 Connect to an Azure Quantum workspace and force a credential prompt:
                                 ```
-                                In []: %connect {ParamName_Login} {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
+                                In []: %connect {ParamName_Login}
+                                                {ParamName_SubscriptionId}=SUBSCRIPTION_ID
+                                                {ParamName_ResourceGroupName}=RESOURCE_GROUP_NAME
+                                                {ParamName_WorkspaceName}=WORKSPACE_NAME
+                                                {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                         and enter the code [login code] to authenticate.
                                         Connected to WORKSPACE_NAME
