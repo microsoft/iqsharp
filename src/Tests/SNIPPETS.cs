@@ -54,7 +54,7 @@ namespace Tests.IQSharp
     }
 ";
 
-        public static string Op3_Op4_EntryPoints =
+        public static string Op3_Op4_Op5_EntryPoints =
 @"
     /// # Summary
     ///     This to show that @EntryPoint() is ignored when compiling from snippets:
@@ -68,6 +68,12 @@ namespace Tests.IQSharp
     operation Op4() : Unit
     {
         Op3();
+    }
+
+    @ EntryPoint (  )
+    operation Op5() : Unit
+    {
+        Op4();
     }
 ";
 

@@ -150,7 +150,7 @@ namespace Tests.IQSharp
             await AssertCompile(controller, SNIPPETS.Op1_Op2, "Op1", "Op2");
 
             // Compile snippet with entry point attributes and multiple operations:
-            await AssertCompile(controller, SNIPPETS.Op3_Op4_EntryPoints, "Op3", "Op4");
+            await AssertCompile(controller, SNIPPETS.Op3_Op4_Op5_EntryPoints, "Op3", "Op4", "Op5");
 
             // running Op2:
             await AssertSimulate(controller, "Op2", "Hello from quantum world!");

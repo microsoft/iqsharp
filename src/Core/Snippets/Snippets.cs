@@ -154,7 +154,7 @@ namespace Microsoft.Quantum.IQSharp
                 if (Regex.IsMatch(code, entryPointPattern))
                 {
                     code = Regex.Replace(code, entryPointPattern, string.Empty);
-                    logger.LogWarning("@EntryPoint()", "@EntryPoint() attributes are ignored when compiling Q# code in this workspace.");
+                    logger.LogWarning("@EntryPoint()", "@EntryPoint() attributes are ignored when compiling Q# code defined in notebook cells or string literals.");
                 }
 
                 var snippets = SelectSnippetsToCompile(code).ToArray();
