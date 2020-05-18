@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using System;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <inheritdoc />
     public class IQSharpKernelApp : KernelApplication

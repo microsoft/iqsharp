@@ -7,7 +7,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
 
     public class EchoReplyContent : MessageContent

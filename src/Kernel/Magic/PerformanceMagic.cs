@@ -9,10 +9,11 @@ using System.Linq;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///     A magic command that reports various performance metrics to the

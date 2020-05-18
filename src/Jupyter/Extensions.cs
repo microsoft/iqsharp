@@ -5,10 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
-using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -20,26 +17,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public static class Extensions
     {
-
-        /// <summary>
-        /// Creates a wrapper of an IChannel that adds new lines to every message
-        /// sent to stdout and stderr
-        /// </summary>
-        public static ChannelWithNewLines WithNewLines(this IChannel original) =>
-            (original is ChannelWithNewLines ch) ? ch : new ChannelWithNewLines(original);
-
-        /// <summary>
-        ///     Adds services required for the IQ# kernel to a given service
-        ///     collection.
-        /// </summary>
-        public static void AddIQSharpKernel(this IServiceCollection services)
-        {
-            services.AddSingleton<ISymbolResolver, Jupyter.SymbolResolver>();
-            services.AddSingleton<IMagicSymbolResolver, Jupyter.MagicSymbolResolver>();
-            services.AddSingleton<IExecutionEngine, Jupyter.IQSharpEngine>();
-            services.AddSingleton<IConfigurationSource, ConfigurationSource>();
-        }
-
         /// <summary>
         ///     Given a configuration source, applies an action if that
         ///     configuration source defines a value for a particular
@@ -175,7 +152,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///      Removes common indents from each line in a string,
         ///      similarly to Python's <c>textwrap.dedent()</c> function.
         /// </summary>
-        internal static string Dedent(this string text)
+        public static string Dedent(this string text)
         {
             // First, start by finding the length of common indents,
             // disregarding lines that are only whitespace.
@@ -191,7 +168,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                 : minWhitespace = 0;
                 }
             }
-            
+
             // We can use that to build a new regex that strips
             // out common indenting.
             var leftTrimRegex = new Regex(@$"^[ \t]{{{minWhitespace}}}", RegexOptions.Multiline);

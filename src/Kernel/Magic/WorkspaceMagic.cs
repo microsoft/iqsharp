@@ -5,9 +5,9 @@ using System.Linq;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///     A magic symbol that provides access to a given workspace.
