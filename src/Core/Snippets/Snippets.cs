@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 
@@ -145,7 +144,11 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var logger = new QSharpLogger(Logger);
+            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            {
+                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Ignore any @EntryPoint() attributes found in snippets.
+            };
+            var logger = new QSharpLogger(Logger, errorCodesToIgnore);
 
             try
             {
