@@ -13,9 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.11.2005.817-beta" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.10.0" />
-    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.8.0-preview" />
+    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.11.2005.1420-beta" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.21" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />

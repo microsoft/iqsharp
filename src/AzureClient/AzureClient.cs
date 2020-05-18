@@ -14,6 +14,7 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -23,8 +24,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string ConnectionString { get; set; }
         private string ActiveTargetName { get; set; }
         private AuthenticationResult? AuthenticationResult { get; set; }
-        private IJobsClient? QuantumClient { get; set; }
-        private Azure.Quantum.IWorkspace? ActiveWorkspace { get; set; }
+        private IQuantumClient? QuantumClient { get; set; }
+        private Azure.Quantum.Workspace? ActiveWorkspace { get; set; }
 
         /// <summary>
         /// Creates an AzureClient object.
@@ -97,7 +98,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var credentials = new Rest.TokenCredentials(AuthenticationResult.AccessToken);
 
-            QuantumClient = new JobsClient(); // TODO: pass (credentials) after updating package.
+            QuantumClient = new QuantumClient(credentials);
             QuantumClient.SubscriptionId = subscriptionId;
             QuantumClient.ResourceGroupName = resourceGroupName;
             QuantumClient.WorkspaceName = workspaceName;
@@ -108,8 +109,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var jobsList = await QuantumClient.ListJobsAsync(); // QuantumClient.Jobs.ListAsync();
-                channel.Stdout($"Found {jobsList.Value.Count()} jobs in Azure Quantum workspace {workspaceName}");
+                var jobsList = await QuantumClient.Jobs.ListAsync();
+                channel.Stdout($"Found {jobsList.Count()} jobs in Azure Quantum workspace {workspaceName}");
             }
             catch (Exception e)
             {
@@ -117,18 +118,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
-            return ActiveWorkspace.ToJupyterTable().ToExecutionResult();
+            return QuantumClient.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> PrintConnectionStatusAsync(IChannel channel)
         {
-            if (ActiveWorkspace == null)
+            if (QuantumClient == null)
             {
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            return ActiveWorkspace.ToJupyterTable().ToExecutionResult();
+            return QuantumClient.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -137,7 +138,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IOperationResolver operationResolver,
             string operationName)
         {
-            if (QuantumClient == null)
+            if (ActiveWorkspace == null)
             {
                 channel.Stderr("Must call %connect before submitting a job.");
                 return AzureClientError.NotConnected.ToExecutionResult();
@@ -155,18 +156,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            // TODO: Generate the appropriate EntryPointInfo for the given operation.
             var operationInfo = operationResolver.Resolve(operationName);
             var entryPointInfo = new EntryPointInfo<QVoid, Result>(operationInfo.RoslynType);
             var entryPointInput = QVoid.Instance;
+            var machine = Azure.Quantum.QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTargetName, ConnectionString);
+            if (machine == null)
+            {
+                channel.Stderr($"Could not find an execution target for target {ActiveTargetName}.");
+                return AzureClientError.NoTarget.ToExecutionResult();
+            }
 
-            // TODO: Create the appropriate QuantumMachine object using ActiveTargetName
-            var jobStorageHelper = new JobStorageHelper(ConnectionString);
-            //var machine = new QuantumMachine(ActiveTargetName, Workspace, jobStorageHelper);
-            //var submissionContext = new QuantumMachine.SubmissionContext();
-            //var job = await machine.SubmitAsync(entryPointInfo, entryPointInput, submissionContext);
-            //return job.Id.ToExecutionResult();
-            return operationName.ToExecutionResult();
+            var job = await machine.SubmitAsync(entryPointInfo, entryPointInput);
+            return job.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -196,15 +197,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public async Task<ExecutionResult> PrintTargetListAsync(
             IChannel channel)
         {
-            if (ActiveWorkspace == null)
+            if (QuantumClient == null)
             {
                 channel.Stderr("Must call %connect before listing targets.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            // TODO: Get the list of targets from the updated Azure.Quantum.Client API
-            //return ActiveWorkspace.Targets.ToJupyterTable().ToExecutionResult();
-            return AzureClientError.NoTarget.ToExecutionResult();
+            var providersStatus = await QuantumClient.Providers.GetStatusAsync();
+            return providersStatus.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -218,7 +218,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobDetails = await QuantumClient.GetJobAsync(jobId); // QuantumClient.Jobs.GetAsync(jobId);
+            var jobDetails = await QuantumClient.Jobs.GetAsync(jobId);
             if (jobDetails == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -238,14 +238,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobsList = await QuantumClient.ListJobsAsync(); // QuantumClient.Jobs.ListAsync();
-            if (jobsList.Value == null || jobsList.Value.Count() == 0)
+            var jobsList = await QuantumClient.Jobs.ListAsync();
+            if (jobsList == null || jobsList.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            return jobsList.Value.ToJupyterTable().ToExecutionResult();
+            return jobsList.ToJupyterTable().ToExecutionResult();
         }
     }
 }

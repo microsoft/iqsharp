@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Quantum.Client;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.QsCompiler.Serialization;
+using Microsoft.Quantum.Runtime;
 using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -74,47 +76,50 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<JobDetails, string>)>
                     {
-                        ("Id", jobDetails => jobDetails.Id),
-                        ("ProviderId", jobDetails => jobDetails.ProviderId),
-                        ("Status", jobDetails => jobDetails.Status)
+                        ("JobId", jobDetails => jobDetails.Id),
+                        ("JobName", jobDetails => jobDetails.Name),
+                        ("JobStatus", jobDetails => jobDetails.Status),
+                        ("Provider", jobDetails => jobDetails.ProviderId),
+                        ("Target", jobDetails => jobDetails.Target),
                     },
                 Rows = jobsList.ToList()
             };
 
-        internal static Table<Azure.Quantum.IWorkspace> ToJupyterTable(this Azure.Quantum.IWorkspace workspace) =>
-            new List<Azure.Quantum.IWorkspace> { workspace }.ToJupyterTable();
-
-        internal static Table<Azure.Quantum.IWorkspace> ToJupyterTable(this IEnumerable<Azure.Quantum.IWorkspace> workspacesList) =>
-            new Table<Azure.Quantum.IWorkspace>
+        internal static Table<IQuantumMachineJob> ToJupyterTable(this IQuantumMachineJob job) =>
+            new Table<IQuantumMachineJob>
             {
-                Columns = new List<(string, Func<Azure.Quantum.IWorkspace, string>)>
+                Columns = new List<(string, Func<IQuantumMachineJob, string>)>
                     {
-                        // TODO: Uncomment this after updating the Azure.Quantum.Client API
-                        //("Name", workspace => workspace.Name),
-                        //("Type", workspace => workspace.Type),
-                        //("Location", workspace => workspace.Location),
-                        ("TEMP_AsString", workspace => workspace.ToString()),
+                        ("JobId", job => job.Id),
+                        ("JobStatus", job => job.Status),
+                        ("JobUri", job => job.Uri.ToString()),
                     },
-                Rows = workspacesList.ToList()
+                Rows = new List<IQuantumMachineJob>() { job }
             };
 
-        // TODO: Implement this for providers and targets once they are exposed
-        //       through the Azure.Quantum.Client API.
+        internal static Table<IQuantumClient> ToJupyterTable(this IQuantumClient quantumClient) =>
+            new Table<IQuantumClient>
+            {
+                Columns = new List<(string, Func<IQuantumClient, string>)>
+                    {
+                        ("SubscriptionId", quantumClient => quantumClient.SubscriptionId),
+                        ("ResourceGroupName", quantumClient => quantumClient.ResourceGroupName),
+                        ("WorkspaceName", quantumClient => quantumClient.WorkspaceName),
+                    },
+                Rows = new List<IQuantumClient>() { quantumClient }
+            };
 
-        //internal static Table<Provider> ToJupyterTable(this Provider provider) =>
-        //    new List<Provider> { provider }.ToJupyterTable();
-
-        //internal static Table<Provider> ToJupyterTable(this IEnumerable<Provider> providersList) =>
-        //    new Table<Provider>
-        //    {
-        //        Columns = new List<(string, Func<Provider, string>)>
-        //            {
-        //                ("Name", provider => provider.ApplicationName),
-        //                ("ProviderId", provider => provider.ProviderId),
-        //                ("ProviderSku", provider => provider.ProviderSku),
-        //                ("ProvisioningState", provider => provider.ProvisioningState)
-        //            },
-        //        Rows = providersList.ToList()
-        //    };
+        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<ProviderStatus> providerStatusList) =>
+            new Table<TargetStatus>
+            {
+                Columns = new List<(string, Func<TargetStatus, string>)>
+                    {
+                        ("TargetId", target => target.Id),
+                        ("CurrentAvailability", target => target.CurrentAvailability),
+                        ("AverageQueueTime", target => target.AverageQueueTime.ToString()),
+                        ("StatusPage", target => target.StatusPage),
+                    },
+                Rows = providerStatusList.SelectMany(provider => provider.Targets).ToList()
+            };
     }
 }
