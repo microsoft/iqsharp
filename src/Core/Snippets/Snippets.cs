@@ -144,9 +144,9 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var errorCodesToIgnore = new List<string>()
+            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
             {
-                "QS6241",   // Invalid entry point. Only executable Q# projects can have entry points.
+                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Invalid entry point. Only executable Q# projects can have entry points.
             };
             var logger = new QSharpLogger(Logger, errorCodesToIgnore);
 
