@@ -146,7 +146,7 @@ namespace Microsoft.Quantum.IQSharp
             var duration = Stopwatch.StartNew();
             var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
             {
-                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Invalid entry point. Only executable Q# projects can have entry points.
+                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Ignore any @EntryPoint() attributes found in snippets.
             };
             var logger = new QSharpLogger(Logger, errorCodesToIgnore);
 
