@@ -145,18 +145,14 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var logger = new QSharpLogger(Logger);
+            var errorCodesToIgnore = new List<string>()
+            {
+                "QS6241",   // Invalid entry point. Only executable Q# projects can have entry points.
+            };
+            var logger = new QSharpLogger(Logger, errorCodesToIgnore);
 
             try
             {
-                // strip any @EntryPoint() attributes from the snippet
-                var entryPointPattern = @"@\s*EntryPoint\s*\(\s*\)";
-                if (Regex.IsMatch(code, entryPointPattern))
-                {
-                    code = Regex.Replace(code, entryPointPattern, string.Empty);
-                    logger.LogWarning("@EntryPoint()", "@EntryPoint() attributes are ignored when compiling Q# code defined in notebook cells or string literals.");
-                }
-
                 var snippets = SelectSnippetsToCompile(code).ToArray();
                 var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
