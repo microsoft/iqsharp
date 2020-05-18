@@ -56,11 +56,12 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones. 
         /// Returns an enumerable of all namespaces, including the content from both source files and references.  
         /// </summary> 
-        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, QSharpLogger logger = null)
+        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, QSharpLogger logger = null, bool compileAsExecutable = false)
         {
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
+                IsExecutable = compileAsExecutable
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -77,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp
                 $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
-            return BuildAssembly(sources, metadatas, logger, dllName);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false);
         }
 
         /// <summary>
@@ -86,17 +87,17 @@ namespace Microsoft.Quantum.IQSharp
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName)
+        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable);
             if (logger.HasErrors) return null;
 
             try
