@@ -9,12 +9,10 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum.Client;
-using Microsoft.Azure.Quantum.Storage;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Core;
-using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {

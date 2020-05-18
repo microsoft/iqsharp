@@ -29,9 +29,7 @@ __all__ = [
     'connect',
     'target',
     'submit',
-    'execute',
-    'status',
-    'output'
+    'status'
 ]
 
 ## FUNCTIONS ##
@@ -45,11 +43,5 @@ def target(name : str = '', **params) -> Any:
 def submit(op, **params) -> Any:
     return qsharp.client._execute_callable_magic("submit", op, raise_on_stderr=False, **params)
 
-def execute(op, **params) -> Any:
-    return qsharp.client._execute_callable_magic("execute", op, raise_on_stderr=False, **params)
-
 def status(jobId : str = '', **params) -> Any:
     return qsharp.client._execute_magic(f"status {jobId}", raise_on_stderr=False, **params)
-
-def output(jobId : str = '', **params) -> Any:
-    return qsharp.client._execute_magic(f"output {jobId}", raise_on_stderr=False, **params)
