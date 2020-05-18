@@ -35,7 +35,7 @@ jobs:
 - job: "pack_conda_win"
   dependsOn: "iqsharp"
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'windows-2019'
   steps:
   - template: steps-conda.yml
   condition: eq(variables['Enable.Conda'], 'true')
