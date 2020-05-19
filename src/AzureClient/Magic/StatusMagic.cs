@@ -18,7 +18,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class StatusMagic : AzureClientMagicBase
     {
         private const string
-            ParamName_JobId = "jobId";
+            ParameterNameJobId = "jobId";
 
         /// <summary>
         ///     Constructs a new magic command given an IAzureClient object.
@@ -61,10 +61,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_JobId);
-            if (inputParameters.ContainsKey(ParamName_JobId))
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
+            if (inputParameters.ContainsKey(ParameterNameJobId))
             {
-                string jobId = inputParameters.DecodeParameter<string>(ParamName_JobId);
+                string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
                 return await AzureClient.PrintJobStatusAsync(channel, jobId);
             }
 

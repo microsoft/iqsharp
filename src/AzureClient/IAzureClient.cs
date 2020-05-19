@@ -3,60 +3,57 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Jupyter.Core;
-using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <summary>
-    /// Describes possible error results from <c>IAzureClient</c> methods.
+    /// Describes possible error results from <see cref="IAzureClient"/> methods.
     /// </summary>
     public enum AzureClientError
     {
         /// <summary>
         /// Method completed with an unknown error.
         /// </summary>
-        [Description(Resources.AzureClientError_UnknownError)]
+        [Description(Resources.AzureClientErrorUnknownError)]
         UnknownError = 0,
 
         /// <summary>
         /// No connection has been made to any Azure Quantum workspace.
         /// </summary>
-        [Description(Resources.AzureClientError_NotConnected)]
+        [Description(Resources.AzureClientErrorNotConnected)]
         NotConnected = 1,
 
         /// <summary>
         /// A target has not yet been configured for job submission.
         /// </summary>
-        [Description(Resources.AzureClientError_NoTarget)]
+        [Description(Resources.AzureClientErrorNoTarget)]
         NoTarget = 2,
 
         /// <summary>
         /// A job meeting the specified criteria was not found.
         /// </summary>
-        [Description(Resources.AzureClientError_JobNotFound)]
+        [Description(Resources.AzureClientErrorJobNotFound)]
         JobNotFound = 3,
 
         /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
-        [Description(Resources.AzureClientError_NoOperationName)]
+        [Description(Resources.AzureClientErrorNoOperationName)]
         NoOperationName = 4,
 
         /// <summary>
         /// Authentication with the Azure service failed.
         /// </summary>
-        [Description(Resources.AzureClientError_AuthenticationFailed)]
+        [Description(Resources.AzureClientErrorAuthenticationFailed)]
         AuthenticationFailed = 5,
 
         /// <summary>
         /// A workspace meeting the specified criteria was not found.
         /// </summary>
-        [Description(Resources.AzureClientError_WorkspaceNotFound)]
+        [Description(Resources.AzureClientErrorWorkspaceNotFound)]
         WorkspaceNotFound = 6,
     }
 
@@ -97,12 +94,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Task<ExecutionResult> SetActiveTargetAsync(
             IChannel channel,
             string targetName);
-        
-        /// <summary>
-        /// Prints the specified target for job submission.
-        /// </summary>
-        public Task<ExecutionResult> PrintActiveTargetAsync(
-            IChannel channel);
 
         /// <summary>
         /// Prints the list of targets currently provisioned in the current workspace.

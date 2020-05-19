@@ -18,7 +18,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class TargetMagic : AzureClientMagicBase
     {
         private const string
-            ParamName_TargetName = "name";
+            ParameterNameTargetName = "name";
 
         /// <summary>
         ///     Constructs a new magic command given an IAzureClient object.
@@ -63,10 +63,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_TargetName);
-            if (inputParameters.ContainsKey(ParamName_TargetName))
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameTargetName);
+            if (inputParameters.ContainsKey(ParameterNameTargetName))
             {
-                string targetName = inputParameters.DecodeParameter<string>(ParamName_TargetName);
+                string targetName = inputParameters.DecodeParameter<string>(ParameterNameTargetName);
                 return await AzureClient.SetActiveTargetAsync(channel, targetName);
             }
 

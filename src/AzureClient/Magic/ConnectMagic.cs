@@ -18,11 +18,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class ConnectMagic : AzureClientMagicBase
     {
         private const string
-            ParamName_Login = "login",
-            ParamName_StorageAccountConnectionString = "storageAccountConnectionString",
-            ParamName_SubscriptionId = "subscriptionId",
-            ParamName_ResourceGroupName = "resourceGroupName",
-            ParamName_WorkspaceName = "workspaceName";
+            ParameterNameLogin = "login",
+            ParameterNameStorageAccountConnectionString = "storageAccountConnectionString",
+            ParameterNameSubscriptionId = "subscriptionId",
+            ParameterNameResourceGroupName = "resourceGroupName",
+            ParameterNameWorkspaceName = "workspaceName";
 
         /// <summary>
         ///     Constructs a new magic command given an IAzureClient object.
@@ -51,10 +51,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             $@"
                                 Connect to an Azure Quantum workspace:
                                 ```
-                                In []: %connect {ParamName_SubscriptionId}=SUBSCRIPTION_ID
-                                                {ParamName_ResourceGroupName}=RESOURCE_GROUP_NAME
-                                                {ParamName_WorkspaceName}=WORKSPACE_NAME
-                                                {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
+                                In []: %connect {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
+                                                {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
+                                                {ParameterNameWorkspaceName}=WORKSPACE_NAME
+                                                {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: Connected to WORKSPACE_NAME
                                 ```
                             ".Dedent(),
@@ -62,16 +62,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             $@"
                                 Connect to an Azure Quantum workspace and force a credential prompt:
                                 ```
-                                In []: %connect {ParamName_Login}
-                                                {ParamName_SubscriptionId}=SUBSCRIPTION_ID
-                                                {ParamName_ResourceGroupName}=RESOURCE_GROUP_NAME
-                                                {ParamName_WorkspaceName}=WORKSPACE_NAME
-                                                {ParamName_StorageAccountConnectionString}=CONNECTION_STRING
+                                In []: %connect {ParameterNameLogin}
+                                                {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
+                                                {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
+                                                {ParameterNameWorkspaceName}=WORKSPACE_NAME
+                                                {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                         and enter the code [login code] to authenticate.
                                         Connected to WORKSPACE_NAME
                                 ```
-                                Use the `{ParamName_Login}` option if you want to bypass any saved or cached
+                                Use the `{ParameterNameLogin}` option if you want to bypass any saved or cached
                                 credentials when connecting to Azure.
                             ".Dedent()
                         }
@@ -85,16 +85,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input);
 
-            var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParamName_StorageAccountConnectionString);
+            var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString);
             if (string.IsNullOrEmpty(storageAccountConnectionString))
             {
                 return await AzureClient.PrintConnectionStatusAsync(channel);
             }
 
-            var subscriptionId = inputParameters.DecodeParameter<string>(ParamName_SubscriptionId);
-            var resourceGroupName = inputParameters.DecodeParameter<string>(ParamName_ResourceGroupName);
-            var workspaceName = inputParameters.DecodeParameter<string>(ParamName_WorkspaceName);
-            var forceLogin = inputParameters.DecodeParameter<bool>(ParamName_Login);
+            var subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId);
+            var resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName);
+            var workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName);
+            var forceLogin = inputParameters.DecodeParameter<bool>(ParameterNameLogin, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,

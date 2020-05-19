@@ -12,9 +12,7 @@ using Microsoft.Azure.Quantum.Client;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.Runtime;
-using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -32,7 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <summary>
-        ///      Encapsulates a given <c>AzureClientError</c> as the result of an execution.
+        ///      Encapsulates a given <see cref="AzureClientError"/> as the result of an execution.
         /// </summary>
         /// <param name="azureClientError">
         ///      The result of an IAzureClient API call.
@@ -45,8 +43,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
 
         /// <summary>
-        ///     Returns the string value of the <c>DescriptionAttribute</c> for the given
-        ///     <c>AzureClientError</c> enumeration value.
+        ///     Returns the string value of the <see cref="DescriptionAttribute"/> for the given
+        ///     <see cref="AzureClientError"/> enumeration value.
         /// </summary>
         /// <param name="azureClientError"></param>
         /// <returns></returns>
@@ -60,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <summary>
-        ///      Encapsulates a given <c>AzureClientError</c> as the result of an execution.
+        ///      Encapsulates a given <see cref="AzureClientError"/> as the result of an execution.
         /// </summary>
         /// <param name="task">
         ///      A task which will return the result of an IAzureClient API call.

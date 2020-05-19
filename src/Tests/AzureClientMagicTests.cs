@@ -119,7 +119,6 @@ namespace Tests.IQSharp
         Connect,
         SetActiveTarget,
         SubmitJob,
-        PrintActiveTarget,
         PrintConnectionStatus,
         PrintJobList,
         PrintJobStatus,
@@ -153,12 +152,6 @@ namespace Tests.IQSharp
             LastAction = AzureClientAction.Connect;
             ConnectionString = storageAccountConnectionString;
             ForceLogin = forceLogin;
-            return ExecuteStatus.Ok.ToExecutionResult();
-        }
-
-        public async Task<ExecutionResult> PrintActiveTargetAsync(IChannel channel)
-        {
-            LastAction = AzureClientAction.PrintActiveTarget;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 

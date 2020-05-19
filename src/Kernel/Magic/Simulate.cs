@@ -19,7 +19,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class SimulateMagic : AbstractMagic
     {
         private const string
-            ParamName_OperationName = "operationName";
+            ParameterNameOperationName = "operationName";
 
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
@@ -58,9 +58,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParamName_OperationName);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
-            var name = inputParameters.DecodeParameter<string>(ParamName_OperationName);
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 

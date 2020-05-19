@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿#nullable enable
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -9,25 +7,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     internal static class Resources
     {
-        public const string AzureClientError_UnknownError =
+        public const string AzureClientErrorUnknownError =
             "An unknown error occurred.";
 
-        public const string AzureClientError_NotConnected =
+        public const string AzureClientErrorNotConnected =
             "Not connected to any Azure Quantum workspace.";
 
-        public const string AzureClientError_NoTarget =
+        public const string AzureClientErrorNoTarget =
             "No execution target has been configured for Azure Quantum job submission.";
 
-        public const string AzureClientError_JobNotFound =
+        public const string AzureClientErrorJobNotFound =
             "No job with the given ID was found in the current Azure Quantum workspace.";
 
-        public const string AzureClientError_NoOperationName =
+        public const string AzureClientErrorNoOperationName =
             "No Q# operation name was specified for Azure Quantum job submission.";
 
-        public const string AzureClientError_AuthenticationFailed =
+        public const string AzureClientErrorAuthenticationFailed =
             "Failed to authenticate to the specified Azure Quantum workspace.";
 
-        public const string AzureClientError_WorkspaceNotFound =
+        public const string AzureClientErrorWorkspaceNotFound =
             "No Azure Quantum workspace was found that matches the specified criteria.";
     }
 }

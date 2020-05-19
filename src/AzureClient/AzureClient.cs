@@ -19,20 +19,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
-        private string ConnectionString { get; set; }
-        private string ActiveTargetName { get; set; }
+        private string ConnectionString { get; set; } = string.Empty;
+        private string ActiveTargetName { get; set; } = string.Empty;
         private AuthenticationResult? AuthenticationResult { get; set; }
         private IQuantumClient? QuantumClient { get; set; }
         private Azure.Quantum.Workspace? ActiveWorkspace { get; set; }
-
-        /// <summary>
-        /// Creates an AzureClient object.
-        /// </summary>
-        public AzureClient()
-        {
-            ConnectionString = string.Empty;
-            ActiveTargetName = string.Empty;
-        }
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> ConnectAsync(
@@ -41,7 +32,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string storageAccountConnectionString,
-            bool forceLogin = false)
+            bool forceLoginPrompt = false)
         {
             ConnectionString = storageAccountConnectionString;
 
@@ -64,8 +55,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var scopes = new List<string>() { "https://quantum.microsoft.com/Jobs.ReadWrite" };
 
-            bool promptForLogin = forceLogin;
-            if (!promptForLogin)
+            bool shouldShowLoginPrompt = forceLoginPrompt;
+            if (!shouldShowLoginPrompt)
             { 
                 try
                 {
@@ -75,11 +66,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }
                 catch (MsalUiRequiredException)
                 {
-                    promptForLogin = true;
+                    shouldShowLoginPrompt = true;
                 }
             }
 
-            if (promptForLogin)
+            if (shouldShowLoginPrompt)
             {
                 AuthenticationResult = await msalApp.AcquireTokenWithDeviceCode(scopes,
                     deviceCodeResult =>
@@ -95,12 +86,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             var credentials = new Rest.TokenCredentials(AuthenticationResult.AccessToken);
-
-            QuantumClient = new QuantumClient(credentials);
-            QuantumClient.SubscriptionId = subscriptionId;
-            QuantumClient.ResourceGroupName = resourceGroupName;
-            QuantumClient.WorkspaceName = workspaceName;
-
+            QuantumClient = new QuantumClient(credentials)
+            {
+                SubscriptionId = subscriptionId,
+                ResourceGroupName = resourceGroupName,
+                WorkspaceName = workspaceName
+            };
             ActiveWorkspace = new Azure.Quantum.Workspace(
                 QuantumClient.SubscriptionId, QuantumClient.ResourceGroupName,
                 QuantumClient.WorkspaceName, AuthenticationResult?.AccessToken);
@@ -108,7 +99,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             try
             {
                 var jobsList = await QuantumClient.Jobs.ListAsync();
-                channel.Stdout($"Found {jobsList.Count()} jobs in Azure Quantum workspace {workspaceName}");
+                channel.Stdout($"Successfully connected to Azure Quantum workspace {workspaceName}.");
             }
             catch (Exception e)
             {
@@ -120,15 +111,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintConnectionStatusAsync(IChannel channel)
-        {
-            if (QuantumClient == null)
-            {
-                return AzureClientError.NotConnected.ToExecutionResult();
-            }
-
-            return QuantumClient.ToJupyterTable().ToExecutionResult();
-        }
+        public async Task<ExecutionResult> PrintConnectionStatusAsync(IChannel channel) =>
+            QuantumClient == null
+            ? AzureClientError.NotConnected.ToExecutionResult()
+            : QuantumClient.ToJupyterTable().ToExecutionResult();
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> SubmitJobAsync(
@@ -138,19 +124,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (ActiveWorkspace == null)
             {
-                channel.Stderr("Must call %connect before submitting a job.");
+                channel.Stderr("Please call %connect before submitting a job.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
             if (ActiveTargetName == null)
             {
-                channel.Stderr("Must call %target before submitting a job.");
+                channel.Stderr("Please call %target before submitting a job.");
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
             if (string.IsNullOrEmpty(operationName))
             {
-                channel.Stderr("Must pass a valid Q# operation name to %submit.");
+                channel.Stderr("Please pass a valid Q# operation name to %submit.");
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
@@ -179,25 +165,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintActiveTargetAsync(
-            IChannel channel)
-        {
-            if (string.IsNullOrEmpty(ActiveTargetName))
-            {
-                channel.Stderr("No active target has been set for the current Azure Quantum workspace.");
-                return AzureClientError.NoTarget.ToExecutionResult();
-            }
-
-            return $"Active target is {ActiveTargetName}.".ToExecutionResult();
-        }
-
-        /// <inheritdoc/>
         public async Task<ExecutionResult> PrintTargetListAsync(
             IChannel channel)
         {
             if (QuantumClient == null)
             {
-                channel.Stderr("Must call %connect before listing targets.");
+                channel.Stderr("Please call %connect before listing targets.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
@@ -212,7 +185,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (QuantumClient == null)
             {
-                channel.Stderr("Must call %connect before getting job status.");
+                channel.Stderr("Please call %connect before getting job status.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
@@ -232,7 +205,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (QuantumClient == null)
             {
-                channel.Stderr("Must call %connect before listing jobs.");
+                channel.Stderr("Please call %connect before listing jobs.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 

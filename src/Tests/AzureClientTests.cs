@@ -33,10 +33,6 @@ namespace Tests.IQSharp
             var result = azureClient.SetActiveTargetAsync(new MockChannel(), targetName).GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Ok);
 
-            result = azureClient.PrintActiveTargetAsync(new MockChannel()).GetAwaiter().GetResult();
-            Assert.IsTrue(result.Status == ExecuteStatus.Ok);
-            Assert.IsNotNull(result.Output);
-
             result = azureClient.PrintTargetListAsync(new MockChannel()).GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
         }

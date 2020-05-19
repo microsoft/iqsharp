@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+#nullable enable
+
+using System;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -24,6 +24,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Constructs the Azure Client magic command with the specified keyword
         ///     and documentation.
         /// </summary>
+        /// <param name="azureClient">The <see cref="IAzureClient"/> object used to interact with Azure.</param>
+        /// <param name="keyword">The name used to invoke the magic command.</param>
+        /// <param name="docs">Documentation describing the usage of this magic command.</param>
         public AzureClientMagicBase(IAzureClient azureClient, string keyword, Documentation docs):
             base(keyword, docs)
         {

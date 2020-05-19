@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -179,13 +181,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///      Retrieves and JSON-decodes the value for the given parameter name.
         /// </summary>
-        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName)
+        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default)
         {
             if (!parameters.TryGetValue(parameterName, out string parameterValue))
             {
-                return default(T);
+                return defaultValue;
             }
-            return (T)(JsonConvert.DeserializeObject(parameterValue) ?? default(T));
+            return (T)(JsonConvert.DeserializeObject(parameterValue)) ?? defaultValue;
         }
     }
 }
