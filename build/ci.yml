@@ -19,7 +19,7 @@ jobs:
 - job: "pack_conda_linux"
   dependsOn: "iqsharp"
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: 'ubuntu-latest'
   steps:
   - template: steps-conda.yml
   condition: eq(variables['Enable.Conda'], 'true')
@@ -27,7 +27,7 @@ jobs:
 - job: "pack_conda_macos"
   dependsOn: "iqsharp"
   pool:
-    vmImage: macOS-10.14
+    vmImage: 'macOS-latest'
   steps:
   - template: steps-conda.yml
   condition: eq(variables['Enable.Conda'], 'true')
@@ -35,7 +35,7 @@ jobs:
 - job: "pack_conda_win"
   dependsOn: "iqsharp"
   pool:
-    vmImage: windows-2019
+    vmImage: 'windows-2019'
   steps:
   - template: steps-conda.yml
   condition: eq(variables['Enable.Conda'], 'true')
