@@ -6,6 +6,7 @@ variables:
   Build.Major: 0
   Build.Minor: 11
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
+  IQSharp.Hosting.Env: 'build-agent-iqsharp'
 
 jobs:
 - job: "iqsharp"
