@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -13,8 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.14.0" />
-    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.10.0-preview" />
+    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.11.2005.1420-beta" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.21" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />
   </ItemGroup>
 
