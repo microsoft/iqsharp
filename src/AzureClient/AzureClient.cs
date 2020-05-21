@@ -13,6 +13,8 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Rest.Azure;
+using Microsoft.Azure.Quantum.Client.Models;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -23,7 +25,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string ActiveTargetName { get; set; } = string.Empty;
         private AuthenticationResult? AuthenticationResult { get; set; }
         private IQuantumClient? QuantumClient { get; set; }
-        private Azure.Quantum.Workspace? ActiveWorkspace { get; set; }
+        private IPage<ProviderStatus>? ProviderStatusList { get; set; }
+        private Azure.Quantum.IWorkspace? ActiveWorkspace { get; set; }
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> ConnectAsync(
@@ -98,8 +101,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var jobsList = await QuantumClient.Jobs.ListAsync();
-                channel.Stdout($"Successfully connected to Azure Quantum workspace {workspaceName}.");
+                ProviderStatusList = await QuantumClient.Providers.GetStatusAsync();
             }
             catch (Exception e)
             {
@@ -107,20 +109,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
-            return QuantumClient.ToJupyterTable().ToExecutionResult();
+            channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
+
+            // TODO: Add encoder for IPage<ProviderStatus> rather than calling ToJupyterTable() here directly.
+            return ProviderStatusList.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintConnectionStatusAsync(IChannel channel) =>
-            QuantumClient == null
-            ? AzureClientError.NotConnected.ToExecutionResult()
-            : QuantumClient.ToJupyterTable().ToExecutionResult();
+        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel)
+        {
+            if (QuantumClient == null || ProviderStatusList == null)
+            {
+                return AzureClientError.NotConnected.ToExecutionResult();
+            }
 
-        /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(
+            channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
+
+            // TODO: Add encoder for IPage<ProviderStatus> rather than calling ToJupyterTable() here directly.
+            return ProviderStatusList.ToJupyterTable().ToExecutionResult();
+        }
+
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
             IChannel channel,
             IOperationResolver operationResolver,
-            string operationName)
+            string operationName,
+            bool execute)
         {
             if (ActiveWorkspace == null)
             {
@@ -140,9 +153,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var operationInfo = operationResolver.Resolve(operationName);
-            var entryPointInfo = new EntryPointInfo<QVoid, Result>(operationInfo.RoslynType);
-            var entryPointInput = QVoid.Instance;
             var machine = Azure.Quantum.QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTargetName, ConnectionString);
             if (machine == null)
             {
@@ -150,8 +160,37 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
+            var operationInfo = operationResolver.Resolve(operationName);
+            var entryPointInfo = new EntryPointInfo<QVoid, Result>(operationInfo.RoslynType);
+            var entryPointInput = QVoid.Instance;
+
+            // TODO: check `execute` and do appropriate thing.
             var job = await machine.SubmitAsync(entryPointInfo, entryPointInput);
+
+            // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
             return job.ToJupyterTable().ToExecutionResult();
+        }
+
+        /// <inheritdoc/>
+        public async Task<ExecutionResult> SubmitJobAsync(
+            IChannel channel,
+            IOperationResolver operationResolver,
+            string operationName) =>
+            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: false);
+
+        /// <inheritdoc/>
+        public async Task<ExecutionResult> ExecuteJobAsync(
+            IChannel channel,
+            IOperationResolver operationResolver,
+            string operationName) =>
+            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: true);
+
+        /// <inheritdoc/>
+        public async Task<ExecutionResult> GetActiveTargetAsync(
+            IChannel channel)
+        {
+            // TODO: This should also print the list of available targets to the IChannel.
+            return ActiveTargetName.ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -160,26 +199,36 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string targetName)
         {
             // TODO: Validate that this target name is valid in the workspace.
+            // TODO: Load the associated provider package.
             ActiveTargetName = targetName;
             return $"Active target is now {ActiveTargetName}".ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintTargetListAsync(
-            IChannel channel)
+        public async Task<ExecutionResult> GetJobResultAsync(
+            IChannel channel,
+            string jobId)
         {
             if (QuantumClient == null)
             {
-                channel.Stderr("Please call %connect before listing targets.");
+                channel.Stderr("Please call %connect before getting job results.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var providersStatus = await QuantumClient.Providers.GetStatusAsync();
-            return providersStatus.ToJupyterTable().ToExecutionResult();
+            // TODO: If jobId is empty, use the most-recently submitted job in this session.
+            var jobDetails = await QuantumClient.Jobs.GetAsync(jobId);
+            if (jobDetails == null)
+            {
+                channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
+                return AzureClientError.JobNotFound.ToExecutionResult();
+            }
+
+            // TODO: How to get the job results? There is no API for this.
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintJobStatusAsync(
+        public async Task<ExecutionResult> GetJobStatusAsync(
             IChannel channel,
             string jobId)
         {
@@ -189,6 +238,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
+            // TODO: If jobId is empty, use the most-recently submitted job in this session.
             var jobDetails = await QuantumClient.Jobs.GetAsync(jobId);
             if (jobDetails == null)
             {
@@ -196,11 +246,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
+            // TODO: Add encoder for JobDetails rather than calling ToJupyterTable() here directly.
             return jobDetails.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> PrintJobListAsync(
+        public async Task<ExecutionResult> GetJobListAsync(
             IChannel channel)
         {
             if (QuantumClient == null)
@@ -216,6 +267,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
+            // TODO: Add encoder for IPage<JobDetails> rather than calling ToJupyterTable() here directly.
             return jobsList.ToJupyterTable().ToExecutionResult();
         }
     }

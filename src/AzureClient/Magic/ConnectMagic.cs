@@ -37,6 +37,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             This magic command allows for connecting to an Azure Quantum workspace
                             as specified by a valid subscription ID, resource group name, workspace name,
                             and storage account connection string.
+
+                            If the connection is successful, a list of the available execution targets
+                            in the Azure Quantum workspace will be displayed.
                         ".Dedent(),
                     Examples = new[]
                         {
@@ -44,7 +47,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                 Print information about the current connection:
                                 ```
                                 In []: %connect
-                                Out[]: Connected to WORKSPACE_NAME
+                                Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
                             ".Dedent(),
 
@@ -55,7 +59,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                                 {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
                                                 {ParameterNameWorkspaceName}=WORKSPACE_NAME
                                                 {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
-                                Out[]: Connected to WORKSPACE_NAME
+                                Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
                             ".Dedent(),
 
@@ -69,7 +74,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                                 {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                         and enter the code [login code] to authenticate.
-                                        Connected to WORKSPACE_NAME
+                                       Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
                                 Use the `{ParameterNameLogin}` option if you want to bypass any saved or cached
                                 credentials when connecting to Azure.
@@ -88,7 +94,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString);
             if (string.IsNullOrEmpty(storageAccountConnectionString))
             {
-                return await AzureClient.PrintConnectionStatusAsync(channel);
+                return await AzureClient.GetConnectionStatusAsync(channel);
             }
 
             var subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId);

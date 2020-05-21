@@ -41,7 +41,7 @@ namespace Tests.IQSharp
 
             // unrecognized input
             connectMagic.Test($"invalid");
-            Assert.AreEqual(azureClient.LastAction, AzureClientAction.PrintConnectionStatus);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetConnectionStatus);
 
             // valid input
             connectMagic.Test(
@@ -66,17 +66,17 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestStatusMagic()
         {
-            // no arguments - should print job list
+            // no arguments - should print job status of most recent job
             var azureClient = new MockAzureClient();
             var statusMagic = new StatusMagic(azureClient);
             statusMagic.Test(string.Empty);
-            Assert.AreEqual(azureClient.LastAction, AzureClientAction.PrintJobList);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetJobStatus);
 
             // single argument - should print job status
             azureClient = new MockAzureClient();
             statusMagic = new StatusMagic(azureClient);
             statusMagic.Test($"{jobId}");
-            Assert.AreEqual(azureClient.LastAction, AzureClientAction.PrintJobStatus);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetJobStatus);
         }
 
         [TestMethod]
@@ -96,19 +96,61 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public void TestExecuteMagic()
+        {
+            // no arguments
+            var azureClient = new MockAzureClient();
+            var operationResolver = new MockOperationResolver();
+            var executeMagic = new ExecuteMagic(operationResolver, azureClient);
+            executeMagic.Test(string.Empty);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.ExecuteJob);
+
+            // single argument
+            executeMagic.Test($"{operationName}");
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.ExecuteJob);
+            Assert.IsTrue(azureClient.ExecutedJobs.Contains(operationName));
+        }
+
+        [TestMethod]
+        public void TestOutputMagic()
+        {
+            // no arguments - should print job result of most recent job
+            var azureClient = new MockAzureClient();
+            var outputMagic = new OutputMagic(azureClient);
+            outputMagic.Test(string.Empty);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetJobResult);
+
+            // single argument - should print job status
+            azureClient = new MockAzureClient();
+            outputMagic = new OutputMagic(azureClient);
+            outputMagic.Test($"{jobId}");
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetJobResult);
+        }
+
+        [TestMethod]
+        public void TestJobsMagic()
+        {
+            // no arguments - should print job status of all jobs
+            var azureClient = new MockAzureClient();
+            var jobsMagic = new JobsMagic(azureClient);
+            jobsMagic.Test(string.Empty);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetJobList);
+        }
+
+        [TestMethod]
         public void TestTargetMagic()
         {
-            // no arguments - should print target list
+            // single argument - should set active target
             var azureClient = new MockAzureClient();
             var targetMagic = new TargetMagic(azureClient);
-            targetMagic.Test(string.Empty);
-            Assert.AreEqual(azureClient.LastAction, AzureClientAction.PrintTargetList);
-
-            // single argument - should set active target
-            azureClient = new MockAzureClient();
-            targetMagic = new TargetMagic(azureClient);
             targetMagic.Test(targetName);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.SetActiveTarget);
+
+            // no arguments - should print active target
+            azureClient = new MockAzureClient();
+            targetMagic = new TargetMagic(azureClient);
+            targetMagic.Test(string.Empty);
+            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetActiveTarget);
         }
     }
 
@@ -117,11 +159,13 @@ namespace Tests.IQSharp
         None,
         Connect,
         SetActiveTarget,
+        GetActiveTarget,
         SubmitJob,
-        PrintConnectionStatus,
-        PrintJobList,
-        PrintJobStatus,
-        PrintTargetList,
+        ExecuteJob,
+        GetConnectionStatus,
+        GetJobList,
+        GetJobStatus,
+        GetJobResult,
     }
 
     public class MockAzureClient : IAzureClient
@@ -131,6 +175,7 @@ namespace Tests.IQSharp
         internal bool ForceLogin = false;
         internal string ActiveTargetName = string.Empty;
         internal List<string> SubmittedJobs = new List<string>();
+        internal List<string> ExecutedJobs = new List<string>();
 
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
         {
@@ -138,11 +183,23 @@ namespace Tests.IQSharp
             ActiveTargetName = targetName;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
+        {
+            LastAction = AzureClientAction.GetActiveTarget;
+            return ActiveTargetName.ToExecutionResult();
+        }
 
         public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, IOperationResolver operationResolver, string operationName)
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(operationName);
+            return ExecuteStatus.Ok.ToExecutionResult();
+        }
+
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, IOperationResolver operationResolver, string operationName)
+        {
+            LastAction = AzureClientAction.ExecuteJob;
+            ExecutedJobs.Add(operationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
@@ -154,27 +211,27 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> PrintConnectionStatusAsync(IChannel channel)
+        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel)
         {
-            LastAction = AzureClientAction.PrintConnectionStatus;
+            LastAction = AzureClientAction.GetConnectionStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> PrintJobListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
         {
-            LastAction = AzureClientAction.PrintJobList;
+            LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> PrintJobStatusAsync(IChannel channel, string jobId)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId)
         {
-            LastAction = AzureClientAction.PrintJobStatus;
+            LastAction = AzureClientAction.GetJobStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> PrintTargetListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
         {
-            LastAction = AzureClientAction.PrintTargetList;
+            LastAction = AzureClientAction.GetJobResult;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
     }

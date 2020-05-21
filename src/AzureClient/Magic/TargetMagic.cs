@@ -70,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return await AzureClient.SetActiveTargetAsync(channel, targetName);
             }
 
-            return await AzureClient.PrintTargetListAsync(channel);
+            return await AzureClient.GetActiveTargetAsync(channel);
         }
     }
 }

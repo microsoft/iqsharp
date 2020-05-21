@@ -57,18 +57,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <summary>
         ///     Displays the status corresponding to a given job ID, if provided,
-        ///     or all jobs in the active workspace.
+        ///     or the most recently-submitted job in the current session.
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
-            if (inputParameters.ContainsKey(ParameterNameJobId))
-            {
-                string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-                return await AzureClient.PrintJobStatusAsync(channel, jobId);
-            }
-
-            return await AzureClient.PrintJobListAsync(channel);
+            string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
+            return await AzureClient.GetJobStatusAsync(channel, jobId);
         }
     }
 }

@@ -65,6 +65,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.
+        /// Returns the list of execution targets available in the Azure Quantum workspace.
         /// </summary>
         public Task<ExecutionResult> ConnectAsync(
             IChannel channel,
@@ -75,15 +76,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             bool forceLogin = false);
 
         /// <summary>
-        /// Prints a string describing the current connection status.
+        /// Returns the list of execution targets available in the Azure Quantum workspace,
+        /// or an error if the Azure Quantum workspace connection has not yet been created.
         /// </summary>
-        public Task<ExecutionResult> PrintConnectionStatusAsync(
+        public Task<ExecutionResult> GetConnectionStatusAsync(
             IChannel channel);
 
         /// <summary>
         /// Submits the specified Q# operation as a job to the currently active target.
         /// </summary>
         public Task<ExecutionResult> SubmitJobAsync(
+            IChannel channel,
+            IOperationResolver operationResolver,
+            string operationName);
+
+        /// <summary>
+        /// Executes the specified Q# operation as a job to the currently active target
+        /// and waits for execution to complete before returning.
+        /// </summary>
+        public Task<ExecutionResult> ExecuteJobAsync(
             IChannel channel,
             IOperationResolver operationResolver,
             string operationName);
@@ -96,22 +107,30 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string targetName);
 
         /// <summary>
-        /// Prints the list of targets currently provisioned in the current workspace.
+        /// Returns the specified target for job submission.
         /// </summary>
-        public Task<ExecutionResult> PrintTargetListAsync(
+        public Task<ExecutionResult> GetActiveTargetAsync(
             IChannel channel);
 
         /// <summary>
-        /// Prints the job status corresponding to the given job ID.
+        /// Returns the job result corresponding to the given job ID,
+        /// or for the most recently-submitted job if no job ID is provided.
         /// </summary>
-        public Task<ExecutionResult> PrintJobStatusAsync(
+        public Task<ExecutionResult> GetJobResultAsync(
+            IChannel channel,
+            string jobId);
+
+        /// <summary>
+        /// Returns the job status corresponding to the given job ID.
+        /// </summary>
+        public Task<ExecutionResult> GetJobStatusAsync(
             IChannel channel, 
             string jobId);
 
         /// <summary>
-        /// Prints a list of all jobs in the current workspace.
+        /// Returns a list of all jobs in the current workspace.
         /// </summary>
-        public Task<ExecutionResult> PrintJobListAsync(
+        public Task<ExecutionResult> GetJobListAsync(
             IChannel channel);
     }
 }
