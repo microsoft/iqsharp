@@ -17,32 +17,39 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class OutputMagic : AzureClientMagicBase
     {
-        private const string
-            ParameterNameJobId = "jobId";
+        private const string ParameterNameJobId = "jobId";
 
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="OutputMagic"/> class.
         /// </summary>
-        public OutputMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "output",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public OutputMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.output",
                 new Documentation
                 {
                     Summary = "Displays results for jobs in the current Azure Quantum workspace.",
                     Description = @"
-                        This magic command allows for displaying the results of jobs in the current 
+                        This magic command allows for displaying results of jobs in the current 
                         Azure Quantum workspace. If a valid job ID is provided as an argument, and the
                         job has completed, the output of that job will be displayed. If no job ID is
-                        provided, the job ID from the most recent call to `%aq submit` will be used.
+                        provided, the job ID from the most recent call to `%azure.submit` or
+                        `%azure.execute` will be used.
                         
                         If the job has not yet completed, an error message will be displayed.
+
+                        The Azure Quantum workspace must previously have been initialized
+                        using the %azure.connect magic command.
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
                             Print results of a specific job:
                             ```
-                            In []: %output JOB_ID
+                            In []: %azure.output JOB_ID
                             Out[]: <job results of specified job>
                             ```
                         ".Dedent(),
@@ -50,11 +57,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Print results of the most recently-submitted job:
                             ```
-                            In []: %output
+                            In []: %azure.output
                             Out[]: <job results of most recently-submitted job>
                             ```
-                        ".Dedent()
-                    }
+                        ".Dedent(),
+                    },
                 }) {}
 
         /// <summary>

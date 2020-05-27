@@ -17,19 +17,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class ConnectMagic : AzureClientMagicBase
     {
-        private const string
-            ParameterNameLogin = "login",
-            ParameterNameStorageAccountConnectionString = "storageAccountConnectionString",
-            ParameterNameSubscriptionId = "subscriptionId",
-            ParameterNameResourceGroupName = "resourceGroupName",
-            ParameterNameWorkspaceName = "workspaceName";
+        private const string ParameterNameRefresh = "refresh";
+        private const string ParameterNameStorageAccountConnectionString = "storageAccountConnectionString";
+        private const string ParameterNameSubscriptionId = "subscriptionId";
+        private const string ParameterNameResourceGroupName = "resourceGroupName";
+        private const string ParameterNameWorkspaceName = "workspaceName";
 
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
         /// </summary>
-        public ConnectMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "connect",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public ConnectMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.connect",
                 new Documentation
                 {
                     Summary = "Connects to an Azure workspace or displays current connection status.",
@@ -46,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             @"
                                 Print information about the current connection:
                                 ```
-                                In []: %connect
+                                In []: %azure.connect
                                 Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
                                        <list of targets available in the Azure Quantum workspace>
                                 ```
@@ -55,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             $@"
                                 Connect to an Azure Quantum workspace:
                                 ```
-                                In []: %connect {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
+                                In []: %azure.connect {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
                                                 {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
                                                 {ParameterNameWorkspaceName}=WORKSPACE_NAME
                                                 {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
@@ -67,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             $@"
                                 Connect to an Azure Quantum workspace and force a credential prompt:
                                 ```
-                                In []: %connect {ParameterNameLogin}
+                                In []: %azure.connect {ParameterNameRefresh}
                                                 {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
                                                 {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
                                                 {ParameterNameWorkspaceName}=WORKSPACE_NAME
@@ -77,10 +80,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                        Connected to Azure Quantum workspace WORKSPACE_NAME.
                                        <list of targets available in the Azure Quantum workspace>
                                 ```
-                                Use the `{ParameterNameLogin}` option if you want to bypass any saved or cached
+                                Use the `{ParameterNameRefresh}` option if you want to bypass any saved or cached
                                 credentials when connecting to Azure.
-                            ".Dedent()
-                        }
+                            ".Dedent(),
+                        },
                 }) {}
 
         /// <summary>
@@ -100,14 +103,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId);
             var resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName);
             var workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName);
-            var forceLogin = inputParameters.DecodeParameter<bool>(ParameterNameLogin, defaultValue: false);
+            var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,
                 resourceGroupName,
                 workspaceName,
                 storageAccountConnectionString,
-                forceLogin);
+                refreshCredentials);
         }
     }
 }

@@ -17,18 +17,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class SubmitMagic : AzureClientMagicBase
     {
         /// <summary>
-        ///      The symbol resolver used by this magic command to find
+        ///      Gets the symbol resolver used by this magic command to find
         ///      operations or functions to be simulated.
         /// </summary>
         public IOperationResolver OperationResolver { get; }
 
         /// <summary>
-        ///     Constructs a new magic command given a resolver used to find
-        ///     operations and functions and an IAzureClient object.
+        /// Initializes a new instance of the <see cref="SubmitMagic"/> class.
         /// </summary>
-        public SubmitMagic(IOperationResolver operationResolver, IAzureClient azureClient) :
-            base(azureClient,
-                "submit",
+        /// <param name="operationResolver">
+        /// The <see cref="IOperationResolver"/> object used to find and resolve operations.
+        /// </param>
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public SubmitMagic(IOperationResolver operationResolver, IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.submit",
                 new Documentation
                 {
                     Summary = "Submits a job to an Azure Quantum workspace.",
@@ -37,18 +43,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         corresponding to the Q# operation provided as an argument.
 
                         The Azure Quantum workspace must previously have been initialized
-                        using the %connect magic command.
+                        using the %azure.connect magic command.
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
                             Submit an operation as a new job to the current Azure Quantum workspace:
                             ```
-                            In []: %submit OPERATION_NAME
+                            In []: %azure.submit OPERATION_NAME
                             Out[]: Submitted job JOB_ID
                             ```
                         ".Dedent(),
-                    }
+                    },
                 }) =>
             this.OperationResolver = operationResolver;
 

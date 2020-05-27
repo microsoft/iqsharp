@@ -17,15 +17,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class TargetMagic : AzureClientMagicBase
     {
-        private const string
-            ParameterNameTargetName = "name";
+        private const string ParameterNameTargetName = "name";
 
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="TargetMagic"/> class.
         /// </summary>
-        public TargetMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "target",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public TargetMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.target",
                 new Documentation
                 {
                     Summary = "Views or sets the target for job submission to an Azure Quantum workspace.",
@@ -34,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         to an Azure Quantum workspace, or viewing the list of all available targets.
 
                         The Azure Quantum workspace must previously have been initialized
-                        using the %connect magic command, and the specified target must be
+                        using the %azure.connect magic command, and the specified target must be
                         available in the workspace.   
                     ".Dedent(),
                     Examples = new[]
@@ -42,18 +45,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Set the current target for job submission:
                             ```
-                            In []: %target TARGET_NAME
+                            In []: %azure.target TARGET_NAME
                             Out[]: Active target is now TARGET_NAME
                             ```
                         ".Dedent(),
                         @"
                             View the current target and all available targets in the current Azure Quantum workspace:
                             ```
-                            In []: %target
-                            Out[]: <list of available targets>
+                            In []: %azure.target
+                            Out[]: <current target and list of available targets>
                             ```
                         ".Dedent(),
-                    }
+                    },
                 })
         {
         }

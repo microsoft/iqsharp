@@ -18,28 +18,35 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class JobsMagic : AzureClientMagicBase
     {
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="JobsMagic"/> class.
         /// </summary>
-        public JobsMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "jobs",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public JobsMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.jobs",
                 new Documentation
                 {
                     Summary = "Displays a list of jobs in the current Azure Quantum workspace.",
                     Description = @"
                         This magic command allows for displaying the list of jobs in the current 
                         Azure Quantum workspace.
+
+                        The Azure Quantum workspace must previously have been initialized
+                        using the %azure.connect magic command.
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
                             Print status about a specific job:
                             ```
-                            In []: %jobs
+                            In []: %azure.jobs
                             Out[]: <list of jobs in the workspace>
                             ```
-                        ".Dedent()
-                    }
+                        ".Dedent(),
+                    },
                 }) {}
 
         /// <summary>

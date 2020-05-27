@@ -17,42 +17,49 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class StatusMagic : AzureClientMagicBase
     {
-        private const string
-            ParameterNameJobId = "jobId";
+        private const string ParameterNameJobId = "jobId";
 
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="StatusMagic"/> class.
         /// </summary>
-        public StatusMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "status",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public StatusMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.status",
                 new Documentation
                 {
                     Summary = "Displays status for jobs in the current Azure Quantum workspace.",
                     Description = @"
                         This magic command allows for displaying status of jobs in the current 
                         Azure Quantum workspace. If a valid job ID is provided as an argument, the
-                        detailed status of that job will be displayed; otherwise, a list of all jobs
-                        created in the current session will be displayed.
+                        detailed status of that job will be displayed. If no job ID is
+                        provided, the job ID from the most recent call to `%azure.submit` or
+                        `%azure.execute` will be used.
+
+                        The Azure Quantum workspace must previously have been initialized
+                        using the %azure.connect magic command.
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Print status about a specific job:
+                            Print status of a specific job:
                             ```
-                            In []: %status JOB_ID
-                            Out[]: JOB_ID: <job status>
+                            In []: %azure.status JOB_ID
+                            Out[]: <job status of specified job>
                             ```
                         ".Dedent(),
 
                         @"
-                            Print status about all jobs created in the current session:
+                            Print status of the most recently-submitted job:
                             ```
-                            In []: %status
-                            Out[]: <status for each job>
+                            In []: %azure.status
+                            Out[]: <job status of most recently-submitted job>
                             ```
-                        ".Dedent()
-                    }
+                        ".Dedent(),
+                    },
                 }) {}
 
         /// <summary>

@@ -17,18 +17,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class ExecuteMagic : AzureClientMagicBase
     {
         /// <summary>
-        ///      The symbol resolver used by this magic command to find
+        ///      Gets the symbol resolver used by this magic command to find
         ///      operations or functions to be simulated.
         /// </summary>
         public IOperationResolver OperationResolver { get; }
 
         /// <summary>
-        ///     Constructs a new magic command given a resolver used to find
-        ///     operations and functions and an IAzureClient object.
+        /// Initializes a new instance of the <see cref="ExecuteMagic"/> class.
         /// </summary>
-        public ExecuteMagic(IOperationResolver operationResolver, IAzureClient azureClient) :
-            base(azureClient,
-                "execute",
+        /// <param name="operationResolver">
+        /// The <see cref="IOperationResolver"/> object used to find and resolve operations.
+        /// </param>
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public ExecuteMagic(IOperationResolver operationResolver, IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.execute",
                 new Documentation
                 {
                     Summary = "Executes a job in an Azure Quantum workspace.",
@@ -38,19 +44,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         for the job to complete before returning.
 
                         The Azure Quantum workspace must previously have been initialized
-                        using the %connect magic command.
+                        using the %azure.connect magic command.
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
                             Execute an operation in the current Azure Quantum workspace:
                             ```
-                            In []: %execute OPERATION_NAME
+                            In []: %azure.execute OPERATION_NAME
                             Out[]: Executing job on target TARGET_NAME...
                                    <job results displayed here after execution completes>
                             ```
                         ".Dedent(),
-                    }
+                    },
                 }) =>
             this.OperationResolver = operationResolver;
 
