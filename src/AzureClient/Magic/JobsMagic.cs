@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         @"
-                            Print status about a specific job:
+                            Print the list of jobs:
                             ```
                             In []: %azure.jobs
                             Out[]: <list of jobs in the workspace>
