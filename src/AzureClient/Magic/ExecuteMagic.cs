@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -16,6 +17,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class ExecuteMagic : AzureClientMagicBase
     {
+        private const string ParameterNameOperationName = "operationName";
+
         /// <summary>
         ///      Gets the symbol resolver used by this magic command to find
         ///      operations or functions to be simulated.
@@ -61,14 +64,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             this.OperationResolver = operationResolver;
 
         /// <summary>
-        ///     Executes a new job to an Azure Quantum workspace given a Q# operation
+        ///     Executes a new job in an Azure Quantum workspace given a Q# operation
         ///     name that is present in the current Q# Jupyter workspace, and
         ///     waits for the job to complete before returning.
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            Dictionary<string, string> keyValuePairs = ParseInputParameters(input);
-            var operationName = keyValuePairs.Keys.FirstOrDefault();
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
+            var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             return await AzureClient.ExecuteJobAsync(channel, OperationResolver, operationName);
         }
     }

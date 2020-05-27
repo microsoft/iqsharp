@@ -52,9 +52,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         ///     Lists all jobs in the active workspace.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
-        {
-            return await AzureClient.GetJobListAsync(channel);
-        }
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel) =>
+            await AzureClient.GetJobListAsync(channel);
     }
 }

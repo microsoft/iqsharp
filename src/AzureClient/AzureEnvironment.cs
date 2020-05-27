@@ -82,12 +82,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         return quotedAuthority[1..^1];
                     }
                 }
-            }
-            catch (Exception)
-            {
-            }
 
-            throw new InvalidOperationException($"Failed to construct dogfood authority for subscription ID {subscriptionId}.");
+                throw new InvalidOperationException($"Dogfood authority not found in ARM header response for subscription ID {subscriptionId}.");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to construct dogfood authority for subscription ID {subscriptionId}.", ex);
+            }
         }
     }
 }
