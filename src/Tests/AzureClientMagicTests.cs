@@ -55,8 +55,7 @@ namespace Tests.IQSharp
 
             // valid input with forced login
             connectMagic.Test(
-                @$"refresh
-                   subscriptionId={subscriptionId}
+                @$"refresh subscriptionId={subscriptionId}
                    resourceGroupName={resourceGroupName}
                    workspaceName={workspaceName}
                    storageAccountConnectionString={storageAccountConnectionString}");
