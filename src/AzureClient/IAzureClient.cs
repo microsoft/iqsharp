@@ -73,7 +73,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string storageAccountConnectionString,
-            bool forceLogin = false);
+            bool refreshCredentials = false);
 
         /// <summary>
         /// Returns the list of execution targets available in the Azure Quantum workspace,

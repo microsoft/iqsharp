@@ -450,10 +450,13 @@ namespace Tests.IQSharp
             Assert.IsNull(symbol);
 
             // AzureClient-provided commands
-            Assert.IsNotNull(resolver.Resolve("%connect"));
-            Assert.IsNotNull(resolver.Resolve("%status"));
-            Assert.IsNotNull(resolver.Resolve("%submit"));
-            Assert.IsNotNull(resolver.Resolve("%target"));
+            Assert.IsNotNull(resolver.Resolve("%azure.connect"));
+            Assert.IsNotNull(resolver.Resolve("%azure.target"));
+            Assert.IsNotNull(resolver.Resolve("%azure.submit"));
+            Assert.IsNotNull(resolver.Resolve("%azure.execute"));
+            Assert.IsNotNull(resolver.Resolve("%azure.status"));
+            Assert.IsNotNull(resolver.Resolve("%azure.output"));
+            Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
         }
     }
 }

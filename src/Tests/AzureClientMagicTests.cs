@@ -50,17 +50,18 @@ namespace Tests.IQSharp
                    workspaceName={workspaceName}
                    storageAccountConnectionString={storageAccountConnectionString}");
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.Connect);
-            Assert.IsFalse(azureClient.ForceLogin);
+            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(azureClient.ConnectionString, storageAccountConnectionString);
 
             // valid input with forced login
             connectMagic.Test(
-                @$"login subscriptionId={subscriptionId}
+                @$"refresh
+                   subscriptionId={subscriptionId}
                    resourceGroupName={resourceGroupName}
                    workspaceName={workspaceName}
                    storageAccountConnectionString={storageAccountConnectionString}");
 
-            Assert.IsTrue(azureClient.ForceLogin);
+            Assert.IsTrue(azureClient.RefreshCredentials);
         }
 
         [TestMethod]
@@ -172,7 +173,7 @@ namespace Tests.IQSharp
     {
         internal AzureClientAction LastAction = AzureClientAction.None;
         internal string ConnectionString = string.Empty;
-        internal bool ForceLogin = false;
+        internal bool RefreshCredentials = false;
         internal string ActiveTargetName = string.Empty;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
@@ -203,11 +204,11 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, bool forceLogin)
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, bool refreshCredentials)
         {
             LastAction = AzureClientAction.Connect;
             ConnectionString = storageAccountConnectionString;
-            ForceLogin = forceLogin;
+            RefreshCredentials = refreshCredentials;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
