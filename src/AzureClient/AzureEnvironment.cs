@@ -12,6 +12,8 @@ using System.Text;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    internal enum AzureEnvironmentType { Production, Canary, Dogfood };
+
     internal class AzureEnvironment
     {
         public string ClientId { get; private set; } = string.Empty;
@@ -23,11 +25,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
         }
 
-        public static AzureEnvironment Create(string environment, string subscriptionId) =>
-            string.IsNullOrEmpty(environment) ? Production()
-            : environment.Equals("dogfood", StringComparison.OrdinalIgnoreCase) ? Dogfood(subscriptionId)
-            : environment.Equals("canary", StringComparison.OrdinalIgnoreCase) ? Canary()
-            : Production();
+        public static AzureEnvironment Create(string environment, string subscriptionId)
+        {
+            if (Enum.TryParse(environment, true, out AzureEnvironmentType environmentType))
+            {
+                switch (environmentType)
+                {
+                    case AzureEnvironmentType.Production:
+                        return Production();
+                    case AzureEnvironmentType.Canary:
+                        return Canary();
+                    case AzureEnvironmentType.Dogfood:
+                        return Dogfood(subscriptionId);
+                    default:
+                        throw new InvalidOperationException("Unexpected EnvironmentType value.");
+                }
+            }
+
+            return Production();
+        }
 
         private static AzureEnvironment Production() =>
             new AzureEnvironment()
