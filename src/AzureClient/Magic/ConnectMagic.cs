@@ -17,19 +17,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class ConnectMagic : AzureClientMagicBase
     {
-        private const string
-            ParameterNameLogin = "login",
-            ParameterNameStorageAccountConnectionString = "storageAccountConnectionString",
-            ParameterNameSubscriptionId = "subscriptionId",
-            ParameterNameResourceGroupName = "resourceGroupName",
-            ParameterNameWorkspaceName = "workspaceName";
+        private const string ParameterNameRefresh = "refresh";
+        private const string ParameterNameStorageAccountConnectionString = "storageAccountConnectionString";
+        private const string ParameterNameSubscriptionId = "subscriptionId";
+        private const string ParameterNameResourceGroupName = "resourceGroupName";
+        private const string ParameterNameWorkspaceName = "workspaceName";
 
         /// <summary>
-        ///     Constructs a new magic command given an IAzureClient object.
+        /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
         /// </summary>
-        public ConnectMagic(IAzureClient azureClient) :
-            base(azureClient,
-                "connect",
+        /// <param name="azureClient">
+        /// The <see cref="IAzureClient"/> object to use for Azure functionality.
+        /// </param>
+        public ConnectMagic(IAzureClient azureClient)
+            : base(
+                azureClient,
+                "azure.connect",
                 new Documentation
                 {
                     Summary = "Connects to an Azure workspace or displays current connection status.",
@@ -37,44 +40,50 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             This magic command allows for connecting to an Azure Quantum workspace
                             as specified by a valid subscription ID, resource group name, workspace name,
                             and storage account connection string.
+
+                            If the connection is successful, a list of the available execution targets
+                            in the Azure Quantum workspace will be displayed.
                         ".Dedent(),
                     Examples = new[]
                         {
                             @"
                                 Print information about the current connection:
                                 ```
-                                In []: %connect
-                                Out[]: Connected to WORKSPACE_NAME
+                                In []: %azure.connect
+                                Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
                             ".Dedent(),
 
                             $@"
                                 Connect to an Azure Quantum workspace:
                                 ```
-                                In []: %connect {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
+                                In []: %azure.connect {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
                                                 {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
                                                 {ParameterNameWorkspaceName}=WORKSPACE_NAME
                                                 {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
-                                Out[]: Connected to WORKSPACE_NAME
+                                Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
                             ".Dedent(),
 
                             $@"
                                 Connect to an Azure Quantum workspace and force a credential prompt:
                                 ```
-                                In []: %connect {ParameterNameLogin}
+                                In []: %azure.connect {ParameterNameRefresh}
                                                 {ParameterNameSubscriptionId}=SUBSCRIPTION_ID
                                                 {ParameterNameResourceGroupName}=RESOURCE_GROUP_NAME
                                                 {ParameterNameWorkspaceName}=WORKSPACE_NAME
                                                 {ParameterNameStorageAccountConnectionString}=CONNECTION_STRING
                                 Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                         and enter the code [login code] to authenticate.
-                                        Connected to WORKSPACE_NAME
+                                       Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of targets available in the Azure Quantum workspace>
                                 ```
-                                Use the `{ParameterNameLogin}` option if you want to bypass any saved or cached
+                                Use the `{ParameterNameRefresh}` option if you want to bypass any saved or cached
                                 credentials when connecting to Azure.
-                            ".Dedent()
-                        }
+                            ".Dedent(),
+                        },
                 }) {}
 
         /// <summary>
@@ -88,20 +97,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString);
             if (string.IsNullOrEmpty(storageAccountConnectionString))
             {
-                return await AzureClient.PrintConnectionStatusAsync(channel);
+                return await AzureClient.GetConnectionStatusAsync(channel);
             }
 
             var subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId);
             var resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName);
             var workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName);
-            var forceLogin = inputParameters.DecodeParameter<bool>(ParameterNameLogin, defaultValue: false);
+            var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,
                 resourceGroupName,
                 workspaceName,
                 storageAccountConnectionString,
-                forceLogin);
+                refreshCredentials);
         }
     }
 }

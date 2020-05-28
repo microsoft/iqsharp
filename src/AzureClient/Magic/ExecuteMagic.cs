@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <summary>
     ///     A magic command that can be used to submit jobs to an Azure Quantum workspace.
     /// </summary>
-    public class SubmitMagic : AzureClientMagicBase
+    public class ExecuteMagic : AzureClientMagicBase
     {
         private const string ParameterNameOperationName = "operationName";
 
@@ -26,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public IOperationResolver OperationResolver { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SubmitMagic"/> class.
+        /// Initializes a new instance of the <see cref="ExecuteMagic"/> class.
         /// </summary>
         /// <param name="operationResolver">
         /// The <see cref="IOperationResolver"/> object used to find and resolve operations.
@@ -34,16 +34,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public SubmitMagic(IOperationResolver operationResolver, IAzureClient azureClient)
+        public ExecuteMagic(IOperationResolver operationResolver, IAzureClient azureClient)
             : base(
                 azureClient,
-                "azure.submit",
+                "azure.execute",
                 new Documentation
                 {
-                    Summary = "Submits a job to an Azure Quantum workspace.",
+                    Summary = "Executes a job in an Azure Quantum workspace.",
                     Description = @"
-                        This magic command allows for submitting a job to an Azure Quantum workspace
-                        corresponding to the Q# operation provided as an argument.
+                        This magic command allows for executing a job in an Azure Quantum workspace
+                        corresponding to the Q# operation provided as an argument, and it waits
+                        for the job to complete before returning.
 
                         The Azure Quantum workspace must previously have been initialized
                         using the %azure.connect magic command.
@@ -51,10 +52,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         @"
-                            Submit an operation as a new job to the current Azure Quantum workspace:
+                            Execute an operation in the current Azure Quantum workspace:
                             ```
-                            In []: %azure.submit OPERATION_NAME
-                            Out[]: Submitted job JOB_ID
+                            In []: %azure.execute OPERATION_NAME
+                            Out[]: Executing job on target TARGET_NAME...
+                                   <job results displayed here after execution completes>
                             ```
                         ".Dedent(),
                     },
@@ -62,14 +64,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             this.OperationResolver = operationResolver;
 
         /// <summary>
-        ///     Submits a new job to an Azure Quantum workspace given a Q# operation
-        ///     name that is present in the current Q# Jupyter workspace.
+        ///     Executes a new job in an Azure Quantum workspace given a Q# operation
+        ///     name that is present in the current Q# Jupyter workspace, and
+        ///     waits for the job to complete before returning.
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            return await AzureClient.SubmitJobAsync(channel, OperationResolver, operationName);
+            return await AzureClient.ExecuteJobAsync(channel, OperationResolver, operationName);
         }
     }
 }

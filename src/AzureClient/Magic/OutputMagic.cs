@@ -13,31 +13,33 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <summary>
-    ///     A magic command that can be used to connect to an Azure workspace.
+    ///     A magic command that can be used to connect to display the results of an Azure Quantum job.
     /// </summary>
-    public class StatusMagic : AzureClientMagicBase
+    public class OutputMagic : AzureClientMagicBase
     {
         private const string ParameterNameJobId = "jobId";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StatusMagic"/> class.
+        /// Initializes a new instance of the <see cref="OutputMagic"/> class.
         /// </summary>
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public StatusMagic(IAzureClient azureClient)
+        public OutputMagic(IAzureClient azureClient)
             : base(
                 azureClient,
-                "azure.status",
+                "azure.output",
                 new Documentation
                 {
-                    Summary = "Displays status for jobs in the current Azure Quantum workspace.",
+                    Summary = "Displays results for jobs in the current Azure Quantum workspace.",
                     Description = @"
-                        This magic command allows for displaying status of jobs in the current 
-                        Azure Quantum workspace. If a valid job ID is provided as an argument, the
-                        detailed status of that job will be displayed. If no job ID is
+                        This magic command allows for displaying results of jobs in the current 
+                        Azure Quantum workspace. If a valid job ID is provided as an argument, and the
+                        job has completed, the output of that job will be displayed. If no job ID is
                         provided, the job ID from the most recent call to `%azure.submit` or
                         `%azure.execute` will be used.
+                        
+                        If the job has not yet completed, an error message will be displayed.
 
                         The Azure Quantum workspace must previously have been initialized
                         using the %azure.connect magic command.
@@ -45,32 +47,32 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         @"
-                            Print status of a specific job:
+                            Print results of a specific job:
                             ```
-                            In []: %azure.status JOB_ID
-                            Out[]: <job status of specified job>
+                            In []: %azure.output JOB_ID
+                            Out[]: <job results of specified job>
                             ```
                         ".Dedent(),
 
                         @"
-                            Print status of the most recently-submitted job:
+                            Print results of the most recently-submitted job:
                             ```
-                            In []: %azure.status
-                            Out[]: <job status of most recently-submitted job>
+                            In []: %azure.output
+                            Out[]: <job results of most recently-submitted job>
                             ```
                         ".Dedent(),
                     },
                 }) {}
 
         /// <summary>
-        ///     Displays the status corresponding to a given job ID, if provided,
-        ///     or the most recently-submitted job in the current session.
+        ///     Displays the output of a given completed job ID, if provided,
+        ///     or all jobs submitted in the current session.
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobStatusAsync(channel, jobId);
+            return await AzureClient.GetJobResultAsync(channel, jobId);
         }
     }
 }

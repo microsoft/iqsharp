@@ -66,24 +66,46 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.
         /// </summary>
+        /// <returns>
+        /// The list of execution targets available in the Azure Quantum workspace.
+        /// </returns>
         public Task<ExecutionResult> ConnectAsync(
             IChannel channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
             string storageAccountConnectionString,
-            bool forceLogin = false);
+            bool refreshCredentials = false);
 
         /// <summary>
-        /// Prints a string describing the current connection status.
+        /// Gets the current connection status to an Azure Quantum workspace.
         /// </summary>
-        public Task<ExecutionResult> PrintConnectionStatusAsync(
+        /// <returns>
+        /// The list of execution targets available in the Azure Quantum workspace,
+        /// or an error if the Azure Quantum workspace connection has not yet been created.
+        /// </returns>
+        public Task<ExecutionResult> GetConnectionStatusAsync(
             IChannel channel);
 
         /// <summary>
         /// Submits the specified Q# operation as a job to the currently active target.
         /// </summary>
+        /// <returns>
+        /// Details of the submitted job, or an error if submission failed.
+        /// </returns>
         public Task<ExecutionResult> SubmitJobAsync(
+            IChannel channel,
+            IOperationResolver operationResolver,
+            string operationName);
+
+        /// <summary>
+        /// Executes the specified Q# operation as a job to the currently active target
+        /// and waits for execution to complete before returning.
+        /// </summary>
+        /// <returns>
+        /// The result of the executed job, or an error if execution failed.
+        /// </returns>
+        public Task<ExecutionResult> ExecuteJobAsync(
             IChannel channel,
             IOperationResolver operationResolver,
             string operationName);
@@ -91,27 +113,51 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Sets the specified target for job submission.
         /// </summary>
+        /// <returns>
+        /// Success if the target is valid, or an error if the target cannot be set.
+        /// </returns>
         public Task<ExecutionResult> SetActiveTargetAsync(
             IChannel channel,
             string targetName);
 
         /// <summary>
-        /// Prints the list of targets currently provisioned in the current workspace.
+        /// Gets the currently specified target for job submission.
         /// </summary>
-        public Task<ExecutionResult> PrintTargetListAsync(
+        /// <returns>
+        /// The target name.
+        /// </returns>
+        public Task<ExecutionResult> GetActiveTargetAsync(
             IChannel channel);
 
         /// <summary>
-        /// Prints the job status corresponding to the given job ID.
+        /// Gets the result of a specified job.
         /// </summary>
-        public Task<ExecutionResult> PrintJobStatusAsync(
+        /// <returns>
+        /// The job result corresponding to the given job ID,
+        /// or for the most recently-submitted job if no job ID is provided.
+        /// </returns>
+        public Task<ExecutionResult> GetJobResultAsync(
+            IChannel channel,
+            string jobId);
+
+        /// <summary>
+        /// Gets the status of a specified job.
+        /// </summary>
+        /// <returns>
+        /// The job status corresponding to the given job ID,
+        /// or for the most recently-submitted job if no job ID is provided.
+        /// </returns>
+        public Task<ExecutionResult> GetJobStatusAsync(
             IChannel channel, 
             string jobId);
 
         /// <summary>
-        /// Prints a list of all jobs in the current workspace.
+        /// Gets a list of all jobs in the current Azure Quantum workspace.
         /// </summary>
-        public Task<ExecutionResult> PrintJobListAsync(
+        /// <returns>
+        /// A list of all jobs in the current workspace.
+        /// </returns>
+        public Task<ExecutionResult> GetJobListAsync(
             IChannel channel);
     }
 }
