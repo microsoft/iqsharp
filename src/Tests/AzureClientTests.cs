@@ -6,7 +6,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tests.IQSharp
 {
@@ -23,18 +25,26 @@ namespace Tests.IQSharp
         private readonly string storageAccountConnectionString = "TEST_CONNECTION_STRING";
         private readonly string jobId = "TEST_JOB_ID";
         private readonly string operationName = "TEST_OPERATION_NAME";
-        private readonly string targetName = "TEST_TARGET_NAME";
 
         [TestMethod]
         public void TestTargets()
         {
-            var azureClient = new AzureClient();
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var references = services.GetService<IReferences>();
+            var azureClient = services.GetService<IAzureClient>();
 
-            var result = azureClient.SetActiveTargetAsync(new MockChannel(), targetName).GetAwaiter().GetResult();
-            Assert.IsTrue(result.Status == ExecuteStatus.Ok);
+            // SetActiveTargetAsync with recognized target name, but not yet connected
+            var result = azureClient.SetActiveTargetAsync(new MockChannel(), references, "ionq.simulator").GetAwaiter().GetResult();
+            Assert.IsTrue(result.Status == ExecuteStatus.Error);
 
+            // SetActiveTargetAsync with unrecognized target name
+            result = azureClient.SetActiveTargetAsync(new MockChannel(), references, "contoso.qpu").GetAwaiter().GetResult();
+            Assert.IsTrue(result.Status == ExecuteStatus.Error);
+
+            // GetActiveTargetAsync, but not yet connected
             result = azureClient.GetActiveTargetAsync(new MockChannel()).GetAwaiter().GetResult();
-            Assert.IsTrue(result.Status == ExecuteStatus.Ok);
+            Assert.IsTrue(result.Status == ExecuteStatus.Error);
         }
     }
 }

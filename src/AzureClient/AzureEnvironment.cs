@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using Microsoft.Quantum.Simulation.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;

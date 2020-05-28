@@ -18,43 +18,49 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// Method completed with an unknown error.
         /// </summary>
         [Description(Resources.AzureClientErrorUnknownError)]
-        UnknownError = 0,
+        UnknownError,
 
         /// <summary>
         /// No connection has been made to any Azure Quantum workspace.
         /// </summary>
         [Description(Resources.AzureClientErrorNotConnected)]
-        NotConnected = 1,
+        NotConnected,
 
         /// <summary>
         /// A target has not yet been configured for job submission.
         /// </summary>
         [Description(Resources.AzureClientErrorNoTarget)]
-        NoTarget = 2,
+        NoTarget,
+
+        /// <summary>
+        /// The specified target is not valid for job submission.
+        /// </summary>
+        [Description(Resources.AzureClientErrorInvalidTarget)]
+        InvalidTarget,
 
         /// <summary>
         /// A job meeting the specified criteria was not found.
         /// </summary>
         [Description(Resources.AzureClientErrorJobNotFound)]
-        JobNotFound = 3,
+        JobNotFound,
 
         /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
         [Description(Resources.AzureClientErrorNoOperationName)]
-        NoOperationName = 4,
+        NoOperationName,
 
         /// <summary>
         /// Authentication with the Azure service failed.
         /// </summary>
         [Description(Resources.AzureClientErrorAuthenticationFailed)]
-        AuthenticationFailed = 5,
+        AuthenticationFailed,
 
         /// <summary>
         /// A workspace meeting the specified criteria was not found.
         /// </summary>
         [Description(Resources.AzureClientErrorWorkspaceNotFound)]
-        WorkspaceNotFound = 6,
+        WorkspaceNotFound,
     }
 
     /// <summary>
@@ -118,6 +124,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </returns>
         public Task<ExecutionResult> SetActiveTargetAsync(
             IChannel channel,
+            IReferences references,
             string targetName);
 
         /// <summary>
