@@ -70,12 +70,6 @@ function defineQSharpMode() {
             beginWord: true,
         },
         {
-            // Azure magic commands
-            token: "builtin",
-            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target))\b`,
-            beginWord: true,
-        },
-        {
             // chemistry magic commands
             token: "builtin",
             regex: String.raw`(%chemistry\.(broombridge|encode|fh\.add_terms|fh\.load|inputstate\.load))\b`,
