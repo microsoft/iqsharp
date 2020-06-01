@@ -84,7 +84,7 @@ function defineQSharpMode() {
         {
             // katas magic commands
             token: "builtin",
-            regex: String.raw`(%(?:check_kata|kata))\b`,
+            regex: String.raw`(%(check_kata|kata))\b`,
             beginWord: true,
         },
     ];
