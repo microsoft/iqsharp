@@ -268,7 +268,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that we know which package to load for this target name.
-            if (!ValidExecutionTargets.Any(target => targetName == target.Id))
+            var executionTarget = AzureExecutionTarget.Create(targetName);
+            if (executionTarget == null)
             {
                 channel.Stderr($"Target name {targetName} does not support executing Q# jobs.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
@@ -276,7 +277,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Set the active target and load the package.
-            ActiveTarget = new AzureExecutionTarget(targetName);
+            ActiveTarget = executionTarget;
             await references.AddPackage(ActiveTarget.PackageName);
 
             return $"Active target is now {ActiveTarget.TargetName}".ToExecutionResult();

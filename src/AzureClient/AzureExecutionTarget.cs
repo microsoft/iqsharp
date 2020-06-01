@@ -4,8 +4,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -14,20 +12,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal class AzureExecutionTarget
     {
         public string TargetName { get; private set; }
-        public AzureProvider? Provider { get => GetProvider(TargetName); }
-        public string PackageName { get => $"Microsoft.Quantum.Providers.{Provider}"; }
+        public string PackageName { get => $"Microsoft.Quantum.Providers.{GetProvider(TargetName)}"; }
 
         public static bool IsValid(string targetName) => GetProvider(targetName) != null;
 
-        public AzureExecutionTarget(string targetName)
-        {
-            if (!IsValid(targetName))
-            {
-                throw new InvalidOperationException($"{targetName} is not a valid target name.");
-            }
-
-            TargetName = targetName;
-        }
+        public static AzureExecutionTarget? Create(string targetName) =>
+            IsValid(targetName)
+            ? new AzureExecutionTarget() { TargetName = targetName }
+            : null;
 
         private static AzureProvider? GetProvider(string targetName)
         {
