@@ -17,8 +17,10 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.Serialization;
+using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
+using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
 using Newtonsoft.Json.Bson;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
@@ -67,6 +69,27 @@ namespace Microsoft.Quantum.IQSharp
             return loaded.CompilationOutput;
         }
 
+        /// <inheritdoc/>
+        public AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
+        {
+            var signature = operation.Header.PrintSignature();
+            var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
+
+            var entryPointUri = new Uri(Path.GetFullPath(Path.Combine("/", $"entrypoint.qs")));
+            var entryPointSnippet = @$"namespace ENTRYPOINT
+                {{
+                    open {operation.Header.QualifiedName.Namespace.Value};
+                    @{BuiltIn.EntryPoint.FullName}()
+                    operation {signature}
+                    {{
+                        return {operation.Header.QualifiedName}{argumentTuple};
+                    }}
+                }}";
+
+            var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true);
+        }
+
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
@@ -103,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
-                var trees = new List<SyntaxTree>();
+                var trees = new List<CodeAnalysis.SyntaxTree>();
                 NonNullable<string> GetFileId(Uri uri) => CompilationUnitManager.TryGetFileId(uri, out var id) ? id : NonNullable<string>.New(uri.AbsolutePath);
                 foreach (var file in sources.Keys)
                 {

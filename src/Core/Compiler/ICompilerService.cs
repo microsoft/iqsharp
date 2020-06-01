@@ -13,6 +13,12 @@ namespace Microsoft.Quantum.IQSharp
     public interface ICompilerService
     {
         /// <summary>
+        /// Builds an executable assembly with an entry point that invokes the Q# operation specified
+        /// by the provided <see cref="OperationInfo"/> object.
+        /// </summary>
+        AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName);
+
+        /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
         AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName);

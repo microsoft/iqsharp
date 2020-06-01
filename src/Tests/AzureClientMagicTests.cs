@@ -85,8 +85,7 @@ namespace Tests.IQSharp
         {
             // no arguments
             var azureClient = new MockAzureClient();
-            var operationResolver = new MockOperationResolver();
-            var submitMagic = new SubmitMagic(operationResolver, azureClient);
+            var submitMagic = new SubmitMagic(azureClient);
             submitMagic.Test(string.Empty);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.SubmitJob);
 
@@ -101,8 +100,7 @@ namespace Tests.IQSharp
         {
             // no arguments
             var azureClient = new MockAzureClient();
-            var operationResolver = new MockOperationResolver();
-            var executeMagic = new ExecuteMagic(operationResolver, azureClient);
+            var executeMagic = new ExecuteMagic(azureClient);
             executeMagic.Test(string.Empty);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.ExecuteJob);
 
@@ -141,19 +139,15 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestTargetMagic()
         {
-            var workspace = "Workspace";
-            var services = Startup.CreateServiceProvider(workspace);
-            var references = services.GetService<IReferences>();
-
             // single argument - should set active target
             var azureClient = new MockAzureClient();
-            var targetMagic = new TargetMagic(azureClient, references);
+            var targetMagic = new TargetMagic(azureClient);
             targetMagic.Test(targetName);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.SetActiveTarget);
 
             // no arguments - should print active target
             azureClient = new MockAzureClient();
-            targetMagic = new TargetMagic(azureClient, references);
+            targetMagic = new TargetMagic(azureClient);
             targetMagic.Test(string.Empty);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetActiveTarget);
         }
@@ -182,7 +176,7 @@ namespace Tests.IQSharp
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, IReferences references, string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTargetName = targetName;
@@ -194,14 +188,14 @@ namespace Tests.IQSharp
             return ActiveTargetName.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, IOperationResolver operationResolver, string operationName)
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters)
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(operationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, IOperationResolver operationResolver, string operationName)
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters)
         {
             LastAction = AzureClientAction.ExecuteJob;
             ExecutedJobs.Add(operationName);

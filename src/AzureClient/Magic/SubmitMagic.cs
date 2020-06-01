@@ -20,21 +20,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameOperationName = "operationName";
 
         /// <summary>
-        ///      Gets the symbol resolver used by this magic command to find
-        ///      operations or functions to be simulated.
-        /// </summary>
-        public IOperationResolver OperationResolver { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitMagic"/> class.
         /// </summary>
-        /// <param name="operationResolver">
-        /// The <see cref="IOperationResolver"/> object used to find and resolve operations.
-        /// </param>
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public SubmitMagic(IOperationResolver operationResolver, IAzureClient azureClient)
+        public SubmitMagic(IAzureClient azureClient)
             : base(
                 azureClient,
                 "azure.submit",
@@ -58,8 +49,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) =>
-            this.OperationResolver = operationResolver;
+                })
+        { }
 
         /// <summary>
         ///     Submits a new job to an Azure Quantum workspace given a Q# operation
@@ -69,7 +60,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            return await AzureClient.SubmitJobAsync(channel, OperationResolver, operationName);
+            return await AzureClient.SubmitJobAsync(channel, operationName, inputParameters);
         }
     }
 }

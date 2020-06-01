@@ -31,15 +31,14 @@ namespace Tests.IQSharp
         {
             var workspace = "Workspace";
             var services = Startup.CreateServiceProvider(workspace);
-            var references = services.GetService<IReferences>();
             var azureClient = services.GetService<IAzureClient>();
 
             // SetActiveTargetAsync with recognized target name, but not yet connected
-            var result = azureClient.SetActiveTargetAsync(new MockChannel(), references, "ionq.simulator").GetAwaiter().GetResult();
+            var result = azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator").GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
 
             // SetActiveTargetAsync with unrecognized target name
-            result = azureClient.SetActiveTargetAsync(new MockChannel(), references, "contoso.qpu").GetAwaiter().GetResult();
+            result = azureClient.SetActiveTargetAsync(new MockChannel(), "contoso.qpu").GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
 
             // GetActiveTargetAsync, but not yet connected

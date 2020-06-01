@@ -5,18 +5,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
+using Microsoft.Azure.Quantum.Client.Models;
+using Microsoft.Azure.Quantum.Storage;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler.SyntaxTree;
+using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Rest.Azure;
-using Microsoft.Azure.Quantum.Client.Models;
-using Microsoft.Azure.Quantum.Storage;
-using Microsoft.Azure.Quantum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,6 +32,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        // TODO: Factor compilation and EntryPoint-related properties and code to a separate class.
+        private ICompilerService Compiler { get; }
+        private IOperationResolver OperationResolver { get; }
+        private IWorkspace Workspace { get; }
+        private ISnippets Snippets { get; }
+        private IReferences References { get; }
+        private ILogger<AzureClient> Logger { get; }
+        private Lazy<CompilerMetadata> CompilerMetadata { get; set; }
+        private AssemblyInfo EntryPointAssembly { get; set; } = new AssemblyInfo(null);
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private AuthenticationResult? AuthenticationResult { get; set; }
@@ -41,10 +57,66 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 : string.Join(", ", ValidExecutionTargets.Select(target => target.Id));
         }
 
+        public AzureClient(
+            ICompilerService compiler,
+            IOperationResolver operationResolver,
+            IWorkspace workspace,
+            ISnippets snippets,
+            IReferences references,
+            ILogger<AzureClient> logger,
+            IEventService eventService)
+        {
+            Compiler = compiler;
+            OperationResolver = operationResolver;
+            Workspace = workspace;
+            Snippets = snippets;
+            References = references;
+            Logger = logger;
+            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+
+            Workspace.Reloaded += OnWorkspaceReloaded;
+            References.PackageLoaded += OnGlobalReferencesPackageLoaded;
+
+            AssemblyLoadContext.Default.Resolving += Resolve;
+
+            eventService?.TriggerServiceInitialized<IAzureClient>(this);
+        }
+
+        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e) =>
+            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+
+        private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e) =>
+            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+
+        private CompilerMetadata LoadCompilerMetadata() =>
+            Workspace.HasErrors
+                    ? References?.CompilerMetadata.WithAssemblies(Snippets.AssemblyInfo)
+                    : References?.CompilerMetadata.WithAssemblies(Snippets.AssemblyInfo, Workspace.AssemblyInfo);
+
+        /// <summary>
+        /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
+        /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
+        /// </summary>
+        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
+        {
+            if (name.Name == Path.GetFileNameWithoutExtension(EntryPointAssembly?.Location))
+            {
+                return EntryPointAssembly.Assembly;
+            }
+            if (name.Name == Path.GetFileNameWithoutExtension(Snippets?.AssemblyInfo?.Location))
+            {
+                return Snippets.AssemblyInfo.Assembly;
+            }
+            else if (name.Name == Path.GetFileNameWithoutExtension(Workspace?.AssemblyInfo?.Location))
+            {
+                return Workspace.AssemblyInfo.Assembly;
+            }
+
+            return null;
+        }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(
-            IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
@@ -151,11 +223,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToJupyterTable().ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName,
-            bool execute)
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters, bool execute)
         {
             if (ActiveWorkspace == null)
             {
@@ -176,7 +244,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var machine = Azure.Quantum.QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetName, ConnectionString);
+            var machine = QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetName, ConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
@@ -184,50 +252,58 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
 
-            var operationInfo = operationResolver.Resolve(operationName);
-            var entryPointInfo = new EntryPointInfo<QVoid, Result>(operationInfo.RoslynType);
-            var entryPointInput = QVoid.Instance;
+            // TODO: Factor compilation and EntryPoint-related properties and code to a separate class.
+            var operationInfo = OperationResolver.Resolve(operationName);
+            var logger = new QSharpLogger(Logger);
+            EntryPointAssembly = Compiler.BuildEntryPoint(operationInfo, CompilerMetadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"));
+            var entryPointOperationInfo = EntryPointAssembly.Operations.Single();
 
-            if (execute)
+            // TODO: Need these two lines to construct the Type objects correctly.
+            Type entryPointInputType = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).DefaultIfEmpty(typeof(QVoid)).First(); // .Header.Signature.ArgumentType.GetType();
+            Type entryPointOutputType = typeof(Result); // entryPointOperationInfo.Header.Signature.ReturnType.GetType();
+
+            var entryPointInputOutputTypes = new Type[] { entryPointInputType, entryPointOutputType };
+            Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(entryPointInputOutputTypes);
+            var entryPointInfo = entryPointInfoType.GetConstructor(
+                new Type[] { typeof(Type) }).Invoke(new object[] { entryPointOperationInfo.RoslynType });
+
+            var typedParameters = new List<object>();
+            foreach (var parameter in entryPointOperationInfo.RoslynParameters)
             {
-                channel.Stdout($"Executing {operationName} on target {ActiveTarget.TargetName}...");
-                var output = await machine.ExecuteAsync(entryPointInfo, entryPointInput);
-                MostRecentJobId = output.Job.Id;
-
-                // TODO: Add encoder to visualize IEnumerable<KeyValuePair<string, double>>
-                return output.Histogram.ToExecutionResult();
+                typedParameters.Add(System.Convert.ChangeType(inputParameters.DecodeParameter<string>(parameter.Name), parameter.ParameterType));
             }
-            else
-            {
-                channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
-                var job = await machine.SubmitAsync(entryPointInfo, entryPointInput);
-                MostRecentJobId = job.Id;
-                channel.Stdout("Job submission successful.");
-                channel.Stdout($"To check the status, run:\n    %azure.status {MostRecentJobId}");
-                channel.Stdout($"To see the results, run:\n    %azure.output {MostRecentJobId}");
 
-                // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
-                return job.ToJupyterTable().ToExecutionResult();
-            }
+            // TODO: Need to use all of the typed parameters, not just the first one.
+            var entryPointInput = typedParameters.DefaultIfEmpty(QVoid.Instance).First();
+
+            channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
+
+            var method = typeof(IQuantumMachine).GetMethod("SubmitAsync").MakeGenericMethod(entryPointInputOutputTypes);
+            var job = await (method.Invoke(machine, new object[] { entryPointInfo, entryPointInput }) as Task<IQuantumMachineJob>);
+            MostRecentJobId = job.Id;
+            channel.Stdout("Job submission successful.");
+            channel.Stdout($"To check the status, run:\n    %azure.status {MostRecentJobId}");
+            channel.Stdout($"To see the results, run:\n    %azure.output {MostRecentJobId}");
+
+            //if (execute)
+            //{
+            //    // TODO: wait for job completion
+            //}
+
+            // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
+            return job.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName) =>
-            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: false);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName) =>
-            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: true);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetActiveTargetAsync(
-            IChannel channel)
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
         {
             if (AvailableProviders == null)
             {
@@ -248,10 +324,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SetActiveTargetAsync(
-            IChannel channel,
-            IReferences references,
-            string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
         {
             if (AvailableProviders == null)
             {
@@ -278,15 +351,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
-            await references.AddPackage(ActiveTarget.PackageName);
+            await References.AddPackage(ActiveTarget.PackageName);
 
             return $"Active target is now {ActiveTarget.TargetName}".ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobResultAsync(
-            IChannel channel,
-            string jobId)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
         {
             if (ActiveWorkspace == null)
             {
@@ -335,9 +406,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobStatusAsync(
-            IChannel channel,
-            string jobId)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId)
         {
             if (ActiveWorkspace == null)
             {
@@ -368,8 +437,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(
-            IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
         {
             if (ActiveWorkspace == null)
             {
