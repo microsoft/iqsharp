@@ -15,39 +15,48 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     internal class EntryPoint : IEntryPoint
     {
-        private readonly object entryPointInfo;
-        private readonly Type[] entryPointInputOutputTypes;
-        private readonly OperationInfo entryPointOperationInfo;
+        private object EntryPointInfo { get; }
+        private Type InputType { get; }
+        private Type OutputType { get; }
+        private OperationInfo OperationInfo { get; }
 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
         /// </summary>
-        /// <param name="entryPointInfo">Must be an <see cref="EntryPoint"/> object with type
-        /// parameters specified by the types in the <c>entryPointInputOutputTypes</c> argument.</param>
-        /// <param name="entryPointInputOutputTypes">Specifies the type parameters for the
-        /// <see cref="EntryPoint"/> object provided as the <c>entryPointInfo</c> argument.</param>
-        /// <param name="entryPointOperationInfo">Information about the Q# operation to be used as the entry point.</param>
-        public EntryPoint(object entryPointInfo, Type[] entryPointInputOutputTypes, OperationInfo entryPointOperationInfo)
+        /// <param name="entryPointInfo">Must be an <see cref="Simulation.Core.EntryPointInfo"/> object with type
+        /// parameters specified by the types in the <c>entryPointInputbeginWords</c> argument.</param>
+        /// <param name="inputType">Specifies the input parameter type for the
+        /// <see cref="Simulation.Core.EntryPointInfo"/> object provided as the <c>entryPointInfo</c> argument.</param>
+        /// <param name="outputType">Specifies the output parameter type for the
+        /// <see cref="Simulation.Core.EntryPointInfo"/> object provided as the <c>entryPointInfo</c> argument.</param>
+        /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo)
         {
-            this.entryPointInfo = entryPointInfo;
-            this.entryPointInputOutputTypes = entryPointInputOutputTypes;
-            this.entryPointOperationInfo = entryPointOperationInfo;
+            EntryPointInfo = entryPointInfo;
+            InputType = inputType;
+            OutputType = outputType;
+            OperationInfo = operationInfo;
         }
 
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, Dictionary<string, string> inputParameters)
         {
-            var typedParameters = new List<object>();
-            foreach (var parameter in entryPointOperationInfo.RoslynParameters)
+            var parameterTypes = new List<Type>();
+            var parameterValues = new List<object>();
+            foreach (var parameter in OperationInfo.RoslynParameters)
             {
-                typedParameters.Add(System.Convert.ChangeType(inputParameters[parameter.Name], parameter.ParameterType));
+                parameterTypes.Add(parameter.ParameterType);
+                parameterValues.Add(System.Convert.ChangeType(inputParameters[parameter.Name], parameter.ParameterType));
             }
 
-            // TODO: Need to use all of the typed parameters, not just the first one.
-            var entryPointInput = typedParameters.DefaultIfEmpty(QVoid.Instance).First();
+            var entryPointInput =
+                parameterValues.Count == 0 ? QVoid.Instance :
+                parameterValues.Count == 1 ? parameterValues.Single() :
+                InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray());
 
-            var method = typeof(IQuantumMachine).GetMethod("SubmitAsync").MakeGenericMethod(entryPointInputOutputTypes);
-            return method.Invoke(machine, new object[] { entryPointInfo, entryPointInput }) as Task<IQuantumMachineJob>;
+            var submitMethod = typeof(IQuantumMachine).GetMethod("SubmitAsync").MakeGenericMethod(new Type[] { InputType, OutputType });
+            var submitParameters = new object[] { EntryPointInfo, entryPointInput };
+            return submitMethod.Invoke(machine, submitParameters) as Task<IQuantumMachineJob>;
         }
     }
 }

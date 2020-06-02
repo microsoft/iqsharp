@@ -90,16 +90,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AssemblyInfo = Compiler.BuildEntryPoint(operationInfo, CompilerMetadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"));
             var entryPointOperationInfo = AssemblyInfo.Operations.Single();
 
-            // TODO: Need these two lines to construct the Type objects correctly.
-            Type entryPointInputType = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).DefaultIfEmpty(typeof(QVoid)).First(); // .Header.Signature.ArgumentType.GetType();
-            Type entryPointOutputType = typeof(Result); // entryPointOperationInfo.Header.Signature.ReturnType.GetType();
+            var parameterTypes = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).ToArray();
+            var typeCount = parameterTypes.Length;
+            Type entryPointInputType =
+                typeCount == 0 ? typeof(QVoid) :
+                typeCount == 1 ? parameterTypes.Single() :
+                PartialMapper.TupleTypes[typeCount].MakeGenericType(parameterTypes);
+            Type entryPointOutputType = entryPointOperationInfo.ReturnType;
 
-            var entryPointInputOutputTypes = new Type[] { entryPointInputType, entryPointOutputType };
-            Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(entryPointInputOutputTypes);
+            Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(new Type[] { entryPointInputType, entryPointOutputType });
             var entryPointInfo = entryPointInfoType.GetConstructor(
                 new Type[] { typeof(Type) }).Invoke(new object[] { entryPointOperationInfo.RoslynType });
 
-            return new EntryPoint(entryPointInfo, entryPointInputOutputTypes, entryPointOperationInfo);
+            return new EntryPoint(entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo);
         }
     }
 }
