@@ -3,9 +3,7 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -60,7 +58,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            return await AzureClient.SubmitJobAsync(channel, operationName, inputParameters);
+
+            var remainingParameters = new Dictionary<string, string>();
+            foreach (var key in inputParameters.Keys)
+            {
+                remainingParameters[key] = inputParameters.DecodeParameter<string>(key);
+            }
+
+            return await AzureClient.SubmitJobAsync(channel, operationName, remainingParameters);
         }
     }
 }

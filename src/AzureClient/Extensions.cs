@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public static void AddAzureClient(this IServiceCollection services)
         {
             services.AddSingleton<IAzureClient, AzureClient>();
+            services.AddSingleton<IEntryPointGenerator, EntryPointGenerator>();
         }
 
         /// <summary>
