@@ -12,7 +12,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal class AzureExecutionTarget
     {
         public string TargetName { get; private set; }
-        public string PackageName { get => $"Microsoft.Quantum.Providers.{GetProvider(TargetName)}"; }
+        public string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetName)}";
 
         public static bool IsValid(string targetName) => GetProvider(targetName) != null;
 

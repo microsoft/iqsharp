@@ -45,5 +45,31 @@ namespace Tests.IQSharp
             result = azureClient.GetActiveTargetAsync(new MockChannel()).GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
         }
+
+        [TestMethod]
+        public void TestAzureExecutionTarget()
+        {
+            var targetName = "invalidname";
+            var executionTarget = AzureExecutionTarget.Create(targetName);
+            Assert.IsNull(executionTarget);
+
+            targetName = "ionq.targetname";
+            executionTarget = AzureExecutionTarget.Create(targetName);
+            Assert.IsNotNull(executionTarget);
+            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.IonQ");
+
+            targetName = "HonEYWEll.targetname";
+            executionTarget = AzureExecutionTarget.Create(targetName);
+            Assert.IsNotNull(executionTarget);
+            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.Honeywell");
+
+            targetName = "qci.target.name.qpu";
+            executionTarget = AzureExecutionTarget.Create(targetName);
+            Assert.IsNotNull(executionTarget);
+            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.QCI");
+        }
     }
 }
