@@ -22,6 +22,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public const string AzureClientErrorJobNotFound =
             "No job with the given ID was found in the current Azure Quantum workspace.";
 
+        public const string AzureClientErrorJobNotCompleted =
+            "The specified Azure Quantum job has not yet completed.";
+
         public const string AzureClientErrorNoOperationName =
             "No Q# operation name was specified for Azure Quantum job submission.";
 

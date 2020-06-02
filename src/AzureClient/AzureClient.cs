@@ -280,10 +280,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var method = typeof(IQuantumMachine).GetMethod("SubmitAsync").MakeGenericMethod(entryPointInputOutputTypes);
             var job = await (method.Invoke(machine, new object[] { entryPointInfo, entryPointInput }) as Task<IQuantumMachineJob>);
+            channel.Stdout($"Job {job.Id} submitted successfully.");
+
             MostRecentJobId = job.Id;
-            channel.Stdout("Job submission successful.");
-            channel.Stdout($"To check the status, run:\n    %azure.status {MostRecentJobId}");
-            channel.Stdout($"To see the results, run:\n    %azure.output {MostRecentJobId}");
 
             //if (execute)
             //{
@@ -385,9 +384,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (!job.Succeeded || string.IsNullOrEmpty(job.Details.OutputDataUri))
             {
-                channel.Stderr($"Job ID {jobId} has not completed. Displaying the status instead.");
-                // TODO: Add encoder for CloudJob rather than calling ToJupyterTable() here directly.
-                return job.Details.ToJupyterTable().ToExecutionResult();
+                channel.Stderr($"Job ID {jobId} has not completed. To check the status, use:\n   %azure.status {jobId}");
+                return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
 
             var stream = new MemoryStream();
@@ -432,8 +430,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            // TODO: Add encoder for CloudJob rather than calling ToJupyterTable() here directly.
-            return job.Details.ToJupyterTable().ToExecutionResult();
+            // TODO: Add encoder for CloudJob which calls ToJupyterTable() for display.
+            return job.Details.ToExecutionResult();
         }
 
         /// <inheritdoc/>
