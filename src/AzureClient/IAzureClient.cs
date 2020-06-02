@@ -45,6 +45,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         JobNotFound,
 
         /// <summary>
+        /// The result of a job was requested, but the job has not yet completed.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobNotCompleted)]
+        JobNotCompleted,
+
+        /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
         [Description(Resources.AzureClientErrorNoOperationName)]
