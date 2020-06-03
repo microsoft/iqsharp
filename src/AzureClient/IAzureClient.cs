@@ -58,6 +58,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         NoOperationName,
 
         /// <summary>
+        /// The specified Q# operation name is not recognized.
+        /// </summary>
+        [Description(Resources.AzureClientErrorUnrecognizedOperationName)]
+        UnrecognizedOperationName,
+
+        /// <summary>
+        /// The specified Q# operation cannot be used as an entry point.
+        /// </summary>
+        [Description(Resources.AzureClientErrorInvalidEntryPoint)]
+        InvalidEntryPoint,
+
+        /// <summary>
+        /// The Azure Quantum job submission failed.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobSubmissionFailed)]
+        JobSubmissionFailed,
+
+        /// <summary>
         /// Authentication with the Azure service failed.
         /// </summary>
         [Description(Resources.AzureClientErrorAuthenticationFailed)]

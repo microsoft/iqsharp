@@ -102,7 +102,7 @@ namespace Microsoft.Quantum.IQSharp
                 $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
             // Ignore any @EntryPoint() attributes found in snippets.
-            logger.ErrorCodesToIgnore.Append(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
             var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);

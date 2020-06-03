@@ -28,6 +28,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public const string AzureClientErrorNoOperationName =
             "No Q# operation name was specified for Azure Quantum job submission.";
 
+        public const string AzureClientErrorUnrecognizedOperationName =
+            "The specified Q# operation name was not recognized.";
+
+        public const string AzureClientErrorInvalidEntryPoint =
+            "The specified Q# operation cannot be used as an entry point for Azure Quantum job submission.";
+
+        public const string AzureClientErrorJobSubmissionFailed =
+            "Failed to submit the job to the Azure Quantum workspace.";
+
         public const string AzureClientErrorAuthenticationFailed =
             "Failed to authenticate to the specified Azure Quantum workspace.";
 

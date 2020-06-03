@@ -16,6 +16,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.Runtime;
+using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Rest.Azure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -195,20 +198,53 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
 
-            var entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetName);
-            var job = await entryPoint.SubmitAsync(machine, inputParameters);
+            IEntryPoint? entryPoint = null;
+            try
+            {
+                entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetName);
+            }
+            catch (UnsupportedOperationException e)
+            {
+                channel.Stderr($"{operationName} is not a recognized Q# operation name.");
+                return AzureClientError.UnrecognizedOperationName.ToExecutionResult();
+            }
+            catch (CompilationErrorsException e)
+            {
+                channel.Stderr($"The Q# operation {operationName} could not be compiled as an entry point for job execution.");
+                foreach (var message in e.Errors) channel.Stderr(message);
+                return AzureClientError.InvalidEntryPoint.ToExecutionResult();
+            }
 
-            channel.Stdout($"Job {job.Id} submitted successfully.");
+            IQuantumMachineJob? job = null;
+            try
+            {
+                job = await entryPoint.SubmitAsync(machine, inputParameters);
+                channel.Stdout($"Job {job.Id} submitted successfully.");
+                MostRecentJobId = job.Id;
+            }
+            catch (ArgumentException e)
+            {
+                channel.Stderr($"Failed to parse all expected parameters for Q# operation {operationName}.");
+                channel.Stderr(e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+            }
+            catch (Exception e)
+            {
+                channel.Stderr($"Failed to submit Q# operation {operationName} for execution.");
+                channel.Stderr(e.InnerException?.Message ?? e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+            }
 
-            MostRecentJobId = job.Id;
+            if (!execute)
+            {
+                // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
+                return job.ToJupyterTable().ToExecutionResult();
+            }
 
-            //if (execute)
-            //{
-            //    // TODO: wait for job completion
-            //}
+            Logger?.LogDebug($"Waiting for Azure Quantum job {job.Id} to complete...");
 
-            // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
-            return job.ToJupyterTable().ToExecutionResult();
+            // TODO: Actually wait for job completion before calling GetJobResultAsync
+            return await GetJobResultAsync(channel, job.Id);
         }
 
         /// <inheritdoc/>

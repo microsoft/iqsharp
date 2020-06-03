@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -18,18 +19,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal class EntryPointGenerator : IEntryPointGenerator
     {
         private ICompilerService Compiler { get; }
-        private IOperationResolver OperationResolver { get; }
+        private ILogger<EntryPointGenerator> Logger { get; }
         private IWorkspace Workspace { get; }
         private ISnippets Snippets { get; }
-        private IReferences References { get; }
-        private ILogger<EntryPointGenerator> Logger { get; }
-        private AssemblyInfo WorkspaceAssemblyInfo { get; set; } = new AssemblyInfo(null);
-        private AssemblyInfo SnippetsAssemblyInfo { get; set; } = new AssemblyInfo(null);
-        private AssemblyInfo EntryPointAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        public IReferences References { get; }
+        public AssemblyInfo WorkspaceAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        public AssemblyInfo SnippetsAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        public AssemblyInfo EntryPointAssemblyInfo { get; set; } = new AssemblyInfo(null);
 
         public EntryPointGenerator(
             ICompilerService compiler,
-            IOperationResolver operationResolver,
             IWorkspace workspace,
             ISnippets snippets,
             IReferences references,
@@ -37,7 +36,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEventService eventService)
         {
             Compiler = compiler;
-            OperationResolver = operationResolver;
             Workspace = workspace;
             Snippets = snippets;
             References = references;
@@ -70,8 +68,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
-        public IEntryPoint Generate(string operationName, string executionTarget)
+        public IEntryPoint Generate(string operationName, string? executionTarget)
         {
+            Logger?.LogDebug($"Generating entry point: operationName={operationName}, executionTarget={executionTarget}");
+
             var logger = new QSharpLogger(Logger);
             var compilerMetadata = References.CompilerMetadata;
 
@@ -87,6 +87,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
                 WorkspaceAssemblyInfo = Compiler.BuildFiles(
                     workspaceFiles, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__workspace__.dll"), executionTarget);
+                if (WorkspaceAssemblyInfo == null || logger.HasErrors)
+                {
+                    Logger?.LogError($"Error compiling workspace.");
+                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                }
+
                 compilerMetadata = compilerMetadata.WithAssemblies(WorkspaceAssemblyInfo);
             }
 
@@ -97,13 +103,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = Compiler.BuildSnippets(
                     snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"), executionTarget);
+                if (SnippetsAssemblyInfo == null || logger.HasErrors)
+                {
+                    Logger?.LogError($"Error compiling snippets.");
+                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                }
+
                 compilerMetadata = compilerMetadata.WithAssemblies(SnippetsAssemblyInfo);
             }
 
             // Build the entry point assembly
-            var operationInfo = OperationResolver.Resolve(operationName);
+            var operationInfo = new EntryPointOperationResolver(this).Resolve(operationName);
+            if (operationInfo == null)
+            {
+                Logger?.LogError($"{operationName} is not a recognized Q# operation name.");
+                throw new UnsupportedOperationException(operationName);
+            }
+
             EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
                 operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget);
+            if (EntryPointAssemblyInfo == null || logger.HasErrors)
+            {
+                Logger?.LogError($"Error compiling entry point for operation {operationName}.");
+                throw new CompilationErrorsException(logger.Errors.ToArray());
+            }
+
             var entryPointOperationInfo = EntryPointAssemblyInfo.Operations.Single();
 
             // Construct the EntryPointInfo<,> object

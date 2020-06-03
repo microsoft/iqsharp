@@ -45,8 +45,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var parameterValues = new List<object>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
+                if (!inputParameters.ContainsKey(parameter.Name))
+                {
+                    throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
+                }
+
+                string rawParameterValue = inputParameters[parameter.Name];
+                object? parameterValue = null;
+                try
+                {
+                    parameterValue = System.Convert.ChangeType(rawParameterValue, parameter.ParameterType);
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException($"The value {rawParameterValue} provided for parameter {parameter.Name} could not be converted to the expected type.");
+                }
+
                 parameterTypes.Add(parameter.ParameterType);
-                parameterValues.Add(System.Convert.ChangeType(inputParameters[parameter.Name], parameter.ParameterType));
+                parameterValues.Add(parameterValue);
             }
 
             var entryPointInput =
