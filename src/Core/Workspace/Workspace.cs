@@ -78,6 +78,11 @@ namespace Microsoft.Quantum.IQSharp
         public string Root { get; set; }
 
         /// <summary>
+        /// Gets the source files to be built for this Workspace.
+        /// </summary>
+        public IEnumerable<string> SourceFiles => Directory.EnumerateFiles(Root, "*.qs", SearchOption.TopDirectoryOnly);
+
+        /// <summary>
         /// Information about the assembly built from this Workspace.
         /// </summary>
         public AssemblyInfo AssemblyInfo { get; set; }
@@ -200,7 +205,7 @@ namespace Microsoft.Quantum.IQSharp
             if (!File.Exists(CacheDll)) return false;
             var last = File.GetLastWriteTime(CacheDll);
 
-            foreach (var f in Directory.EnumerateFiles(Root, "*.qs", SearchOption.AllDirectories))
+            foreach (var f in SourceFiles)
             {
                 if (File.GetLastWriteTime(f) > last)
                 {
@@ -230,7 +235,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
 
-                files = Directory.EnumerateFiles(Root, "*.qs", SearchOption.TopDirectoryOnly).ToArray();
+                files = SourceFiles.ToArray();
 
                 if (files.Length > 0)
                 {
