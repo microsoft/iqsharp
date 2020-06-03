@@ -20,7 +20,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// representing an entry point that wraps the specified operation.
         /// </summary>
         /// <param name="operationName">The name of the operation to wrap in an entry point.</param>
+        /// <param name="executionTarget">The intended execution target for the compiled entry point.</param>
         /// <returns>The generated entry point.</returns>
-        public IEntryPoint Generate(string operationName);
+        public IEntryPoint Generate(string operationName, string executionTarget);
     }
 }

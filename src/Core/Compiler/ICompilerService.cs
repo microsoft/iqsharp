@@ -16,17 +16,17 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
-        AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName);
+        AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
-        AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName);
+        AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName);
+        AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null);
 
         /// <summary>
         /// Returns the names of all declared callables and types. 

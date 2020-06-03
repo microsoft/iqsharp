@@ -56,6 +56,11 @@ namespace Microsoft.Quantum.IQSharp
         AssemblyInfo AssemblyInfo { get; }
 
         /// <summary>
+        /// The list of currently available snippets.
+        /// </summary>
+        IEnumerable<Snippet> Items { get; set; }
+
+        /// <summary>
         /// Adds or updates a snippet of code. If successful, this updates the AssemblyInfo
         /// with the new operations found in the Snippet and returns a new Snippet
         /// populated with the results of the compilation.

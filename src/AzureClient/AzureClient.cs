@@ -195,7 +195,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
 
-            var entryPoint = EntryPointGenerator.Generate(operationName);
+            var entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetName);
             var job = await entryPoint.SubmitAsync(machine, inputParameters);
 
             channel.Stdout($"Job {job.Id} submitted successfully.");

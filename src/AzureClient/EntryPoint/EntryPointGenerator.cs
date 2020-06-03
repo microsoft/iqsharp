@@ -23,8 +23,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ISnippets Snippets { get; }
         private IReferences References { get; }
         private ILogger<EntryPointGenerator> Logger { get; }
-        private Lazy<CompilerMetadata> CompilerMetadata { get; set; }
-        private AssemblyInfo AssemblyInfo { get; set; } = new AssemblyInfo(null);
+        private AssemblyInfo WorkspaceAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        private AssemblyInfo SnippetsAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        private AssemblyInfo EntryPointAssemblyInfo { get; set; } = new AssemblyInfo(null);
 
         public EntryPointGenerator(
             ICompilerService compiler,
@@ -41,55 +42,71 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Snippets = snippets;
             References = references;
             Logger = logger;
-            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-
-            Workspace.Reloaded += OnWorkspaceReloaded;
-            References.PackageLoaded += OnGlobalReferencesPackageLoaded;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
             eventService?.TriggerServiceInitialized<IEntryPointGenerator>(this);
         }
-        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e) =>
-            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-
-        private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e) =>
-            CompilerMetadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-
-        private CompilerMetadata LoadCompilerMetadata() =>
-            Workspace.HasErrors
-                    ? References?.CompilerMetadata.WithAssemblies(Snippets.AssemblyInfo)
-                    : References?.CompilerMetadata.WithAssemblies(Snippets.AssemblyInfo, Workspace.AssemblyInfo);
-
+        
         /// <summary>
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
         public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
         {
-            if (name.Name == Path.GetFileNameWithoutExtension(AssemblyInfo?.Location))
+            if (name.Name == Path.GetFileNameWithoutExtension(EntryPointAssemblyInfo?.Location))
             {
-                return AssemblyInfo.Assembly;
+                return EntryPointAssemblyInfo.Assembly;
             }
-            if (name.Name == Path.GetFileNameWithoutExtension(Snippets?.AssemblyInfo?.Location))
+            if (name.Name == Path.GetFileNameWithoutExtension(SnippetsAssemblyInfo?.Location))
             {
-                return Snippets.AssemblyInfo.Assembly;
+                return SnippetsAssemblyInfo.Assembly;
             }
-            else if (name.Name == Path.GetFileNameWithoutExtension(Workspace?.AssemblyInfo?.Location))
+            else if (name.Name == Path.GetFileNameWithoutExtension(WorkspaceAssemblyInfo?.Location))
             {
-                return Workspace.AssemblyInfo.Assembly;
+                return WorkspaceAssemblyInfo.Assembly;
             }
 
             return null;
         }
 
-        public IEntryPoint Generate(string operationName)
+        public IEntryPoint Generate(string operationName, string executionTarget)
         {
-            var operationInfo = OperationResolver.Resolve(operationName);
             var logger = new QSharpLogger(Logger);
-            AssemblyInfo = Compiler.BuildEntryPoint(operationInfo, CompilerMetadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"));
-            var entryPointOperationInfo = AssemblyInfo.Operations.Single();
+            var compilerMetadata = References.CompilerMetadata;
 
+            // Clear references to previously-built assemblies
+            WorkspaceAssemblyInfo = null;
+            SnippetsAssemblyInfo = null;
+            EntryPointAssemblyInfo = null;
+
+            // Compile the workspace against the provided execution target
+            var workspaceFiles = Workspace.SourceFiles.ToArray();
+            if (workspaceFiles.Any())
+            {
+                Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
+                WorkspaceAssemblyInfo = Compiler.BuildFiles(
+                    workspaceFiles, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__workspace__.dll"), executionTarget);
+                compilerMetadata = compilerMetadata.WithAssemblies(WorkspaceAssemblyInfo);
+            }
+
+            // Compile the snippets against the provided execution target
+            var snippets = Snippets.Items.ToArray();
+            if (snippets.Any())
+            {
+                Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
+                SnippetsAssemblyInfo = Compiler.BuildSnippets(
+                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"), executionTarget);
+                compilerMetadata = compilerMetadata.WithAssemblies(SnippetsAssemblyInfo);
+            }
+
+            // Build the entry point assembly
+            var operationInfo = OperationResolver.Resolve(operationName);
+            EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
+                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget);
+            var entryPointOperationInfo = EntryPointAssemblyInfo.Operations.Single();
+
+            // Construct the EntryPointInfo<,> object
             var parameterTypes = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).ToArray();
             var typeCount = parameterTypes.Length;
             Type entryPointInputType =

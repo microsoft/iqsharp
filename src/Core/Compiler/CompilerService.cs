@@ -16,6 +16,7 @@ using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.DataTypes;
+using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
@@ -70,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
+        public AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -87,7 +88,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget: executionTarget);
         }
 
         /// <summary>
@@ -95,28 +96,35 @@ namespace Microsoft.Quantum.IQSharp
         /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
         /// with the same name as the snippet id.
         /// </summary>
-        public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
+        public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
             string WrapInNamespace(Snippet s) =>
                 $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
+            // Ignore any @EntryPoint() attributes found in snippets.
+            logger.ErrorCodesToIgnore.Append(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false);
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
+
+            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+
+            return assembly;
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
+        public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget: executionTarget);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable)
+        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string executionTarget)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
@@ -131,7 +139,10 @@ namespace Microsoft.Quantum.IQSharp
                 foreach (var file in sources.Keys)
                 {
                     var sourceFile = GetFileId(file);
-                    var code = SimulationCode.generate(sourceFile, CodegenContext.Create(qsCompilation.Namespaces));
+                    var codegenContext = string.IsNullOrEmpty(executionTarget)
+                        ? CodegenContext.Create(qsCompilation.Namespaces)
+                        : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
+                    var code = SimulationCode.generate(sourceFile, codegenContext);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
                     logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");
