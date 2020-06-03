@@ -62,13 +62,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
 
-            var remainingParameters = new Dictionary<string, string>();
+            var decodedParameters = new Dictionary<string, string>();
             foreach (var key in inputParameters.Keys)
             {
-                remainingParameters[key] = inputParameters.DecodeParameter<string>(key);
+                decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
             }
 
-            return await AzureClient.ExecuteJobAsync(channel, operationName, remainingParameters);
+            return await AzureClient.ExecuteJobAsync(channel, operationName, decodedParameters);
         }
     }
 }
