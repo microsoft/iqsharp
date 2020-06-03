@@ -77,6 +77,21 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string Op6b_Op6a =
+@"
+    /// # Summary
+    ///     This to show that the order of snippet operations is preserved:
+    operation Op6b() : Unit
+    {
+        HelloQ();
+    }
+
+    operation Op6a() : Unit
+    {
+        Op6b();
+    }
+";
+
         public static string DependsOnWorkspace =
 @"
     /// # Summary

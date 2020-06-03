@@ -35,7 +35,7 @@ namespace Tests.IQSharp
             Console.WriteLine(JsonConvert.SerializeObject(response));
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            foreach (var op in ops.OrderBy(o => o).Zip(response.Result.OrderBy(o => o), (expected, actual) => new { expected, actual })) { Assert.AreEqual(op.expected, op.actual); }
+            foreach (var op in ops.Zip(response.Result, (expected, actual) => new { expected, actual })) { Assert.AreEqual(op.expected, op.actual); }
 
             return response.Result;
         }
@@ -152,6 +152,9 @@ namespace Tests.IQSharp
             // Compile snippet with entry point attributes and multiple operations:
             await AssertCompile(controller, SNIPPETS.Op3_Op4_Op5_EntryPoints, "Op3", "Op4", "Op5");
 
+            // Compile snippet with operations out of alphabetical order to ensure order is preserved:
+            await AssertCompile(controller, SNIPPETS.Op6b_Op6a, "Op6b", "Op6a");
+
             // running Op2:
             await AssertSimulate(controller, "Op2", "Hello from quantum world!");
         }
@@ -175,7 +178,7 @@ namespace Tests.IQSharp
         {
             var compiler = new CompilerService();
 
-            var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).OrderBy(o => o).ToArray();
+            var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).ToArray();
 
             Assert.AreEqual(2, elements.Length);
             Assert.AreEqual("SNIPPET.Op2", elements[1]);
