@@ -80,7 +80,9 @@ namespace Tests.IQSharp
         public static string Op6b_Op6a =
 @"
     /// # Summary
-    ///     This to show that the order of snippet operations is preserved:
+    ///     This to show that the order of snippet operations returned
+    ///     from compilation is the same as the order in which they
+    ///     are defined in the code:
     operation Op6b() : Unit
     {
         HelloQ();
@@ -88,7 +90,7 @@ namespace Tests.IQSharp
 
     operation Op6a() : Unit
     {
-        Op6b();
+        HelloQ();
     }
 ";
 
