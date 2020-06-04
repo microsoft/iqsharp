@@ -60,7 +60,8 @@ def test_simple_compile():
 
 def test_multi_compile():
     """
-    Verifies that compile works
+    Verifies that compile works and that operations
+    are returned in the correct order
     """
     ops = qsharp.compile( """
     operation HelloQ() : Result
@@ -75,8 +76,8 @@ def test_multi_compile():
         return HelloQ();
     }
 """)
-    assert "Hello2" == ops[0]._name
-    assert "HelloQ" == ops[1]._name
+    assert "HelloQ" == ops[0]._name
+    assert "Hello2" == ops[1]._name
 
     r = ops[1].simulate()
     assert r == qsharp.Result.One
