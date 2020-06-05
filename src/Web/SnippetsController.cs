@@ -72,7 +72,6 @@ namespace Microsoft.Quantum.IQSharp
                     result.Elements?
                         .Where(e => e.IsQsCallable)
                         .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
-                        .OrderBy(o => o)
                         .ToArray();
 
                 return opsNames;

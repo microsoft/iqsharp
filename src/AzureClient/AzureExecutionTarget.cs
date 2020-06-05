@@ -21,6 +21,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? new AzureExecutionTarget() { TargetName = targetName }
             : null;
 
+        /// <summary>
+        ///     Gets the Azure Quantum provider corresponding to the given execution target.
+        /// </summary>
+        /// <param name="targetName">The Azure Quantum execution target name.</param>
+        /// <returns>The <see cref="AzureProvider"/> enum value representing the provider.</returns>
+        /// <remarks>
+        ///     Valid target names are structured as "provider.target".
+        ///     For example, "ionq.simulator" or "honeywell.qpu".
+        /// </remarks>
         private static AzureProvider? GetProvider(string targetName)
         {
             var parts = targetName.Split('.', 2);
