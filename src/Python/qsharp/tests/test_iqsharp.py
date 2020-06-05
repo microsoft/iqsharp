@@ -2,6 +2,9 @@ import qsharp
 
 print ( qsharp.component_versions() )
 
+def test_fail_intentionally():
+    assert False
+
 def test_simulate():
     """
     Checks that a simple simulate works correctly
