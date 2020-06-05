@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
@@ -18,7 +17,6 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Rest.Azure;
 using Newtonsoft.Json;
@@ -216,10 +214,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }
 
-            IQuantumMachineJob? job = null;
             try
             {
-                job = await entryPoint.SubmitAsync(machine, inputParameters);
+                var job = await entryPoint.SubmitAsync(machine, inputParameters);
                 channel.Stdout($"Job {job.Id} submitted successfully.");
                 MostRecentJobId = job.Id;
             }
@@ -238,14 +235,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (!execute)
             {
-                // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
-                return job.ToJupyterTable().ToExecutionResult();
+                return await GetJobStatusAsync(channel, MostRecentJobId);
             }
 
             var timeoutInSeconds = 30;
             channel.Stdout($"Waiting up to {timeoutInSeconds} seconds for Azure Quantum job to complete...");
 
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)))
             {
                 CloudJob? cloudJob = null;
                 do
@@ -255,13 +251,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     var pollingIntervalInSeconds = 5;
                     await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
                     if (cts.IsCancellationRequested) break;
-                    cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
-                    channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
+                    cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
+                    channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
                 }
-                while (cloudJob != null && !cloudJob.Succeeded && !cloudJob.Failed);
+                while (cloudJob == null || cloudJob.InProgress);
             }
 
-            return await GetJobResultAsync(channel, job.Id);
+            return await GetJobResultAsync(channel, MostRecentJobId);
         }
 
         /// <inheritdoc/>
@@ -348,7 +344,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = ActiveWorkspace.GetJob(jobId);
+            var job = await ActiveWorkspace.GetJobAsync(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -396,7 +392,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = ActiveWorkspace.GetJob(jobId);
+            var job = await ActiveWorkspace.GetJobAsync(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -416,7 +412,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = ActiveWorkspace.ListJobs();
+            var jobs = await ActiveWorkspace.ListJobsAsync();
             if (jobs == null || jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
