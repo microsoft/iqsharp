@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
@@ -241,17 +242,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return job.ToJupyterTable().ToExecutionResult();
             }
 
-            channel.Stdout($"Waiting for Azure Quantum job to complete...");
-            
-            CloudJob? cloudJob = null;
-            do
+            var timeoutInSeconds = 30;
+            channel.Stdout($"Waiting up to {timeoutInSeconds} seconds for Azure Quantum job to complete...");
+
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
             {
-                // TODO: Allow Jupyter kernel interrupt to break out of this loop
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
-                channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
+                CloudJob? cloudJob = null;
+                do
+                {
+                    // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
+                    //       handle Jupyter kernel interrupt here and break out of this loop 
+                    var pollingIntervalInSeconds = 5;
+                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds), cts.Token);
+                    if (cts.IsCancellationRequested) break;
+                    cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
+                    channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
+                }
+                while (cloudJob != null && !cloudJob.Succeeded && !cloudJob.Failed);
             }
-            while (cloudJob != null && !cloudJob.Succeeded && !cloudJob.Failed);
 
             return await GetJobResultAsync(channel, job.Id);
         }
