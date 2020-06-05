@@ -25,7 +25,22 @@ function Test-One {
     }
 }
 
+function Test-Python {
+    Param($directory)
+
+    Write-Host "##[info]Testing Python inside $directory"
+    python --version
+    pytest --log-level=DEBUG
+
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to test Python inside $directory"
+        $script:all_ok = $False
+    }
+}
+
 Test-One '../iqsharp.sln'
+
+Test-Python '../src/Python/qsharp/tests'
 
 if (-not $all_ok) 
 {
