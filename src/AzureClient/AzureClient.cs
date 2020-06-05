@@ -253,7 +253,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
                     //       handle Jupyter kernel interrupt here and break out of this loop 
                     var pollingIntervalInSeconds = 5;
-                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds), cts.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
                     if (cts.IsCancellationRequested) break;
                     cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
@@ -403,8 +403,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            // TODO: Add encoder for CloudJob which calls ToJupyterTable() for display.
-            return job.ToExecutionResult();
+            // TODO: Add encoder for CloudJob rather than calling ToJupyterTable() here directly.
+            return job.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
