@@ -241,7 +241,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return job.ToJupyterTable().ToExecutionResult();
             }
 
-            Logger?.LogDebug($"Waiting for Azure Quantum job {job.Id} to complete...");
+            channel.Stdout($"Waiting for Azure Quantum job to complete...");
+            
+            CloudJob? cloudJob = null;
+            do
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
+                channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
+            }
+            while (cloudJob != null && !cloudJob.Succeeded && !cloudJob.Failed);
 
             // TODO: Actually wait for job completion before calling GetJobResultAsync
             return await GetJobResultAsync(channel, job.Id);
@@ -387,7 +396,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // TODO: Add encoder for CloudJob which calls ToJupyterTable() for display.
-            return job.Details.ToExecutionResult();
+            return job.ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -407,7 +416,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // TODO: Add encoder for IEnumerable<CloudJob> rather than calling ToJupyterTable() here directly.
-            return jobs.Select(job => job.Details).ToJupyterTable().ToExecutionResult();
+            return jobs.ToJupyterTable().ToExecutionResult();
         }
     }
 }
