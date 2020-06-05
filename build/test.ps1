@@ -26,24 +26,33 @@ function Test-One {
 }
 
 function Test-Python {
-    Param([string] $directory)
+    Param([string] $packageFolder, [string] $testFolder)
 
-    Write-Host "##[info]Testing Python inside $directory"
-    
-    Push-Location (Join-Path $PSScriptRoot $directory)
+    Write-Host "##[info]Installing IQ# kernel"
+    Push-Location (Join-Path $PSScriptRoot '../src/Tool')
+        dotnet run -- install
+    Pop-Location
+
+    Write-Host "##[info]Installing Python package from $packageFolder"
+    Push-Location (Join-Path $PSScriptRoot $packageFolder)
+        pip install .
+    Pop-Location
+
+    Write-Host "##[info]Testing Python inside $testFolder"    
+    Push-Location (Join-Path $PSScriptRoot $testFolder)
         python --version
         pytest --log-level=DEBUG
     Pop-Location
 
     if ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to test Python inside $directory"
+        Write-Host "##vso[task.logissue type=error;]Failed to test Python inside $testFolder"
         $script:all_ok = $False
     }
 }
 
 Test-One '../iqsharp.sln'
 
-Test-Python '../src/Python/qsharp/tests'
+Test-Python '../src/Python' '../src/Python/qsharp/tests'
 
 if (-not $all_ok) 
 {
