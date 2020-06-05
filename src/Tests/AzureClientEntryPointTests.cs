@@ -148,9 +148,7 @@ namespace Tests.IQSharp
             => ExecuteAsync(info, input, submissionContext, executionContext, null);
 
         public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachineExecutionContext executionContext, IQuantumMachine.ConfigureJob configureJobCallback)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
             => SubmitAsync(info, input, null);
@@ -159,14 +157,10 @@ namespace Tests.IQSharp
             => SubmitAsync(info, input, null, null);
 
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachine.ConfigureJob configureJobCallback)
-        {
-            return Task.FromResult(new MockQuantumMachineJob() as IQuantumMachineJob);
-        }
+            => Task.FromResult(new MockQuantumMachineJob() as IQuantumMachineJob);
 
         public (bool IsValid, string Message) Validate<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
     public class MockQuantumMachineJob : IQuantumMachineJob
@@ -183,14 +177,8 @@ namespace Tests.IQSharp
 
         public Uri Uri => throw new NotImplementedException();
 
-        public Task CancelAsync(CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
+        public Task CancelAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        public Task RefreshAsync(CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
+        public Task RefreshAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
     }
 }
