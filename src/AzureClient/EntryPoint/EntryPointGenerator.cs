@@ -140,8 +140,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Type entryPointOutputType = entryPointOperationInfo.ReturnType;
 
             Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(new Type[] { entryPointInputType, entryPointOutputType });
-            var entryPointInfo = entryPointInfoType.GetConstructor(
-                new Type[] { typeof(Type) }).Invoke(new object[] { entryPointOperationInfo.RoslynType });
+            var entryPointInfo = entryPointInfoType.GetConstructor(new Type[] { typeof(Type) })
+                .Invoke(new object[] { entryPointOperationInfo.RoslynType });
 
             return new EntryPoint(entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo);
         }

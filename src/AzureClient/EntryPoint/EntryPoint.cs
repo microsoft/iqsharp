@@ -70,6 +70,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 parameterValues.Count == 1 ? parameterValues.Single() :
                 InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray());
 
+            // Find and invoke the method on IQuantumMachine that is declared as:
+            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
             var submitMethod = typeof(IQuantumMachine)
                 .GetMethods()
                 .Single(method =>
