@@ -28,14 +28,14 @@ function Test-One {
 function Test-Python {
     Param([string] $packageFolder, [string] $testFolder)
 
-    Write-Host "##[info]Installing IQ# kernel"
-    Push-Location (Join-Path $PSScriptRoot '../src/Tool')
-        dotnet run -- install
-    Pop-Location
-
     Write-Host "##[info]Installing Python package from $packageFolder"
     Push-Location (Join-Path $PSScriptRoot $packageFolder)
         pip install .
+    Pop-Location
+
+    Write-Host "##[info]Installing IQ# kernel"
+    Push-Location (Join-Path $PSScriptRoot '../src/Tool')
+        dotnet run -- install
     Pop-Location
 
     Write-Host "##[info]Testing Python inside $testFolder"    
