@@ -246,13 +246,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             CloudJob? cloudJob = null;
             do
             {
+                // TODO: Allow Jupyter kernel interrupt to break out of this loop
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 cloudJob = (await GetJobStatusAsync(channel, job.Id)).Output as CloudJob;
                 channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob.Status}");
             }
             while (cloudJob != null && !cloudJob.Succeeded && !cloudJob.Failed);
 
-            // TODO: Actually wait for job completion before calling GetJobResultAsync
             return await GetJobResultAsync(channel, job.Id);
         }
 
