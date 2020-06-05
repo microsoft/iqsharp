@@ -70,7 +70,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 parameterValues.Count == 1 ? parameterValues.Single() :
                 InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray());
 
-            var submitMethod = typeof(IQuantumMachine).GetMethod("SubmitAsync").MakeGenericMethod(new Type[] { InputType, OutputType });
+            var submitMethod = typeof(IQuantumMachine)
+                .GetMethods()
+                .Single(method =>
+                    method.Name == "SubmitAsync"
+                    && method.IsGenericMethodDefinition
+                    && method.GetParameters().Length == 2
+                    && method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == EntryPointInfo.GetType().GetGenericTypeDefinition()
+                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter)
+                .MakeGenericMethod(new Type[] { InputType, OutputType });
             var submitParameters = new object[] { EntryPointInfo, entryPointInput };
             return submitMethod.Invoke(machine, submitParameters) as Task<IQuantumMachineJob>;
         }
