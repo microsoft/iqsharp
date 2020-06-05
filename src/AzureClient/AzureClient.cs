@@ -142,7 +142,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (Exception e)
             {
-                channel.Stderr(e.ToString());
+                Logger?.LogError(e, $"Failed to download providers list from Azure Quantum workspace: {e.Message}");
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
@@ -251,7 +251,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     var pollingIntervalInSeconds = 5;
                     await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
                     if (cts.IsCancellationRequested) break;
-                    cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
+                    cloudJob = await GetCloudJob(MostRecentJobId);
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
                 }
                 while (cloudJob == null || cloudJob.InProgress);
@@ -344,7 +344,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = await ActiveWorkspace.GetJobAsync(jobId);
+            var job = await GetCloudJob(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -392,7 +392,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = await ActiveWorkspace.GetJobAsync(jobId);
+            var job = await GetCloudJob(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -412,7 +412,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync();
+            var jobs = await GetCloudJobs();
             if (jobs == null || jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
@@ -421,6 +421,34 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // TODO: Add encoder for IEnumerable<CloudJob> rather than calling ToJupyterTable() here directly.
             return jobs.ToJupyterTable().ToExecutionResult();
+        }
+
+        private async Task<CloudJob?> GetCloudJob(string jobId)
+        {
+            try
+            {
+                return await ActiveWorkspace.GetJobAsync(jobId);
+            }
+            catch (Exception e)
+            {
+                Logger?.LogError(e, $"Failed to retrieve the specified Azure Quantum job: {e.Message}");
+            }
+
+            return null;
+        }
+
+        private async Task<IEnumerable<CloudJob>?> GetCloudJobs()
+        {
+            try
+            {
+                return await ActiveWorkspace.ListJobsAsync();
+            }
+            catch (Exception e)
+            {
+                Logger?.LogError(e, $"Failed to retrieve the list of jobs from the Azure Quantum workspace: {e.Message}");
+            }
+
+            return null;
         }
     }
 }
