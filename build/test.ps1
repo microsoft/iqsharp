@@ -26,11 +26,14 @@ function Test-One {
 }
 
 function Test-Python {
-    Param($directory)
+    Param([string] $directory)
 
     Write-Host "##[info]Testing Python inside $directory"
-    python --version
-    pytest --log-level=DEBUG
+    
+    Push-Location (Join-Path $PSScriptRoot $directory)
+        python --version
+        pytest --log-level=DEBUG
+    Pop-Location
 
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.logissue type=error;]Failed to test Python inside $directory"
