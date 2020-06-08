@@ -60,10 +60,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 baseEngine.RegisterDisplayEncoder(new CloudJobToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new CloudJobToTextEncoder());
-                baseEngine.RegisterJsonEncoder(new CloudJobJsonConverter(), new CloudJobListJsonConverter());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
-                baseEngine.RegisterJsonEncoder(new TargetStatusJsonConverter(), new TargetStatusListJsonConverter());
                 baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
             }
