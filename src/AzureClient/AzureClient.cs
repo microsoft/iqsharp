@@ -19,8 +19,6 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Rest.Azure;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -62,12 +60,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 baseEngine.RegisterDisplayEncoder(new CloudJobToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new CloudJobToTextEncoder());
-                baseEngine.RegisterDisplayEncoder(new CloudJobToJsonEncoder());
-
+                baseEngine.RegisterJsonEncoder(new CloudJobJsonConverter(), new CloudJobListJsonConverter());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
-                baseEngine.RegisterDisplayEncoder(new TargetStatusToJsonEncoder());
-
+                baseEngine.RegisterJsonEncoder(new TargetStatusJsonConverter(), new TargetStatusListJsonConverter());
                 baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
             }
@@ -370,15 +366,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
 
-            using (var stream = new MemoryStream())
-            {
-                // TODO: Use JobStorageHelper.DownloadJobOutputAsync() after https://github.com/microsoft/qsharp-runtime/issues/239 is fixed.
-                // await new JobStorageHelper(ConnectionString).DownloadJobOutputAsync(jobId, stream);
-                await new JobStorageHelper(ConnectionString).StorageHelper.DownloadBlobAsync(
-                    $"quantum-job-{jobId.ToLowerInvariant()}", "outputData", stream);
+            using var stream = new MemoryStream();
 
-                return stream.ToHistogram().ToExecutionResult();
-            }
+            // TODO: Use JobStorageHelper.DownloadJobOutputAsync() after https://github.com/microsoft/qsharp-runtime/issues/239 is fixed.
+            // await new JobStorageHelper(ConnectionString).DownloadJobOutputAsync(jobId, stream);
+            await new JobStorageHelper(ConnectionString).StorageHelper.DownloadBlobAsync(
+                $"quantum-job-{jobId.ToLowerInvariant()}", "outputData", stream);
+
+            return stream.ToHistogram().ToExecutionResult();
         }
 
         /// <inheritdoc/>

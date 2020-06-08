@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -70,20 +71,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
     }
 
-    public class TargetStatusToJsonEncoder : IResultEncoder
+    public class TargetStatusJsonConverter : JsonConverter<TargetStatus>
     {
-        public string MimeType => MimeTypes.Json;
+        public override TargetStatus ReadJson(JsonReader reader, Type objectType, TargetStatus existingValue, bool hasExistingValue, JsonSerializer serializer)
+            => throw new NotImplementedException();
 
-        public EncodedData? Encode(object displayable)
-        {
-            if (displayable is TargetStatus target) displayable = new List<TargetStatus>() { target };
+        public override void WriteJson(JsonWriter writer, TargetStatus value, JsonSerializer serializer) =>
+            JToken.FromObject(value.ToDictionary()).WriteTo(writer);
+    }
 
-            if (displayable is IEnumerable<TargetStatus> targets)
-            {
-                var serialized = JsonConvert.SerializeObject(targets.Select(target => target.ToDictionary()));
-                return serialized.ToEncodedData();
-            }
-            else return null;
-        }
+    public class TargetStatusListJsonConverter : JsonConverter<IEnumerable<TargetStatus>>
+    {
+        public override IEnumerable<TargetStatus> ReadJson(JsonReader reader, Type objectType, IEnumerable<TargetStatus> existingValue, bool hasExistingValue, JsonSerializer serializer)
+            => throw new NotImplementedException();
+
+        public override void WriteJson(JsonWriter writer, IEnumerable<TargetStatus> value, JsonSerializer serializer) =>
+            JToken.FromObject(value.Select(job => job.ToDictionary())).WriteTo(writer);
     }
 }

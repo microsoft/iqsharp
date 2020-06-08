@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.Azure.Quantum;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -74,20 +75,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
     }
 
-    public class CloudJobToJsonEncoder : IResultEncoder
+    public class CloudJobJsonConverter : JsonConverter<CloudJob>
     {
-        public string MimeType => MimeTypes.Json;
+        public override CloudJob ReadJson(JsonReader reader, Type objectType, CloudJob existingValue, bool hasExistingValue, JsonSerializer serializer)
+            => throw new NotImplementedException();
 
-        public EncodedData? Encode(object displayable)
-        {
-            if (displayable is CloudJob job) displayable = new List<CloudJob>() { job };
+        public override void WriteJson(JsonWriter writer, CloudJob value, JsonSerializer serializer) =>
+            JToken.FromObject(value.ToDictionary()).WriteTo(writer);
+    }
 
-            if (displayable is IEnumerable<CloudJob> jobs)
-            {
-                var serialized = JsonConvert.SerializeObject(jobs.Select(job => job.ToDictionary()));
-                return serialized.ToEncodedData();
-            }
-            else return null;
-        }
+    public class CloudJobListJsonConverter : JsonConverter<IEnumerable<CloudJob>>
+    {
+        public override IEnumerable<CloudJob> ReadJson(JsonReader reader, Type objectType, IEnumerable<CloudJob> existingValue, bool hasExistingValue, JsonSerializer serializer)
+            => throw new NotImplementedException();
+
+        public override void WriteJson(JsonWriter writer, IEnumerable<CloudJob> value, JsonSerializer serializer) =>
+            JToken.FromObject(value.Select(job => job.ToDictionary())).WriteTo(writer);
     }
 }
