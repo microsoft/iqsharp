@@ -13,6 +13,31 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    internal static class TargetStatusExtensions
+    {
+        internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
+            new Dictionary<string, object>()
+            {
+                { "targetName", target.Id },
+                { "currentAvailability", target.CurrentAvailability },
+                { "averageQueueTime", target.AverageQueueTime },
+                { "statusPage", target.StatusPage },
+            };
+
+        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
+            new Table<TargetStatus>
+            {
+                Columns = new List<(string, Func<TargetStatus, string>)>
+                    {
+                        ("Target Name", target => target.Id),
+                        ("Current Availability", target => target.CurrentAvailability),
+                        ("Average Queue Time", target => target.AverageQueueTime.ToString()),
+                        ("Status Page", target => target.StatusPage),
+                    },
+                Rows = targets.ToList()
+            };
+    }
+
     public class TargetStatusToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();

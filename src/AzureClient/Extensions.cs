@@ -67,51 +67,5 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </param>
         public static async Task<ExecutionResult> ToExecutionResult(this Task<AzureClientError> task) =>
             (await task).ToExecutionResult();
-
-        internal static Dictionary<string, string> ToDictionary(this CloudJob cloudJob) =>
-            new Dictionary<string, string>()
-            {
-                { "id", cloudJob.Id },
-                { "name", cloudJob.Details.Name },
-                { "status", cloudJob.Status },
-                { "provider", cloudJob.Details.ProviderId },
-                { "target", cloudJob.Details.Target },
-            };
-
-        internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
-            new Table<CloudJob>
-            {
-                Columns = new List<(string, Func<CloudJob, string>)>
-                    {
-                        ("Job ID", cloudJob => cloudJob.Id),
-                        ("Job Name", cloudJob => cloudJob.Details.Name),
-                        ("Job Status", cloudJob => cloudJob.Status),
-                        ("Provider", cloudJob => cloudJob.Details.ProviderId),
-                        ("Target", cloudJob => cloudJob.Details.Target),
-                    },
-                Rows = jobsList.ToList()
-            };
-
-        internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
-            new Dictionary<string, object>()
-            {
-                { "targetName", target.Id },
-                { "currentAvailability", target.CurrentAvailability },
-                { "averageQueueTime", target.AverageQueueTime },
-                { "statusPage", target.StatusPage },
-            };
-
-        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
-            new Table<TargetStatus>
-            {
-                Columns = new List<(string, Func<TargetStatus, string>)>
-                    {
-                        ("Target Name", target => target.Id),
-                        ("Current Availability", target => target.CurrentAvailability),
-                        ("Average Queue Time", target => target.AverageQueueTime.ToString()),
-                        ("Status Page", target => target.StatusPage),
-                    },
-                Rows = targets.ToList()
-            };
     }
 }

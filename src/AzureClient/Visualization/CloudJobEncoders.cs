@@ -13,6 +13,33 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    internal static class CloudJobExtensions
+    {
+        internal static Dictionary<string, string> ToDictionary(this CloudJob cloudJob) =>
+            new Dictionary<string, string>()
+            {
+                { "id", cloudJob.Id },
+                { "name", cloudJob.Details.Name },
+                { "status", cloudJob.Status },
+                { "provider", cloudJob.Details.ProviderId },
+                { "target", cloudJob.Details.Target },
+            };
+
+        internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
+            new Table<CloudJob>
+            {
+                Columns = new List<(string, Func<CloudJob, string>)>
+                    {
+                        ("Job ID", cloudJob => cloudJob.Id),
+                        ("Job Name", cloudJob => cloudJob.Details.Name),
+                        ("Job Status", cloudJob => cloudJob.Status),
+                        ("Provider", cloudJob => cloudJob.Details.ProviderId),
+                        ("Target", cloudJob => cloudJob.Details.Target),
+                    },
+                Rows = jobsList.ToList()
+            };
+    }
+
     public class CloudJobToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();
