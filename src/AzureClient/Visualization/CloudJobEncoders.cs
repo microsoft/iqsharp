@@ -15,8 +15,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal static class CloudJobExtensions
     {
-        internal static Dictionary<string, string> ToDictionary(this CloudJob cloudJob) =>
-            new Dictionary<string, string>()
+        internal static Dictionary<string, object> ToDictionary(this CloudJob cloudJob) =>
+            new Dictionary<string, object>()
             {
                 { "id", cloudJob.Id },
                 { "name", cloudJob.Details.Name },
