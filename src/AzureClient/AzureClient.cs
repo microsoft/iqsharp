@@ -47,6 +47,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         public AzureClient(
+            IExecutionEngine engine,
             IReferences references,
             IEntryPointGenerator entryPointGenerator,
             ILogger<AzureClient> logger,
@@ -56,6 +57,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointGenerator = entryPointGenerator;
             Logger = logger;
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
+
+            if (engine is BaseEngine baseEngine)
+            {
+                baseEngine.RegisterDisplayEncoder(new CloudJobToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new CloudJobToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new CloudJobToJsonEncoder());
+
+                baseEngine.RegisterDisplayEncoder(new TargetStatusToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new TargetStatusToJsonEncoder());
+            }
         }
 
         /// <inheritdoc/>
@@ -148,8 +160,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
 
-            // TODO: Add encoder for IEnumerable<TargetStatus> rather than calling ToJupyterTable() here directly.
-            return ValidExecutionTargets.ToJupyterTable().ToExecutionResult();
+            return ValidExecutionTargets.ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -162,8 +173,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
 
-            // TODO: Add encoder for IEnumerable<TargetStatus> rather than calling ToJupyterTable() here directly.
-            return ValidExecutionTargets.ToJupyterTable().ToExecutionResult();
+            return ValidExecutionTargets.ToExecutionResult();
         }
 
         private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters, bool execute)
@@ -399,8 +409,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            // TODO: Add encoder for CloudJob rather than calling ToJupyterTable() here directly.
-            return job.ToJupyterTable().ToExecutionResult();
+            return job.ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -419,8 +428,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            // TODO: Add encoder for IEnumerable<CloudJob> rather than calling ToJupyterTable() here directly.
-            return jobs.ToJupyterTable().ToExecutionResult();
+            return jobs.ToExecutionResult();
         }
 
         private async Task<CloudJob?> GetCloudJob(string jobId)

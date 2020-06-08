@@ -68,44 +68,37 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public static async Task<ExecutionResult> ToExecutionResult(this Task<AzureClientError> task) =>
             (await task).ToExecutionResult();
 
-        internal static Table<CloudJob> ToJupyterTable(this CloudJob cloudJob) =>
-            new List<CloudJob> { cloudJob }.ToJupyterTable();
+        internal static Dictionary<string, string> ToDictionary(this CloudJob cloudJob) =>
+            new Dictionary<string, string>()
+            {
+                { "id", cloudJob.Id },
+                { "name", cloudJob.Details.Name },
+                { "status", cloudJob.Status },
+                { "provider", cloudJob.Details.ProviderId },
+                { "target", cloudJob.Details.Target },
+            };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
             new Table<CloudJob>
             {
                 Columns = new List<(string, Func<CloudJob, string>)>
                     {
-                        ("JobId", cloudJob => cloudJob.Id),
-                        ("JobName", cloudJob => cloudJob.Details.Name),
-                        ("JobStatus", cloudJob => cloudJob.Status),
+                        ("Job ID", cloudJob => cloudJob.Id),
+                        ("Job Name", cloudJob => cloudJob.Details.Name),
+                        ("Job Status", cloudJob => cloudJob.Status),
                         ("Provider", cloudJob => cloudJob.Details.ProviderId),
                         ("Target", cloudJob => cloudJob.Details.Target),
                     },
                 Rows = jobsList.ToList()
             };
 
-        internal static Table<IQuantumMachineJob> ToJupyterTable(this IQuantumMachineJob job) =>
-            new Table<IQuantumMachineJob>
+        internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
+            new Dictionary<string, object>()
             {
-                Columns = new List<(string, Func<IQuantumMachineJob, string>)>
-                    {
-                        ("JobId", job => job.Id),
-                        ("JobStatus", job => job.Status),
-                    },
-                Rows = new List<IQuantumMachineJob>() { job }
-            };
-
-        internal static Table<IQuantumClient> ToJupyterTable(this IQuantumClient quantumClient) =>
-            new Table<IQuantumClient>
-            {
-                Columns = new List<(string, Func<IQuantumClient, string>)>
-                    {
-                        ("SubscriptionId", quantumClient => quantumClient.SubscriptionId),
-                        ("ResourceGroupName", quantumClient => quantumClient.ResourceGroupName),
-                        ("WorkspaceName", quantumClient => quantumClient.WorkspaceName),
-                    },
-                Rows = new List<IQuantumClient>() { quantumClient }
+                { "targetName", target.Id },
+                { "currentAvailability", target.CurrentAvailability },
+                { "averageQueueTime", target.AverageQueueTime },
+                { "statusPage", target.StatusPage },
             };
 
         internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
@@ -113,10 +106,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<TargetStatus, string>)>
                     {
-                        ("TargetId", target => target.Id),
-                        ("CurrentAvailability", target => target.CurrentAvailability),
-                        ("AverageQueueTime", target => target.AverageQueueTime.ToString()),
-                        ("StatusPage", target => target.StatusPage),
+                        ("Target Name", target => target.Id),
+                        ("Current Availability", target => target.CurrentAvailability),
+                        ("Average Queue Time", target => target.AverageQueueTime.ToString()),
+                        ("Status Page", target => target.StatusPage),
                     },
                 Rows = targets.ToList()
             };
