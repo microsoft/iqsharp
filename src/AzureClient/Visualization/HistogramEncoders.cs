@@ -41,10 +41,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new Table<KeyValuePair<string, double>>
             {
                 Columns = new List<(string, Func<KeyValuePair<string, double>, string>)>
-                    {
-                        ("Result", entry => entry.Key),
-                        ("Frequency", entry => entry.Value.ToString()),
-                    },
+                {
+                    ("Result", entry => entry.Key),
+                    ("Frequency", entry => entry.Value.ToString()),
+                },
                 Rows = histogram.ToList()
             };
     }
@@ -55,12 +55,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string MimeType => MimeTypes.Html;
 
-        public EncodedData? Encode(object displayable)
-        {
-            return displayable is Histogram histogram
+        public EncodedData? Encode(object displayable) =>
+            displayable is Histogram histogram
                 ? tableEncoder.Encode(histogram.ToJupyterTable())
                 : null;
-        }
     }
 
     public class HistogramToTextEncoder : IResultEncoder
@@ -69,11 +67,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string MimeType => MimeTypes.PlainText;
 
-        public EncodedData? Encode(object displayable)
-        {
-            return displayable is Histogram histogram
+        public EncodedData? Encode(object displayable) =>
+            displayable is Histogram histogram
                 ? tableEncoder.Encode(histogram.ToJupyterTable())
                 : null;
-        }
     }
 }
