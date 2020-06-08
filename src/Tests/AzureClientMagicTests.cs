@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tests.IQSharp
 {
@@ -140,15 +141,19 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestTargetMagic()
         {
+            var workspace = "Workspace";
+            var services = Startup.CreateServiceProvider(workspace);
+            var references = services.GetService<IReferences>();
+
             // single argument - should set active target
             var azureClient = new MockAzureClient();
-            var targetMagic = new TargetMagic(azureClient);
+            var targetMagic = new TargetMagic(azureClient, references);
             targetMagic.Test(targetName);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.SetActiveTarget);
 
             // no arguments - should print active target
             azureClient = new MockAzureClient();
-            targetMagic = new TargetMagic(azureClient);
+            targetMagic = new TargetMagic(azureClient, references);
             targetMagic.Test(string.Empty);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetActiveTarget);
         }
@@ -177,7 +182,7 @@ namespace Tests.IQSharp
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, IReferences references, string targetName)
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTargetName = targetName;

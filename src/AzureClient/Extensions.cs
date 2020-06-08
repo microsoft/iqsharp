@@ -90,7 +90,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     {
                         ("JobId", job => job.Id),
                         ("JobStatus", job => job.Status),
-                        ("JobUri", job => job.Uri.ToString()),
                     },
                 Rows = new List<IQuantumMachineJob>() { job }
             };
@@ -107,7 +106,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Rows = new List<IQuantumClient>() { quantumClient }
             };
 
-        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<ProviderStatus> providerStatusList) =>
+        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
             new Table<TargetStatus>
             {
                 Columns = new List<(string, Func<TargetStatus, string>)>
@@ -117,7 +116,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ("AverageQueueTime", target => target.AverageQueueTime.ToString()),
                         ("StatusPage", target => target.StatusPage),
                     },
-                Rows = providerStatusList.SelectMany(provider => provider.Targets).ToList()
+                Rows = targets.ToList()
             };
     }
 }

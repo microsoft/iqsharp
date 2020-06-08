@@ -29,19 +29,31 @@ __all__ = [
     'connect',
     'target',
     'submit',
-    'status'
+    'execute',
+    'status',
+    'output',
+    'jobs'
 ]
 
 ## FUNCTIONS ##
 
 def connect(**params) -> Any:
-    return qsharp.client._execute_magic(f"connect", raise_on_stderr=False, **params)
+    return qsharp.client._execute_magic(f"azure.connect", raise_on_stderr=False, **params)
 
 def target(name : str = '', **params) -> Any:
-    return qsharp.client._execute_magic(f"target {name}", raise_on_stderr=False, **params)
+    return qsharp.client._execute_magic(f"azure.target {name}", raise_on_stderr=False, **params)
 
 def submit(op, **params) -> Any:
-    return qsharp.client._execute_callable_magic("submit", op, raise_on_stderr=False, **params)
+    return qsharp.client._execute_callable_magic("azure.submit", op, raise_on_stderr=False, **params)
+
+def execute(op, **params) -> Any:
+    return qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, **params)
 
 def status(jobId : str = '', **params) -> Any:
-    return qsharp.client._execute_magic(f"status {jobId}", raise_on_stderr=False, **params)
+    return qsharp.client._execute_magic(f"azure.status {jobId}", raise_on_stderr=False, **params)
+
+def output(jobId : str = '', **params) -> Any:
+    return qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, **params)
+
+def jobs(**params) -> Any:
+    return qsharp.client._execute_magic(f"azure.jobs", raise_on_stderr=False, **params)
