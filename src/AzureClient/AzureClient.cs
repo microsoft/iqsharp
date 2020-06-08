@@ -67,6 +67,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToJsonEncoder());
+
+                baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
             }
         }
 
@@ -367,19 +370,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
 
-            var stream = new MemoryStream();
-            await new JobStorageHelper(ConnectionString).DownloadJobOutputAsync(jobId, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var output = new StreamReader(stream).ReadToEnd();
-            var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
-            var histogram = new Dictionary<string, double>();
-            foreach (var entry in deserializedOutput["histogram"] as JObject)
+            using (var stream = new MemoryStream())
             {
-                histogram[entry.Key] = entry.Value.ToObject<double>();
-            }
+                // TODO: Use JobStorageHelper.DownloadJobOutputAsync() after https://github.com/microsoft/qsharp-runtime/issues/239 is fixed.
+                // await new JobStorageHelper(ConnectionString).DownloadJobOutputAsync(jobId, stream);
+                await new JobStorageHelper(ConnectionString).StorageHelper.DownloadBlobAsync(
+                    $"quantum-job-{jobId.ToLowerInvariant()}", "outputData", stream);
 
-            // TODO: Add encoder to visualize IEnumerable<KeyValuePair<string, double>>
-            return histogram.ToExecutionResult();
+                return stream.ToHistogram().ToExecutionResult();
+            }
         }
 
         /// <inheritdoc/>

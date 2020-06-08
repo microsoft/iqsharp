@@ -28,12 +28,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new Table<TargetStatus>
             {
                 Columns = new List<(string, Func<TargetStatus, string>)>
-                    {
-                        ("Target Name", target => target.Id),
-                        ("Current Availability", target => target.CurrentAvailability),
-                        ("Average Queue Time", target => target.AverageQueueTime.ToString()),
-                        ("Status Page", target => target.StatusPage),
-                    },
+                {
+                    ("Target Name", target => target.Id),
+                    ("Current Availability", target => target.CurrentAvailability),
+                    ("Average Queue Time", target => target.AverageQueueTime.ToString()),
+                    ("Status Page", target => target.StatusPage),
+                },
                 Rows = targets.ToList()
             };
     }
