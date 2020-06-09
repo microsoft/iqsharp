@@ -55,10 +55,56 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string MimeType => MimeTypes.Html;
 
-        public EncodedData? Encode(object displayable) =>
-            displayable is Histogram histogram
-                ? tableEncoder.Encode(histogram.ToJupyterTable())
-                : null;
+        public EncodedData? Encode(object displayable)
+        {
+            if (displayable is Histogram histogram)
+            {
+                var style = "text-align: left";
+                var columnStyle = $"{style}; width: 25ch";
+                var lastColumnStyle = $"{style}; width: calc(100% - 25ch - 25ch)";
+
+                // Make the HTML table body by formatting everything as individual rows.
+                var formattedData = string.Join("\n",
+                    histogram.Select(entry =>
+                    {
+                        var result = entry.Key;
+                        var frequency = entry.Value;
+
+                        return FormattableString.Invariant($@"
+                            <tr>
+                                <td style=""{columnStyle}"">{result}</td>
+                                <td style=""{columnStyle}"">{frequency}</td>
+                                <td style=""{lastColumnStyle}"">
+                                    <progress
+                                        max=""100""
+                                        value=""{frequency * 100}""
+                                        style=""width: 100%;""
+                                    >
+                                </td>
+                            </tr>
+                        ");
+                    })
+                );
+
+                // Construct and return the table.
+                var outputTable = $@"
+                    <table style=""table-layout: fixed; width: 100%"">
+                        <thead>
+                            <tr>
+                                <th style=""{columnStyle}"">Result</th>
+                                <th style=""{columnStyle}"">Frequency</th>
+                                <th style=""{lastColumnStyle}"">Histogram</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {formattedData}
+                        </tbody>
+                    </table>
+                ";
+                return outputTable.ToEncodedData();
+            }
+            else return null;
+        }
     }
 
     public class HistogramToTextEncoder : IResultEncoder
