@@ -31,9 +31,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ["status"] = cloudJob.Status,
                 ["provider"] = cloudJob.Details.ProviderId,
                 ["target"] = cloudJob.Details.Target,
-                ["creationTime"] = cloudJob.Details.CreationTime.ToDateTime(),
-                ["beginExecutionTime"] = cloudJob.Details.BeginExecutionTime.ToDateTime(),
-                ["endExecutionTime"] = cloudJob.Details.EndExecutionTime.ToDateTime(),
+                ["creationTime"] = cloudJob.Details.CreationTime.ToDateTime()?.ToUniversalTime(),
+                ["beginExecutionTime"] = cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToUniversalTime(),
+                ["endExecutionTime"] = cloudJob.Details.EndExecutionTime.ToDateTime()?.ToUniversalTime(),
             };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
