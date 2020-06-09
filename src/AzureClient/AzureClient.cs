@@ -247,18 +247,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return await GetJobStatusAsync(channel, MostRecentJobId);
             }
 
-            var timeoutInSeconds = 30;
-            channel.Stdout($"Waiting up to {timeoutInSeconds} seconds for Azure Quantum job to complete...");
+            channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
 
-            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
             {
                 CloudJob? cloudJob = null;
                 do
                 {
                     // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
                     //       handle Jupyter kernel interrupt here and break out of this loop 
-                    var pollingIntervalInSeconds = 5;
-                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
+                    await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
                     if (cts.IsCancellationRequested) break;
                     cloudJob = await GetCloudJob(MostRecentJobId);
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
