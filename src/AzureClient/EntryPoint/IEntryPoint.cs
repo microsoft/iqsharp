@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// Submits the entry point for execution to Azure Quantum.
         /// </summary>
         /// <param name="machine">The <see cref="IQuantumMachine"/> object representing the job submission target.</param>
-        /// <param name="context">The <see cref="AzureSubmissionContext"/> object representing the submission context for the job.</param>
+        /// <param name="submissionContext">The <see cref="AzureSubmissionContext"/> object representing the submission context for the job.</param>
         /// <returns>The details of the submitted job.</returns>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext);
     }
