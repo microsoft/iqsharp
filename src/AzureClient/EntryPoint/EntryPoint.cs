@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, Dictionary<string, string> inputParameters)
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, IQuantumMachineSubmissionContext context, Dictionary<string, string> inputParameters)
         {
             var parameterTypes = new List<Type>();
             var parameterValues = new List<object>();
@@ -71,17 +71,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray());
 
             // Find and invoke the method on IQuantumMachine that is declared as:
-            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
+            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context)
             var submitMethod = typeof(IQuantumMachine)
                 .GetMethods()
                 .Single(method =>
                     method.Name == "SubmitAsync"
                     && method.IsGenericMethodDefinition
-                    && method.GetParameters().Length == 2
+                    && method.GetParameters().Length == 3
                     && method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == EntryPointInfo.GetType().GetGenericTypeDefinition()
-                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter)
+                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter
+                    && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext))
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
-            var submitParameters = new object[] { EntryPointInfo, entryPointInput };
+            var submitParameters = new object[] { EntryPointInfo, entryPointInput, context };
             return submitMethod.Invoke(machine, submitParameters) as Task<IQuantumMachineJob>;
         }
     }

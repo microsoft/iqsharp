@@ -16,6 +16,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class ExecuteMagic : AzureClientMagicBase
     {
         private const string ParameterNameOperationName = "operationName";
+        private const string ParameterNameJobName = "jobName";
+        private const string ParameterNameShots = "shots";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteMagic"/> class.
@@ -61,6 +63,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+            var jobName = inputParameters.DecodeParameter<string>(ParameterNameJobName, defaultValue: operationName);
+            var shots = inputParameters.DecodeParameter<int>(ParameterNameShots, defaultValue: 500);
 
             var decodedParameters = new Dictionary<string, string>();
             foreach (var key in inputParameters.Keys)
@@ -68,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
             }
 
-            return await AzureClient.ExecuteJobAsync(channel, operationName, decodedParameters);
+            return await AzureClient.ExecuteJobAsync(channel, operationName, jobName, shots, decodedParameters);
         }
     }
 }

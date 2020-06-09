@@ -173,7 +173,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters, bool execute)
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, string jobName, int shots, Dictionary<string, string> inputParameters, bool execute)
         {
             if (ActiveWorkspace == null)
             {
@@ -223,8 +223,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var job = await entryPoint.SubmitAsync(machine, inputParameters);
-                channel.Stdout($"Job {job.Id} submitted successfully.");
+                var submissionContext = new AzureSubmissionContext() { FriendlyName = jobName, Shots = shots };
+                var job = await entryPoint.SubmitAsync(machine, submissionContext, inputParameters);
+                channel.Stdout($"Job successfully submitted for {shots} shots.");
+                channel.Stdout($"   Job name: {jobName}");
+                channel.Stdout($"   Job ID: {job.Id}");
                 MostRecentJobId = job.Id;
             }
             catch (ArgumentException e)
@@ -268,12 +271,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
-            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, string jobName, int shots, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, jobName, shots, inputParameters, execute: false);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
-            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, string jobName, int shots, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, jobName, shots, inputParameters, execute: true);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
