@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class TargetMagic : AzureClientMagicBase
     {
-        private const string ParameterNameTargetName = "name";
+        private const string ParameterNameTargetId = "id";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TargetMagic"/> class.
@@ -45,8 +45,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Set the current target for job submission:
                             ```
-                            In []: %azure.target TARGET_NAME
-                            Out[]: Active target is now TARGET_NAME
+                            In []: %azure.target TARGET_ID
+                            Out[]: Active target is now TARGET_ID
                             ```
                         ".Dedent(),
                         @"
@@ -65,11 +65,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameTargetName);
-            if (inputParameters.ContainsKey(ParameterNameTargetName))
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameTargetId);
+            if (inputParameters.ContainsKey(ParameterNameTargetId))
             {
-                string targetName = inputParameters.DecodeParameter<string>(ParameterNameTargetName);
-                return await AzureClient.SetActiveTargetAsync(channel, targetName);
+                string targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
+                return await AzureClient.SetActiveTargetAsync(channel, targetId);
             }
 
             return await AzureClient.GetActiveTargetAsync(channel);

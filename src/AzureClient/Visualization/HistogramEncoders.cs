@@ -19,9 +19,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal static class HistogramExtensions
     {
-        internal static Histogram ToHistogram(this MemoryStream stream)
+        internal static Histogram ToHistogram(this Stream stream)
         {
-            stream.Seek(0, SeekOrigin.Begin);
             var output = new StreamReader(stream).ReadToEnd();
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
             var deserializedHistogram = deserializedOutput["Histogram"] as JArray;

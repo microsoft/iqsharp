@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
 using Microsoft.Azure.Quantum.Client.Models;
-using Microsoft.Azure.Quantum.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -194,20 +194,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var machine = QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetName, ConnectionString);
+            var machine = QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetId, ConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                channel.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetName}.");
+                channel.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
 
-            channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
+            channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetId}...");
 
             IEntryPoint? entryPoint = null;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetName);
+                entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetId);
             }
             catch (UnsupportedOperationException e)
             {
@@ -286,18 +286,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (ActiveTarget == null)
             {
-                channel.Stderr("No execution target has been specified. To specify one, run:\n%azure.target <target name>");
+                channel.Stderr("No execution target has been specified. To specify one, run:\n%azure.target <target ID>");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
-            channel.Stdout($"Current execution target: {ActiveTarget.TargetName}");
+            channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
-            return ActiveTarget.TargetName.ToExecutionResult();
+            return ActiveTarget.TargetId.ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
         {
             if (AvailableProviders == null)
             {
@@ -305,19 +305,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            // Validate that this target name is valid in the workspace.
-            if (!AvailableTargets.Any(target => targetName == target.Id))
+            // Validate that this target is valid in the workspace.
+            if (!AvailableTargets.Any(target => targetId == target.Id))
             {
-                channel.Stderr($"Target name {targetName} is not available in the current Azure Quantum workspace.");
+                channel.Stderr($"Target {targetId} is not available in the current Azure Quantum workspace.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
 
-            // Validate that we know which package to load for this target name.
-            var executionTarget = AzureExecutionTarget.Create(targetName);
+            // Validate that we know which package to load for this target.
+            var executionTarget = AzureExecutionTarget.Create(targetId);
             if (executionTarget == null)
             {
-                channel.Stderr($"Target name {targetName} does not support executing Q# jobs.");
+                channel.Stderr($"Target {targetId} does not support executing Q# jobs.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
@@ -328,7 +328,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
 
-            return $"Active target is now {ActiveTarget.TargetName}".ToExecutionResult();
+            return $"Active target is now {ActiveTarget.TargetId}".ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -364,14 +364,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
 
-            using var stream = new MemoryStream();
-
-            // TODO: Use JobStorageHelper.DownloadJobOutputAsync() after https://github.com/microsoft/qsharp-runtime/issues/239 is fixed.
-            // await new JobStorageHelper(ConnectionString).DownloadJobOutputAsync(jobId, stream);
-            await new JobStorageHelper(ConnectionString).StorageHelper.DownloadBlobAsync(
-                $"quantum-job-{jobId.ToLowerInvariant()}", "outputData", stream);
-
-            return stream.ToHistogram().ToExecutionResult();
+            try
+            {
+                var request = WebRequest.Create(job.Details.OutputDataUri);
+                using var responseStream = request.GetResponse().GetResponseStream();
+                return responseStream.ToHistogram().ToExecutionResult();
+            }
+            catch (Exception e)
+            {
+                channel.Stderr($"Failed to retrieve results for job ID {jobId}.");
+                Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
+                return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
+            }
         }
 
         /// <inheritdoc/>

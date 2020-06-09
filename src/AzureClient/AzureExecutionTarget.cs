@@ -11,28 +11,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal class AzureExecutionTarget
     {
-        public string TargetName { get; private set; }
-        public string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetName)}";
+        public string TargetId { get; private set; }
+        public string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
 
-        public static bool IsValid(string targetName) => GetProvider(targetName) != null;
+        public static bool IsValid(string targetId) => GetProvider(targetId) != null;
 
-        public static AzureExecutionTarget? Create(string targetName) =>
-            IsValid(targetName)
-            ? new AzureExecutionTarget() { TargetName = targetName }
+        public static AzureExecutionTarget? Create(string targetId) =>
+            IsValid(targetId)
+            ? new AzureExecutionTarget() { TargetId = targetId }
             : null;
 
         /// <summary>
         ///     Gets the Azure Quantum provider corresponding to the given execution target.
         /// </summary>
-        /// <param name="targetName">The Azure Quantum execution target name.</param>
+        /// <param name="targetId">The Azure Quantum execution target ID.</param>
         /// <returns>The <see cref="AzureProvider"/> enum value representing the provider.</returns>
         /// <remarks>
-        ///     Valid target names are structured as "provider.target".
+        ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "honeywell.qpu".
         /// </remarks>
-        private static AzureProvider? GetProvider(string targetName)
+        private static AzureProvider? GetProvider(string targetId)
         {
-            var parts = targetName.Split('.', 2);
+            var parts = targetId.Split('.', 2);
             if (Enum.TryParse(parts[0], true, out AzureProvider provider))
             {
                 return provider;

@@ -52,6 +52,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         JobNotCompleted,
 
         /// <summary>
+        /// The job output failed to be downloaded from the Azure storage location.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobOutputDownloadFailed)]
+        JobOutputDownloadFailed,
+
+        /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
         [Description(Resources.AzureClientErrorNoOperationName)]
@@ -139,13 +145,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Success if the target is valid, or an error if the target cannot be set.
         /// </returns>
-        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName);
+        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId);
 
         /// <summary>
         /// Gets the currently specified target for job submission.
         /// </summary>
         /// <returns>
-        /// The target name.
+        /// The target ID.
         /// </returns>
         public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel);
 

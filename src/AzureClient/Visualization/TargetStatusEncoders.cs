@@ -19,10 +19,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
             new Dictionary<string, object>()
             {
-                { "targetName", target.Id },
-                { "currentAvailability", target.CurrentAvailability },
-                { "averageQueueTime", target.AverageQueueTime },
-                { "statusPage", target.StatusPage },
+                ["id"] = target.Id,
+                ["currentAvailability"] = target.CurrentAvailability,
+                ["averageQueueTime"] = target.AverageQueueTime,
             };
 
         internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
@@ -30,10 +29,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<TargetStatus, string>)>
                 {
-                    ("Target Name", target => target.Id),
+                    ("Target ID", target => target.Id),
                     ("Current Availability", target => target.CurrentAvailability),
-                    ("Average Queue Time", target => target.AverageQueueTime.ToString()),
-                    ("Status Page", target => target.StatusPage),
+                    ("Average Queue Time (Seconds)", target => target.AverageQueueTime.ToString()),
                 },
                 Rows = targets.ToList()
             };
@@ -45,14 +43,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string MimeType => MimeTypes.Html;
 
-        public EncodedData? Encode(object displayable)
-        {
-            if (displayable is TargetStatus target) displayable = new List<TargetStatus>() { target };
-
-            return displayable is IEnumerable<TargetStatus> targets
+        public EncodedData? Encode(object displayable) =>
+            displayable.AsEnumerableOf<TargetStatus>() is IEnumerable<TargetStatus> targets
                 ? tableEncoder.Encode(targets.ToJupyterTable())
                 : null;
-        }
     }
 
     public class TargetStatusToTextEncoder : IResultEncoder
@@ -61,14 +55,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string MimeType => MimeTypes.PlainText;
 
-        public EncodedData? Encode(object displayable)
-        {
-            if (displayable is TargetStatus target) displayable = new List<TargetStatus>() { target };
-
-            return displayable is IEnumerable<TargetStatus> targets
+        public EncodedData? Encode(object displayable) =>
+            displayable.AsEnumerableOf<TargetStatus>() is IEnumerable<TargetStatus> targets
                 ? tableEncoder.Encode(targets.ToJupyterTable())
                 : null;
-        }
     }
 
     public class TargetStatusJsonConverter : JsonConverter<TargetStatus>
