@@ -10,16 +10,27 @@ using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// Represents the configuration settings for a job submission to Azure Quantum.
+    /// </summary>
     public sealed class AzureSubmissionContext : IQuantumMachineSubmissionContext
     {
         private static int defaultShots = 500;
 
+        /// <inheritdoc/>
         public string FriendlyName { get; set; } = string.Empty;
 
+        /// <inheritdoc/>
         public int Shots { get; set; } = defaultShots;
 
+        /// <summary>
+        ///     The Q# operation name to be executed as part of this job.
+        /// </summary>
         public string OperationName { get; set; } = string.Empty;
 
+        /// <summary>
+        ///     The input parameters to be provided to the specified Q# operation.
+        /// </summary>
         public Dictionary<string, string> InputParameters { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
