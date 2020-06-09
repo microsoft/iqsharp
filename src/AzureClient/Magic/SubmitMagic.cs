@@ -15,10 +15,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class SubmitMagic : AzureClientMagicBase
     {
-        private const string ParameterNameOperationName = "operationName";
-        private const string ParameterNameJobName = "jobName";
-        private const string ParameterNameShots = "shots";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SubmitMagic"/> class.
         /// </summary>
@@ -58,18 +54,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
-            var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            var jobName = inputParameters.DecodeParameter<string>(ParameterNameJobName, defaultValue: operationName);
-            var shots = inputParameters.DecodeParameter<int>(ParameterNameShots, defaultValue: 500);
-
-            var decodedParameters = new Dictionary<string, string>();
-            foreach (var key in inputParameters.Keys)
-            {
-                decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
-            }
-
-            return await AzureClient.SubmitJobAsync(channel, operationName, jobName, shots, decodedParameters);
+            return await AzureClient.SubmitJobAsync(channel, AzureSubmissionContext.Parse(input));
         }
     }
 }

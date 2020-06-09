@@ -44,8 +44,7 @@ namespace Tests.IQSharp
 
             var job = await entryPoint.SubmitAsync(
                 new MockQuantumMachine(),
-                new AzureSubmissionContext(),
-                new Dictionary<string, string>());
+                new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 
@@ -66,8 +65,7 @@ namespace Tests.IQSharp
 
             var job = await entryPoint.SubmitAsync(
                 new MockQuantumMachine(),
-                new AzureSubmissionContext(),
-                new Dictionary<string, string>() { { "count", "2" }, { "name", "test" } } );
+                new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "2", ["name"] = "test" } });
             Assert.IsNotNull(job);
         }
 
@@ -81,8 +79,7 @@ namespace Tests.IQSharp
             Assert.ThrowsException<ArgumentException>(() =>
                 entryPoint.SubmitAsync(
                     new MockQuantumMachine(),
-                    new AzureSubmissionContext(),
-                    new Dictionary<string, string>() { { "count", "2" } }));
+                    new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "2" } }));
         }
 
         [TestMethod]
@@ -95,8 +92,7 @@ namespace Tests.IQSharp
             Assert.ThrowsException<ArgumentException>(() =>
                 entryPoint.SubmitAsync(
                     new MockQuantumMachine(),
-                    new AzureSubmissionContext(),
-                    new Dictionary<string, string>() { { "count", "NaN" }, { "name", "test" } }));
+                    new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "NaN", ["name"] = "test" } }));
         }
 
         [TestMethod]
@@ -116,8 +112,7 @@ namespace Tests.IQSharp
 
             var job = await entryPoint.SubmitAsync(
                     new MockQuantumMachine(),
-                    new AzureSubmissionContext(),
-                    new Dictionary<string, string>());
+                    new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 

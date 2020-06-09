@@ -39,18 +39,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, IQuantumMachineSubmissionContext context, Dictionary<string, string> inputParameters)
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
         {
             var parameterTypes = new List<Type>();
             var parameterValues = new List<object>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
-                if (!inputParameters.ContainsKey(parameter.Name))
+                if (!submissionContext.InputParameters.ContainsKey(parameter.Name))
                 {
                     throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
                 }
 
-                string rawParameterValue = inputParameters[parameter.Name];
+                string rawParameterValue = submissionContext.InputParameters[parameter.Name];
                 object? parameterValue = null;
                 try
                 {
@@ -82,7 +82,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[1].ParameterType.IsGenericMethodParameter
                     && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext))
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
-            var submitParameters = new object[] { EntryPointInfo, entryPointInput, context };
+            var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext };
             return submitMethod.Invoke(machine, submitParameters) as Task<IQuantumMachineJob>;
         }
     }
