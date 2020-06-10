@@ -24,7 +24,7 @@ If (-not (Test-Path -Path $Env:PYTHON_OUTDIR)) { [IO.Directory]::CreateDirectory
 If ($Env:BLOBS_OUTDIR -eq $null) { $Env:BLOBS_OUTDIR =  (Join-Path $Env:DROPS_DIR "blobs") }
 If (-not (Test-Path -Path $Env:BLOBS_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:BLOBS_OUTDIR) }
 
-If ($Env:CONDA_BLD_PATH -eq $null) { $Env:CONDA_BLD_PATH = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\conda-bld")) }
+If ($Env:CONDA_BLD_PATH -eq $null) { $Env:CONDA_BLD_PATH = Resolve-Path "~\conda-bld" }
 If (-not (Test-Path -Path $Env:CONDA_BLD_PATH)) { [IO.Directory]::CreateDirectory($Env:CONDA_BLD_PATH) }
 
 If ($Env:CONDA_OUTDIR -eq $null) { $Env:CONDA_OUTDIR =  (Join-Path $Env:DROPS_DIR "conda") }
