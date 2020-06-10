@@ -20,12 +20,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        internal IAzureWorkspace? ActiveWorkspace { get; private set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
-        private IAzureWorkspace? ActiveWorkspace { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatus>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
