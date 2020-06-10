@@ -65,10 +65,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 parameterValues.Add(parameterValue);
             }
 
-            var entryPointInput =
-                parameterValues.Count == 0 ? QVoid.Instance :
-                parameterValues.Count == 1 ? parameterValues.Single() :
-                InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray());
+            var entryPointInput = parameterValues.Count switch
+            {
+                0 => QVoid.Instance,
+                1 => parameterValues.Single(),
+                _ => InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray())
+            };
 
             // Find and invoke the method on IQuantumMachine that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
