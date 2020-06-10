@@ -5,20 +5,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Rest.Azure;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -30,19 +25,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEntryPointGenerator EntryPointGenerator { get; }
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
-        private AuthenticationResult? AuthenticationResult { get; set; }
-        private IQuantumClient? QuantumClient { get; set; }
-        private Azure.Quantum.IWorkspace? ActiveWorkspace { get; set; }
+        private IAzureWorkspace? ActiveWorkspace { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
-        private IPage<ProviderStatus>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatus>? AvailableTargets { get => AvailableProviders?.SelectMany(provider => provider.Targets); }
-        private IEnumerable<TargetStatus>? ValidExecutionTargets { get => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.Id)); }
-        private string ValidExecutionTargetsDisplayText
-        {
-            get => ValidExecutionTargets == null
-                ? "(no execution targets available)"
-                : string.Join(", ", ValidExecutionTargets.Select(target => target.Id));
-        }
+        private IEnumerable<ProviderStatus>? AvailableProviders { get; set; }
+        private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
+        private IEnumerable<TargetStatus>? ValidExecutionTargets => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.Id));
+        private string ValidExecutionTargetsDisplayText =>
+            ValidExecutionTargets == null
+            ? "(no execution targets available)"
+            : string.Join(", ", ValidExecutionTargets.Select(target => target.Id));
 
         public AzureClient(
             IExecutionEngine engine,
@@ -68,7 +59,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(
+            IChannel channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
@@ -77,85 +69,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             ConnectionString = storageAccountConnectionString;
 
-            var azureEnvironmentEnvVarName = "AZURE_QUANTUM_ENV";
-            var azureEnvironmentName = System.Environment.GetEnvironmentVariable(azureEnvironmentEnvVarName);
-            var azureEnvironment = AzureEnvironment.Create(azureEnvironmentName, subscriptionId);
-
-            var msalApp = PublicClientApplicationBuilder
-                .Create(azureEnvironment.ClientId)
-                .WithAuthority(azureEnvironment.Authority)
-                .Build();
-
-            // Register the token cache for serialization
-            var cacheFileName = "aad.bin";
-            var cacheDirectoryEnvVarName = "AZURE_QUANTUM_TOKEN_CACHE";
-            var cacheDirectory = System.Environment.GetEnvironmentVariable(cacheDirectoryEnvVarName);
-            if (string.IsNullOrEmpty(cacheDirectory))
-            {
-                cacheDirectory = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), ".azure-quantum");
-            }
-
-            var storageCreationProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDirectory, azureEnvironment.ClientId).Build();
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
-            cacheHelper.RegisterCache(msalApp.UserTokenCache);
-
-            bool shouldShowLoginPrompt = refreshCredentials;
-            if (!shouldShowLoginPrompt)
-            {
-                try
-                {
-                    var accounts = await msalApp.GetAccountsAsync();
-                    AuthenticationResult = await msalApp.AcquireTokenSilent(
-                        azureEnvironment.Scopes, accounts.FirstOrDefault()).WithAuthority(msalApp.Authority).ExecuteAsync();
-                }
-                catch (MsalUiRequiredException)
-                {
-                    shouldShowLoginPrompt = true;
-                }
-            }
-
-            if (shouldShowLoginPrompt)
-            {
-                AuthenticationResult = await msalApp.AcquireTokenWithDeviceCode(
-                    azureEnvironment.Scopes,
-                    deviceCodeResult =>
-                    {
-                        channel.Stdout(deviceCodeResult.Message);
-                        return Task.FromResult(0);
-                    }).WithAuthority(msalApp.Authority).ExecuteAsync();
-            }
-
-            if (AuthenticationResult == null)
+            var azureEnvironment = AzureEnvironment.Create(subscriptionId);
+            ActiveWorkspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, resourceGroupName, workspaceName, refreshCredentials);
+            if (ActiveWorkspace == null)
             {
                 return AzureClientError.AuthenticationFailed.ToExecutionResult();
             }
 
-            var credentials = new Rest.TokenCredentials(AuthenticationResult.AccessToken);
-            QuantumClient = new QuantumClient(credentials)
+            AvailableProviders = await ActiveWorkspace.GetProvidersAsync();
+            if (AvailableProviders == null)
             {
-                SubscriptionId = subscriptionId,
-                ResourceGroupName = resourceGroupName,
-                WorkspaceName = workspaceName,
-                BaseUri = azureEnvironment.BaseUri,
-            };
-            ActiveWorkspace = new Azure.Quantum.Workspace(
-                QuantumClient.SubscriptionId,
-                QuantumClient.ResourceGroupName,
-                QuantumClient.WorkspaceName,
-                AuthenticationResult?.AccessToken,
-                azureEnvironment.BaseUri);
-
-            try
-            {
-                AvailableProviders = await QuantumClient.Providers.GetStatusAsync();
-            }
-            catch (Exception e)
-            {
-                Logger?.LogError(e, $"Failed to download providers list from Azure Quantum workspace: {e.Message}");
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
-            channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
+            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 
             return ValidExecutionTargets.ToExecutionResult();
         }
@@ -163,12 +90,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel)
         {
-            if (QuantumClient == null || AvailableProviders == null)
+            if (ActiveWorkspace == null || AvailableProviders == null)
             {
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            channel.Stdout($"Connected to Azure Quantum workspace {QuantumClient.WorkspaceName}.");
+            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 
             return ValidExecutionTargets.ToExecutionResult();
         }
@@ -194,7 +121,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var machine = QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetId, ConnectionString);
+            var machine = ActiveWorkspace.CreateQuantumMachine(ActiveTarget.TargetId, ConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
@@ -258,7 +185,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     //       handle Jupyter kernel interrupt here and break out of this loop 
                     await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
                     if (cts.IsCancellationRequested) break;
-                    cloudJob = await GetCloudJob(MostRecentJobId);
+                    cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
                 }
                 while (cloudJob == null || cloudJob.InProgress);
@@ -351,7 +278,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = await GetCloudJob(jobId);
+            var job = await ActiveWorkspace.GetJobAsync(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -398,7 +325,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = await GetCloudJob(jobId);
+            var job = await ActiveWorkspace.GetJobAsync(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -417,7 +344,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = await GetCloudJobs();
+            var jobs = await ActiveWorkspace.ListJobsAsync();
             if (jobs == null || jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
@@ -425,34 +352,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             return jobs.ToExecutionResult();
-        }
-
-        private async Task<CloudJob?> GetCloudJob(string jobId)
-        {
-            try
-            {
-                return await ActiveWorkspace.GetJobAsync(jobId);
-            }
-            catch (Exception e)
-            {
-                Logger?.LogError(e, $"Failed to retrieve the specified Azure Quantum job: {e.Message}");
-            }
-
-            return null;
-        }
-
-        private async Task<IEnumerable<CloudJob>?> GetCloudJobs()
-        {
-            try
-            {
-                return await ActiveWorkspace.ListJobsAsync();
-            }
-            catch (Exception e)
-            {
-                Logger?.LogError(e, $"Failed to retrieve the list of jobs from the Azure Quantum workspace: {e.Message}");
-            }
-
-            return null;
         }
     }
 }
