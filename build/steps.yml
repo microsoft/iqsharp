@@ -7,9 +7,14 @@ steps:
 ##
 # Pre-reqs
 ##
-- pwsh: |
-    conda install --yes --quiet python=3.7 pip setuptools pytest jupyter
-  displayName: 'Use conda environment w/ Python 3.7'
+- bash: |
+    conda create --yes --quiet --prefix ~/.envs python=3.7 pip setuptools pytest jupyter
+  displayName: 'Create conda environment w/ Python 3.7'
+
+- bash: |
+    eval "$(conda shell.bash hook)"
+    conda activate ~/.envs
+  displayName: 'Activate conda environment'
 
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK 3.1.100'
