@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
 
@@ -73,11 +74,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var timeout = inputParameters.DecodeParameter<int>(parameterNameTimeout, defaultValue: DefaultExecutionTimeoutInSeconds);
             var pollingInterval = inputParameters.DecodeParameter<int>(parameterNamePollingInterval, defaultValue: DefaultExecutionPollingIntervalInSeconds);
 
-            var decodedParameters = new Dictionary<string, string>();
-            foreach (var key in inputParameters.Keys)
-            {
-                decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
-            }
+            var decodedParameters = inputParameters.ToDictionary(
+                item => item.Key,
+                item => inputParameters.DecodeParameter<string>(item.Key));
 
             return new AzureSubmissionContext()
             {
