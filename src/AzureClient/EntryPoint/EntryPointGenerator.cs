@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -23,9 +23,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IWorkspace Workspace { get; }
         private ISnippets Snippets { get; }
         public IReferences References { get; }
-        public AssemblyInfo WorkspaceAssemblyInfo { get; set; } = new AssemblyInfo(null);
-        public AssemblyInfo SnippetsAssemblyInfo { get; set; } = new AssemblyInfo(null);
-        public AssemblyInfo EntryPointAssemblyInfo { get; set; } = new AssemblyInfo(null);
+        public AssemblyInfo? WorkspaceAssemblyInfo { get; set; }
+        public AssemblyInfo? SnippetsAssemblyInfo { get; set; }
+        public AssemblyInfo? EntryPointAssemblyInfo { get; set; }
 
         public EntryPointGenerator(
             ICompilerService compiler,
@@ -45,28 +45,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             eventService?.TriggerServiceInitialized<IEntryPointGenerator>(this);
         }
-        
+
         /// <summary>
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) => name.Name switch
         {
-            if (name.Name == Path.GetFileNameWithoutExtension(EntryPointAssemblyInfo?.Location))
-            {
-                return EntryPointAssemblyInfo.Assembly;
-            }
-            if (name.Name == Path.GetFileNameWithoutExtension(SnippetsAssemblyInfo?.Location))
-            {
-                return SnippetsAssemblyInfo.Assembly;
-            }
-            else if (name.Name == Path.GetFileNameWithoutExtension(WorkspaceAssemblyInfo?.Location))
-            {
-                return WorkspaceAssemblyInfo.Assembly;
-            }
-
-            return null;
-        }
+            var s when s == Path.GetFileNameWithoutExtension(EntryPointAssemblyInfo?.Location) => EntryPointAssemblyInfo?.Assembly,
+            var s when s == Path.GetFileNameWithoutExtension(SnippetsAssemblyInfo?.Location) => SnippetsAssemblyInfo?.Assembly,
+            var s when s == Path.GetFileNameWithoutExtension(WorkspaceAssemblyInfo?.Location) => WorkspaceAssemblyInfo?.Assembly,
+            _ => null
+        };
 
         public IEntryPoint Generate(string operationName, string? executionTarget)
         {
@@ -133,10 +123,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Construct the EntryPointInfo<,> object
             var parameterTypes = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).ToArray();
             var typeCount = parameterTypes.Length;
-            Type entryPointInputType =
-                typeCount == 0 ? typeof(QVoid) :
-                typeCount == 1 ? parameterTypes.Single() :
-                PartialMapper.TupleTypes[typeCount].MakeGenericType(parameterTypes);
+            Type entryPointInputType = typeCount switch
+            {
+                0 => typeof(QVoid),
+                1 => parameterTypes.Single(),
+                _ => PartialMapper.TupleTypes[typeCount].MakeGenericType(parameterTypes)
+            };
             Type entryPointOutputType = entryPointOperationInfo.ReturnType;
 
             Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(new Type[] { entryPointInputType, entryPointOutputType });
