@@ -55,6 +55,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
             }
         }
 
@@ -220,7 +222,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
-            return ActiveTarget.TargetId.ToExecutionResult();
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -255,7 +258,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
 
-            return $"Active target is now {ActiveTarget.TargetId}".ToExecutionResult();
+            channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>

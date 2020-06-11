@@ -19,7 +19,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new CloudJobJsonConverter(),
             new CloudJobListJsonConverter(),
             new TargetStatusJsonConverter(),
-            new TargetStatusListJsonConverter()
+            new TargetStatusListJsonConverter(),
+            new AzureClientErrorJsonConverter()
         );
 
         public static JsonConverter[] AllConverters => allConverters.ToArray();

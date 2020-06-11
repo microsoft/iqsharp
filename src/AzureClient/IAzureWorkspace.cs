@@ -13,7 +13,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal interface IAzureWorkspace
     {
-        public string Name { get; }
+        public string? Name { get; }
 
         public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
         public Task<CloudJob?> GetJobAsync(string jobId);

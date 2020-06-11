@@ -15,13 +15,26 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockAzureWorkspace : IAzureWorkspace
     {
+        public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
+
         public string Name { get; private set; }
 
         public List<ProviderStatus> Providers { get; } = new List<ProviderStatus>();
         
         public List<CloudJob> Jobs { get; } = new List<CloudJob>();
 
-        public MockAzureWorkspace(string workspaceName) => Name = workspaceName;
+        public MockAzureWorkspace(string workspaceName)
+        {
+            Name = workspaceName;
+            if (Name == NameWithMockProviders)
+            {
+                // add a mock target for each provider: "ionq.mock", "honeywell.mock", etc.
+                AddMockTargets(
+                    Enum.GetNames(typeof(AzureProvider))
+                        .Select(provider => $"{provider.ToLowerInvariant()}.mock")
+                        .ToArray());
+            }
+        }
 
         public async Task<CloudJob?> GetJobAsync(string jobId) => Jobs.FirstOrDefault(job => job.Id == jobId);
 

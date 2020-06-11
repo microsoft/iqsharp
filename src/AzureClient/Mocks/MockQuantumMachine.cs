@@ -24,31 +24,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
             => ExecuteAsync(info, input, null as IQuantumMachineSubmissionContext);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext)
             => ExecuteAsync(info, input, submissionContext, null as IQuantumMachine.ConfigureJob);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachine.ConfigureJob configureJobCallback)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext, IQuantumMachine.ConfigureJob? configureJobCallback)
             => ExecuteAsync(info, input, submissionContext, null, configureJobCallback);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext executionContext)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext? executionContext)
             => ExecuteAsync(info, input, executionContext, null);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext executionContext, IQuantumMachine.ConfigureJob configureJobCallback)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext? executionContext, IQuantumMachine.ConfigureJob? configureJobCallback)
             => ExecuteAsync(info, input, null, executionContext);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachineExecutionContext executionContext)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext, IQuantumMachineExecutionContext? executionContext)
             => ExecuteAsync(info, input, submissionContext, executionContext, null);
 
-        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachineExecutionContext executionContext, IQuantumMachine.ConfigureJob configureJobCallback)
+        public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext, IQuantumMachineExecutionContext? executionContext, IQuantumMachine.ConfigureJob? configureJobCallback)
             => throw new NotImplementedException();
 
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
             => SubmitAsync(info, input, null);
 
-        public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext)
+        public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext)
             => SubmitAsync(info, input, submissionContext, null);
 
-        public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachine.ConfigureJob configureJobCallback)
+        public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext, IQuantumMachine.ConfigureJob? configureJobCallback)
         {
             var job = new MockCloudJob();
             Workspace?.AddMockJobs(job.Id);

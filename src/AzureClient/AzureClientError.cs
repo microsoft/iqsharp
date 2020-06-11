@@ -16,7 +16,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// Method completed with an unknown error.
         /// </summary>
         [Description(Resources.AzureClientErrorUnknownError)]
-        UnknownError,
+        UnknownError = 1000,
 
         /// <summary>
         /// No connection has been made to any Azure Quantum workspace.
