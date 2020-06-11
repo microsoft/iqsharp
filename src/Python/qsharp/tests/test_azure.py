@@ -11,15 +11,20 @@
 
 import importlib
 import os
+import pytest
 import qsharp
 from qsharp.azure import AzureError, AzureJob, AzureTarget
+import sys
 
 ## SETUP ##
 
-def setup_module(module):
+@pytest.fixture(scope="session", autouse=True)
+def set_environment_variables():
     # Need to restart the IQ# kernel after setting the environment variable
     os.environ["AZURE_QUANTUM_ENV"] = "mock"
     importlib.reload(qsharp)
+    if "qsharp.chemistry" in sys.modules:
+        importlib.reload(qsharp.chemistry)
 
 ## TESTS ##
 
