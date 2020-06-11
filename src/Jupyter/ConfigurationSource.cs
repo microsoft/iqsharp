@@ -61,6 +61,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public double TruncationThreshold =>
             GetOptionOrDefault("dump.truncationThreshold", 1e-10);
+
+        public PhaseDisplayStyle PhaseDisplayStyle =>
+            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
     }
 
     /// <summary>

@@ -15,6 +15,15 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PhaseDisplayStyle
+    {
+        None,
+        ArrowOnly,
+        NumberOnly,
+        ArrowsAndNumber
+    }
+
     /// <summary>
     ///     The convention to be used in labeling computational basis states
     ///     given their representations as strings of classical bits.
@@ -216,6 +225,44 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     vector.SignificantAmplitudes(ConfigurationSource).Select(item =>
                     {
                         var (amplitude, basisLabel) = item;
+                        var displayPhaseAsArrows = ConfigurationSource.PhaseDisplayStyle;
+
+                        var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
+                        {
+                            PhaseDisplayStyle.None => FormattableString.Invariant($@"
+                                <td> 
+                                
+                                </td>
+                            "),
+                            PhaseDisplayStyle.ArrowOnly => FormattableString.Invariant($@"
+                                <td style=""{StyleForAngle(amplitude.Phase)}"">
+                                 ↑
+                                </td>
+                            "),
+                            PhaseDisplayStyle.ArrowsAndNumber => FormattableString.Invariant($@"
+                                <td>
+                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div>{amplitude.Phase}</div>
+                                </td>
+                            "),
+                            PhaseDisplayStyle.NumberOnly => FormattableString.Invariant($@"
+                                <td> 
+                                    {amplitude.Phase}
+                                </td>
+                            "),
+                            _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
+                        };
+
+                        // displayPhaseAsArrows
+                        //     ? FormattableString.Invariant($@"
+                        //         <td style=""{StyleForAngle(amplitude.Phase)}"">
+                        //             ↑
+                        //         </td>
+                        //     ")
+                        //     : FormattableString.Invariant($@"
+                        //         <td> 
+                                    
+                        //         </td>
+                        //     ");
 
                         return FormattableString.Invariant($@"
                             <tr>
@@ -228,9 +275,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                         style=""width: 100%;""
                                     >
                                 </td>
-                                <td style=""{StyleForAngle(amplitude.Phase)}"">
-                                    ↑
-                                </td>
+                                {phaseCell}
                             </tr>
                         ");
                     })
@@ -316,4 +361,4 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             else return null;
         }
     }
-}
+} 
