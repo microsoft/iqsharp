@@ -21,8 +21,8 @@ If (-not (Test-Path -Path $Env:NUGET_OUTDIR)) { [IO.Directory]::CreateDirectory(
 If ($Env:PYTHON_OUTDIR -eq $null) { $Env:PYTHON_OUTDIR =  (Join-Path $Env:DROPS_DIR "wheels") }
 If (-not (Test-Path -Path $Env:PYTHON_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:PYTHON_OUTDIR) }
 
-If ($Env:BLOBS_OUTDIR -eq $null) { $Env:BLOBS_OUTDIR =  (Join-Path $Env:DROPS_DIR "blobs") }
-If (-not (Test-Path -Path $Env:BLOBS_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:BLOBS_OUTDIR) }
+If ($Env:SELFCONTAINED_OUTDIR -eq $null) { $Env:SELFCONTAINED_OUTDIR =  (Join-Path $Env:DROPS_DIR "blobs") }
+If (-not (Test-Path -Path $Env:SELFCONTAINED_OUTDIR)) { [IO.Directory]::CreateDirectory($Env:SELFCONTAINED_OUTDIR) }
 
 If ($Env:CONDA_BLD_PATH -eq $null) { $Env:CONDA_BLD_PATH = (Join-Path (Resolve-Path ~) "conda-bld") }
 If (-not (Test-Path -Path $Env:CONDA_BLD_PATH)) { [IO.Directory]::CreateDirectory($Env:CONDA_BLD_PATH) }

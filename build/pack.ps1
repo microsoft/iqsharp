@@ -99,7 +99,7 @@ function Pack-Exe() {
         [string] $Configuration = $Env:BUILD_CONFIGURATION
     );
 
-    $OutputPath = Join-Path $Env:BLOBS_OUTDIR $Runtime;
+    $OutputPath = Join-Path $Env:SELFCONTAINED_OUTDIR $Runtime;
 
     # Suppress generating pdb files.
     # See https://github.com/dotnet/cli/issues/2246#issuecomment-320633639.
