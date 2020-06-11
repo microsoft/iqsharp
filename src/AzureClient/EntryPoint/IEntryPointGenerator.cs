@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -18,17 +18,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Gets the compiled workspace assembly for the most recently-generated entry point.
         /// </summary>
-        public AssemblyInfo WorkspaceAssemblyInfo { get; }
+        public AssemblyInfo? WorkspaceAssemblyInfo { get; }
 
         /// <summary>
         /// Gets the compiled snippets assembly for the most recently-generated entry point.
         /// </summary>
-        public AssemblyInfo SnippetsAssemblyInfo { get; }
+        public AssemblyInfo? SnippetsAssemblyInfo { get; }
 
         /// <summary>
         /// Gets the compiled entry point assembly for the most recently-generated entry point.
         /// </summary>
-        public AssemblyInfo EntryPointAssemblyInfo { get; }
+        public AssemblyInfo? EntryPointAssemblyInfo { get; }
 
         /// <summary>
         /// Gets the references used for compilation of the entry point assembly.

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -23,12 +23,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
         /// </summary>
-        /// <param name="entryPointInfo">Must be an <see cref="Simulation.Core.EntryPointInfo"/> object with type
+        /// <param name="entryPointInfo">Must be an <see cref="EntryPointInfo{I,O}"/> object with type
         /// parameters specified by the types in the <c>entryPointInputbeginWords</c> argument.</param>
         /// <param name="inputType">Specifies the input parameter type for the
-        /// <see cref="Simulation.Core.EntryPointInfo"/> object provided as the <c>entryPointInfo</c> argument.</param>
+        /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="outputType">Specifies the output parameter type for the
-        /// <see cref="Simulation.Core.EntryPointInfo"/> object provided as the <c>entryPointInfo</c> argument.</param>
+        /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
         public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo)
         {
@@ -58,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException($"The value {rawParameterValue} provided for parameter {parameter.Name} could not be converted to the expected type.");
+                    throw new ArgumentException($"The value {rawParameterValue} provided for parameter {parameter.Name} could not be converted to the expected type: {e.Message}");
                 }
 
                 parameterTypes.Add(parameter.ParameterType);
@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[1].ParameterType.IsGenericMethodParameter)
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
             var submitParameters = new object[] { EntryPointInfo, entryPointInput };
-            return submitMethod.Invoke(machine, submitParameters) as Task<IQuantumMachineJob>;
+            return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
         }
     }
 }
