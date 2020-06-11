@@ -227,11 +227,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         var (amplitude, basisLabel) = item;
                         var displayPhaseAsArrows = ConfigurationSource.PhaseDisplayStyle;
 
+                        //different options for displaying phase style
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
                         {
                             PhaseDisplayStyle.None => FormattableString.Invariant($@"
                                 <td> 
-                                
                                 </td>
                             "),
                             PhaseDisplayStyle.ArrowOnly => FormattableString.Invariant($@"
@@ -251,18 +251,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             "),
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
-
-                        // displayPhaseAsArrows
-                        //     ? FormattableString.Invariant($@"
-                        //         <td style=""{StyleForAngle(amplitude.Phase)}"">
-                        //             ↑
-                        //         </td>
-                        //     ")
-                        //     : FormattableString.Invariant($@"
-                        //         <td> 
-                                    
-                        //         </td>
-                        //     ");
 
                         return FormattableString.Invariant($@"
                             <tr>
