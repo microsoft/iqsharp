@@ -33,9 +33,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         internal static Dictionary<string, object> ToDictionary(this AzureClientError error) =>
             new Dictionary<string, object>()
             {
-                ["errorCode"] = System.Convert.ToInt32(error),
-                ["errorName"] = error.ToString(),
-                ["errorDescription"] = error.ToDescription(),
+                ["error_code"] = System.Convert.ToInt32(error),
+                ["error_name"] = error.ToString(),
+                ["error_description"] = error.ToDescription(),
             };
     }
 

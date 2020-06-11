@@ -20,8 +20,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new Dictionary<string, object>()
             {
                 ["id"] = target.Id,
-                ["currentAvailability"] = target.CurrentAvailability,
-                ["averageQueueTime"] = target.AverageQueueTime,
+                ["current_availability"] = target.CurrentAvailability,
+                ["average_queue_time"] = target.AverageQueueTime,
             };
 
         internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>

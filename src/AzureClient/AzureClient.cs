@@ -86,6 +86,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 
+            if (ValidExecutionTargets.Count() == 0)
+            {
+                channel.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.Name}.");
+            }
+
             return ValidExecutionTargets.ToExecutionResult();
         }
 
@@ -349,13 +354,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync();
-            if (jobs == null || jobs.Count() == 0)
+            var jobs = await ActiveWorkspace.ListJobsAsync() ?? new List<CloudJob>();
+            if (jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
-                return AzureClientError.JobNotFound.ToExecutionResult();
             }
-
+            
             return jobs.ToExecutionResult();
         }
     }
