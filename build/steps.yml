@@ -7,12 +7,18 @@ steps:
 ##
 # Pre-reqs
 ##
+
+# On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory
+# We need to take ownership if we want to update conda or install packages globally
+# As discussed here: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/anaconda
+- bash: |
+    sudo chown -R $USER $CONDA
+  displayName: Take ownership of conda installation
+
 - task: CondaEnvironment@1
   inputs:
     packageSpecs: "python=3.7 pip setuptools pytest jupyter"
-    createCustomEnvironment: true
-    createOptions: "--prefix ~/conda-env"
-  displayName: 'Use conda environment w/ Python 3.7'
+  displayName: 'Use conda environment w/ Python 3.'
 
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK 3.1.100'
