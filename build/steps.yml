@@ -7,7 +7,7 @@ steps:
 ##
 # Pre-reqs
 ##
-- pwsh: |
+- bash: |
     conda create --yes --quiet --prefix ~/.envs python=3.7 pip setuptools pytest jupyter
     conda activate ~/.envs
   displayName: 'Use conda environment w/ Python 3.7'
