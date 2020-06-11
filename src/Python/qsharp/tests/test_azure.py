@@ -9,8 +9,17 @@
 
 ## IMPORTS ##
 
+import importlib
+import os
 import qsharp
 from qsharp.azure import AzureError, AzureJob, AzureTarget
+
+## SETUP ##
+
+def setup_module(module):
+    # Need to restart the IQ# kernel after setting the environment variable
+    os.environ["AZURE_QUANTUM_ENV"] = "mock"
+    importlib.reload(qsharp)
 
 ## TESTS ##
 
