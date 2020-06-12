@@ -61,6 +61,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public double TruncationThreshold =>
             GetOptionOrDefault("dump.truncationThreshold", 1e-10);
+
+        /// <summary>
+        ///     Allows for options to view phase as arrows, or in radians
+        ///     or both in arrow format and radians. This also allows the
+        ///     option to show None. 
+        /// </summary>
+        public PhaseDisplayStyle PhaseDisplayStyle =>
+            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
     }
 
     /// <summary>

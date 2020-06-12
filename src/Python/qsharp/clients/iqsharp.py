@@ -77,7 +77,8 @@ class IQSharpClient(object):
         atexit.register(self.stop)
 
     def stop(self):
-        logger.info("Stopping IQ# kernel...")
+        # Don't use logger here. If we're running inside pytest, the handle to the
+        # log output file may have already been closed.
         try:
             self.kernel_manager.shutdown_kernel()
         except:
