@@ -19,6 +19,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private static readonly int DefaultShots = 500;
         private static readonly int DefaultExecutionTimeoutInSeconds = 30;
         private static readonly int DefaultExecutionPollingIntervalInSeconds = 5;
+        
+        internal static readonly string ParameterNameOperationName = "__operationName__";
+        internal static readonly string ParameterNameJobName = "jobName";
+        internal static readonly string ParameterNameShots = "shots";
+        internal static readonly string ParameterNameTimeout = "timeout";
+        internal static readonly string ParameterNamePollingInterval = "poll";
 
         /// <inheritdoc/>
         public string FriendlyName { get; set; } = string.Empty;
@@ -61,18 +67,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public static AzureSubmissionContext Parse(string inputCommand)
         {
-            var parameterNameOperationName = "operationName";
-            var parameterNameJobName = "jobName";
-            var parameterNameShots = "shots";
-            var parameterNameTimeout = "timeout";
-            var parameterNamePollingInterval = "pollingInterval";
-
-            var inputParameters = AbstractMagic.ParseInputParameters(inputCommand, firstParameterInferredName: parameterNameOperationName);
-            var operationName = inputParameters.DecodeParameter<string>(parameterNameOperationName);
-            var jobName = inputParameters.DecodeParameter<string>(parameterNameJobName, defaultValue: operationName);
-            var shots = inputParameters.DecodeParameter<int>(parameterNameShots, defaultValue: DefaultShots);
-            var timeout = inputParameters.DecodeParameter<int>(parameterNameTimeout, defaultValue: DefaultExecutionTimeoutInSeconds);
-            var pollingInterval = inputParameters.DecodeParameter<int>(parameterNamePollingInterval, defaultValue: DefaultExecutionPollingIntervalInSeconds);
+            var inputParameters = AbstractMagic.ParseInputParameters(inputCommand, firstParameterInferredName: ParameterNameOperationName);
+            var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+            var jobName = inputParameters.DecodeParameter<string>(ParameterNameJobName, defaultValue: operationName);
+            var shots = inputParameters.DecodeParameter<int>(ParameterNameShots, defaultValue: DefaultShots);
+            var timeout = inputParameters.DecodeParameter<int>(ParameterNameTimeout, defaultValue: DefaultExecutionTimeoutInSeconds);
+            var pollingInterval = inputParameters.DecodeParameter<int>(ParameterNamePollingInterval, defaultValue: DefaultExecutionPollingIntervalInSeconds);
 
             var decodedParameters = inputParameters.ToDictionary(
                 item => item.Key,

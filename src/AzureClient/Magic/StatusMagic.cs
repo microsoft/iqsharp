@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class StatusMagic : AzureClientMagicBase
     {
-        private const string ParameterNameJobId = "jobId";
+        private const string ParameterNameJobId = "id";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StatusMagic"/> class.

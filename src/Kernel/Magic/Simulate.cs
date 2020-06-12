@@ -18,8 +18,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class SimulateMagic : AbstractMagic
     {
-        private const string
-            ParameterNameOperationName = "operationName";
+        private const string ParameterNameOperationName = "__operationName__";
 
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
