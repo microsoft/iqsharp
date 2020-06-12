@@ -15,10 +15,21 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     Represents different styles for displaying the phases of complex
+    ///     amplitudes when displaying state vectors as HTML.
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PhaseDisplayStyle
     {
+        /// <summary>
+        ///     Suppress phase information.
+        /// </summary>
         None,
+        /// <summary>
+        ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
+        ///     dependent on the phase.
+        /// </summary>
         ArrowOnly,
         NumberOnly,
         ArrowsAndNumber
@@ -231,10 +242,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         //different options for displaying phase style
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
                         {
-                            PhaseDisplayStyle.None => FormattableString.Invariant($@"
-                                <td> 
-                                </td>
-                            "),
+                            PhaseDisplayStyle.None => "",
                             PhaseDisplayStyle.ArrowOnly => FormattableString.Invariant($@"
                                 <td style=""{StyleForAngle(amplitude.Phase)}"">
                                  ↑
