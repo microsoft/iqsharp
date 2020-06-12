@@ -15,6 +15,10 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    /// <summary>
+    ///     Represents different styles for displaying the phases of complex
+    ///     amplitudes when displaying state vectors as HTML.
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PhaseDisplayStyle
     {
