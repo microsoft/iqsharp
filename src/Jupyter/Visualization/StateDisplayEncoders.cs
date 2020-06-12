@@ -22,7 +22,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PhaseDisplayStyle
     {
+        /// <summary>
+        ///     Suppress phase information.
+        /// </summary>
         None,
+        /// <summary>
+        ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
+        ///     dependent on the phase.
+        /// </summary>
         ArrowOnly,
         NumberOnly,
         ArrowsAndNumber
