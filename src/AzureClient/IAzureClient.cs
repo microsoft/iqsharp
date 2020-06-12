@@ -128,7 +128,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Details of the submitted job, or an error if submission failed.
         /// </returns>
-        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters);
+        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext);
 
         /// <summary>
         /// Executes the specified Q# operation as a job to the currently active target
@@ -137,7 +137,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// The result of the executed job, or an error if execution failed.
         /// </returns>
-        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters);
+        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext);
 
         /// <summary>
         /// Sets the specified target for job submission.

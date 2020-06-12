@@ -42,7 +42,9 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("HelloQ", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(new MockQuantumMachine(), new Dictionary<string, string>());
+            var job = await entryPoint.SubmitAsync(
+                new MockQuantumMachine(),
+                new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 
@@ -61,7 +63,9 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(new MockQuantumMachine(), new Dictionary<string, string>() { { "count", "2" }, { "name", "test" } } );
+            var job = await entryPoint.SubmitAsync(
+                new MockQuantumMachine(),
+                new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "2", ["name"] = "test" } });
             Assert.IsNotNull(job);
         }
 
@@ -73,7 +77,9 @@ namespace Tests.IQSharp
             Assert.IsNotNull(entryPoint);
 
             Assert.ThrowsException<ArgumentException>(() =>
-                entryPoint.SubmitAsync(new MockQuantumMachine(), new Dictionary<string, string>() { { "count", "2" } }));
+                entryPoint.SubmitAsync(
+                    new MockQuantumMachine(),
+                    new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "2" } }));
         }
 
         [TestMethod]
@@ -84,7 +90,9 @@ namespace Tests.IQSharp
             Assert.IsNotNull(entryPoint);
 
             Assert.ThrowsException<ArgumentException>(() =>
-                entryPoint.SubmitAsync(new MockQuantumMachine(), new Dictionary<string, string>() { { "count", "NaN" }, { "name", "test" } }));
+                entryPoint.SubmitAsync(
+                    new MockQuantumMachine(),
+                    new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "NaN", ["name"] = "test" } }));
         }
 
         [TestMethod]
@@ -102,7 +110,9 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("DependsOnWorkspace", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(new MockQuantumMachine(), new Dictionary<string, string>());
+            var job = await entryPoint.SubmitAsync(
+                    new MockQuantumMachine(),
+                    new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 
@@ -139,10 +149,10 @@ namespace Tests.IQSharp
             => ExecuteAsync(info, input, submissionContext, null, configureJobCallback);
 
         public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext executionContext)
-            => ExecuteAsync(info, input, null as IQuantumMachineExecutionContext);
+            => ExecuteAsync(info, input, executionContext, null);
 
         public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineExecutionContext executionContext, IQuantumMachine.ConfigureJob configureJobCallback)
-            => ExecuteAsync(info, input, executionContext, null as IQuantumMachine.ConfigureJob);
+            => ExecuteAsync(info, input, null, executionContext);
 
         public Task<IQuantumMachineOutput<TOutput>> ExecuteAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachineExecutionContext executionContext)
             => ExecuteAsync(info, input, submissionContext, executionContext, null);
@@ -154,7 +164,7 @@ namespace Tests.IQSharp
             => SubmitAsync(info, input, null);
 
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext)
-            => SubmitAsync(info, input, null, null);
+            => SubmitAsync(info, input, submissionContext, null);
 
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext submissionContext, IQuantumMachine.ConfigureJob configureJobCallback)
             => Task.FromResult(new MockQuantumMachineJob() as IQuantumMachineJob);

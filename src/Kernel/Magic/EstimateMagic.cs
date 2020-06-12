@@ -19,6 +19,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class EstimateMagic : AbstractMagic
     {
+        private const string ParameterNameOperationName = "__operationName__";
+
         /// <summary>
         ///     Given a symbol resolver that can be used to locate operations,
         ///     constructs a new magic command that performs resource estimation
@@ -52,15 +54,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var (name, args) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new ResourcesEstimator().WithStackTraceDisplay(channel);
             qsim.DisableLogToConsole();
 
-            await symbol.Operation.RunAsync(qsim, args);
+            await symbol.Operation.RunAsync(qsim, inputParameters);
 
             return qsim.Data.ToExecutionResult();
         }

@@ -187,7 +187,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 return defaultValue;
             }
-            return (T)(JsonConvert.DeserializeObject(parameterValue)) ?? defaultValue;
+            return (T)System.Convert.ChangeType(JsonConvert.DeserializeObject(parameterValue), typeof(T)) ?? defaultValue;
         }
     }
 }

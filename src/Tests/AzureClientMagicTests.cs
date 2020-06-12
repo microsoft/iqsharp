@@ -188,17 +188,17 @@ namespace Tests.IQSharp
             return ActiveTargetId.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters)
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext)
         {
             LastAction = AzureClientAction.SubmitJob;
-            SubmittedJobs.Add(operationName);
+            SubmittedJobs.Add(submissionContext.OperationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters)
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext)
         {
             LastAction = AzureClientAction.ExecuteJob;
-            ExecutedJobs.Add(operationName);
+            ExecutedJobs.Add(submissionContext.OperationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 

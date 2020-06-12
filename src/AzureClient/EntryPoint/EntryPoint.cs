@@ -39,18 +39,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, Dictionary<string, string> inputParameters)
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
         {
             var parameterTypes = new List<Type>();
             var parameterValues = new List<object>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
-                if (!inputParameters.ContainsKey(parameter.Name))
+                if (!submissionContext.InputParameters.ContainsKey(parameter.Name))
                 {
                     throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
                 }
 
-                string rawParameterValue = inputParameters[parameter.Name];
+                string rawParameterValue = submissionContext.InputParameters[parameter.Name];
                 object? parameterValue = null;
                 try
                 {
@@ -73,17 +73,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
 
             // Find and invoke the method on IQuantumMachine that is declared as:
-            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input)
+            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context)
             var submitMethod = typeof(IQuantumMachine)
                 .GetMethods()
                 .Single(method =>
                     method.Name == "SubmitAsync"
                     && method.IsGenericMethodDefinition
-                    && method.GetParameters().Length == 2
+                    && method.GetParameters().Length == 3
                     && method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == EntryPointInfo.GetType().GetGenericTypeDefinition()
-                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter)
+                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter
+                    && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext))
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
-            var submitParameters = new object[] { EntryPointInfo, entryPointInput };
+            var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
         }
     }

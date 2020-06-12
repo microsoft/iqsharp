@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
@@ -15,8 +16,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class ExecuteMagic : AzureClientMagicBase
     {
-        private const string ParameterNameOperationName = "operationName";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteMagic"/> class.
         /// </summary>
@@ -59,16 +58,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
-            var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-
-            var decodedParameters = new Dictionary<string, string>();
-            foreach (var key in inputParameters.Keys)
-            {
-                decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
-            }
-
-            return await AzureClient.ExecuteJobAsync(channel, operationName, decodedParameters);
+            return await AzureClient.ExecuteJobAsync(channel, AzureSubmissionContext.Parse(input));
         }
     }
 }

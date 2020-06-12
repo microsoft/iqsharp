@@ -93,7 +93,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     <c>Dictionary</c> with the names and values of the parameters,
         ///     where the values of the <c>Dictionary</c> are JSON-serialized objects.
         /// </summary>
-        public Dictionary<string, string> ParseInputParameters(string input, string firstParameterInferredName = "")
+        public static Dictionary<string, string> ParseInputParameters(string input, string firstParameterInferredName = "")
         {
             Dictionary<string, string> inputParameters = new Dictionary<string, string>();
 

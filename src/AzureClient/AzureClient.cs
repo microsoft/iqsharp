@@ -173,7 +173,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters, bool execute)
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, bool execute)
         {
             if (ActiveWorkspace == null)
             {
@@ -187,7 +187,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
-            if (string.IsNullOrEmpty(operationName))
+            if (string.IsNullOrEmpty(submissionContext.OperationName))
             {
                 var commandName = execute ? "%azure.execute" : "%azure.submit";
                 channel.Stderr($"Please pass a valid Q# operation name to {commandName}.");
@@ -202,40 +202,42 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
 
-            channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetId}...");
+            channel.Stdout($"Submitting {submissionContext.OperationName} to target {ActiveTarget.TargetId}...");
 
             IEntryPoint? entryPoint = null;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetId);
+                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId);
             }
             catch (UnsupportedOperationException e)
             {
-                channel.Stderr($"{operationName} is not a recognized Q# operation name.");
+                channel.Stderr($"{submissionContext.OperationName} is not a recognized Q# operation name.");
                 return AzureClientError.UnrecognizedOperationName.ToExecutionResult();
             }
             catch (CompilationErrorsException e)
             {
-                channel.Stderr($"The Q# operation {operationName} could not be compiled as an entry point for job execution.");
+                channel.Stderr($"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
                 foreach (var message in e.Errors) channel.Stderr(message);
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }
 
             try
             {
-                var job = await entryPoint.SubmitAsync(machine, inputParameters);
-                channel.Stdout($"Job {job.Id} submitted successfully.");
+                var job = await entryPoint.SubmitAsync(machine, submissionContext);
+                channel.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
+                channel.Stdout($"   Job name: {submissionContext.FriendlyName}");
+                channel.Stdout($"   Job ID: {job.Id}");
                 MostRecentJobId = job.Id;
             }
             catch (ArgumentException e)
             {
-                channel.Stderr($"Failed to parse all expected parameters for Q# operation {operationName}.");
+                channel.Stderr($"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.");
                 channel.Stderr(e.Message);
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
             catch (Exception e)
             {
-                channel.Stderr($"Failed to submit Q# operation {operationName} for execution.");
+                channel.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
                 channel.Stderr(e.InnerException?.Message ?? e.Message);
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
@@ -245,18 +247,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return await GetJobStatusAsync(channel, MostRecentJobId);
             }
 
-            var timeoutInSeconds = 30;
-            channel.Stdout($"Waiting up to {timeoutInSeconds} seconds for Azure Quantum job to complete...");
+            channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
 
-            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
             {
                 CloudJob? cloudJob = null;
                 do
                 {
                     // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
                     //       handle Jupyter kernel interrupt here and break out of this loop 
-                    var pollingIntervalInSeconds = 5;
-                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
+                    await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
                     if (cts.IsCancellationRequested) break;
                     cloudJob = await GetCloudJob(MostRecentJobId);
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
@@ -268,12 +268,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
-            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: false);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
-            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: true);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
