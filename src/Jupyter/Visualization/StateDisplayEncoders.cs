@@ -208,6 +208,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             string StyleForAngle(double angle) =>
                 $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
                    text-align: center;";
+            string StyleForNumber() =>
+                $@"text-align: center;";
 
             if (displayable is DisplayableState vector)
             {
@@ -225,7 +227,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     vector.SignificantAmplitudes(ConfigurationSource).Select(item =>
                     {
                         var (amplitude, basisLabel) = item;
-                        var displayPhaseAsArrows = ConfigurationSource.PhaseDisplayStyle;
 
                         //different options for displaying phase style
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
@@ -241,7 +242,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             "),
                             PhaseDisplayStyle.ArrowsAndNumber => FormattableString.Invariant($@"
                                 <td>
-                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div>{amplitude.Phase}</div>
+                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div style=""{StyleForNumber()}"">{amplitude.Phase}</div>
                                 </td>
                             "),
                             PhaseDisplayStyle.NumberOnly => FormattableString.Invariant($@"
