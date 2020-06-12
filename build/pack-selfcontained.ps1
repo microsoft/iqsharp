@@ -36,6 +36,8 @@ Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
 Pop-Location
 
 Write-Host "##[info]Packing IQ# as self-contained executables."
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime win10-x64
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime osx-x64
-Pack-Exe "../src/Tool/Tool.csproj" -Runtime linux-x64
+Push-Location (Join-Path $PSScriptRoot ../src/Tool)
+    Pack-Exe "./Tool.csproj" -Runtime win10-x64
+    Pack-Exe "./Tool.csproj" -Runtime osx-x64
+    Pack-Exe "./Tool.csproj" -Runtime linux-x64
+Pop-Location
