@@ -59,8 +59,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(
-            IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
