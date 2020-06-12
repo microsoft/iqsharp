@@ -31,7 +31,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     dependent on the phase.
         /// </summary>
         ArrowOnly,
+        /// <summary> 
+        ///     Display phase information in number format.
+        /// </summary>
         NumberOnly,
+        /// <summary>
+        ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
+        ///     dependent on the phase as well as display phase information in number
+        ///     format.
         ArrowsAndNumber
     }
 
