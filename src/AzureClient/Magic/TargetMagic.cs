@@ -19,18 +19,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         private const string ParameterNameTargetName = "name";
 
-        private IReferences? References { get; set; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TargetMagic"/> class.
         /// </summary>
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        /// <param name="references">
-        /// The <see cref="IReferences"/> object to use for loading target-specific packages.
-        /// </param>
-        public TargetMagic(IAzureClient azureClient, IReferences references)
+        public TargetMagic(IAzureClient azureClient)
             : base(
                 azureClient,
                 "azure.target",
@@ -62,8 +57,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) =>
-            References = references;
+                })
+        { }
 
         /// <summary>
         ///     Sets or views the target for job submission to the current Azure Quantum workspace.
@@ -74,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (inputParameters.ContainsKey(ParameterNameTargetName))
             {
                 string targetName = inputParameters.DecodeParameter<string>(ParameterNameTargetName);
-                return await AzureClient.SetActiveTargetAsync(channel, References, targetName);
+                return await AzureClient.SetActiveTargetAsync(channel, targetName);
             }
 
             return await AzureClient.GetActiveTargetAsync(channel);

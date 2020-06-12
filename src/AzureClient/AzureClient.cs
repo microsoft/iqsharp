@@ -5,18 +5,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
+using Microsoft.Azure.Quantum.Client.Models;
+using Microsoft.Azure.Quantum.Storage;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Rest.Azure;
-using Microsoft.Azure.Quantum.Client.Models;
-using Microsoft.Azure.Quantum.Storage;
-using Microsoft.Azure.Quantum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,6 +27,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        private ILogger<AzureClient> Logger { get; }
+        private IReferences References { get; }
+        private IEntryPointGenerator EntryPointGenerator { get; }
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private AuthenticationResult? AuthenticationResult { get; set; }
@@ -41,10 +46,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 : string.Join(", ", ValidExecutionTargets.Select(target => target.Id));
         }
 
+        public AzureClient(
+            IReferences references,
+            IEntryPointGenerator entryPointGenerator,
+            ILogger<AzureClient> logger,
+            IEventService eventService)
+        {
+            References = references;
+            EntryPointGenerator = entryPointGenerator;
+            Logger = logger;
+            eventService?.TriggerServiceInitialized<IAzureClient>(this);
+        }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(
-            IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
@@ -127,7 +142,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (Exception e)
             {
-                channel.Stderr(e.ToString());
+                Logger?.LogError(e, $"Failed to download providers list from Azure Quantum workspace: {e.Message}");
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
@@ -151,11 +166,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToJupyterTable().ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName,
-            bool execute)
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters, bool execute)
         {
             if (ActiveWorkspace == null)
             {
@@ -176,7 +187,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var machine = Azure.Quantum.QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetName, ConnectionString);
+            var machine = QuantumMachineFactory.CreateMachine(ActiveWorkspace, ActiveTarget.TargetName, ConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
@@ -184,49 +195,81 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.InvalidTarget.ToExecutionResult();
             }
 
-            var operationInfo = operationResolver.Resolve(operationName);
-            var entryPointInfo = new EntryPointInfo<QVoid, Result>(operationInfo.RoslynType);
-            var entryPointInput = QVoid.Instance;
+            channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
 
-            if (execute)
+            IEntryPoint? entryPoint = null;
+            try
             {
-                channel.Stdout($"Executing {operationName} on target {ActiveTarget.TargetName}...");
-                var output = await machine.ExecuteAsync(entryPointInfo, entryPointInput);
-                MostRecentJobId = output.Job.Id;
-
-                // TODO: Add encoder to visualize IEnumerable<KeyValuePair<string, double>>
-                return output.Histogram.ToExecutionResult();
+                entryPoint = EntryPointGenerator.Generate(operationName, ActiveTarget.TargetName);
             }
-            else
+            catch (UnsupportedOperationException e)
             {
-                channel.Stdout($"Submitting {operationName} to target {ActiveTarget.TargetName}...");
-                var job = await machine.SubmitAsync(entryPointInfo, entryPointInput);
+                channel.Stderr($"{operationName} is not a recognized Q# operation name.");
+                return AzureClientError.UnrecognizedOperationName.ToExecutionResult();
+            }
+            catch (CompilationErrorsException e)
+            {
+                channel.Stderr($"The Q# operation {operationName} could not be compiled as an entry point for job execution.");
+                foreach (var message in e.Errors) channel.Stderr(message);
+                return AzureClientError.InvalidEntryPoint.ToExecutionResult();
+            }
+
+            try
+            {
+                var job = await entryPoint.SubmitAsync(machine, inputParameters);
                 channel.Stdout($"Job {job.Id} submitted successfully.");
-
                 MostRecentJobId = job.Id;
-
-                // TODO: Add encoder for IQuantumMachineJob rather than calling ToJupyterTable() here.
-                return job.ToJupyterTable().ToExecutionResult();
             }
+            catch (ArgumentException e)
+            {
+                channel.Stderr($"Failed to parse all expected parameters for Q# operation {operationName}.");
+                channel.Stderr(e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+            }
+            catch (Exception e)
+            {
+                channel.Stderr($"Failed to submit Q# operation {operationName} for execution.");
+                channel.Stderr(e.InnerException?.Message ?? e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+            }
+
+            if (!execute)
+            {
+                return await GetJobStatusAsync(channel, MostRecentJobId);
+            }
+
+            var timeoutInSeconds = 30;
+            channel.Stdout($"Waiting up to {timeoutInSeconds} seconds for Azure Quantum job to complete...");
+
+            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            {
+                CloudJob? cloudJob = null;
+                do
+                {
+                    // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
+                    //       handle Jupyter kernel interrupt here and break out of this loop 
+                    var pollingIntervalInSeconds = 5;
+                    await Task.Delay(TimeSpan.FromSeconds(pollingIntervalInSeconds));
+                    if (cts.IsCancellationRequested) break;
+                    cloudJob = await GetCloudJob(MostRecentJobId);
+                    channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
+                }
+                while (cloudJob == null || cloudJob.InProgress);
+            }
+
+            return await GetJobResultAsync(channel, MostRecentJobId);
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName) =>
-            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: false);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(
-            IChannel channel,
-            IOperationResolver operationResolver,
-            string operationName) =>
-            await SubmitOrExecuteJobAsync(channel, operationResolver, operationName, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters) =>
+            await SubmitOrExecuteJobAsync(channel, operationName, inputParameters, execute: true);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetActiveTargetAsync(
-            IChannel channel)
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
         {
             if (AvailableProviders == null)
             {
@@ -247,10 +290,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SetActiveTargetAsync(
-            IChannel channel,
-            IReferences references,
-            string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
         {
             if (AvailableProviders == null)
             {
@@ -279,15 +319,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ActiveTarget = executionTarget;
 
             channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
-            await references.AddPackage(ActiveTarget.PackageName);
+            await References.AddPackage(ActiveTarget.PackageName);
 
             return $"Active target is now {ActiveTarget.TargetName}".ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobResultAsync(
-            IChannel channel,
-            string jobId)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
         {
             if (ActiveWorkspace == null)
             {
@@ -306,7 +344,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = ActiveWorkspace.GetJob(jobId);
+            var job = await GetCloudJob(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -335,9 +373,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobStatusAsync(
-            IChannel channel,
-            string jobId)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId)
         {
             if (ActiveWorkspace == null)
             {
@@ -356,20 +392,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var job = ActiveWorkspace.GetJob(jobId);
+            var job = await GetCloudJob(jobId);
             if (job == null)
             {
                 channel.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            // TODO: Add encoder for CloudJob which calls ToJupyterTable() for display.
-            return job.Details.ToExecutionResult();
+            // TODO: Add encoder for CloudJob rather than calling ToJupyterTable() here directly.
+            return job.ToJupyterTable().ToExecutionResult();
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(
-            IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
         {
             if (ActiveWorkspace == null)
             {
@@ -377,7 +412,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = ActiveWorkspace.ListJobs();
+            var jobs = await GetCloudJobs();
             if (jobs == null || jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
@@ -385,7 +420,35 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // TODO: Add encoder for IEnumerable<CloudJob> rather than calling ToJupyterTable() here directly.
-            return jobs.Select(job => job.Details).ToJupyterTable().ToExecutionResult();
+            return jobs.ToJupyterTable().ToExecutionResult();
+        }
+
+        private async Task<CloudJob?> GetCloudJob(string jobId)
+        {
+            try
+            {
+                return await ActiveWorkspace.GetJobAsync(jobId);
+            }
+            catch (Exception e)
+            {
+                Logger?.LogError(e, $"Failed to retrieve the specified Azure Quantum job: {e.Message}");
+            }
+
+            return null;
+        }
+
+        private async Task<IEnumerable<CloudJob>?> GetCloudJobs()
+        {
+            try
+            {
+                return await ActiveWorkspace.ListJobsAsync();
+            }
+            catch (Exception e)
+            {
+                Logger?.LogError(e, $"Failed to retrieve the list of jobs from the Azure Quantum workspace: {e.Message}");
+            }
+
+            return null;
         }
     }
 }

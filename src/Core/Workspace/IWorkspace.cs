@@ -65,6 +65,11 @@ namespace Microsoft.Quantum.IQSharp
         string Root { get; }
 
         /// <summary>
+        /// Gets the source files to be built for this Workspace.
+        /// </summary>
+        public IEnumerable<string> SourceFiles { get; }
+
+        /// <summary>
         /// The folder where the assembly is permanently saved for cache.
         /// </summary>
         string CacheFolder { get; }

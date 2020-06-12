@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public static void AddAzureClient(this IServiceCollection services)
         {
             services.AddSingleton<IAzureClient, AzureClient>();
+            services.AddSingleton<IEntryPointGenerator, EntryPointGenerator>();
         }
 
         /// <summary>
@@ -66,19 +68,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public static async Task<ExecutionResult> ToExecutionResult(this Task<AzureClientError> task) =>
             (await task).ToExecutionResult();
 
-        internal static Table<JobDetails> ToJupyterTable(this JobDetails jobDetails) =>
-            new List<JobDetails> { jobDetails }.ToJupyterTable();
+        internal static Table<CloudJob> ToJupyterTable(this CloudJob cloudJob) =>
+            new List<CloudJob> { cloudJob }.ToJupyterTable();
 
-        internal static Table<JobDetails> ToJupyterTable(this IEnumerable<JobDetails> jobsList) =>
-            new Table<JobDetails>
+        internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
+            new Table<CloudJob>
             {
-                Columns = new List<(string, Func<JobDetails, string>)>
+                Columns = new List<(string, Func<CloudJob, string>)>
                     {
-                        ("JobId", jobDetails => jobDetails.Id),
-                        ("JobName", jobDetails => jobDetails.Name),
-                        ("JobStatus", jobDetails => jobDetails.Status),
-                        ("Provider", jobDetails => jobDetails.ProviderId),
-                        ("Target", jobDetails => jobDetails.Target),
+                        ("JobId", cloudJob => cloudJob.Id),
+                        ("JobName", cloudJob => cloudJob.Details.Name),
+                        ("JobStatus", cloudJob => cloudJob.Status),
+                        ("Provider", cloudJob => cloudJob.Details.ProviderId),
+                        ("Target", cloudJob => cloudJob.Details.Target),
                     },
                 Rows = jobsList.ToList()
             };

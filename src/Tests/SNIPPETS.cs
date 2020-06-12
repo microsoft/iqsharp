@@ -207,6 +207,15 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string InvalidEntryPoint =
+@"
+    /// # Summary
+    ///     This script has an operation that is not valid to be marked as an entry point.
+    operation InvalidEntryPoint(q : Qubit) : Unit {
+        H(q);
+    }
+";
+
         public static string Reverse =
 @"
     /// # Summary

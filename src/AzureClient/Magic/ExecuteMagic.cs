@@ -3,9 +3,7 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -20,21 +18,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameOperationName = "operationName";
 
         /// <summary>
-        ///      Gets the symbol resolver used by this magic command to find
-        ///      operations or functions to be simulated.
-        /// </summary>
-        public IOperationResolver OperationResolver { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteMagic"/> class.
         /// </summary>
-        /// <param name="operationResolver">
-        /// The <see cref="IOperationResolver"/> object used to find and resolve operations.
-        /// </param>
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public ExecuteMagic(IOperationResolver operationResolver, IAzureClient azureClient)
+        public ExecuteMagic(IAzureClient azureClient)
             : base(
                 azureClient,
                 "azure.execute",
@@ -60,8 +49,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) =>
-            this.OperationResolver = operationResolver;
+                })
+        { }
 
         /// <summary>
         ///     Executes a new job in an Azure Quantum workspace given a Q# operation
@@ -72,7 +61,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            return await AzureClient.ExecuteJobAsync(channel, OperationResolver, operationName);
+
+            var decodedParameters = new Dictionary<string, string>();
+            foreach (var key in inputParameters.Keys)
+            {
+                decodedParameters[key] = inputParameters.DecodeParameter<string>(key);
+            }
+
+            return await AzureClient.ExecuteJobAsync(channel, operationName, decodedParameters);
         }
     }
 }
