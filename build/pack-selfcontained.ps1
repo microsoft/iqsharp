@@ -16,8 +16,7 @@ function Pack-Exe() {
 
     # Suppress generating pdb files.
     # See https://github.com/dotnet/cli/issues/2246#issuecomment-320633639.
-    dotnet publish `
-    (Join-Path $PSScriptRoot $Project) `
+    dotnet publish $Project `
         -c $Configuration `
         -r $Runtime `
         --self-contained true `
