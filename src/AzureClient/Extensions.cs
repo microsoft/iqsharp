@@ -4,16 +4,12 @@
 #nullable enable
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client;
-using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -37,7 +33,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClientError">
         ///      The result of an IAzureClient API call.
         /// </param>
-        public static ExecutionResult ToExecutionResult(this AzureClientError azureClientError) =>
+        internal static ExecutionResult ToExecutionResult(this AzureClientError azureClientError) =>
             new ExecutionResult
             {
                 Status = ExecuteStatus.Error,
@@ -50,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         /// <param name="azureClientError"></param>
         /// <returns></returns>
-        public static string ToDescription(this AzureClientError azureClientError)
+        internal static string ToDescription(this AzureClientError azureClientError)
         {
             var attributes = azureClientError
                 .GetType()
@@ -65,60 +61,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="task">
         ///      A task which will return the result of an IAzureClient API call.
         /// </param>
-        public static async Task<ExecutionResult> ToExecutionResult(this Task<AzureClientError> task) =>
+        internal static async Task<ExecutionResult> ToExecutionResult(this Task<AzureClientError> task) =>
             (await task).ToExecutionResult();
 
-        internal static Table<CloudJob> ToJupyterTable(this CloudJob cloudJob) =>
-            new List<CloudJob> { cloudJob }.ToJupyterTable();
-
-        internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
-            new Table<CloudJob>
-            {
-                Columns = new List<(string, Func<CloudJob, string>)>
-                    {
-                        ("JobId", cloudJob => cloudJob.Id),
-                        ("JobName", cloudJob => cloudJob.Details.Name),
-                        ("JobStatus", cloudJob => cloudJob.Status),
-                        ("Provider", cloudJob => cloudJob.Details.ProviderId),
-                        ("Target", cloudJob => cloudJob.Details.Target),
-                    },
-                Rows = jobsList.ToList()
-            };
-
-        internal static Table<IQuantumMachineJob> ToJupyterTable(this IQuantumMachineJob job) =>
-            new Table<IQuantumMachineJob>
-            {
-                Columns = new List<(string, Func<IQuantumMachineJob, string>)>
-                    {
-                        ("JobId", job => job.Id),
-                        ("JobStatus", job => job.Status),
-                    },
-                Rows = new List<IQuantumMachineJob>() { job }
-            };
-
-        internal static Table<IQuantumClient> ToJupyterTable(this IQuantumClient quantumClient) =>
-            new Table<IQuantumClient>
-            {
-                Columns = new List<(string, Func<IQuantumClient, string>)>
-                    {
-                        ("SubscriptionId", quantumClient => quantumClient.SubscriptionId),
-                        ("ResourceGroupName", quantumClient => quantumClient.ResourceGroupName),
-                        ("WorkspaceName", quantumClient => quantumClient.WorkspaceName),
-                    },
-                Rows = new List<IQuantumClient>() { quantumClient }
-            };
-
-        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
-            new Table<TargetStatus>
-            {
-                Columns = new List<(string, Func<TargetStatus, string>)>
-                    {
-                        ("TargetId", target => target.Id),
-                        ("CurrentAvailability", target => target.CurrentAvailability),
-                        ("AverageQueueTime", target => target.AverageQueueTime.ToString()),
-                        ("StatusPage", target => target.StatusPage),
-                    },
-                Rows = targets.ToList()
-            };
+        /// <summary>
+        ///     Returns the provided argument as an enumeration of the specified type.
+        /// </summary>
+        /// <returns>
+        ///     If the argument is already an <see cref="IEnumerable{T}"/> of the specified type,
+        ///     the argument is returned. If the argument is of type <c>T</c>, then an 
+        ///     enumeration is returned with this argument as the only element.
+        ///     Otherwise, null is returned.
+        /// </returns>
+        internal static IEnumerable<T>? AsEnumerableOf<T>(this object? source) =>
+            source is T singleton ? new List<T> { singleton } :
+            source is IEnumerable<T> collection ? collection :
+            null;
     }
 }

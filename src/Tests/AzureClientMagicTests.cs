@@ -32,7 +32,7 @@ namespace Tests.IQSharp
         private readonly string storageAccountConnectionString = "TEST_CONNECTION_STRING";
         private readonly string jobId = "TEST_JOB_ID";
         private readonly string operationName = "TEST_OPERATION_NAME";
-        private readonly string targetName = "TEST_TARGET_NAME";
+        private readonly string targetId = "TEST_TARGET_ID";
 
         [TestMethod]
         public void TestConnectMagic()
@@ -142,7 +142,7 @@ namespace Tests.IQSharp
             // single argument - should set active target
             var azureClient = new MockAzureClient();
             var targetMagic = new TargetMagic(azureClient);
-            targetMagic.Test(targetName);
+            targetMagic.Test(targetId);
             Assert.AreEqual(azureClient.LastAction, AzureClientAction.SetActiveTarget);
 
             // no arguments - should print active target
@@ -172,20 +172,20 @@ namespace Tests.IQSharp
         internal AzureClientAction LastAction = AzureClientAction.None;
         internal string ConnectionString = string.Empty;
         internal bool RefreshCredentials = false;
-        internal string ActiveTargetName = string.Empty;
+        internal string ActiveTargetId = string.Empty;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetName)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
         {
             LastAction = AzureClientAction.SetActiveTarget;
-            ActiveTargetName = targetName;
+            ActiveTargetId = targetId;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
         {
             LastAction = AzureClientAction.GetActiveTarget;
-            return ActiveTargetName.ToExecutionResult();
+            return ActiveTargetId.ToExecutionResult();
         }
 
         public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, string operationName, Dictionary<string, string> inputParameters)

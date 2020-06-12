@@ -33,11 +33,11 @@ namespace Tests.IQSharp
             var services = Startup.CreateServiceProvider(workspace);
             var azureClient = services.GetService<IAzureClient>();
 
-            // SetActiveTargetAsync with recognized target name, but not yet connected
+            // SetActiveTargetAsync with recognized target ID, but not yet connected
             var result = azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator").GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
 
-            // SetActiveTargetAsync with unrecognized target name
+            // SetActiveTargetAsync with unrecognized target ID
             result = azureClient.SetActiveTargetAsync(new MockChannel(), "contoso.qpu").GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == ExecuteStatus.Error);
 
@@ -49,26 +49,26 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestAzureExecutionTarget()
         {
-            var targetName = "invalidname";
-            var executionTarget = AzureExecutionTarget.Create(targetName);
+            var targetId = "invalidname";
+            var executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.IsNull(executionTarget);
 
-            targetName = "ionq.targetname";
-            executionTarget = AzureExecutionTarget.Create(targetName);
+            targetId = "ionq.targetId";
+            executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.IsNotNull(executionTarget);
-            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.TargetId, targetId);
             Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.IonQ");
 
-            targetName = "HonEYWEll.targetname";
-            executionTarget = AzureExecutionTarget.Create(targetName);
+            targetId = "HonEYWEll.targetId";
+            executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.IsNotNull(executionTarget);
-            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.TargetId, targetId);
             Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.Honeywell");
 
-            targetName = "qci.target.name.qpu";
-            executionTarget = AzureExecutionTarget.Create(targetName);
+            targetId = "qci.target.name.qpu";
+            executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.IsNotNull(executionTarget);
-            Assert.AreEqual(executionTarget.TargetName, targetName);
+            Assert.AreEqual(executionTarget.TargetId, targetId);
             Assert.AreEqual(executionTarget.PackageName, "Microsoft.Quantum.Providers.QCI");
         }
     }
