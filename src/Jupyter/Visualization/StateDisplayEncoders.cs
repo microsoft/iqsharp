@@ -230,10 +230,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         //different options for displaying phase style
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
                         {
-                            PhaseDisplayStyle.None => FormattableString.Invariant($@"
-                                <td> 
-                                </td>
-                            "),
+                            PhaseDisplayStyle.None => "",
                             PhaseDisplayStyle.ArrowOnly => FormattableString.Invariant($@"
                                 <td style=""{StyleForAngle(amplitude.Phase)}"">
                                  ↑
