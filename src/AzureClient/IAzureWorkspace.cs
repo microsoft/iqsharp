@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -13,11 +13,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal interface IAzureWorkspace
     {
-        public string Name { get; }
+        public string? Name { get; }
 
-        public Task<IEnumerable<ProviderStatus>> GetProvidersAsync();
-        public Task<CloudJob> GetJobAsync(string jobId);
-        public Task<IEnumerable<CloudJob>> ListJobsAsync();
+        public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
+        public Task<CloudJob?> GetJobAsync(string jobId);
+        public Task<IEnumerable<CloudJob>?> ListJobsAsync();
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString);
     }
 }

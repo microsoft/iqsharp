@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -19,7 +19,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new CloudJobJsonConverter(),
             new CloudJobListJsonConverter(),
             new TargetStatusJsonConverter(),
-            new TargetStatusListJsonConverter()
+            new TargetStatusListJsonConverter(),
+            new AzureClientErrorJsonConverter()
         );
 
         public static JsonConverter[] AllConverters => allConverters.ToArray();
