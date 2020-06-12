@@ -30,6 +30,11 @@ function Pack-Exe() {
 
 }
 
+# Fetch TypeScript definitions
+Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
+    npm install
+Pop-Location
+
 Write-Host "##[info]Packing IQ# as self-contained executables."
 Pack-Exe "../src/Tool/Tool.csproj" -Runtime win10-x64
 Pack-Exe "../src/Tool/Tool.csproj" -Runtime osx-x64
