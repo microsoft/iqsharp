@@ -34,9 +34,6 @@ Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
     npm install
 Pop-Location
 
-$signingKeyPath = Get-Item (Join-Path $PSScriptRoot "267DevDivSNKey2048.snk")
-Write-Host "##[info] Signing key found at $signingKeyPath"
-
 Write-Host "##[info]Packing IQ# as self-contained executables."
 Push-Location (Join-Path $PSScriptRoot ../src/Tool)
     Pack-Exe "./Tool.csproj" -Runtime win10-x64
