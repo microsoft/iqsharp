@@ -16,7 +16,7 @@ if ($IsWindows) {
 # Find the repo root relative to this script.
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
-$BlobsDirectory = Join-Path $ArtifactRoot (Join-Path "blobs" $RuntimeID)
+$SelfContainedDirectory = Join-Path $ArtifactRoot (Join-Path "selfcontained" $RuntimeID)
 $NugetsDirectory = Join-Path $ArtifactRoot "nugets"
 $NugetConfig = Resolve-Path (Join-Path $PSScriptRoot "NuGet.config");
 
@@ -28,8 +28,8 @@ New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirecto
 Write-Host "## Artifact manifest ($ArtifactRoot): ##"
 Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 
-Write-Host "## Copying IQ# from '$BlobsDirectory' into '$TargetDirectory...' ##"
-Copy-Item (Join-Path $BlobsDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
+Write-Host "## Copying IQ# from '$SelfContainedDirectory' into '$TargetDirectory...' ##"
+Copy-Item (Join-Path $SelfContainedDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
 
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";

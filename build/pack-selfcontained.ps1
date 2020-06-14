@@ -14,6 +14,8 @@ function Pack-Exe() {
 
     $OutputPath = Join-Path $Env:SELFCONTAINED_OUTDIR $Runtime;
 
+    Write-Host "##[info]Publishing self-contained $Runtime executable to $OutputPath"
+
     # Suppress generating pdb files.
     # See https://github.com/dotnet/cli/issues/2246#issuecomment-320633639.
     dotnet publish $Project `
