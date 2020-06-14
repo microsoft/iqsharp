@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 $ErrorActionPreference = 'Stop'
 
-& "$PSScriptRoot/set-env.ps1"
+& (Join-Path $PSScriptRoot "set-env.ps1")
 $all_ok = $True
 
 function Pack-Exe() {
