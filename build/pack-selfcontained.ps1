@@ -29,10 +29,7 @@ function Pack-Exe() {
 
 }
 
-# Fetch TypeScript definitions
-Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
-    npm install
-Pop-Location
+& (Join-Path $PSScriptRoot ".." "bootstrap.ps1")
 
 Write-Host "##[info]Packing IQ# as self-contained executables."
 Push-Location (Join-Path $PSScriptRoot ../src/Tool)
