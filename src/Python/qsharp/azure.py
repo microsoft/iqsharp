@@ -73,7 +73,7 @@ class AzureJob(object):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-class AzureError(object):
+class AzureError(Exception):
     """
     Contains error information resulting from an attempt to interact with Azure.
     """
@@ -91,30 +91,37 @@ class AzureError(object):
 
 ## FUNCTIONS ##
 
-def connect(**params) -> Union[List[AzureTarget], AzureError]:
+def connect(**params) -> List[AzureTarget]:
     result = qsharp.client._execute_magic(f"azure.connect", raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else [AzureTarget(target) for target in result]
+    if "error_code" in result: raise AzureError(result)
+    return [AzureTarget(target) for target in result]
 
-def target(name : str = '', **params) -> Union[AzureTarget, AzureError]:
+def target(name : str = '', **params) -> AzureTarget:
     result = qsharp.client._execute_magic(f"azure.target {name}", raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else AzureTarget(result)
+    if "error_code" in result: raise AzureError(result)
+    return AzureTarget(result)
 
-def submit(op, **params) -> Union[AzureJob, AzureError]:
+def submit(op, **params) -> AzureJob:
     result = qsharp.client._execute_callable_magic("azure.submit", op, raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else AzureJob(result)
+    if "error_code" in result: raise AzureError(result)
+    return AzureJob(result)
 
-def execute(op, **params) -> Union[Dict, AzureError]:
+def execute(op, **params) -> Dict:
     result = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else result
+    if "error_code" in result: raise AzureError(result)
+    return result
 
-def status(jobId : str = '', **params) -> Union[AzureJob, AzureError]:
+def status(jobId : str = '', **params) -> AzureJob:
     result = qsharp.client._execute_magic(f"azure.status {jobId}", raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else AzureJob(result)
+    if "error_code" in result: raise AzureError(result)
+    return AzureJob(result)
 
-def output(jobId : str = '', **params) -> Union[Dict, AzureError]:
+def output(jobId : str = '', **params) -> Dict:
     result = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else result
+    if "error_code" in result: raise AzureError(result)
+    return result
 
-def jobs(**params) -> Union[List[AzureJob], AzureError]:
+def jobs(**params) -> List[AzureJob]:
     result = qsharp.client._execute_magic(f"azure.jobs", raise_on_stderr=False, **params)
-    return AzureError(result) if "error_code" in result else [AzureJob(job) for job in result]
+    if "error_code" in result: raise AzureError(result)
+    return [AzureJob(job) for job in result]
