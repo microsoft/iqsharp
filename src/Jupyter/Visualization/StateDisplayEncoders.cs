@@ -16,6 +16,33 @@ using Newtonsoft.Json.Converters;
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
+    ///     Represents different styles for displaying the phases of complex
+    ///     amplitudes when displaying state vectors as HTML.
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PhaseDisplayStyle
+    {
+        /// <summary>
+        ///     Suppress phase information.
+        /// </summary>
+        None,
+        /// <summary>
+        ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
+        ///     dependent on the phase.
+        /// </summary>
+        ArrowOnly,
+        /// <summary> 
+        ///     Display phase information in number format.
+        /// </summary>
+        NumberOnly,
+        /// <summary>
+        ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
+        ///     dependent on the phase as well as display phase information in number
+        ///     format.
+        ArrowsAndNumber
+    }
+
+    /// <summary>
     ///     The convention to be used in labeling computational basis states
     ///     given their representations as strings of classical bits.
     /// </summary>
@@ -199,6 +226,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             string StyleForAngle(double angle) =>
                 $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
                    text-align: center;";
+            string StyleForNumber() =>
+                $@"text-align: center;";
 
             if (displayable is DisplayableState vector)
             {
@@ -217,6 +246,28 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         var (amplitude, basisLabel) = item;
 
+                        //different options for displaying phase style
+                        var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
+                        {
+                            PhaseDisplayStyle.None => "",
+                            PhaseDisplayStyle.ArrowOnly => FormattableString.Invariant($@"
+                                <td style=""{StyleForAngle(amplitude.Phase)}"">
+                                 ↑
+                                </td>
+                            "),
+                            PhaseDisplayStyle.ArrowsAndNumber => FormattableString.Invariant($@"
+                                <td>
+                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div style=""{StyleForNumber()}"">{amplitude.Phase}</div>
+                                </td>
+                            "),
+                            PhaseDisplayStyle.NumberOnly => FormattableString.Invariant($@"
+                                <td> 
+                                    {amplitude.Phase}
+                                </td>
+                            "),
+                            _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
+                        };
+
                         return FormattableString.Invariant($@"
                             <tr>
                                 <td>$\left|{basisLabel}\right\rangle$</td>
@@ -228,9 +279,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                         style=""width: 100%;""
                                     >
                                 </td>
-                                <td style=""{StyleForAngle(amplitude.Phase)}"">
-                                    ↑
-                                </td>
+                                {phaseCell}
                             </tr>
                         ");
                     })
@@ -316,4 +365,4 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             else return null;
         }
     }
-}
+} 
