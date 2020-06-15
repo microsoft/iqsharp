@@ -28,12 +28,12 @@ def set_environment_variables():
 
 ## TESTS ##
 
-def test_empty_workspace(monkeypatch):
+def test_empty_workspace():
     """
     Tests behavior of a mock workspace with no providers.
     """
     with pytest.raises(AzureError) as exception_info:
-        qsharp.azure.target()   # not yet connected
+        qsharp.azure.target()
     assert exception_info.value.error_name == "NotConnected"
 
     targets = qsharp.azure.connect(
@@ -45,7 +45,7 @@ def test_empty_workspace(monkeypatch):
     assert targets == []
 
     with pytest.raises(AzureError) as exception_info:
-        qsharp.azure.target("invalid.target")   # invalid target
+        qsharp.azure.target("invalid.target")
     assert exception_info.value.error_name == "InvalidTarget"
 
     jobs = qsharp.azure.jobs()
@@ -65,7 +65,7 @@ def test_workspace_with_providers():
     assert len(targets) > 0
 
     with pytest.raises(AzureError) as exception_info:
-        qsharp.azure.target()   # no target specified yet
+        qsharp.azure.target()
     assert exception_info.value.error_name == "NoTarget"
 
     for target in targets:
@@ -93,7 +93,7 @@ def test_workspace_with_providers():
     op = qsharp.QSharpCallable("Microsoft.Quantum.SanityTests.HelloAgain", None)
 
     with pytest.raises(AzureError) as exception_info:
-        qsharp.azure.execute(op)   # missing parameters
+        qsharp.azure.execute(op)
     assert exception_info.value.error_name == "JobSubmissionFailed"
 
     histogram = qsharp.azure.execute(op, count=3, name="test")
