@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -67,24 +68,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Parses the input to a magic command, interpreting the input as
         ///     a name followed by a JSON-serialized dictionary.
         /// </summary>
-        public static (string, Dictionary<string, string>) ParseInput(string input)
-        {
-            if (input == null) return (string.Empty, new Dictionary<string, string> { });
-            var BLANK_SPACE = new char[1] { ' ' };
-
-            var inputParts = input.Split(BLANK_SPACE, 2, StringSplitOptions.RemoveEmptyEntries);
-            var name = inputParts.Length > 0 ? inputParts[0] : string.Empty;
-            var args = inputParts.Length > 1
-                    ? JsonConverters.JsonToDict(inputParts[1])
-                    : new Dictionary<string, string> { };
-
-            return (name, args);
-        }
-
-        /// <summary>
-        ///     Parses the input to a magic command, interpreting the input as
-        ///     a name followed by a JSON-serialized dictionary.
-        /// </summary>
         public static Dictionary<string, string> JsonToDict(string input) =>
             !string.IsNullOrEmpty(input) ? JsonConverters.JsonToDict(input) : new Dictionary<string, string> { };
 
@@ -97,46 +80,63 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
             Dictionary<string, string> inputParameters = new Dictionary<string, string>();
 
-            var args = input.Split(null as char[], StringSplitOptions.RemoveEmptyEntries);
+            // This regex looks for four types of matches:
+            // 1. (\{.*\})
+            //      Matches anything enclosed in matching curly braces.
+            // 2. [^\s"]+(?:\s*=\s*)(?:"[^"]*"|[^\s"]*)*
+            //      Matches things that look like key=value, allowing whitespace around the equals sign,
+            //      and allowing value to be a quoted string, e.g., key="value".
+            // 3. [^\s"]+(?:"[^"]*"[^\s"]*)*
+            //      Matches things that are single words, not inside quotes.
+            // 4. (?:"[^"]*"[^\s"]*)+
+            //      Matches quoted strings.
+            var regex = new Regex(@"(\{.*\})|[^\s""]+(?:\s*=\s*)(?:""[^""]*""|[^\s""]*)*|[^\s""]+(?:""[^""]*""[^\s""]*)*|(?:""[^""]*""[^\s""]*)+");
+            var args = regex.Matches(input).Select(match => match.Value);
 
             // If we are expecting a first inferred-name parameter, see if it exists.
             // If so, serialize it to the dictionary as JSON and remove it from the list of args.
-            if (args.Length > 0 &&
-                !args[0].StartsWith("{") &&
-                !args[0].Contains("=") &&
+            if (args.Any() &&
+                !args.First().StartsWith("{") &&
+                !args.First().Contains("=") &&
                 !string.IsNullOrEmpty(firstParameterInferredName))
             {
-                using (var writer = new StringWriter())
-                {
-                    Json.Serializer.Serialize(writer, args[0]);
-                    inputParameters[firstParameterInferredName] = writer.ToString();
-                }
-                args = args.Where((_, index) => index != 0).ToArray();
+                using var writer = new StringWriter();
+                Json.Serializer.Serialize(writer, args.First());
+                inputParameters[firstParameterInferredName] = writer.ToString();
+                args = args.Skip(1);
             }
 
-            // See if the remaining arguments look like JSON. If so, try to parse as JSON.
-            // Otherwise, try to parse as key=value pairs and serialize into the dictionary as JSON.
-            if (args.Length > 0 && args[0].StartsWith("{"))
+            // See if the remaining arguments look like JSON. If so, parse as JSON.
+            if (args.Any() && args.First().StartsWith("{"))
             {
-                var jsonArgs = JsonToDict(string.Join(" ", args));
+                var jsonArgs = JsonToDict(args.First());
                 foreach (var (key, jsonValue) in jsonArgs)
                 {
                     inputParameters[key] = jsonValue;
                 }
+
+                return inputParameters;
             }
-            else
+
+            // Otherwise, try to parse as key=value pairs and serialize into the dictionary as JSON.
+            foreach (string arg in args)
             {
-                foreach (string arg in args)
+                var tokens = arg.Split("=", 2);
+                var key = tokens[0].Trim();
+                var value = tokens.Length switch
                 {
-                    var tokens = arg.Split("=", 2);
-                    var key = tokens[0].Trim();
-                    var value = (tokens.Length == 1) ? true as object : tokens[1].Trim() as object;
-                    using (var writer = new StringWriter())
-                    {
-                        Json.Serializer.Serialize(writer, value);
-                        inputParameters[key] = writer.ToString();
-                    }
-                }
+                    // If there was no value provided explicitly, treat it as an implicit "true" value
+                    1 => true as object,
+
+                    // Trim whitespace and also enclosing single-quotes or double-quotes before returning
+                    2 => Regex.Replace(tokens[1].Trim(), @"^['""]|['""]$", string.Empty) as object,
+
+                    // We called arg.Split("=", 2), so there should never be more than 2
+                    _ => throw new InvalidOperationException()
+                };
+                using var writer = new StringWriter();
+                Json.Serializer.Serialize(writer, value);
+                inputParameters[key] = writer.ToString();
             }
 
             return inputParameters;
