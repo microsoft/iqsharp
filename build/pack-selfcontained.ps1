@@ -33,9 +33,12 @@ function Pack-Exe() {
 
 & (Join-Path $PSScriptRoot ".." "bootstrap.ps1")
 
-Write-Host "##[info]Packing IQ# as self-contained executables."
+Write-Host "##[info]Packing IQ# as self-contained executables..."
 Push-Location (Join-Path $PSScriptRoot ../src/Tool)
     Pack-Exe "./Tool.csproj" -Runtime win10-x64
     Pack-Exe "./Tool.csproj" -Runtime osx-x64
     Pack-Exe "./Tool.csproj" -Runtime linux-x64
 Pop-Location
+
+Write-Host "##[info]Verifying manifest..."
+& (Join-Path $PSScriptRoot "manifest-selfcontained.ps1")

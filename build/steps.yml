@@ -35,13 +35,6 @@ steps:
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 ##
-# Verify manifest
-##
-- pwsh: .\manifest.ps1
-  displayName: "Verifying manifest"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-
-##
 # Publish tests results and build artifacts.
 ##
 - task: PublishTestResults@2
