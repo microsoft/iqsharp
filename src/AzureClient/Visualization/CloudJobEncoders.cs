@@ -22,8 +22,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? dateTime
             : null as DateTime?;
 
-        internal static Dictionary<string, object> ToDictionary(this CloudJob cloudJob) =>
-            new Dictionary<string, object>()
+        internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
+            new Dictionary<string, object?>()
             {
                 // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
                 ["id"] = cloudJob.Id,
@@ -47,11 +47,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Job Status", cloudJob => cloudJob.Status),
                     ("Provider", cloudJob => cloudJob.Details.ProviderId),
                     ("Target", cloudJob => cloudJob.Details.Target),
-                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString()),
-                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToString()),
-                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime.ToDateTime()?.ToString()),
+                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),
+                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
+                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
                 },
-                Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList()
+                Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
     }
 
