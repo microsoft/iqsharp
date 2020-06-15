@@ -101,9 +101,6 @@ Pack-Nuget '../src/Jupyter/Jupyter.csproj'
 Write-Host "##[info]Packing IQ# tool..."
 Pack-Nuget '../src/Tool/Tool.csproj'
 
-Write-Host "##[info]Verifying manifest..."
-& (Join-Path $PSScriptRoot "manifest.ps1")
-
 if ($Env:ENABLE_PYTHON -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Creating Python packages. Env:ENABLE_PYTHON was set to 'false'."
 } else {
