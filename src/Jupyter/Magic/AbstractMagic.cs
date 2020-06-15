@@ -67,24 +67,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Parses the input to a magic command, interpreting the input as
         ///     a name followed by a JSON-serialized dictionary.
         /// </summary>
-        public static (string, Dictionary<string, string>) ParseInput(string input)
-        {
-            if (input == null) return (string.Empty, new Dictionary<string, string> { });
-            var BLANK_SPACE = new char[1] { ' ' };
-
-            var inputParts = input.Split(BLANK_SPACE, 2, StringSplitOptions.RemoveEmptyEntries);
-            var name = inputParts.Length > 0 ? inputParts[0] : string.Empty;
-            var args = inputParts.Length > 1
-                    ? JsonConverters.JsonToDict(inputParts[1])
-                    : new Dictionary<string, string> { };
-
-            return (name, args);
-        }
-
-        /// <summary>
-        ///     Parses the input to a magic command, interpreting the input as
-        ///     a name followed by a JSON-serialized dictionary.
-        /// </summary>
         public static Dictionary<string, string> JsonToDict(string input) =>
             !string.IsNullOrEmpty(input) ? JsonConverters.JsonToDict(input) : new Dictionary<string, string> { };
 
