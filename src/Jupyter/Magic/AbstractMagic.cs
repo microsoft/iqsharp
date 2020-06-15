@@ -127,8 +127,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 {
                     // If there was no value provided explicitly, treat it as an implicit "true" value
                     1 => true as object,
+
                     // Trim whitespace and also enclosing single-quotes or double-quotes before returning
-                    _ => Regex.Replace(tokens[1].Trim(), @"^['""]|['""]$", string.Empty) as object
+                    2 => Regex.Replace(tokens[1].Trim(), @"^['""]|['""]$", string.Empty) as object,
+
+                    // We called arg.Split("=", 2), so there should never be more than 2
+                    _ => throw new InvalidOperationException()
                 };
                 using var writer = new StringWriter();
                 Json.Serializer.Serialize(writer, value);
