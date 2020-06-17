@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Microsoft.Azure.Quantum;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 
@@ -77,5 +78,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             source is T singleton ? new List<T> { singleton } :
             source is IEnumerable<T> collection ? collection :
             null;
+
+        /// <summary>
+        ///     Determines whether the given <see cref="CloudJob"/> matches the given <c>filter</c>.
+        /// </summary>
+        internal static bool Matches(this CloudJob job, string filter) =>
+            (job.Id != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+            (job.Details.Name != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+            (job.Details.Target != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase));
     }
 }

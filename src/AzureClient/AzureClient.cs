@@ -350,12 +350,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            return jobs
-                .Where(job =>
-                    job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                    job.Details.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                    job.Details.Target.Contains(filter, StringComparison.OrdinalIgnoreCase))
-                .ToExecutionResult();
+            return jobs.Where(job => job.Matches(filter)).ToExecutionResult();
         }
     }
 }
