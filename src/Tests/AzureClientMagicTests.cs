@@ -11,6 +11,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Tests.IQSharp
 {
@@ -26,7 +27,7 @@ namespace Tests.IQSharp
     [TestClass]
     public class AzureClientMagicTests
     {
-        private readonly string subscriptionId = "TEST_SUBSCRIPTION_ID";
+        private readonly string subscriptionId = Guid.NewGuid().ToString();
         private readonly string resourceGroupName = "TEST_RESOURCE_GROUP_NAME";
         private readonly string workspaceName = "TEST_WORKSPACE_NAME";
         private readonly string storageAccountConnectionString = "TEST_CONNECTION_STRING";
@@ -40,11 +41,24 @@ namespace Tests.IQSharp
             var azureClient = new MockAzureClient();
             var connectMagic = new ConnectMagic(azureClient);
 
+            // no input
+            connectMagic.Test(string.Empty);
+            Assert.AreEqual(AzureClientAction.GetConnectionStatus, azureClient.LastAction);
+
             // unrecognized input
             connectMagic.Test($"invalid");
-            Assert.AreEqual(azureClient.LastAction, AzureClientAction.GetConnectionStatus);
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
 
-            // valid input
+            // valid input with resource ID
+            connectMagic.Test($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.IsFalse(azureClient.RefreshCredentials);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+
+            // valid input with individual parameters
             connectMagic.Test(
                 @$"subscriptionId={subscriptionId}
                    resourceGroupName={resourceGroupName}

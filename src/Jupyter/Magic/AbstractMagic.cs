@@ -122,14 +122,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             foreach (string arg in args)
             {
                 var tokens = arg.Split("=", 2);
-                var key = tokens[0].Trim();
+                var regexBeginEndQuotes = @"^['""]|['""]$";
+                var key = Regex.Replace(tokens[0].Trim(), regexBeginEndQuotes, string.Empty);
                 var value = tokens.Length switch
                 {
                     // If there was no value provided explicitly, treat it as an implicit "true" value
                     1 => true as object,
 
                     // Trim whitespace and also enclosing single-quotes or double-quotes before returning
-                    2 => Regex.Replace(tokens[1].Trim(), @"^['""]|['""]$", string.Empty) as object,
+                    2 => Regex.Replace(tokens[1].Trim(), regexBeginEndQuotes, string.Empty) as object,
 
                     // We called arg.Split("=", 2), so there should never be more than 2
                     _ => throw new InvalidOperationException()

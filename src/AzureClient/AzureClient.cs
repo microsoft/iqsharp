@@ -66,20 +66,33 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string storageAccountConnectionString,
             bool refreshCredentials = false)
         {
-            ConnectionString = storageAccountConnectionString;
-
             var azureEnvironment = AzureEnvironment.Create(subscriptionId);
-            ActiveWorkspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, resourceGroupName, workspaceName, refreshCredentials);
-            if (ActiveWorkspace == null)
+            IAzureWorkspace? workspace = null;
+            try
+            {
+                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, resourceGroupName, workspaceName, refreshCredentials);
+            }
+            catch (Exception e)
+            {
+                channel.Stderr($"The connection to the Azure Quantum workspace could not be completed. Please check the provided parameters and try again.");
+                channel.Stderr($"Error details: {e.Message}");
+                return AzureClientError.WorkspaceNotFound.ToExecutionResult();
+            }
+
+            if (workspace == null)
             {
                 return AzureClientError.AuthenticationFailed.ToExecutionResult();
             }
 
-            AvailableProviders = await ActiveWorkspace.GetProvidersAsync();
-            if (AvailableProviders == null)
+            var providers = await workspace.GetProvidersAsync();
+            if (providers == null)
             {
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
+
+            ActiveWorkspace = workspace;
+            AvailableProviders = providers;
+            ConnectionString = storageAccountConnectionString;
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 
