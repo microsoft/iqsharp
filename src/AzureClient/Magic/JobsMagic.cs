@@ -17,6 +17,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public class JobsMagic : AzureClientMagicBase
     {
+        private const string ParameterNameFilter = "__filter__";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JobsMagic"/> class.
         /// </summary>
@@ -32,7 +34,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Summary = "Displays a list of jobs in the current Azure Quantum workspace.",
                     Description = @"
                         This magic command allows for displaying the list of jobs in the current 
-                        Azure Quantum workspace.
+                        Azure Quantum workspace, optionally filtering the list to jobs which
+                        have an ID, name, or target containing the provided filter parameter.
 
                         The Azure Quantum workspace must previously have been initialized
                         using the %azure.connect magic command.
@@ -46,13 +49,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Out[]: <list of jobs in the workspace>
                             ```
                         ".Dedent(),
+
+                        @"
+                            Print the list of jobs whose names contain ""MyJob"":
+                            ```
+                            In []: %azure.jobs ""MyJob""
+                            Out[]: <list of matching jobs>
+                            ```
+                        ".Dedent(),
                     },
                 }) {}
 
         /// <summary>
-        ///     Lists all jobs in the active workspace.
+        ///     Lists all jobs in the active workspace, optionally filtered by a provided parameter.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel) =>
-            await AzureClient.GetJobListAsync(channel);
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        {
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
+            var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
+            return await AzureClient.GetJobListAsync(channel, filter);
+        }
     }
 }

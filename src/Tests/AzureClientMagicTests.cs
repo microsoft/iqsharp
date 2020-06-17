@@ -254,7 +254,7 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();

@@ -335,7 +335,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter)
         {
             if (ActiveWorkspace == null)
             {
@@ -350,7 +350,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            return jobs.ToExecutionResult();
+            return jobs
+                .Where(job =>
+                    job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                    job.Details.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                    job.Details.Target.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                .ToExecutionResult();
         }
     }
 }
