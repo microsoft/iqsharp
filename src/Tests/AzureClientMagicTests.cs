@@ -60,10 +60,10 @@ namespace Tests.IQSharp
 
             // valid input with individual parameters
             connectMagic.Test(
-                @$"subscriptionId={subscriptionId}
-                   resourceGroupName={resourceGroupName}
-                   workspaceName={workspaceName}
-                   storageAccountConnectionString={storageAccountConnectionString}");
+                @$"subscription={subscriptionId}
+                   resourceGroup={resourceGroupName}
+                   workspace={workspaceName}
+                   storage={storageAccountConnectionString}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
@@ -73,10 +73,10 @@ namespace Tests.IQSharp
 
             // valid input with extra whitespace and quotes
             connectMagic.Test(
-                @$"subscriptionId   =   {subscriptionId}
-                   resourceGroupName=  ""{resourceGroupName}""
-                   workspaceName  ={workspaceName}
-                   storageAccountConnectionString = '{storageAccountConnectionString}'");
+                @$"subscription   =   {subscriptionId}
+                   resourceGroup=  ""{resourceGroupName}""
+                   workspace  ={workspaceName}
+                   storage = '{storageAccountConnectionString}'");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
@@ -86,10 +86,10 @@ namespace Tests.IQSharp
 
             // valid input with forced login
             connectMagic.Test(
-                @$"refresh subscriptionId={subscriptionId}
-                   resourceGroupName={resourceGroupName}
-                   workspaceName={workspaceName}
-                   storageAccountConnectionString={storageAccountConnectionString}");
+                @$"refresh subscription={subscriptionId}
+                   resourceGroup={resourceGroupName}
+                   workspace={workspaceName}
+                   storage={storageAccountConnectionString}");
             Assert.IsTrue(azureClient.RefreshCredentials);
         }
 

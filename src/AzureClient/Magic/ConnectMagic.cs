@@ -19,10 +19,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class ConnectMagic : AzureClientMagicBase
     {
         private const string ParameterNameRefresh = "refresh";
-        private const string ParameterNameStorageAccountConnectionString = "storageAccountConnectionString";
-        private const string ParameterNameSubscriptionId = "subscriptionId";
-        private const string ParameterNameResourceGroupName = "resourceGroupName";
-        private const string ParameterNameWorkspaceName = "workspaceName";
+        private const string ParameterNameStorageAccountConnectionString = "storage";
+        private const string ParameterNameSubscriptionId = "subscription";
+        private const string ParameterNameResourceGroupName = "resourceGroup";
+        private const string ParameterNameWorkspaceName = "workspace";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
@@ -62,7 +62,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                 In []: %azure.connect {ParameterNameSubscriptionId}=""SUBSCRIPTION_ID""
                                                       {ParameterNameResourceGroupName}=""RESOURCE_GROUP_NAME""
                                                       {ParameterNameWorkspaceName}=""WORKSPACE_NAME""
-                                                      {ParameterNameStorageAccountConnectionString}=""CONNECTION_STRING""
+                                                      {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
                                 Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
                                        <list of Q# execution targets available in the Azure Quantum workspace>
                                 ```
