@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using Microsoft.Jupyter.Core;
 
@@ -24,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <param name="engine">The <see cref="IExecutionEngine"/> instance for which interrupt is requested.</param>
         public static void TriggerKernelInterruptRequested(this IEventService eventService, IExecutionEngine engine)
         {
-            eventService?.Trigger<KernelInterruptRequestedEvent, IExecutionEngine>(engine);
+            eventService.Trigger<KernelInterruptRequestedEvent, IExecutionEngine>(engine);
         }
 
         /// <summary>
@@ -34,7 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <returns>The typed EventPubSub for the KernelInterruptRequested event.</returns>
         public static EventPubSub<KernelInterruptRequestedEvent, IExecutionEngine> OnKernelInterruptRequested(this IEventService eventService)
         {
-            return eventService?.Events<KernelInterruptRequestedEvent, IExecutionEngine>();
+            return eventService.Events<KernelInterruptRequestedEvent, IExecutionEngine>();
         }
     }
 }
