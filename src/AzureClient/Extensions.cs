@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         internal static bool Matches(this CloudJob job, string filter) =>
             (job.Id != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
-            (job.Details.Name != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
-            (job.Details.Target != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase));
+            (job.Details.Name != null && job.Details.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+            (job.Details.Target != null && job.Details.Target.Contains(filter, StringComparison.OrdinalIgnoreCase));
     }
 }
