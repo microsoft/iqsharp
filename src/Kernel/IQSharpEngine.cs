@@ -50,6 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = magicSymbolResolver;
+            this.EventService = eventService;
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
@@ -87,6 +88,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         internal ISymbolResolver SymbolsResolver { get; }
 
         internal ISymbolResolver MagicResolver { get; }
+
+        internal IEventService EventService { get; }
 
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
@@ -127,6 +130,18 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 performanceMonitor.Report();
             }
+        }
+
+        /// <summary>
+        /// This method is called when the Jupyter client requests that the current
+        /// cell execution should be interrupted.
+        /// </summary>
+        /// <param name="message">The original request from the client.</param>
+        public override void OnInterruptRequest(Message message)
+        {
+            EventService?.Trigger<KernelInterruptRequestedEvent, IExecutionEngine>(this);
+
+            base.OnInterruptRequest(message);
         }
     }
 }

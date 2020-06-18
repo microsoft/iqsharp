@@ -36,7 +36,8 @@ namespace Tests.IQSharp
     {
         public event Action<Message> KernelInfoRequest;
         public event Action<Message> ExecuteRequest;
-        public event Action<Message> ShutdownRequest; 
+        public event Action<Message> ShutdownRequest;
+        public event Action<Message> InterruptRequest;
 
         internal void Handle(Message message)
         {

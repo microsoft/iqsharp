@@ -13,6 +13,7 @@ using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -23,6 +24,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
+        private IEventService EventService { get; }
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private IAzureWorkspace? ActiveWorkspace { get; set; }
@@ -45,6 +47,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             References = references;
             EntryPointGenerator = entryPointGenerator;
             Logger = logger;
+            EventService = eventService;
+
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
             if (engine is BaseEngine baseEngine)
@@ -177,11 +181,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
             {
+                EventService.OnKernelInterruptRequested().On += (engine) => cts.Cancel();
+
                 CloudJob? cloudJob = null;
                 do
                 {
-                    // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
-                    //       handle Jupyter kernel interrupt here and break out of this loop 
                     await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
                     if (cts.IsCancellationRequested) break;
                     cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
