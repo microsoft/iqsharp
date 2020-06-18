@@ -49,7 +49,7 @@ setuptools.setup(
     name="qsharp",
     version=version,
     author="Microsoft",
-    author_email="opencode@microsoft.com",
+    author_email="que-contacts@microsoft.com",
     description="Python client for Q#, a domain-specific quantum programming language",
     long_description=long_description,
     long_description_content_type="text/markdown",
