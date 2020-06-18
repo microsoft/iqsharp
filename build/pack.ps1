@@ -32,7 +32,7 @@ function Pack-Wheel() {
     $result = 0
 
     Push-Location (Join-Path $PSScriptRoot $Path)
-        python setup.py bdist_wheel sdist
+        python setup.py bdist_wheel sdist --formats=gztar,zip
 
         if  ($LastExitCode -ne 0) {
             Write-Host "##vso[task.logissue type=error;]Failed to build $Path."
@@ -40,6 +40,7 @@ function Pack-Wheel() {
         } else {
             Copy-Item "dist/*.whl" $Env:PYTHON_OUTDIR
             Copy-Item "dist/*.tar.gz" $Env:PYTHON_OUTDIR
+            Copy-Item "dist/*.zip" $Env:PYTHON_OUTDIR
         }
     Pop-Location
 
