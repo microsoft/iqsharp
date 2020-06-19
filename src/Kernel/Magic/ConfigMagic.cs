@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -81,7 +81,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string? input, IChannel channel)
+        public override ExecutionResult Run(string? input, IChannel channel, CancellationToken cancellationToken)
         {
             // If we didn't get any input, treat it as a query.
             if (input == null || input.Trim().Length == 0)

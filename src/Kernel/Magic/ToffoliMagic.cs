@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -36,14 +37,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public ISymbolResolver SymbolResolver { get; }
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel) =>
-            RunAsync(input, channel).Result;
+        public override ExecutionResult Run(string input, IChannel channel, CancellationToken cancellationToken) =>
+            RunAsync(input, channel, cancellationToken).Result;
 
         /// <summary>
         /// Simulates a function/operation using the ToffoliSimulator as target machine.
         /// It expects a single input: the name of the function/operation to simulate.
         /// </summary>
-        public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 

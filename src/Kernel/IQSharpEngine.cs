@@ -16,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -96,7 +97,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
         /// the operations found. These operations are then available for simulation and estimate.
         /// </summary>
-        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
+        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel, CancellationToken cancellationToken)
         {
             channel = channel.WithNewLines();
 
@@ -130,18 +131,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 performanceMonitor.Report();
             }
-        }
-
-        /// <summary>
-        /// This method is called when the Jupyter client requests that the current
-        /// cell execution should be interrupted.
-        /// </summary>
-        /// <param name="message">The original request from the client.</param>
-        public override void OnInterruptRequest(Message message)
-        {
-            EventService?.Trigger<KernelInterruptRequestedEvent, IExecutionEngine>(this);
-
-            base.OnInterruptRequest(message);
         }
     }
 }

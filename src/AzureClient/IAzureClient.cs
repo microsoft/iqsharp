@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 
@@ -128,7 +129,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Details of the submitted job, or an error if submission failed.
         /// </returns>
-        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext);
+        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, CancellationToken token, AzureSubmissionContext submissionContext);
 
         /// <summary>
         /// Executes the specified Q# operation as a job to the currently active target
@@ -137,7 +138,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// The result of the executed job, or an error if execution failed.
         /// </returns>
-        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext);
+        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, CancellationToken token, AzureSubmissionContext submissionContext);
 
         /// <summary>
         /// Sets the specified target for job submission.
