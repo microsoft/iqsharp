@@ -45,7 +45,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                dump.basisStateLabelingConvention ""BigEndian""
                                dump.truncateSmallAmplitudes      true
                         ```
-                    ",
+                    ".Dedent(),
 
                     @"
                         Configure the `DumpMachine` and `DumpRegister` callables
