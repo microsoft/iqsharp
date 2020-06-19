@@ -117,7 +117,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
             var resourceIdRegex = new Regex(
                 @"^\/subscriptions\/([a-zA-Z0-9\-]*)\/resourceGroups\/([^\s\/]*)\/providers\/Microsoft\.Quantum\/Workspaces\/([^\s\/]*)$");
-            if (!string.IsNullOrEmpty(resourceId) && resourceIdRegex.IsMatch(resourceId))
+            var match = resourceIdRegex.Match(resourceId);
+            if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
                 // -> match.Groups[0]: The full resource ID for the Azure Quantum workspace
