@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -38,23 +38,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new ExecutionResult
             {
                 Status = ExecuteStatus.Error,
-                Output = azureClientError.ToDescription()
+                Output = azureClientError,
             };
-
-        /// <summary>
-        ///     Returns the string value of the <see cref="DescriptionAttribute"/> for the given
-        ///     <see cref="AzureClientError"/> enumeration value.
-        /// </summary>
-        /// <param name="azureClientError"></param>
-        /// <returns></returns>
-        internal static string ToDescription(this AzureClientError azureClientError)
-        {
-            var attributes = azureClientError
-                .GetType()
-                .GetField(azureClientError.ToString())
-                .GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
-            return attributes?.Length > 0 ? attributes[0].Description : string.Empty;
-        }
 
         /// <summary>
         ///      Encapsulates a given <see cref="AzureClientError"/> as the result of an execution.
