@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -20,12 +20,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        internal IAzureWorkspace? ActiveWorkspace { get; private set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
-        private IAzureWorkspace? ActiveWorkspace { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatus>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
@@ -55,6 +55,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
             }
         }
 
@@ -95,6 +97,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ConnectionString = storageAccountConnectionString;
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
+
+            if (ValidExecutionTargets.Count() == 0)
+            {
+                channel.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.Name}.");
+            }
 
             return ValidExecutionTargets.ToExecutionResult();
         }
@@ -232,7 +239,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
-            return ActiveTarget.TargetId.ToExecutionResult();
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -267,7 +275,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
 
-            return $"Active target is now {ActiveTarget.TargetId}".ToExecutionResult();
+            channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -356,13 +366,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync();
-            if (jobs == null || jobs.Count() == 0)
+            var jobs = await ActiveWorkspace.ListJobsAsync() ?? new List<CloudJob>();
+            if (jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
-                return AzureClientError.JobNotFound.ToExecutionResult();
             }
-
+            
             return jobs.ToExecutionResult();
         }
     }
