@@ -99,6 +99,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ActiveWorkspace = workspace;
             AvailableProviders = providers;
             ConnectionString = storageAccountConnectionString;
+            ActiveTarget = null;
+            MostRecentJobId = string.Empty;
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 

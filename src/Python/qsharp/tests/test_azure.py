@@ -51,9 +51,9 @@ def test_empty_workspace():
     jobs = qsharp.azure.jobs()
     assert jobs == []
 
-def test_create_workspace_with_parameters():
+def test_workspace_create_with_parameters():
     """
-    Tests creation of a mock workspace with mock providers using parameters.
+    Tests behavior of a mock workspace with providers, using parameters to connect.
     """
     targets = qsharp.azure.connect(
         storage="test",
@@ -64,11 +64,13 @@ def test_create_workspace_with_parameters():
     assert isinstance(targets, list)
     assert len(targets) > 0
 
-def test_workspace_with_providers():
+    _test_workspace_with_providers_after_connection()
+
+def test_workspace_create_with_resource_id():
     """
-    Tests behavior of a mock workspace created via resource ID with mock providers.
+    Tests behavior of a mock workspace with providers, using resource ID to connect.
     """
-    subscriptionId = "test"
+    subscriptionId = "f846b2bd-d0e2-4a1d-8141-4c6944a9d387"
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
     targets = qsharp.azure.connect(
@@ -76,10 +78,30 @@ def test_workspace_with_providers():
     assert isinstance(targets, list)
     assert len(targets) > 0
 
+    _test_workspace_with_providers_after_connection()
+
+def test_workspace_create_with_resource_id_and_storage():
+    """
+    Tests behavior of a mock workspace with providers, using resource ID and storage connection string to connect.
+    """
+    subscriptionId = "f846b2bd-d0e2-4a1d-8141-4c6944a9d387"
+    resourceGroupName = "test"
+    workspaceName = "WorkspaceNameWithMockProviders"
+    storageAccountConnectionString = "test"
+    targets = qsharp.azure.connect(
+        resourceId=f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}",
+        storage=storageAccountConnectionString)
+    assert isinstance(targets, list)
+    assert len(targets) > 0
+
+    _test_workspace_with_providers_after_connection()
+
+def _test_workspace_with_providers_after_connection():
     with pytest.raises(AzureError) as exception_info:
         qsharp.azure.target()
     assert exception_info.value.error_name == "NoTarget"
 
+    targets = qsharp.azure.connect()
     for target in targets:
         active_target = qsharp.azure.target(target.id)
         assert isinstance(active_target, AzureTarget)

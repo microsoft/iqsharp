@@ -58,6 +58,17 @@ namespace Tests.IQSharp
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
 
+            // valid input with resource ID and storage account connection string
+            connectMagic.Test(
+                @$"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}
+                   storage={storageAccountConnectionString}");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.IsFalse(azureClient.RefreshCredentials);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+
             // valid input with individual parameters
             connectMagic.Test(
                 @$"subscription={subscriptionId}

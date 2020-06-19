@@ -58,6 +58,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ".Dedent(),
 
                             $@"
+                                Connect to an Azure Quantum workspace using its resource ID and a storage account connection string,
+                                which is required for workspaces that do not have a linked storage account:
+                                ```
+                                In []: %azure.connect {ParameterNameResourceId}=""/subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                                                      {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
+                                Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                       <list of Q# execution targets available in the Azure Quantum workspace>
+                                ```
+                            ".Dedent(),
+
+                            $@"
                                 Connect to an Azure Quantum workspace using individual parameters:
                                 ```
                                 In []: %azure.connect {ParameterNameSubscriptionId}=""SUBSCRIPTION_ID""
@@ -115,9 +126,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // A valid resource ID looks like:
             // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
-            var resourceIdRegex = new Regex(
-                @"^\/subscriptions\/([a-zA-Z0-9\-]*)\/resourceGroups\/([^\s\/]*)\/providers\/Microsoft\.Quantum\/Workspaces\/([^\s\/]*)$");
-            var match = resourceIdRegex.Match(resourceId);
+            var match = Regex.Match(resourceId,
+                @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$");
             if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
@@ -125,7 +135,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 // -> match.Groups[1]: The Azure subscription ID
                 // -> match.Groups[2]: The Azure resource group name
                 // -> match.Groups[3]: The Azure Quantum workspace name
-                var match = resourceIdRegex.Match(resourceId);
                 subscriptionId = match.Groups[1].Value;
                 resourceGroupName = match.Groups[2].Value;
                 workspaceName = match.Groups[3].Value;
