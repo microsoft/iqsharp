@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client.Models;
@@ -25,6 +26,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
         private IEventService EventService { get; }
+        private CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private IAzureWorkspace? ActiveWorkspace { get; set; }
@@ -49,7 +51,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Logger = logger;
             EventService = eventService;
 
-            eventService?.TriggerServiceInitialized<IAzureClient>(this);
+            EventService.TriggerServiceInitialized<IAzureClient>(this);
+            EventService.OnKernelInterruptRequested().On += (engine) => CancellationTokenSource.Cancel();
 
             if (engine is BaseEngine baseEngine)
             {
@@ -179,19 +182,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
 
-            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
+            try
             {
-                EventService.OnKernelInterruptRequested().On += (engine) => cts.Cancel();
-
                 CloudJob? cloudJob = null;
-                do
+                ResetCancellationTokenSource().CancelAfter(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout));
+                while ((cloudJob == null || cloudJob.InProgress) && !CancellationTokenSource.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
-                    if (cts.IsCancellationRequested) break;
+                    await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), CancellationTokenSource.Token);
                     cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
                     channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
                 }
-                while (cloudJob == null || cloudJob.InProgress);
+            }
+            catch (TaskCanceledException e)
+            {
+                Logger?.LogInformation($"Cancelled waiting for job execution to complete: {e.Message}");
             }
 
             return await GetJobResultAsync(channel, MostRecentJobId);
@@ -355,6 +359,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             return jobs.ToExecutionResult();
+        }
+
+        /// <summary>
+        ///     Creates a new <see cref="System.Threading.CancellationTokenSource"/> object, stores it in
+        ///     the <see cref="CancellationTokenSource"/> property, and properly disposes of the existing one.
+        /// </summary>
+        /// <returns>The new <see cref="CancellationTokenSource"/> object.</returns>
+        private CancellationTokenSource ResetCancellationTokenSource()
+        {
+            var oldCts = CancellationTokenSource;
+            CancellationTokenSource = new CancellationTokenSource();
+            oldCts.Dispose();
+            return CancellationTokenSource;
         }
     }
 }
