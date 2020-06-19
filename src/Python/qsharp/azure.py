@@ -46,7 +46,10 @@ class AzureTarget(object):
         self.current_availability = data["current_availability"]
         self.average_queue_time = data["average_queue_time"]
 
-    def __eq__(self, other):
+    def __repr__(self) -> str:
+        return self.__dict__.__repr__()
+
+    def __eq__(self, other) -> bool:
         if not isinstance(other, AzureTarget):
             # don't attempt to compare against unrelated types
             return NotImplemented
@@ -67,7 +70,10 @@ class AzureJob(object):
         self.begin_execution_time = data["begin_execution_time"]
         self.end_execution_time = data["end_execution_time"]
 
-    def __eq__(self, other):
+    def __repr__(self) -> str:
+        return self.__dict__.__repr__()
+
+    def __eq__(self, other) -> bool:
         if not isinstance(other, AzureJob):
             # don't attempt to compare against unrelated types
             return NotImplemented
@@ -83,7 +89,10 @@ class AzureError(Exception):
         self.error_name = data["error_name"]
         self.error_description = data["error_description"]
 
-    def __eq__(self, other):
+    def __repr__(self) -> str:
+        return self.__dict__.__repr__()
+
+    def __eq__(self, other) -> bool:
         if not isinstance(other, AzureError):
             # don't attempt to compare against unrelated types
             return NotImplemented
