@@ -166,10 +166,10 @@ namespace Microsoft.Quantum.IQSharp
                     {
                         id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
-                        warnings = logger.Logs.Where(m => m.Source == s.Uri.AbsolutePath).Select(logger.Format).ToArray(),
+                        warnings = logger.Logs.Where(m => m.Source == s.Uri.LocalPath).Select(logger.Format).ToArray(),
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
-                            .Where(c => c.SourceFile() == s.Uri.AbsolutePath)
+                            .Where(c => c.SourceFile() == s.Uri.LocalPath)
                             .ToArray()
                     };
 
