@@ -107,3 +107,9 @@ def test_workspace_with_providers():
     jobs = qsharp.azure.jobs()
     assert isinstance(jobs, list)
     assert len(jobs) == 2
+
+    # Check that job filtering works
+    jobs = qsharp.azure.jobs(job.id)
+    print(job.id)
+    assert isinstance(jobs, list)
+    assert len(jobs) == 1

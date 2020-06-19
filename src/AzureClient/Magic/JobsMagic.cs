@@ -51,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
 
                         @"
-                            Print the list of jobs whose names contain ""MyJob"":
+                            Print the list of jobs whose ID, name, or target contains ""MyJob"":
                             ```
                             In []: %azure.jobs ""MyJob""
                             Out[]: <list of matching jobs>

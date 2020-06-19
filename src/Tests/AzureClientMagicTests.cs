@@ -161,6 +161,12 @@ namespace Tests.IQSharp
             var jobsMagic = new JobsMagic(azureClient);
             jobsMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // with arguments - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient);
+            jobsMagic.Test($"{jobId}");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
         }
 
         [TestMethod]
