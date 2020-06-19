@@ -91,8 +91,8 @@ class AzureError(Exception):
 
 ## FUNCTIONS ##
 
-def connect(**params) -> List[AzureTarget]:
-    result = qsharp.client._execute_magic(f"azure.connect", raise_on_stderr=False, **params)
+def connect(resourceId : str = '', **params) -> List[AzureTarget]:
+    result = qsharp.client._execute_magic(f"azure.connect {resourceId}", raise_on_stderr=False, **params)
     if "error_code" in result: raise AzureError(result)
     return [AzureTarget(target) for target in result]
 

@@ -37,10 +37,10 @@ def test_empty_workspace():
     assert exception_info.value.error_name == "NotConnected"
 
     targets = qsharp.azure.connect(
-        storageAccountConnectionString="test",
-        subscriptionId="test",
-        resourceGroupName="test",
-        workspaceName="test"
+        storage="test",
+        subscription="test",
+        resourceGroup="test",
+        workspace="test"
     )
     assert targets == []
 
@@ -51,16 +51,28 @@ def test_empty_workspace():
     jobs = qsharp.azure.jobs()
     assert jobs == []
 
-def test_workspace_with_providers():
+def test_create_workspace_with_parameters():
     """
-    Tests behavior of a mock workspace with mock providers.
+    Tests creation of a mock workspace with mock providers using parameters.
     """
     targets = qsharp.azure.connect(
-        storageAccountConnectionString="test",
-        subscriptionId="test",
-        resourceGroupName="test",
-        workspaceName="WorkspaceNameWithMockProviders"
+        storage="test",
+        subscription="test",
+        resourceGroup="test",
+        workspace="WorkspaceNameWithMockProviders"
     )
+    assert isinstance(targets, list)
+    assert len(targets) > 0
+
+def test_workspace_with_providers():
+    """
+    Tests behavior of a mock workspace created via resource ID with mock providers.
+    """
+    subscriptionId = "test"
+    resourceGroupName = "test"
+    workspaceName = "WorkspaceNameWithMockProviders"
+    targets = qsharp.azure.connect(
+        f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}")
     assert isinstance(targets, list)
     assert len(targets) > 0
 
