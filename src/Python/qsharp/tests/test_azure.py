@@ -72,7 +72,7 @@ def test_workspace_with_providers():
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
     targets = qsharp.azure.connect(
-        f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}")
+        resourceId=f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}")
     assert isinstance(targets, list)
     assert len(targets) > 0
 

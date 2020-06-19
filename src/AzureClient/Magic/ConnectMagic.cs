@@ -23,6 +23,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameSubscriptionId = "subscription";
         private const string ParameterNameResourceGroupName = "resourceGroup";
         private const string ParameterNameWorkspaceName = "workspace";
+        private const string ParameterNameResourceId = "resourceId";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
@@ -47,10 +48,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
                     Examples = new[]
                         {
-                            @"
+                            $@"
                                 Connect to an Azure Quantum workspace using its resource ID:
                                 ```
-                                In []: %azure.connect ""/subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                                In []: %azure.connect {ParameterNameResourceId}=""/subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                                 Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
                                        <list of Q# execution targets available in the Azure Quantum workspace>
                                 ```
@@ -74,7 +75,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                 Connect to an Azure Quantum workspace and force a credential prompt using
                                 the `{ParameterNameRefresh}` option:
                                 ```
-                                In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                                In []: %azure.connect {ParameterNameRefresh} {ParameterNameResourceId}=""/subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                                 Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                         and enter the code [login code] to authenticate.
                                        Connected to Azure Quantum workspace WORKSPACE_NAME.
@@ -107,6 +108,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return await AzureClient.GetConnectionStatusAsync(channel);
             }
 
+            var resourceId = inputParameters.DecodeParameter<string>(ParameterNameResourceId, defaultValue: string.Empty);
             var subscriptionId = string.Empty;
             var resourceGroupName = string.Empty;
             var workspaceName = string.Empty;
@@ -115,15 +117,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
             var resourceIdRegex = new Regex(
                 @"^\/subscriptions\/([a-zA-Z0-9\-]*)\/resourceGroups\/([^\s\/]*)\/providers\/Microsoft\.Quantum\/Workspaces\/([^\s\/]*)$");
-            var resourceIdParameters = inputParameters.Where((pair) => resourceIdRegex.IsMatch(pair.Key));
-            if (resourceIdParameters.Any())
+            if (!string.IsNullOrEmpty(resourceId) && resourceIdRegex.IsMatch(resourceId))
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
                 // -> match.Groups[0]: The full resource ID for the Azure Quantum workspace
                 // -> match.Groups[1]: The Azure subscription ID
                 // -> match.Groups[2]: The Azure resource group name
                 // -> match.Groups[3]: The Azure Quantum workspace name
-                var match = resourceIdRegex.Match(resourceIdParameters.First().Key);
+                var match = resourceIdRegex.Match(resourceId);
                 subscriptionId = match.Groups[1].Value;
                 resourceGroupName = match.Groups[2].Value;
                 workspaceName = match.Groups[3].Value;
