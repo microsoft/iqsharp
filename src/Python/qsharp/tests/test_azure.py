@@ -79,6 +79,7 @@ def test_workspace_create_with_resource_id():
     assert len(targets) > 0
 
     _test_workspace_with_providers_after_connection()
+    _test_workspace_job_execution()
 
 def test_workspace_create_with_resource_id_and_storage():
     """
@@ -123,6 +124,7 @@ def _test_workspace_with_providers_after_connection():
     assert isinstance(retrieved_job, AzureJob)
     assert job.id == retrieved_job.id
 
+def _test_workspace_job_execution():
     # Execute a workspace operation with parameters
     op = qsharp.QSharpCallable("Microsoft.Quantum.SanityTests.HelloAgain", None)
 
@@ -130,7 +132,7 @@ def _test_workspace_with_providers_after_connection():
         qsharp.azure.execute(op)
     assert exception_info.value.error_name == "JobSubmissionFailed"
 
-    histogram = qsharp.azure.execute(op, count=3, name="test")
+    histogram = qsharp.azure.execute(op, count=3, name="test", timeout=3, poll=0.5)
     assert isinstance(histogram, dict)
 
     retrieved_histogram = qsharp.azure.output()
