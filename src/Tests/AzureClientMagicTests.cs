@@ -19,7 +19,7 @@ namespace Tests.IQSharp
     {
         public static void Test(this MagicSymbol magic, string input, ExecuteStatus expected = ExecuteStatus.Ok)
         {
-            var result = magic.Execute(input, new MockChannel(), CancellationToken.None).GetAwaiter().GetResult();
+            var result = magic.Execute(input, new MockChannel()).GetAwaiter().GetResult();
             Assert.IsTrue(result.Status == expected);
         }
     }
@@ -224,14 +224,14 @@ namespace Tests.IQSharp
             return ActiveTargetId.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, CancellationToken token, AzureSubmissionContext submissionContext)
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken token)
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(submissionContext.OperationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, CancellationToken token, AzureSubmissionContext submissionContext)
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken token)
         {
             LastAction = AzureClientAction.ExecuteJob;
             ExecutedJobs.Add(submissionContext.OperationName);

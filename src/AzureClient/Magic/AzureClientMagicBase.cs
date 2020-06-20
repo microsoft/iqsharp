@@ -35,7 +35,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public override ExecutionResult Run(string input, IChannel channel, CancellationToken cancellationToken) =>
+        public override ExecutionResult Run(string input, IChannel channel) =>
+            RunCancellable(input, channel, CancellationToken.None);
+
+        /// <inheritdoc/>
+        public override ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken cancellationToken) =>
             RunAsync(input, channel, cancellationToken).GetAwaiter().GetResult();
 
         /// <summary>

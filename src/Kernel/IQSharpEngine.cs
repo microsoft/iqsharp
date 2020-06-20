@@ -16,7 +16,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -51,7 +50,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = magicSymbolResolver;
-            this.EventService = eventService;
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
@@ -90,14 +88,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver MagicResolver { get; }
 
-        internal IEventService EventService { get; }
-
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
         /// the operations found. These operations are then available for simulation and estimate.
         /// </summary>
-        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel, CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
         {
             channel = channel.WithNewLines();
 

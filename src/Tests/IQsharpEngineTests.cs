@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -47,7 +46,7 @@ namespace Tests.IQSharp
         public static async Task<string> AssertCompile(IQSharpEngine engine, string source, params string[] expectedOps)
         {
             var channel = new MockChannel();
-            var response = await engine.ExecuteMundane(source, channel, CancellationToken.None);
+            var response = await engine.ExecuteMundane(source, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -61,7 +60,7 @@ namespace Tests.IQSharp
             var configSource = new ConfigurationSource(skipLoading: true);
             var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource);
             var channel = new MockChannel();
-            var response = await simMagic.Execute(snippetName, channel, CancellationToken.None);
+            var response = await simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
@@ -73,7 +72,7 @@ namespace Tests.IQSharp
         {
             var channel = new MockChannel();
             var estimateMagic = new EstimateMagic(engine.SymbolsResolver);
-            var response = await estimateMagic.Execute(snippetName, channel, CancellationToken.None);
+            var response = await estimateMagic.Execute(snippetName, channel);
             var result = response.Output as DataTable;
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -104,7 +103,7 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
-            var response = await simMagic.Execute("_snippet_.HelloQ", channel, CancellationToken.None);
+            var response = await simMagic.Execute("_snippet_.HelloQ", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -156,7 +155,7 @@ namespace Tests.IQSharp
 
             // Run with toffoli simulator:
             var toffoliMagic = new ToffoliMagic(engine.SymbolsResolver);
-            var response = await toffoliMagic.Execute("HelloQ", channel, CancellationToken.None);
+            var response = await toffoliMagic.Execute("HelloQ", channel);
             var result = response.Output as Dictionary<string, double>;
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -220,7 +219,7 @@ namespace Tests.IQSharp
 
             {
                 var channel = new MockChannel();
-                var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel, CancellationToken.None);
+                var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
                 PrintResult(response, channel);
                 Assert.AreEqual(ExecuteStatus.Ok, response.Status);
                 Assert.AreEqual(3, channel.msgs.Count);
@@ -230,7 +229,7 @@ namespace Tests.IQSharp
 
             {
                 var channel = new MockChannel();
-                var response = await engine.ExecuteMundane(SNIPPETS.OneWarning, channel, CancellationToken.None);
+                var response = await engine.ExecuteMundane(SNIPPETS.OneWarning, channel);
                 PrintResult(response, channel);
                 Assert.AreEqual(ExecuteStatus.Ok, response.Status);
                 Assert.AreEqual(1, channel.msgs.Count);
@@ -245,7 +244,7 @@ namespace Tests.IQSharp
             var engine = Init();
 
             var channel = new MockChannel();
-            var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel, CancellationToken.None);
+            var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
@@ -259,7 +258,7 @@ namespace Tests.IQSharp
             var snippets = engine.Snippets as Snippets;
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
-            var response = await pkgMagic.Execute("", channel, CancellationToken.None);
+            var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -269,11 +268,11 @@ namespace Tests.IQSharp
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
-            response = await engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel, CancellationToken.None);
+            response = await engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel, CancellationToken.None);
+            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -294,7 +293,7 @@ namespace Tests.IQSharp
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
 
-            var response = await pkgMagic.Execute("microsoft.quantum", channel, CancellationToken.None);
+            var response = await pkgMagic.Execute("microsoft.quantum", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
@@ -314,7 +313,7 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             // Check the workspace, it should be in error state:
-            var response = await whoMagic.Execute("", channel, CancellationToken.None);
+            var response = await whoMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -336,34 +335,34 @@ namespace Tests.IQSharp
             var result = new string[0];
 
             // Check the workspace, it should be in error state:
-            var response = await wsMagic.Execute("reload", channel, CancellationToken.None);
+            var response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = await wsMagic.Execute("", channel, CancellationToken.None);
+            response = await wsMagic.Execute("", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
             // Try compiling a snippet that depends on a workspace that depends on the chemistry package:
-            response = await engine.ExecuteMundane(SNIPPETS.DependsOnChemistryWorkspace, channel, CancellationToken.None);
+            response = await engine.ExecuteMundane(SNIPPETS.DependsOnChemistryWorkspace, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
 
             // Add dependencies:
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel, CancellationToken.None);
+            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            response = await pkgMagic.Execute("microsoft.quantum.research", channel, CancellationToken.None);
+            response = await pkgMagic.Execute("microsoft.quantum.research", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
             // Reload workspace:
-            response = await wsMagic.Execute("reload", channel, CancellationToken.None);
+            response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
-            response = await wsMagic.Execute("", channel, CancellationToken.None);
+            response = await wsMagic.Execute("", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -373,12 +372,12 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
 
             // Check an invalid command
-            response = await wsMagic.Execute("foo", channel, CancellationToken.None);
+            response = await wsMagic.Execute("foo", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
             // Check that everything still works:
-            response = await wsMagic.Execute("", channel, CancellationToken.None);
+            response = await wsMagic.Execute("", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
         }

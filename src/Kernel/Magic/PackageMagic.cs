@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -40,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public IReferences References { get; }
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel, CancellationToken cancellationToken)
+        public override ExecutionResult Run(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNamePackageName);
             var name = inputParameters.DecodeParameter<string>(ParameterNamePackageName);
@@ -48,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var statusUpdater = channel.DisplayUpdatable(status);
             void Update() => statusUpdater.Update(status);
 
-            var task = RunAsync(name, channel, cancellationToken, (newStatus) =>
+            var task = RunAsync(name, channel, (newStatus) =>
             {
                 status.Subtask = newStatus;
                 Update();
@@ -72,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     a task that can be awaited on for the completion of the package
         ///     download.
         /// </summary>
-        public async Task<ExecutionResult> RunAsync(string name, IChannel channel, CancellationToken cancellationToken, Action<string> statusCallback)
+        public async Task<ExecutionResult> RunAsync(string name, IChannel channel, Action<string> statusCallback)
         {
             if (!string.IsNullOrWhiteSpace(name))
             {

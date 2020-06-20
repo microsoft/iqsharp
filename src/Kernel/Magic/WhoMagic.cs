@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Linq;
-using System.Threading;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -35,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public ISnippets Snippets { get; }
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel, CancellationToken cancellationToken) =>
+        public override ExecutionResult Run(string input, IChannel channel) =>
             Snippets.Operations
                 .Select(op => op.FullName)
                 .OrderBy(name => name)

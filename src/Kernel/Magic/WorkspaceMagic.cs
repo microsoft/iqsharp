@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Linq;
-using System.Threading;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -51,7 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         }
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string input, IChannel channel, CancellationToken cancellationToken)
+        public override ExecutionResult Run(string input, IChannel channel)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameCommand);
             var command = inputParameters.DecodeParameter<string>(ParameterNameCommand);

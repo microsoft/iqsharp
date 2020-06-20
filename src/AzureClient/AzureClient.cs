@@ -14,7 +14,6 @@ using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -26,7 +25,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
-        private IEventService EventService { get; }
         private IMetadataController MetadataController { get; }
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string ConnectionString { get; set; } = string.Empty;
@@ -52,7 +50,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointGenerator = entryPointGenerator;
             MetadataController = metadataController;
             Logger = logger;
-            EventService = eventService;
 
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
@@ -117,9 +114,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
             IChannel channel,
-            CancellationToken cancellationToken,
             AzureSubmissionContext submissionContext,
-            bool execute)
+            bool waitForCompletion,
+            CancellationToken cancellationToken)
         {
             if (ActiveWorkspace == null)
             {
@@ -135,7 +132,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (string.IsNullOrEmpty(submissionContext.OperationName))
             {
-                channel.Stderr($"Please pass a valid Q# operation name to {GetCommandDisplayName(execute ? "execute" : "submit")}.");
+                channel.Stderr($"Please pass a valid Q# operation name to {GetCommandDisplayName(waitForCompletion ? "execute" : "submit")}.");
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
@@ -187,7 +184,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 
-            if (!execute)
+            if (!waitForCompletion)
             {
                 return await GetJobStatusAsync(channel, MostRecentJobId);
             }
@@ -218,12 +215,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, CancellationToken cancellationToken, AzureSubmissionContext submissionContext) =>
-            await SubmitOrExecuteJobAsync(channel, cancellationToken, submissionContext, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken cancellationToken) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, waitForCompletion: false, cancellationToken);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, CancellationToken cancellationToken, AzureSubmissionContext submissionContext) =>
-            await SubmitOrExecuteJobAsync(channel, cancellationToken, submissionContext, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken cancellationToken) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, waitForCompletion: true, cancellationToken);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)

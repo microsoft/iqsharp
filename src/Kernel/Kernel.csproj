@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.4.11092-CI-20200619-180042" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />
   </ItemGroup>
 
