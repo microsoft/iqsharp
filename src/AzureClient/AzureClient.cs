@@ -50,7 +50,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointGenerator = entryPointGenerator;
             MetadataController = metadataController;
             Logger = logger;
-
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
             if (engine is BaseEngine baseEngine)
