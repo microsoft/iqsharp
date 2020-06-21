@@ -114,7 +114,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
             IChannel channel,
             AzureSubmissionContext submissionContext,
-            bool waitForCompletion,
+            bool execute,
             CancellationToken cancellationToken)
         {
             if (ActiveWorkspace == null)
@@ -131,7 +131,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (string.IsNullOrEmpty(submissionContext.OperationName))
             {
-                channel.Stderr($"Please pass a valid Q# operation name to {GetCommandDisplayName(waitForCompletion ? "execute" : "submit")}.");
+                channel.Stderr($"Please pass a valid Q# operation name to {GetCommandDisplayName(execute ? "execute" : "submit")}.");
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
@@ -183,28 +183,32 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 
-            if (waitForCompletion)
+            // If the command was not %azure.execute, simply return the job status.
+            if (!execute)
             {
-                channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
+                return await GetJobStatusAsync(channel, MostRecentJobId);
+            }
 
-                using (var executionTimeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
-                using (var executionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(executionTimeoutTokenSource.Token, cancellationToken))
+            // If the command was %azure.execute, wait for the job to complete and return the job output.
+            channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
+
+            using (var executionTimeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
+            using (var executionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(executionTimeoutTokenSource.Token, cancellationToken))
+            {
+                try
                 {
-                    try
+                    CloudJob? cloudJob = null;
+                    while (cloudJob == null || cloudJob.InProgress)
                     {
-                        CloudJob? cloudJob = null;
-                        while (cloudJob == null || cloudJob.InProgress)
-                        {
-                            executionCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                            await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), executionCancellationTokenSource.Token);
-                            cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
-                            channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
-                        }
+                        executionCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                        await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), executionCancellationTokenSource.Token);
+                        cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
+                        channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
                     }
-                    catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException)
-                    {
-                        Logger?.LogInformation($"Operation canceled while waiting for job execution to complete: {e.Message}");
-                    }
+                }
+                catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException)
+                {
+                    Logger?.LogInformation($"Operation canceled while waiting for job execution to complete: {e.Message}");
                 }
             }
 
@@ -213,11 +217,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken cancellationToken) =>
-            await SubmitOrExecuteJobAsync(channel, submissionContext, waitForCompletion: false, cancellationToken);
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: false, cancellationToken);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken cancellationToken) =>
-            await SubmitOrExecuteJobAsync(channel, submissionContext, waitForCompletion: true, cancellationToken);
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: true, cancellationToken);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
