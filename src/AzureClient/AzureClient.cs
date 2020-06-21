@@ -183,30 +183,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 
-            if (!waitForCompletion)
+            if (waitForCompletion)
             {
-                return await GetJobStatusAsync(channel, MostRecentJobId);
-            }
+                channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
 
-            channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
-
-            using (var executionTimeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
-            using (var executionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(executionTimeoutTokenSource.Token, cancellationToken))
-            {
-                try
+                using (var executionTimeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
+                using (var executionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(executionTimeoutTokenSource.Token, cancellationToken))
                 {
-                    CloudJob? cloudJob = null;
-                    while (cloudJob == null || cloudJob.InProgress)
+                    try
                     {
-                        executionCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                        await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), executionCancellationTokenSource.Token);
-                        cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
-                        channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
+                        CloudJob? cloudJob = null;
+                        while (cloudJob == null || cloudJob.InProgress)
+                        {
+                            executionCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                            await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), executionCancellationTokenSource.Token);
+                            cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
+                            channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
+                        }
                     }
-                }
-                catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException)
-                {
-                    Logger?.LogInformation($"Operation canceled while waiting for job execution to complete: {e.Message}");
+                    catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException)
+                    {
+                        Logger?.LogInformation($"Operation canceled while waiting for job execution to complete: {e.Message}");
+                    }
                 }
             }
 
