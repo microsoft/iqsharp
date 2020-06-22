@@ -104,10 +104,9 @@ namespace Microsoft.Quantum.IQSharp
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
                 var trees = new List<SyntaxTree>();
-                NonNullable<string> GetFileId(Uri uri) => CompilationUnitManager.TryGetFileId(uri, out var id) ? id : NonNullable<string>.New(uri.LocalPath);
                 foreach (var file in sources.Keys)
                 {
-                    var sourceFile = GetFileId(file);
+                    var sourceFile = CompilationUnitManager.GetFileId(file);
                     var code = SimulationCode.generate(sourceFile, CodegenContext.Create(qsCompilation.Namespaces));
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);

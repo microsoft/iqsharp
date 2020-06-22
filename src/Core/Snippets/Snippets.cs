@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -166,10 +167,13 @@ namespace Microsoft.Quantum.IQSharp
                     {
                         id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
-                        warnings = logger.Logs.Where(m => m.Source == s.Uri.LocalPath).Select(logger.Format).ToArray(),
+                        warnings = logger.Logs
+                            .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri).Value)
+                            .Select(logger.Format)
+                            .ToArray(),
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
-                            .Where(c => c.SourceFile() == s.Uri.LocalPath)
+                            .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri).Value)
                             .ToArray()
                     };
 
