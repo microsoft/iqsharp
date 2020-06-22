@@ -369,7 +369,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     channel.Stderr($"No jobs matching \"{filter}\" found in current Azure Quantum workspace.");
                 }
             }
-
+            
             return jobs.ToExecutionResult();
         }
 
