@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -20,12 +20,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        internal IAzureWorkspace? ActiveWorkspace { get; private set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
+        private IMetadataController MetadataController { get; }
+        private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string ConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
-        private IAzureWorkspace? ActiveWorkspace { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatus>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
@@ -39,11 +41,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IExecutionEngine engine,
             IReferences references,
             IEntryPointGenerator entryPointGenerator,
+            IMetadataController metadataController,
             ILogger<AzureClient> logger,
             IEventService eventService)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
+            MetadataController = metadataController;
             Logger = logger;
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
@@ -55,6 +59,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new TargetStatusToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
             }
         }
 
@@ -83,6 +89,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
 
+            if (ValidExecutionTargets.Count() == 0)
+            {
+                channel.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.Name}.");
+            }
+
             return ValidExecutionTargets.ToExecutionResult();
         }
 
@@ -103,20 +114,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (ActiveWorkspace == null)
             {
-                channel.Stderr("Please call %azure.connect before submitting a job.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before submitting a job.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
             if (ActiveTarget == null)
             {
-                channel.Stderr("Please call %azure.target before submitting a job.");
+                channel.Stderr($"Please call {GetCommandDisplayName("target")} before submitting a job.");
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
             if (string.IsNullOrEmpty(submissionContext.OperationName))
             {
-                var commandName = execute ? "%azure.execute" : "%azure.submit";
-                channel.Stderr($"Please pass a valid Q# operation name to {commandName}.");
+                channel.Stderr($"Please pass a valid Q# operation name to {GetCommandDisplayName(execute ? "execute" : "submit")}.");
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
@@ -206,20 +216,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (AvailableProviders == null)
             {
-                channel.Stderr("Please call %azure.connect before getting the execution target.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before getting the execution target.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
             if (ActiveTarget == null)
             {
-                channel.Stderr("No execution target has been specified. To specify one, run:\n%azure.target <target ID>");
+                channel.Stderr($"No execution target has been specified. To specify one, call {GetCommandDisplayName("target")} with the target ID.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
             channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
-            return ActiveTarget.TargetId.ToExecutionResult();
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -227,7 +238,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (AvailableProviders == null)
             {
-                channel.Stderr("Please call %azure.connect before setting an execution target.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before setting an execution target.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
@@ -254,7 +265,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
 
-            return $"Active target is now {ActiveTarget.TargetId}".ToExecutionResult();
+            channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
+
+            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -262,7 +275,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (ActiveWorkspace == null)
             {
-                channel.Stderr("Please call %azure.connect before getting job results.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before getting job results.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
@@ -286,7 +299,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (!job.Succeeded || string.IsNullOrEmpty(job.Details.OutputDataUri))
             {
-                channel.Stderr($"Job ID {jobId} has not completed. To check the status, use:\n   %azure.status {jobId}");
+                channel.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
 
@@ -309,7 +322,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (ActiveWorkspace == null)
             {
-                channel.Stderr("Please call %azure.connect before getting job status.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before getting job status.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
@@ -339,18 +352,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (ActiveWorkspace == null)
             {
-                channel.Stderr("Please call %azure.connect before listing jobs.");
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before listing jobs.");
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync();
-            if (jobs == null || jobs.Count() == 0)
+            var jobs = await ActiveWorkspace.ListJobsAsync() ?? new List<CloudJob>();
+            if (jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
-                return AzureClientError.JobNotFound.ToExecutionResult();
             }
-
+            
             return jobs.ToExecutionResult();
         }
+
+        private string GetCommandDisplayName(string commandName) =>
+            IsPythonUserAgent ? $"qsharp.azure.{commandName}()" : $"%azure.{commandName}";
     }
 }

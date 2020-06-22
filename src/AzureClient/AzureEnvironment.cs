@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -16,10 +16,11 @@ using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal enum AzureEnvironmentType { Production, Canary, Dogfood };
+    internal enum AzureEnvironmentType { Production, Canary, Dogfood, Mock };
 
     internal class AzureEnvironment
     {
+        public static string EnvironmentVariableName => "AZURE_QUANTUM_ENV";
         public AzureEnvironmentType Type { get; private set; }
 
         private string SubscriptionId { get; set; } = string.Empty;
@@ -34,8 +35,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public static AzureEnvironment Create(string subscriptionId)
         {
-            var azureEnvironmentEnvVarName = "AZURE_QUANTUM_ENV";
-            var azureEnvironmentName = System.Environment.GetEnvironmentVariable(azureEnvironmentEnvVarName);
+            var azureEnvironmentName = System.Environment.GetEnvironmentVariable(EnvironmentVariableName);
 
             if (Enum.TryParse(azureEnvironmentName, true, out AzureEnvironmentType environmentType))
             {
@@ -47,6 +47,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         return Canary(subscriptionId);
                     case AzureEnvironmentType.Dogfood:
                         return Dogfood(subscriptionId);
+                    case AzureEnvironmentType.Mock:
+                        return Mock();
                     default:
                         throw new InvalidOperationException("Unexpected EnvironmentType value.");
                 }
@@ -57,6 +59,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async Task<IAzureWorkspace?> GetAuthenticatedWorkspaceAsync(IChannel channel, string resourceGroupName, string workspaceName, bool refreshCredentials)
         {
+            if (Type == AzureEnvironmentType.Mock)
+            {
+                channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to the real service.");
+                return new MockAzureWorkspace(workspaceName);
+            }
+
             // Find the token cache folder
             var cacheDirectoryEnvVarName = "AZURE_QUANTUM_TOKEN_CACHE";
             var cacheDirectory = System.Environment.GetEnvironmentVariable(cacheDirectoryEnvVarName);
@@ -153,6 +161,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             canary.BaseUri = new Uri("https://app-jobs-canarysouthcentralus.azurewebsites.net/");
             return canary;
         }
+
+        private static AzureEnvironment Mock() =>
+            new AzureEnvironment() { Type = AzureEnvironmentType.Mock };
 
         private static string GetDogfoodAuthority(string subscriptionId)
         {
