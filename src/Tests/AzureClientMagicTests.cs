@@ -224,14 +224,14 @@ namespace Tests.IQSharp
             return ActiveTargetId.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken token)
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token)
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(submissionContext.OperationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken token)
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token)
         {
             LastAction = AzureClientAction.ExecuteJob;
             ExecutedJobs.Add(submissionContext.OperationName);
