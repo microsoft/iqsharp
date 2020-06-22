@@ -1,0 +1,40 @@
+##
+# Pack IQ# self-contained executable.
+##
+
+steps:
+
+##
+# Pre-reqs
+##
+- task: DownloadBuildArtifacts@0
+  inputs:
+    artifactName: iqsharp
+    downloadPath: '$(System.DefaultWorkingDirectory)/artifact'
+
+- pwsh: |
+    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
+  displayName: "Copy build artifacts to IQ# working directory"
+
+- task: UseDotNet@2
+  displayName: 'Use .NET Core SDK 3.1.100'
+  inputs:
+    packageType: sdk
+    version: '3.1.100'
+
+##
+# Pack
+##
+- pwsh: ./pack-selfcontained.ps1
+  displayName: "Packing IQ# self-contained executable"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+##
+# Publish tests results and build artifacts.
+##
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: iqsharp-selfcontained'
+  condition: succeededOrFailed()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: iqsharp-selfcontained
