@@ -17,26 +17,34 @@ jobs:
     inputs:
       failOnAlert: true
 
-- job: "pack_conda_linux"
+- job: "pack_selfcontained"
   dependsOn: "iqsharp"
   pool:
     vmImage: 'ubuntu-latest'
   steps:
+  - template: steps-selfcontained.yml
+  condition: ne(variables['Enable.Conda'], 'false')
+
+- job: "pack_conda_linux"
+  dependsOn: "pack_selfcontained"
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
   - template: steps-conda.yml
-  condition: eq(variables['Enable.Conda'], 'true')
+  condition: ne(variables['Enable.Conda'], 'false')
 
 - job: "pack_conda_macos"
-  dependsOn: "iqsharp"
+  dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'macOS-latest'
   steps:
   - template: steps-conda.yml
-  condition: eq(variables['Enable.Conda'], 'true')
+  condition: ne(variables['Enable.Conda'], 'false')
 
 - job: "pack_conda_win"
-  dependsOn: "iqsharp"
+  dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
   steps:
   - template: steps-conda.yml
-  condition: eq(variables['Enable.Conda'], 'true')
+  condition: ne(variables['Enable.Conda'], 'false')
