@@ -13,11 +13,11 @@
         "Microsoft.Quantum.IQSharp"
     );
     Assemblies = @(
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.dll",
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.AzureClient.dll",
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Core.dll",
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Jupyter.dll",
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Kernel.dll",
-        ".\src\Tool\bin\$Env:BUILD_CONFIGURATION\netcoreapp3.1\Microsoft.Quantum.IQSharp.Web.dll"
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.AzureClient.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Core.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Jupyter.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Kernel.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Web.dll"
     ) | ForEach-Object { Get-Item (Join-Path $PSScriptRoot ".." $_) };
 } | Write-Output;
