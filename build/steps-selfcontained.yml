@@ -30,7 +30,7 @@ steps:
 ##
 # Pack
 ##
-- pwsh: .\pack-selfcontained.ps1
+- pwsh: ./pack-selfcontained.ps1
   displayName: "Packing IQ# self-contained executable"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
