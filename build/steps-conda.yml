@@ -9,11 +9,11 @@ steps:
 ##
 - task: DownloadBuildArtifacts@0
   inputs:
-    artifactName: iqsharp
+    artifactName: iqsharp-selfcontained
     downloadPath: '$(System.DefaultWorkingDirectory)/artifact'
 
 - pwsh: |
-    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
+    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp-selfcontained/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
   displayName: "Copy build artifacts to IQ# working directory"
 
 - task: CondaEnvironment@1
@@ -40,8 +40,8 @@ steps:
 # Publish build artifacts.
 ##
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
+  displayName: 'Publish Artifact: iqsharp-conda'
   condition: succeededOrFailed()
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: iqsharp
+    artifactName: iqsharp-conda
