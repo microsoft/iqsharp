@@ -9,8 +9,14 @@ $Env:IQSHARP_PACKAGE_SOURCE = "$Env:NUGET_OUTDIR"
 if ("$Env:BUILD_RELEASETYPE" -ne "release") {
     $NuGetDirectory = Resolve-Path ~
     Write-Host "## Writing prerelease NuGet config to $NuGetDirectory ##"
-    echo "<?xml version=""1.0"" encoding=""utf-8""?><configuration><packageSources><add key=""qdk-alpha"" value=""https://pkgs.dev.azure.com/ms-quantum-public/Microsoft Quantum (public)/_packaging/alpha/nuget/v3/index.json"" protocolVersion=""3"" /></packageSources></configuration>" > $NuGetDirectory/NuGet.Config
-    echo "" >> $NuGetDirectory/NuGet.Config
+    "
+    <?xml version=""1.0"" encoding=""utf-8""?>
+    <configuration>
+        <packageSources>
+            <add key=""qdk-alpha"" value=""https://pkgs.dev.azure.com/ms-quantum-public/Microsoft Quantum (public)/_packaging/alpha/nuget/v3/index.json"" protocolVersion=""3"" />
+        </packageSources>
+    </configuration>
+    " | Out-File -FilePath $NuGetDirectory/NuGet.Config -Encoding utf8
 }
 
 # Check that iqsharp is installed as a Jupyter kernel.
