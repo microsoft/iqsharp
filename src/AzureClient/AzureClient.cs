@@ -375,7 +375,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter)
         {
             if (ActiveWorkspace == null)
             {
@@ -387,6 +387,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (jobs.Count() == 0)
             {
                 channel.Stderr("No jobs found in current Azure Quantum workspace.");
+            }
+            else
+            {
+                jobs = jobs.Where(job => job.Matches(filter));
+                if (jobs.Count() == 0)
+                {
+                    channel.Stderr($"No jobs matching \"{filter}\" found in current Azure Quantum workspace.");
+                }
             }
             
             return jobs.ToExecutionResult();

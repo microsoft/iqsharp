@@ -132,9 +132,13 @@ namespace Tests.IQSharp
             // invalid job ID
             ExpectError(AzureClientError.JobNotFound, azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_3"));
 
-            // jobs list
-            var jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel()));
+            // jobs list with no filter
+            var jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), string.Empty));
             Assert.AreEqual(2, jobs.Count());
+
+            // jobs list with filter
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID_1"));
+            Assert.AreEqual(1, jobs.Count());
         }
 
         [TestMethod]

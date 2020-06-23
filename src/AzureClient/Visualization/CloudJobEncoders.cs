@@ -42,10 +42,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Columns = new List<(string, Func<CloudJob, string>)>
                 {
                     // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
-                    ("Job ID", cloudJob => cloudJob.Id),
                     ("Job Name", cloudJob => cloudJob.Details.Name),
+                    ("Job ID", cloudJob => cloudJob.Id),
                     ("Job Status", cloudJob => cloudJob.Status),
-                    ("Provider", cloudJob => cloudJob.Details.ProviderId),
                     ("Target", cloudJob => cloudJob.Details.Target),
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
