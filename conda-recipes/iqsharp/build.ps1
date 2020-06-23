@@ -29,6 +29,14 @@ Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
 Write-Host "## Copying IQ# from '$SelfContainedDirectory' into '$TargetDirectory...' ##"
 Copy-Item (Join-Path $SelfContainedDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
 
+# Add the prerelease NuGet feed if this isn't a release build.
+if ("$Env:BUILD_RELEASETYPE" -ne "release") {
+    $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
+    $NuGetConfig = Join-Path $RepoRoot "NuGet.config"
+    Write-Host "## Copying prerelease NuGet config $NuGetConfig to $TargetDirectory ##"
+    Copy-Item $NuGetConfig $TargetDirectory
+}
+
 Write-Host "## Installing IQ# into Jupyter. ##"
 $BaseName = "Microsoft.Quantum.IQSharp";
 if ($IsWindows) {
