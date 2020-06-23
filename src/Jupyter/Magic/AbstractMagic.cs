@@ -94,6 +94,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var regex = new Regex(@"(\{.*\})|[^\s""]+(?:\s*=\s*)(?:""[^""]*""|[^\s""]*)*|[^\s""]+(?:""[^""]*""[^\s""]*)*|(?:""[^""]*""[^\s""]*)+");
             var args = regex.Matches(input).Select(match => match.Value);
 
+            var regexBeginEndQuotes = @"^['""]|['""]$";
+
             // If we are expecting a first inferred-name parameter, see if it exists.
             // If so, serialize it to the dictionary as JSON and remove it from the list of args.
             if (args.Any() &&
@@ -102,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 !string.IsNullOrEmpty(firstParameterInferredName))
             {
                 using var writer = new StringWriter();
-                Json.Serializer.Serialize(writer, args.First());
+                Json.Serializer.Serialize(writer, Regex.Replace(args.First(), regexBeginEndQuotes, string.Empty));
                 inputParameters[firstParameterInferredName] = writer.ToString();
                 args = args.Skip(1);
             }
@@ -123,7 +125,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             foreach (string arg in args)
             {
                 var tokens = arg.Split("=", 2);
-                var regexBeginEndQuotes = @"^['""]|['""]$";
                 var key = Regex.Replace(tokens[0].Trim(), regexBeginEndQuotes, string.Empty);
                 var value = tokens.Length switch
                 {
