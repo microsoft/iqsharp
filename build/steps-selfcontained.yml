@@ -33,7 +33,7 @@ steps:
   displayName: 'Copy prerelease NuGet.config'
   condition: and(succeededOrFailed(), ne(variables['Build.ReleaseType'], 'release'))
   inputs:
-    Contents: NuGet.config
+    Contents: '$(System.DefaultWorkingDirectory)/drops/NuGet.config'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
 ##
