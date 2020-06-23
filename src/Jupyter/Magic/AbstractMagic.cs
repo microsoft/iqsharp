@@ -94,7 +94,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var regex = new Regex(@"(\{.*\})|[^\s""]+(?:\s*=\s*)(?:""[^""]*""|[^\s""]*)*|[^\s""]+(?:""[^""]*""[^\s""]*)*|(?:""[^""]*""[^\s""]*)+");
             var args = regex.Matches(input).Select(match => match.Value);
 
-            var regexBeginEndQuotes = @"^['""]|['""]$";
+            var regexBeginEndQuotes = new Regex(@"^['""]|['""]$");
 
             // If we are expecting a first inferred-name parameter, see if it exists.
             // If so, serialize it to the dictionary as JSON and remove it from the list of args.
@@ -104,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 !string.IsNullOrEmpty(firstParameterInferredName))
             {
                 using var writer = new StringWriter();
-                Json.Serializer.Serialize(writer, Regex.Replace(args.First(), regexBeginEndQuotes, string.Empty));
+                Json.Serializer.Serialize(writer, regexBeginEndQuotes.Replace(args.First(), string.Empty));
                 inputParameters[firstParameterInferredName] = writer.ToString();
                 args = args.Skip(1);
             }
@@ -125,14 +125,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             foreach (string arg in args)
             {
                 var tokens = arg.Split("=", 2);
-                var key = Regex.Replace(tokens[0].Trim(), regexBeginEndQuotes, string.Empty);
+                var key = regexBeginEndQuotes.Replace(tokens[0].Trim(), string.Empty);
                 var value = tokens.Length switch
                 {
                     // If there was no value provided explicitly, treat it as an implicit "true" value
                     1 => true as object,
 
                     // Trim whitespace and also enclosing single-quotes or double-quotes before returning
-                    2 => Regex.Replace(tokens[1].Trim(), regexBeginEndQuotes, string.Empty) as object,
+                    2 => regexBeginEndQuotes.Replace(tokens[1].Trim(), string.Empty) as object,
 
                     // We called arg.Split("=", 2), so there should never be more than 2
                     _ => throw new InvalidOperationException()
