@@ -13,7 +13,14 @@ if ($null -eq $kernels.kernelspecs.iqsharp) {
     jupyter kernelspec list
 }
 
+# Add the prerelease NuGet feed if this isn't a release build.
+if ("$Env:BUILD_RELEASETYPE" -ne "release") {
+    $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
+    $NugetConfig = Join-Path $RepoRoot "NuGet.config"
+    Copy-Item $NugetConfig (Join-Path (Resolve-Path ~) ".nuget/NuGet")
+}
 
+# Run the kernel unit tests.
 Push-Location $PSScriptRoot
     python test.py
     if  ($LastExitCode -ne 0) {
