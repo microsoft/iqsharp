@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -52,9 +53,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Submits a new job to an Azure Quantum workspace given a Q# operation
         ///     name that is present in the current Q# Jupyter workspace.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
-            return await AzureClient.SubmitJobAsync(channel, AzureSubmissionContext.Parse(input));
+            return await AzureClient.SubmitJobAsync(channel, AzureSubmissionContext.Parse(input), cancellationToken);
         }
     }
 }

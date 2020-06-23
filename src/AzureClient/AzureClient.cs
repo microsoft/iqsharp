@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client.Models;
@@ -110,7 +111,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, bool execute)
+        private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
+            IChannel channel,
+            AzureSubmissionContext submissionContext,
+            bool execute,
+            CancellationToken cancellationToken)
         {
             if (ActiveWorkspace == null)
             {
@@ -178,38 +183,45 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 
+            // If the command was not %azure.execute, simply return the job status.
             if (!execute)
             {
                 return await GetJobStatusAsync(channel, MostRecentJobId);
             }
 
+            // If the command was %azure.execute, wait for the job to complete and return the job output.
             channel.Stdout($"Waiting up to {submissionContext.ExecutionTimeout} seconds for Azure Quantum job to complete...");
 
-            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout)))
+            using var executionTimeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(submissionContext.ExecutionTimeout));
+            using var executionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(executionTimeoutTokenSource.Token, cancellationToken);
             {
-                CloudJob? cloudJob = null;
-                do
+                try
                 {
-                    // TODO: Once jupyter-core supports interrupt requests (https://github.com/microsoft/jupyter-core/issues/55),
-                    //       handle Jupyter kernel interrupt here and break out of this loop 
-                    await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval));
-                    if (cts.IsCancellationRequested) break;
-                    cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
-                    channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
+                    CloudJob? cloudJob = null;
+                    while (cloudJob == null || cloudJob.InProgress)
+                    {
+                        executionCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                        await Task.Delay(TimeSpan.FromSeconds(submissionContext.ExecutionPollingInterval), executionCancellationTokenSource.Token);
+                        cloudJob = await ActiveWorkspace.GetJobAsync(MostRecentJobId);
+                        channel.Stdout($"[{DateTime.Now.ToLongTimeString()}] Current job status: {cloudJob?.Status ?? "Unknown"}");
+                    }
                 }
-                while (cloudJob == null || cloudJob.InProgress);
+                catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException)
+                {
+                    Logger?.LogInformation($"Operation canceled while waiting for job execution to complete: {e.Message}");
+                }
             }
 
             return await GetJobResultAsync(channel, MostRecentJobId);
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext) =>
-            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: false);
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? cancellationToken = null) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: false, cancellationToken ?? CancellationToken.None);
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext) =>
-            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: true);
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? cancellationToken = null) =>
+            await SubmitOrExecuteJobAsync(channel, submissionContext, execute: true, cancellationToken ?? CancellationToken.None);
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
