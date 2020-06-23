@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -56,9 +57,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     name that is present in the current Q# Jupyter workspace, and
         ///     waits for the job to complete before returning.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
-            return await AzureClient.ExecuteJobAsync(channel, AzureSubmissionContext.Parse(input));
+            return await AzureClient.ExecuteJobAsync(channel, AzureSubmissionContext.Parse(input), cancellationToken);
         }
     }
 }

@@ -6,18 +6,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     Abstract base class for IQ# magic symbols.
     /// </summary>
-    public abstract class AbstractMagic : MagicSymbol
+    public abstract class AbstractMagic : CancellableMagicSymbol
     {
         /// <summary>
         ///     Constructs a new magic symbol given its name and documentation.
@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             this.Documentation = docs;
 
             this.Kind = SymbolKind.Magic;
-            this.Execute = SafeExecute(this.Run);
+            this.ExecuteCancellable = this.SafeExecute(this.RunCancellable);
         }
 
         /// <summary>
@@ -38,31 +38,32 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     returned execution function displays the given exceptions to its
         ///     display channel.
         /// </summary>
-        public Func<string, IChannel, Task<ExecutionResult>> SafeExecute(Func<string, IChannel, ExecutionResult> magic) =>
-            async (input, channel) =>
-            {
-                channel = channel.WithNewLines();
+        public Func<string, IChannel, CancellationToken, Task<ExecutionResult>> SafeExecute(
+            Func<string, IChannel, CancellationToken, ExecutionResult> magic) =>
+                async (input, channel, cancellationToken) =>
+                {
+                    channel = channel.WithNewLines();
 
-                try
-                {
-                    return magic(input, channel);
-                }
-                catch (InvalidWorkspaceException ws)
-                {
-                    foreach (var m in ws.Errors) channel.Stderr(m);
-                    return ExecuteStatus.Error.ToExecutionResult();
-                }
-                catch (AggregateException agg)
-                {
-                    foreach (var e in agg.InnerExceptions) channel.Stderr(e?.Message);
-                    return ExecuteStatus.Error.ToExecutionResult();
-                }
-                catch (Exception e)
-                {
-                    channel.Stderr(e.Message);
-                    return ExecuteStatus.Error.ToExecutionResult();
-                }
-            };
+                    try
+                    {
+                        return magic(input, channel, cancellationToken);
+                    }
+                    catch (InvalidWorkspaceException ws)
+                    {
+                        foreach (var m in ws.Errors) channel.Stderr(m);
+                        return ExecuteStatus.Error.ToExecutionResult();
+                    }
+                    catch (AggregateException agg)
+                    {
+                        foreach (var e in agg.InnerExceptions) channel.Stderr(e?.Message);
+                        return ExecuteStatus.Error.ToExecutionResult();
+                    }
+                    catch (Exception e)
+                    {
+                        channel.Stderr(e.Message);
+                        return ExecuteStatus.Error.ToExecutionResult();
+                    }
+                };
 
         /// <summary>
         ///     Parses the input to a magic command, interpreting the input as
@@ -146,5 +147,17 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     A method to be run when the magic command is executed.
         /// </summary>
         public abstract ExecutionResult Run(string input, IChannel channel);
+
+        /// <summary>
+        ///     A method to be run when the magic command is executed, including a cancellation
+        ///     token to use for requesting cancellation.
+        /// </summary>
+        /// <remarks>
+        ///     The default implementation in <see cref="AbstractMagic"/> ignores the cancellation token.
+        ///     Derived classes should override this method and monitor the cancellation token if they
+        ///     wish to support cancellation.
+        /// </remarks>
+        public virtual ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken cancellationToken) =>
+            Run(input, channel);
     }
 }

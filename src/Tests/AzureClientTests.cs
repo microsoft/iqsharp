@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client.Models;
@@ -202,14 +203,14 @@ namespace Tests.IQSharp
             var submissionContext = new AzureSubmissionContext();
 
             // not yet connected
-            ExpectError(AzureClientError.NotConnected, azureClient.SubmitJobAsync(new MockChannel(), submissionContext));
+            ExpectError(AzureClientError.NotConnected, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // no target yet
-            ExpectError(AzureClientError.NoTarget, azureClient.SubmitJobAsync(new MockChannel(), submissionContext));
+            ExpectError(AzureClientError.NoTarget, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // add a target
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
@@ -221,15 +222,15 @@ namespace Tests.IQSharp
             Assert.AreEqual("ionq.simulator", target.Id);
 
             // no operation name specified
-            ExpectError(AzureClientError.NoOperationName, azureClient.SubmitJobAsync(new MockChannel(), submissionContext));
+            ExpectError(AzureClientError.NoOperationName, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // specify an operation name, but have missing parameters
             submissionContext.OperationName = "Tests.qss.HelloAgain";
-            ExpectError(AzureClientError.JobSubmissionFailed, azureClient.SubmitJobAsync(new MockChannel(), submissionContext));
+            ExpectError(AzureClientError.JobSubmissionFailed, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // specify input parameters and verify that the job was submitted
             submissionContext.InputParameters = new Dictionary<string, string>() { ["count"] = "3", ["name"] = "testing" };
-            var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext));
+            var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             var retrievedJob = ExpectSuccess<CloudJob>(azureClient.GetJobStatusAsync(new MockChannel(), job.Id));
             Assert.AreEqual(job.Id, retrievedJob.Id);
         }
@@ -261,7 +262,7 @@ namespace Tests.IQSharp
                 ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
-            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext));
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             Assert.IsNotNull(histogram);
         }
     }

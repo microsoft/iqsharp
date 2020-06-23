@@ -6,6 +6,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -223,14 +224,14 @@ namespace Tests.IQSharp
             return ActiveTargetId.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext)
+        public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token)
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(submissionContext.OperationName);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext)
+        public async Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token)
         {
             LastAction = AzureClientAction.ExecuteJob;
             ExecutedJobs.Add(submissionContext.OperationName);
