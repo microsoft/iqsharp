@@ -130,7 +130,7 @@ def output(jobId : str = '', **params) -> Dict:
     if "error_code" in result: raise AzureError(result)
     return result
 
-def jobs(**params) -> List[AzureJob]:
-    result = qsharp.client._execute_magic(f"azure.jobs", raise_on_stderr=False, **params)
+def jobs(filter : str = '', **params) -> List[AzureJob]:
+    result = qsharp.client._execute_magic(f"azure.jobs {filter}", raise_on_stderr=False, **params)
     if "error_code" in result: raise AzureError(result)
     return [AzureJob(job) for job in result]
