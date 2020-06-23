@@ -32,29 +32,44 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 "azure.target",
                 new Documentation
                 {
-                    Summary = "Views or sets the target for job submission to an Azure Quantum workspace.",
-                    Description = @"
-                        This magic command allows for specifying a target for job submission
-                        to an Azure Quantum workspace, or viewing the list of all available targets.
+                    Summary = "Sets or displays the active execution target for Q# job submission in an Azure Quantum workspace.",
+                    Description = $@"
+                        This magic command allows for specifying or displaying the execution target for Q# job submission
+                        in an Azure Quantum workspace.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command, and the specified target must be
-                        available in the workspace.   
+                        The Azure Quantum workspace must have been previously initialized
+                        using the `%azure.connect` magic command. The specified execution target must be
+                        available in the workspace and support execution of Q# programs.
+
+                        #### Optional parameters
+
+                        - The target ID to set as the active execution target for Q# job submission. If not specified,
+                        the currently active execution target is displayed.
+
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
+                        - {AzureClientError.InvalidTarget.ToMarkdown()}
+                        - {AzureClientError.NoTarget.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Set the current target for job submission:
+                            Set the current target for Q# job submission to `provider.qpu`:
                             ```
-                            In []: %azure.target TARGET_ID
-                            Out[]: Active target is now TARGET_ID
+                            In []: %azure.target provider.qpu
+                            Out[]: Loading package Microsoft.Quantum.Providers.Provider and dependencies...
+                                   Active target is now provider.qpu
+                                   <detailed properties of active execution target>
                             ```
                         ".Dedent(),
                         @"
-                            View the current target and all available targets in the current Azure Quantum workspace:
+                            Display the current target and all available targets in the current Azure Quantum workspace:
                             ```
                             In []: %azure.target
-                            Out[]: <current target and list of available targets>
+                            Out[]: Current execution target: provider.qpu
+                                   Available execution targets: provider.qpu, provider.simulator
+                                   <detailed properties of active execution target>
                             ```
                         ".Dedent(),
                     },

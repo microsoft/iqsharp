@@ -33,29 +33,39 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 new Documentation
                 {
                     Summary = "Displays a list of jobs in the current Azure Quantum workspace.",
-                    Description = @"
+                    Description = $@"
                         This magic command allows for displaying the list of jobs in the current 
                         Azure Quantum workspace, optionally filtering the list to jobs which
                         have an ID, name, or target containing the provided filter parameter.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command.
+                        The Azure Quantum workspace must have been previously initialized
+                        using the `%azure.connect` magic command.
+                        
+                        #### Optional parameters
+
+                        - A string to filter the list of jobs. Jobs which have an ID, name, or target
+                        containing the provided filter parameter will be displayed. If not specified,
+                        all recent jobs are displayed.
+                        
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Print the list of jobs:
+                            Get the list of jobs:
                             ```
                             In []: %azure.jobs
-                            Out[]: <list of jobs in the workspace>
+                            Out[]: <detailed status of all recent jobs in the workspace>
                             ```
                         ".Dedent(),
 
                         @"
-                            Print the list of jobs whose ID, name, or target contains ""MyJob"":
+                            Get the list of jobs whose ID, name, or target contains ""My job"":
                             ```
-                            In []: %azure.jobs ""MyJob""
-                            Out[]: <list of matching jobs>
+                            In []: %azure.jobs ""My job""
+                            Out[]: <detailed status of matching jobs in the workspace>
                             ```
                         ".Dedent(),
                     },

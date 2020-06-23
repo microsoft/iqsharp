@@ -32,34 +32,43 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 "azure.output",
                 new Documentation
                 {
-                    Summary = "Displays results for jobs in the current Azure Quantum workspace.",
-                    Description = @"
-                        This magic command allows for displaying results of jobs in the current 
-                        Azure Quantum workspace. If a valid job ID is provided as an argument, and the
-                        job has completed, the output of that job will be displayed. If no job ID is
-                        provided, the job ID from the most recent call to `%azure.submit` or
-                        `%azure.execute` will be used.
-                        
-                        If the job has not yet completed, an error message will be displayed.
+                    Summary = "Displays results for a job in the current Azure Quantum workspace.",
+                    Description = $@"
+                        This magic command allows for displaying results for a job in the current 
+                        Azure Quantum workspace.
+                        The job execution must already be completed in order to display
+                        results.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command.
+                        The Azure Quantum workspace must have been previously initialized
+                        using the `%azure.connect` magic command.
+                        
+                        #### Optional parameters
+
+                        - The job ID for which to display results. If not specified, the job ID from
+                        the most recent call to `%azure.submit` or `%azure.execute` will be used.
+                        
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
+                        - {AzureClientError.JobNotFound.ToMarkdown()}
+                        - {AzureClientError.JobNotCompleted.ToMarkdown()}
+                        - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Print results of a specific job:
+                            Get results of a specific job:
                             ```
                             In []: %azure.output JOB_ID
-                            Out[]: <job results of specified job>
+                            Out[]: <detailed results of specified job>
                             ```
                         ".Dedent(),
 
                         @"
-                            Print results of the most recently-submitted job:
+                            Get results of the most recently submitted job:
                             ```
                             In []: %azure.output
-                            Out[]: <job results of most recently-submitted job>
+                            Out[]: <detailed results of most recently submitted job>
                             ```
                         ".Dedent(),
                     },

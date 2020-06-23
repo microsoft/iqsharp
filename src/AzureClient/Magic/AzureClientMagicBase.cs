@@ -11,6 +11,12 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    internal static class AzureClientMagicExtensions
+    {
+        public static string ToMarkdown(this AzureClientError error) =>
+            $"`{error.ToString()}`: {error.ToDescription()}";
+    }
+
     /// <summary>
     ///     Base class used for Azure Client magic commands.
     /// </summary>
