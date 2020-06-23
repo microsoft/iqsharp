@@ -17,8 +17,8 @@ if ($IsWindows) {
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
 $ArtifactRoot = Join-Path $RepoRoot "drops";
 $SelfContainedDirectory = Join-Path $ArtifactRoot (Join-Path "selfcontained" $RuntimeID)
-$NugetsDirectory = Join-Path $ArtifactRoot "nugets"
-$NugetConfig = Resolve-Path (Join-Path $PSScriptRoot "NuGet.config");
+$NugetConfig = Join-Path $RepoRoot "NuGet.config"
+Copy-Item $NugetConfig $SelfContainedDirectory
 
 $TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
 
