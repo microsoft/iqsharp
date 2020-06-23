@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -35,11 +36,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc/>
         public override ExecutionResult Run(string input, IChannel channel) =>
-            RunAsync(input, channel).GetAwaiter().GetResult();
+            RunCancellable(input, channel, CancellationToken.None);
+
+        /// <inheritdoc/>
+        public override ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken cancellationToken) =>
+            RunAsync(input, channel, cancellationToken).GetAwaiter().GetResult();
 
         /// <summary>
         ///     Executes the magic command functionality for the given input.
         /// </summary>
-        public abstract Task<ExecutionResult> RunAsync(string input, IChannel channel);
+        public abstract Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken);
     }
 }

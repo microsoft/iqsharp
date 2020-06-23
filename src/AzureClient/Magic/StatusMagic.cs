@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -66,7 +67,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Displays the status corresponding to a given job ID, if provided,
         ///     or the most recently-submitted job in the current session.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);

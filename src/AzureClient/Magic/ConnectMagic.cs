@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -111,7 +112,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Connects to an Azure workspace given a subscription ID, resource group name,
         ///     workspace name, and connection string as a JSON-encoded object.
         /// </summary>
-        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
             var inputParameters = ParseInputParameters(input);
             if (!inputParameters.Any())
