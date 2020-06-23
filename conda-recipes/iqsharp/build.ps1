@@ -31,10 +31,10 @@ Copy-Item (Join-Path $SelfContainedDirectory "*") $TargetDirectory -Verbose -Rec
 
 # Add the prerelease NuGet feed if this isn't a release build.
 if ("$Env:BUILD_RELEASETYPE" -ne "release") {
-    $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..");
-    $NuGetConfig = Join-Path $RepoRoot "NuGet.config"
-    Write-Host "## Copying prerelease NuGet config $NuGetConfig to $TargetDirectory ##"
-    Copy-Item $NuGetConfig $TargetDirectory
+    $NuGetConfig = Join-Path $SelfContainedDirectory "NuGet.config"
+    $NuGetDirectory = Resolve-Path ~
+    Write-Host "## Copying prerelease NuGet config $NuGetConfig to $NuGetDirectory ##"
+    Copy-Item $NuGetConfig $NuGetDirectory
 }
 
 Write-Host "## Installing IQ# into Jupyter. ##"

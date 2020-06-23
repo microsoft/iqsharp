@@ -29,6 +29,13 @@ steps:
   displayName: "Packing IQ# self-contained executable"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
+- task: CopyFiles@2
+  displayName: 'Copy prerelease NuGet.config'
+  condition: and(succeededOrFailed(), ne(variables['Build.ReleaseType'], 'release'))
+  inputs:
+    Contents: NuGet.config
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
 ##
 # Publish tests results and build artifacts.
 ##
