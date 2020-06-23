@@ -50,13 +50,6 @@ steps:
     testResultsFiles: '$(System.DefaultWorkingDirectory)/**/*.trx'
     testRunTitle: 'IQ# tests'
 
-- task: CopyFiles@2
-  displayName: 'Copy prerelease NuGet.config'
-  condition: and(succeededOrFailed(), ne(variables['Build.ReleaseType'], 'release'))
-  inputs:
-    Contents: '$(System.DefaultWorkingDirectory)/NuGet.config'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: iqsharp'
   condition: succeededOrFailed()
