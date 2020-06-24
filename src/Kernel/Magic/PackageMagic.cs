@@ -26,7 +26,48 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public PackageMagic(IReferences references) : base(
             "package",
             new Documentation {
-                Summary = "Provides the ability to load a Nuget package. The package must be available on the list of nuget sources, typically this includes nuget.org"
+                Summary = "Provides the ability to load a NuGet package.",
+                Description = @"
+                    This magic command allows for loading a NuGet package into the current IQ# kernel process.
+                    The package must be available on the system's list of NuGet sources, which typically includes nuget.org.
+                    Functionality such as magic commands and result encoders defined in the loaded package will
+                    automatically become available for use in the current session.
+
+                    The package can be specified by name only, or by name and version (using `name::version` syntax).
+
+                    If no version is specified:
+                    - For packages that are part of the Microsoft Quantum Development Kit, IQ# will attempt to
+                    obtain the version of the package that matches the current IQ# version.
+                    - For other packages, IQ# will attempt to obtain the most recent version of the package.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Load the `Microsoft.Quantum.MachineLearning` package into the current IQ# session:
+                        ```
+                        In []: %package Microsoft.Quantum.MachineLearning
+                        Out[]: Adding package Microsoft.Quantum.MachineLearning: done!
+                               <list of all loaded packages and versions>
+                        ```
+                    ".Dedent(),
+                    
+                    @"
+                        Load a specific version of the `Microsoft.Quantum.Katas` package into the current IQ# session:
+                        ```
+                        In []: %package Microsoft.Quantum.Katas::0.11.2006.403
+                        Out[]: Adding package Microsoft.Quantum.Katas::0.11.2006.403: done!
+                               <list of all loaded packages and versions>
+                        ```
+                    ".Dedent(),
+                    
+                    @"
+                        View the list of all packages that have been loaded into the current IQ# session:
+                        ```
+                        In []: %package
+                        Out[]: <list of all loaded packages and versions>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.References = references;

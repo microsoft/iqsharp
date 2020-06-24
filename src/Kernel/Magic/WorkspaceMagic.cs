@@ -23,7 +23,40 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public WorkspaceMagic(IWorkspace workspace) : base(
             "workspace", 
             new Documentation {
-                Summary = "Returns a list of all operations and functions defined in the current session, either interactively or loaded from the current workspace."
+                Summary = "Provides actions related to the current workspace.",
+                Description = @"
+                    This magic command allows for displaying and reloading the Q# operations and functions
+                    defined within .qs files in the current folder.
+
+                    If no parameters are provided, the command displays a list of Q# operations or functions
+                    within .qs files in the current folder which are available
+                    in the current IQ# session for use with magic commands such as `%simulate`
+                    and `%estimate`.
+
+                    The command will also output any errors encountered while compiling the .qs files
+                    in the current folder.
+                    
+                    #### Optional parameters
+
+                    - `reload`: Causes the IQ# kernel to recompile all .qs files in the current folder.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Display the list of Q# operations and functions available in the current folder:
+                        ```
+                        In []: %workspace
+                        Out[]: <list of Q# operation and function names>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Recompile the .qs files in the current folder:
+                        ```
+                        In []: %workspace reload
+                        Out[]: <list of Q# operation and function names>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.Workspace = workspace;

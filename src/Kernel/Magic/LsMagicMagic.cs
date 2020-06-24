@@ -33,9 +33,23 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine) : base(
             "lsmagic",
-            new Documentation
-            {
-                Summary = "Returns a list of all currently available magic commands."
+            new Documentation {
+                Summary = "Returns a list of all currently available magic commands.",
+                Description = @"
+                    This magic command lists all of the magic commands available in the IQ# kernel,
+                    as well as those defined in any packages that have been loaded in the current
+                    session via the `%package` magic command.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Display the list of available magic commands:
+                        ```
+                        In []: %lsmagic
+                        Out[]: <detailed list of all available magic commands>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.resolver = resolver;
