@@ -17,6 +17,7 @@ using Newtonsoft.Json.Converters;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -41,7 +42,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IEventService eventService,
-            IMagicSymbolResolver magicSymbolResolver
+            IMagicSymbolResolver magicSymbolResolver,
+            IReferences references
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -65,6 +67,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
 
+            RegisterPackageLoadedEvent(services, logger, references);
+
             // Handle new shell messages.
             shellRouter.RegisterHandlers<IQSharpEngine>();
 
@@ -75,7 +79,69 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Process.GetCurrentProcess().Id
             );
 
+
             eventService?.TriggerServiceInitialized<IExecutionEngine>(this);
+        }
+
+        /// <summary>
+        ///     Registers an event handler that searches newly loaded packages
+        ///     for extensions to this engine (in particular, for result encoders).
+        /// </summary>
+        private void RegisterPackageLoadedEvent(IServiceProvider services, ILogger logger, IReferences references)
+        {
+            var knownAssemblies = references
+                .Assemblies
+                .Select(asm => asm.Assembly.GetName())
+                .ToImmutableHashSet()
+                // Except assemblies known at compile-time as well.
+                .Add(typeof(StateVectorToHtmlResultEncoder).Assembly.GetName());
+            foreach (var knownAssembly in knownAssemblies) System.Console.WriteLine($"{knownAssembly.FullName}");
+
+            // Register new display encoders when packages load.
+            references.PackageLoaded += (sender, args) =>
+            {
+                logger.LogDebug("Scanning for display encoders after loading {Package}.", args.PackageId);
+                foreach (var assembly in references.Assemblies.Select(asm => asm.Assembly))
+                {
+                    if (!knownAssemblies.Contains(assembly.GetName()))
+                    {
+                        // Look for display encoders in the new assembly.
+                        logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
+                        var relevantTypes = assembly
+                            .GetTypes()
+                            .Where(type =>
+                                !type.IsAbstract &&
+                                !type.IsInterface &&
+                                typeof(IResultEncoder).IsAssignableFrom(type)
+                            );
+
+                        foreach (var type in relevantTypes)
+                        {
+                            logger.LogDebug(
+                                "Found display encoder {TypeName} in {AssemblyName}; registering.",
+                                type.FullName,
+                                assembly.FullName
+                            );
+
+                            // Try and instantiate the new result encoder, but if it fails, that is likely
+                            // a non-critical failure that should result in a warning.
+                            try
+                            {
+                                RegisterDisplayEncoder(ActivatorUtilities.CreateInstance(services, type) as IResultEncoder);
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogWarning(
+                                    ex,
+                                    "Encountered exception loading result encoder {TypeName} from {AssemblyName}.",
+                                    type.FullName, assembly.FullName
+                                );
+                            }
+                        }
+                        knownAssemblies = knownAssemblies.Add(assembly.GetName());
+                    }
+                }
+            };
         }
 
         internal ISnippets Snippets { get; }
