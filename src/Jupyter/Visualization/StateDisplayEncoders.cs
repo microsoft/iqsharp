@@ -230,7 +230,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class StateVectorToHtmlResultEncoder : IResultEncoder
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
-
+        private double count = 0.0;
         /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
         private IConfigurationSource ConfigurationSource;
@@ -295,10 +295,17 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
 
+                        count = count + 1;
+
                         //different options for displaying measurement style
+    
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
-                            MeasurementDisplayStyle.None => "",
+                            MeasurementDisplayStyle.None =>FormattableString.Invariant($@"
+                                <td> 
+                                    
+                                </td>
+                            "),
                             MeasurementDisplayStyle.BarOnly => FormattableString.Invariant($@"
                                 <td>
                                     <progress
@@ -313,13 +320,27 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     <progress
                                         max=""100""
                                         value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
-                                        style=""width: 100%;""
-                                    > {System.Math.Pow(amplitude.Magnitude, 2.0) * 100}%
+                                        style=""width: 70%;""
+                                    > 
+                                    <td>
+                                    <p id=""round${count}""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed(2);
+                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    </script> </p>
+                                    </td>
                                 </td>
-                            "),
+                            "), // not sure what style width does
                             MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    {System.Math.Pow(amplitude.Magnitude, 2.0) * 100}%
+                                    <p id=""round${count}""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed(2);
+                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    </script> </p>
+                                    
                                 </td>
                             "),
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.MeasurementDisplayStyle}")
