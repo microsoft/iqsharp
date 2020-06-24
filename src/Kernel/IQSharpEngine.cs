@@ -101,45 +101,45 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             references.PackageLoaded += (sender, args) =>
             {
                 logger.LogDebug("Scanning for display encoders after loading {Package}.", args.PackageId);
-                foreach (var assembly in references.Assemblies.Select(asm => asm.Assembly))
+                foreach (var assembly in references.Assemblies
+                                                   .Select(asm => asm.Assembly)
+                                                   .Where(asm => !knownAssemblies.Contains(asm.GetName()))
+                )
                 {
-                    if (!knownAssemblies.Contains(assembly.GetName()))
+                    // Look for display encoders in the new assembly.
+                    logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
+                    var relevantTypes = assembly
+                        .GetTypes()
+                        .Where(type =>
+                            !type.IsAbstract &&
+                            !type.IsInterface &&
+                            typeof(IResultEncoder).IsAssignableFrom(type)
+                        );
+
+                    foreach (var type in relevantTypes)
                     {
-                        // Look for display encoders in the new assembly.
-                        logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
-                        var relevantTypes = assembly
-                            .GetTypes()
-                            .Where(type =>
-                                !type.IsAbstract &&
-                                !type.IsInterface &&
-                                typeof(IResultEncoder).IsAssignableFrom(type)
-                            );
+                        logger.LogDebug(
+                            "Found display encoder {TypeName} in {AssemblyName}; registering.",
+                            type.FullName,
+                            assembly.FullName
+                        );
 
-                        foreach (var type in relevantTypes)
+                        // Try and instantiate the new result encoder, but if it fails, that is likely
+                        // a non-critical failure that should result in a warning.
+                        try
                         {
-                            logger.LogDebug(
-                                "Found display encoder {TypeName} in {AssemblyName}; registering.",
-                                type.FullName,
-                                assembly.FullName
-                            );
-
-                            // Try and instantiate the new result encoder, but if it fails, that is likely
-                            // a non-critical failure that should result in a warning.
-                            try
-                            {
-                                RegisterDisplayEncoder(ActivatorUtilities.CreateInstance(services, type) as IResultEncoder);
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogWarning(
-                                    ex,
-                                    "Encountered exception loading result encoder {TypeName} from {AssemblyName}.",
-                                    type.FullName, assembly.FullName
-                                );
-                            }
+                            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance(services, type) as IResultEncoder);
                         }
-                        knownAssemblies = knownAssemblies.Add(assembly.GetName());
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(
+                                ex,
+                                "Encountered exception loading result encoder {TypeName} from {AssemblyName}.",
+                                type.FullName, assembly.FullName
+                            );
+                        }
                     }
+                    knownAssemblies = knownAssemblies.Add(assembly.GetName());
                 }
             };
         }
