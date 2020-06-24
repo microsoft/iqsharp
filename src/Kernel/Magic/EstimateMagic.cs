@@ -34,8 +34,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     The ResourcesEstimator estimates statistics about how many resources the given
                     operation needs for execution. The resources it calculates include:
                     - Counts for each primitive operation
-                    - Depth (maximum number of qubits allocated at any given point)
-                    - Width (total number of gates used for the computation)
+                    - Depth (lower bound for the T-gate depth of the quantum circuit)
+                    - Width (lower bound for the maximum number of qubits used for the computation)
 
                     #### Required parameters
 
