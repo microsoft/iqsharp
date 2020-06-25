@@ -29,20 +29,64 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 new Documentation
                 {
                     Summary = "Submits a job to an Azure Quantum workspace.",
-                    Description = @"
-                        This magic command allows for submitting a job to an Azure Quantum workspace
-                        corresponding to the Q# operation provided as an argument.
+                    Description = $@"
+                        This magic command allows for submitting a Q# operation or function
+                        for execution on the specified target in the current Azure Quantum workspace.
+                        The command returns immediately after the job is submitted.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command.
+                        The Azure Quantum workspace must have been previously initialized
+                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        and an execution target for the job must have been specified using the
+                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+
+                        #### Required parameters
+
+                        - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                        or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                        - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+
+                        #### Optional parameters
+
+                        - `{AzureSubmissionContext.ParameterNameJobName}=<string>`: Friendly name to identify this job. If not specified,
+                        the Q# operation or function name will be used as the job name.
+                        - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
+                        specified Q# operation or function.
+                        
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
+                        - {AzureClientError.NoTarget.ToMarkdown()}
+                        - {AzureClientError.NoOperationName.ToMarkdown()}
+                        - {AzureClientError.InvalidTarget.ToMarkdown()}
+                        - {AzureClientError.UnrecognizedOperationName.ToMarkdown()}
+                        - {AzureClientError.InvalidEntryPoint.ToMarkdown()}
+                        - {AzureClientError.JobSubmissionFailed.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Submit an operation as a new job to the current Azure Quantum workspace:
+                            Submit a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            for execution on the active target in the current Azure Quantum workspace:
                             ```
-                            In []: %azure.submit OPERATION_NAME
-                            Out[]: Submitted job JOB_ID
+                            In []: %azure.submit MyOperation a=5 b=10
+                            Out[]: Submitting MyOperation to target provider.qpu...
+                                   Job successfully submitted for 500 shots.
+                                      Job name: MyOperation
+                                      Job ID: <Azure Quantum job ID>
+                                   <detailed properties of submitted job>
+                            ```
+                        ".Dedent(),
+                        @"
+                            Submit a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            for execution on the active target in the current Azure Quantum workspace,
+                            specifying a custom job name, number of shots, timeout, and polling interval:
+                            ```
+                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100
+                            Out[]: Submitting MyOperation to target provider.qpu...
+                                   Job successfully submitted for 100 shots.
+                                      Job name: My job
+                                      Job ID: <Azure Quantum job ID>
+                                   <detailed properties of submitted job>
                             ```
                         ".Dedent(),
                     },

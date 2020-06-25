@@ -32,32 +32,40 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 "azure.status",
                 new Documentation
                 {
-                    Summary = "Displays status for jobs in the current Azure Quantum workspace.",
-                    Description = @"
-                        This magic command allows for displaying status of jobs in the current 
-                        Azure Quantum workspace. If a valid job ID is provided as an argument, the
-                        detailed status of that job will be displayed. If no job ID is
-                        provided, the job ID from the most recent call to `%azure.submit` or
-                        `%azure.execute` will be used.
+                    Summary = "Displays status for a job in the current Azure Quantum workspace.",
+                    Description = $@"
+                        This magic command allows for displaying status for a job in the current 
+                        Azure Quantum workspace.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command.
+                        The Azure Quantum workspace must have been previously initialized
+                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
+                        
+                        #### Optional parameters
+
+                        - The job ID for which to display status. If not specified, the job ID from
+                        the most recent call to [`%azure.submit`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.submit)
+                        or [`%azure.execute`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute) will be used.
+                        
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
+                        - {AzureClientError.JobNotFound.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Print status of a specific job:
+                            Get the status of a specific job:
                             ```
                             In []: %azure.status JOB_ID
-                            Out[]: <job status of specified job>
+                            Out[]: <detailed status of specified job>
                             ```
                         ".Dedent(),
 
                         @"
-                            Print status of the most recently-submitted job:
+                            Get the status of the most recently submitted job:
                             ```
                             In []: %azure.status
-                            Out[]: <job status of most recently-submitted job>
+                            Out[]: <detailed status of most recently submitted job>
                             ```
                         ".Dedent(),
                     },
