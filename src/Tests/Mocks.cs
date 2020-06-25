@@ -117,4 +117,12 @@ namespace Tests.IQSharp
 
         public void Stdout(string message) => msgs.Add(message);
     }
+
+    public class MockOperationResolver : IOperationResolver
+    {
+        public OperationInfo Resolve(string input)
+        {
+            return new OperationInfo(null, null);
+        }
+    }
 }

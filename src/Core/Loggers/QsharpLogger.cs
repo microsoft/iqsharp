@@ -22,13 +22,12 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         public List<LSP.Diagnostic> Logs { get; }
 
-        public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; }
+        public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.ErrorCode>();
 
-        public QSharpLogger(ILogger logger, List<QsCompiler.Diagnostics.ErrorCode> errorCodesToIgnore = null)
+        public QSharpLogger(ILogger logger)
         {
             this.Logger = logger;
             this.Logs = new List<LSP.Diagnostic>();
-            this.ErrorCodesToIgnore = errorCodesToIgnore ?? new List<QsCompiler.Diagnostics.ErrorCode>();
         }
 
         public static LogLevel MapLevel(LSP.DiagnosticSeverity original)
