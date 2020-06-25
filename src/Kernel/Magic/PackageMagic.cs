@@ -36,6 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     The package can be specified by name only, or by name and version (using `name::version` syntax).
 
                     If no version is specified:
+
                     - For packages that are part of the Microsoft Quantum Development Kit, IQ# will attempt to
                     obtain the version of the package that matches the current IQ# version.
                     - For other packages, IQ# will attempt to obtain the most recent version of the package.

@@ -28,11 +28,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public EstimateMagic(ISymbolResolver resolver) : base(
             "estimate",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Runs a given function or operation on the ResourcesEstimator target machine.",
                 Description = @"
                     The ResourcesEstimator estimates statistics about how many resources the given
                     operation needs for execution. The resources it calculates include:
+
                     - Counts for each primitive operation
                     - Depth (lower bound for the T-gate depth of the quantum circuit)
                     - Width (lower bound for the maximum number of qubits used for the computation)

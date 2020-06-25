@@ -38,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Description = @"
                     This magic command lists all of the magic commands available in the IQ# kernel,
                     as well as those defined in any packages that have been loaded in the current
-                    session via the `%package` magic command.
+                    session via the [`%package` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/package).
                 ".Dedent(),
                 Examples = new []
                 {

@@ -30,6 +30,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Summary = "Reports current performance metrics for this kernel.",
                 Description = @"
                     Reports various performance metrics for the current IQ# kernel process, including:
+
                     - Managed RAM usage
                     - Total RAM usage
                     - Virtual memory size
