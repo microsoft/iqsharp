@@ -18,6 +18,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class SimulateMagic : AbstractMagic
     {
+        private const string ParameterNameOperationName = "__operationName__";
+
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
         ///     operations and functions, and a configuration source used to set
@@ -55,15 +57,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var (name, args) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             using var qsim = new QuantumSimulator()
                 .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
-            var value = await symbol.Operation.RunAsync(qsim, args);
+            var value = await symbol.Operation.RunAsync(qsim, inputParameters);
             return value.ToExecutionResult();
         }
     }

@@ -41,7 +41,7 @@ function Test-Python {
     Write-Host "##[info]Testing Python inside $testFolder"    
     Push-Location (Join-Path $PSScriptRoot $testFolder)
         python --version
-        pytest -v
+        pytest -v --log-level=Debug
     Pop-Location
 
     if ($LastExitCode -ne 0) {

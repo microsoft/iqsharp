@@ -62,7 +62,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DataTableToTextEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
-            RegisterJsonEncoder(JsonConverters.AllConverters);
+
+            RegisterJsonEncoder(
+                JsonConverters.AllConverters
+                .Concat(AzureClient.JsonConverters.AllConverters)
+                .ToArray());
 
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
