@@ -69,6 +69,7 @@ def test_workspace_create_with_parameters():
 def test_workspace_create_with_resource_id():
     """
     Tests behavior of a mock workspace with providers, using resource ID to connect.
+    Also verifies case-insensitivity of resource ID parsing.
     """
     subscriptionId = "f846b2bd-d0e2-4a1d-8141-4c6944a9d387"
     resourceGroupName = "test"

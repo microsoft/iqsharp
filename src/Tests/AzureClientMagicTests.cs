@@ -49,7 +49,7 @@ namespace Tests.IQSharp
             // unrecognized input
             connectMagic.Test($"invalid", ExecuteStatus.Error);
 
-            // valid input with resource ID
+            // valid input with resource ID (and to verify case-insensitivity of resourceId parsing)
             connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
