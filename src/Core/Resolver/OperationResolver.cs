@@ -71,11 +71,12 @@ namespace Microsoft.Quantum.IQSharp
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public OperationInfo Resolve(string name)
+        public OperationInfo Resolve(string name) => ResolveFromAssemblies(name, RelevantAssemblies());
+
+        public static OperationInfo ResolveFromAssemblies(string name, IEnumerable<AssemblyInfo> assemblies)
         {
             var isQualified = name.Contains('.');
-            var relevant = RelevantAssemblies();
-            foreach (var operation in relevant.SelectMany(asm => asm.Operations))
+            foreach (var operation in assemblies.SelectMany(asm => asm.Operations))
             {
                 if (name == (isQualified ? operation.FullName : operation.Header.QualifiedName.Name.Value))
                 {

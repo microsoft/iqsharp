@@ -16,6 +16,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class ToffoliMagic : AbstractMagic
     {
+        private const string ParameterNameOperationName = "__operationName__";
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -43,8 +45,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var (name, args) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
@@ -52,7 +55,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
 
-            var value = await symbol.Operation.RunAsync(qsim, args);
+            var value = await symbol.Operation.RunAsync(qsim, inputParameters);
 
             return value.ToExecutionResult();
         }

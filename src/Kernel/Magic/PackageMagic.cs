@@ -17,6 +17,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class PackageMagic : AbstractMagic
     {
+        private const string ParameterNamePackageName = "__packageName__";
+
         /// <summary>
         ///     Constructs a new magic command that adds package references to
         ///     a given references collection.
@@ -39,7 +41,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
-            var (name, _) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNamePackageName);
+            var name = inputParameters.DecodeParameter<string>(ParameterNamePackageName);
             var status = new Jupyter.TaskStatus($"Adding package {name}");
             var statusUpdater = channel.DisplayUpdatable(status);
             void Update() => statusUpdater.Update(status);

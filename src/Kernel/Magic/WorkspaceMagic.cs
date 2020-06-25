@@ -5,7 +5,7 @@ using System.Linq;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Kernel;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -14,6 +14,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class WorkspaceMagic : AbstractMagic
     {
+        private const string ParameterNameCommand = "__command__";
+
         /// <summary>
         ///      Given a workspace, constructs a new magic symbol to control
         ///      that workspace.
@@ -51,7 +53,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
-            var (command, _) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameCommand);
+            var command = inputParameters.DecodeParameter<string>(ParameterNameCommand);
 
             if (string.IsNullOrWhiteSpace(command))
             {

@@ -15,6 +15,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
 using System.Data;
+using Microsoft.Quantum.IQSharp.AzureClient;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -447,6 +448,15 @@ namespace Tests.IQSharp
 
             symbol = resolver.Resolve("%foo");
             Assert.IsNull(symbol);
+
+            // AzureClient-provided commands
+            Assert.IsNotNull(resolver.Resolve("%azure.connect"));
+            Assert.IsNotNull(resolver.Resolve("%azure.target"));
+            Assert.IsNotNull(resolver.Resolve("%azure.submit"));
+            Assert.IsNotNull(resolver.Resolve("%azure.execute"));
+            Assert.IsNotNull(resolver.Resolve("%azure.status"));
+            Assert.IsNotNull(resolver.Resolve("%azure.output"));
+            Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
         }
     }
 }
