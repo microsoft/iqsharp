@@ -47,8 +47,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(AzureClientAction.GetConnectionStatus, azureClient.LastAction);
 
             // unrecognized input
-            connectMagic.Test($"invalid");
-            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            connectMagic.Test($"invalid", ExecuteStatus.Error);
 
             // valid input with resource ID
             connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");

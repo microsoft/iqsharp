@@ -175,6 +175,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 channel.Stderr($"Please specify either a valid {ParameterNameResourceId} or a valid combination of " +
                     $"{ParameterNameSubscriptionId}, {ParameterNameResourceGroupName}, and {ParameterNameWorkspaceName}");
+                return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
