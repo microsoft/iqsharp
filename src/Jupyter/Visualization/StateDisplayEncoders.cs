@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
         ///     dependent on the phase as well as display phase information in number
         ///     format.
-        ArrowsAndNumber
+        ArrowAndNumber
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                  ↑
                                 </td>
                             "),
-                            PhaseDisplayStyle.ArrowsAndNumber => FormattableString.Invariant($@"
+                            PhaseDisplayStyle.ArrowAndNumber => FormattableString.Invariant($@"
                                 <td>
                                  <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div style=""{StyleForNumber()}"">{amplitude.Phase}</div>
                                 </td>
