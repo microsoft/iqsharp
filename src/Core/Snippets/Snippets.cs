@@ -105,7 +105,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of currently available snippets.
         /// </summary>
-        internal IEnumerable<Snippet> Items { get; set; }
+        public IEnumerable<Snippet> Items { get; set; }
 
         /// <summary>
         /// The list of Q# operations available across all snippets.
@@ -145,11 +145,7 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
-            {
-                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Ignore any @EntryPoint() attributes found in snippets.
-            };
-            var logger = new QSharpLogger(Logger, errorCodesToIgnore);
+            var logger = new QSharpLogger(Logger);
 
             try
             {

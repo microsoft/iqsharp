@@ -26,12 +26,14 @@ namespace Microsoft.Quantum.IQSharp
     {
         private Lazy<Dictionary<string, string>> _params;
         private Lazy<ParameterInfo[]> _roslynParams;
+        private Lazy<Type> _returnType;
 
         internal OperationInfo(Type roslynType, CallableDeclarationHeader header)
         {
             this.Header = header ?? throw new ArgumentNullException(nameof(header));
             RoslynType = roslynType;
             _roslynParams = new Lazy<ParameterInfo[]>(() => RoslynType?.GetMethod("Run").GetParameters().Skip(1).ToArray());
+            _returnType = new Lazy<Type>(() => RoslynType?.GetMethod("Run").ReturnType.GenericTypeArguments.Single());
             _params = new Lazy<Dictionary<string, string>>(() => RoslynParameters?.ToDictionary(p => p.Name, p => p.ParameterType.Name));
         }
 
@@ -59,6 +61,12 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         [JsonIgnore]
         public ParameterInfo[] RoslynParameters => _roslynParams.Value;
+
+        /// <summary>
+        /// The return type for the underlying compiled .NET Type for this Q# operation
+        /// </summary>
+        [JsonIgnore]
+        public Type ReturnType => _returnType.Value;
 
         public override string ToString() => FullName;
     }
