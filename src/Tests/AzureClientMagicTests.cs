@@ -51,7 +51,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
 
             // valid input with resource ID
-            connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);

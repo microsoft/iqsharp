@@ -74,7 +74,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Register the token cache for serialization
-            var cacheFileName = "aad.bin";
+            var cacheFileName = "iqsharp.bin";
             var storageCreationProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDirectory, ClientId).Build();
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
             var msalApp = PublicClientApplicationBuilder.Create(ClientId).WithAuthority(Authority).Build();
