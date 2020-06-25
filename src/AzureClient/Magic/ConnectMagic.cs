@@ -173,8 +173,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 string.IsNullOrWhiteSpace(resourceGroupName) ||
                 string.IsNullOrWhiteSpace(workspaceName))
             {
-                channel.Stderr($"Please specify either a valid {ParameterNameResourceId} or a valid combination of " +
-                    $"{ParameterNameSubscriptionId}, {ParameterNameResourceGroupName}, and {ParameterNameWorkspaceName}");
+                channel.Stderr($"Please specify a valid {ParameterNameResourceId}, or specify a valid combination of " +
+                    $"{ParameterNameSubscriptionId}, {ParameterNameResourceGroupName}, and {ParameterNameWorkspaceName}.");
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
