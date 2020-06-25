@@ -33,7 +33,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine) : base(
             "lsmagic",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Returns a list of all currently available magic commands.",
                 Description = @"
                     This magic command lists all of the magic commands available in the IQ# kernel,

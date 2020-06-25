@@ -39,6 +39,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     - Depth (lower bound for the T-gate depth of the quantum circuit)
                     - Width (lower bound for the maximum number of qubits used for the computation)
 
+                    See the [ResourcesEstimator user guide](https://docs.microsoft.com/quantum/user-guide/machines/resources-estimator) to learn more.
+
                     #### Required parameters
 
                     - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
@@ -47,6 +49,22 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 ".Dedent(),
                 Examples = new []
                 {
+                    @"
+                        Estimate resources for a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %estimate MyOperation
+                        Out[]: Metric           Sum     
+                               ---------------- ----
+                               CNOT             0
+                               QubitClifford    4
+                               R                0
+                               Measure          8
+                               T                0
+                               Depth            0
+                               Width            4
+                               BorrowedWidth    0
+                        ```
+                    ".Dedent(),
                     @"
                         Estimate resources for a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
                         ```

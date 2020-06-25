@@ -50,10 +50,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         #### Required parameters
 
                         The Azure Quantum workspace can be identified by resource ID:
+
                         - `{ParameterNameResourceId}=<string>`: The resource ID of the Azure Quantum workspace.
                         This can be obtained from the workspace page in the Azure portal.
 
                         Alternatively, it can be identified by subscription ID, resource group name, and workspace name:
+                        
                         - `{ParameterNameSubscriptionId}=<string>`: The Azure subscription ID for the Azure Quantum workspace.
                         - `{ParameterNameResourceGroupName}=<string>`: The Azure resource group name for the Azure Quantum workspace.
                         - `{ParameterNameWorkspaceName}=<string>`: The name of the Azure Quantum workspace.

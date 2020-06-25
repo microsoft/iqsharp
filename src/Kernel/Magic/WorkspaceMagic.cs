@@ -22,7 +22,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public WorkspaceMagic(IWorkspace workspace) : base(
             "workspace", 
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Provides actions related to the current workspace.",
                 Description = @"
                     This magic command allows for displaying and reloading the Q# operations and functions

@@ -23,12 +23,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ToffoliMagic(ISymbolResolver resolver) : base(
             "toffoli",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Runs a given function or operation on the ToffoliSimulator target machine.",
                 Description = @"
                     This magic command allows executing a given function or operation on the ToffoliSimulator, 
                     which performs a simulation of the given function or operation in which the state is always
                     a simple product state in the computational basis, and prints the resulting return value.
+
+                    See the [ToffoliSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/toffoli-simulator) to learn more.
 
                     #### Required parameters
 
@@ -38,6 +41,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 ".Dedent(),
                 Examples = new []
                 {
+                    @"
+                        Use the ToffoliSimulator to simulate a Q# operation
+                        defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %toffoli MyOperation
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
                     @"
                         Use the ToffoliSimulator to simulate a Q# operation
                         defined as `operation MyOperation(a : Int, b : Int) : Result`:

@@ -25,7 +25,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ConfigMagic(IConfigurationSource configurationSource) : base(
             "config",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Allows setting or querying configuration options.",
                 Description = @"
                     This magic command allows for setting or querying
@@ -36,14 +37,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     #### Configuration settings
 
-                    ##### `dump.basisStateLabelingConvention`
+                    **`dump.basisStateLabelingConvention`**
 
                     **Value:** `""LittleEndian""` (default), `""BigEndian""`, or `""Bitstring""`
 
                     The convention to be used when labeling computational
-                    basis states in output from methods such as `DumpMachine()` or `DumpRegister()`.
+                    basis states in output from callables such as `DumpMachine` or `DumpRegister`.
 
-                    ##### `dump.truncateSmallAmplitudes`
+                    **`dump.truncateSmallAmplitudes`**
 
                     **Value:** `true` or `false` (default)
 
@@ -51,7 +52,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     (i.e., squared amplitudes) are smaller than a particular threshold, as determined by
                     the `dump.truncationThreshold` setting.
 
-                    ##### `dump.truncationThreshold`
+                    **`dump.truncationThreshold`**
 
                     **Value:** floating point number such as `0.001` or `1E-8` (default `1E-10`)
 
@@ -59,12 +60,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     threshold for measurement probabilities (i.e., squared amplitudes) below which to hide the display
                     of basis states of a state vector.
 
-                    ##### `dump.phaseDisplayStyle`
+                    **`dump.phaseDisplayStyle`**
 
                     **Value:** `""ArrowOnly""` (default), `""NumberOnly""`, `""ArrowAndNumber""`, or `""None""`
 
-                    Configures the phase visualization style in output from methods such as
-                    `DumpMachine()` or `DumpRegister()`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
+                    Configures the phase visualization style in output from callables such as
+                    `DumpMachine` or `DumpRegister`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
                 ".Dedent(),
                 Examples = new []
                 {

@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         have an ID, name, or target containing the provided filter parameter.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the `%azure.connect` magic command.
+                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
                         
                         #### Optional parameters
 

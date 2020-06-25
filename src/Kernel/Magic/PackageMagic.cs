@@ -25,13 +25,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public PackageMagic(IReferences references) : base(
             "package",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Provides the ability to load a NuGet package.",
                 Description = @"
                     This magic command allows for loading a NuGet package into the current IQ# kernel process.
                     The package must be available on the system's list of NuGet sources, which typically includes nuget.org.
-                    Functionality such as magic commands and result encoders defined in the loaded package will
-                    automatically become available for use in the current session.
+                    Q# operations, functions, and user-defined types defined in the loaded package,
+                    along with functionality such as magic commands and result encoders,
+                    will automatically become available for use in the current session.
 
                     The package can be specified by name only, or by name and version (using `name::version` syntax).
 

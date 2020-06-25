@@ -27,12 +27,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
             "simulate",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Runs a given function or operation on the QuantumSimulator target machine.",
                 Description = @"
                     This magic command allows executing a given function or operation on the QuantumSimulator, 
                     which performs a full-state simulation of the given function or operation
                     and prints the resulting return value.
+
+                    See the [QuantumSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/full-state-simulator) to learn more.
 
                     #### Required parameters
 
@@ -42,6 +45,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 ".Dedent(),
                 Examples = new []
                 {
+                    @"
+                        Simulate a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %simulate MyOperation
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
                     @"
                         Simulate a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
                         ```

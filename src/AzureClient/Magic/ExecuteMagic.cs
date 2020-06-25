@@ -36,8 +36,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The command waits a specified amount of time for the job to complete before returning.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the `%azure.connect` magic command, and an execution target for the job
-                        must have been specified using the `%azure.target` magic command.
+                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        and an execution target for the job must have been specified using the
+                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
 
                         #### Required parameters
 
