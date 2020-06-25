@@ -87,7 +87,7 @@ namespace Tests.IQSharp
             });
             Console.WriteLine(JsonConvert.SerializeObject(response));
             Assert.AreEqual(Status.Error, response.Status);
-            Assert.AreEqual(5, response.Messages.Length);
+            Assert.IsTrue(response.Messages.Length > 1);
         }
 
         [TestMethod]
