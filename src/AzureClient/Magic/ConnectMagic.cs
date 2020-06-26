@@ -52,7 +52,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The Azure Quantum workspace can be identified by resource ID:
 
                         - `{ParameterNameResourceId}=<string>`: The resource ID of the Azure Quantum workspace.
-                        This can be obtained from the workspace page in the Azure portal.
+                        This can be obtained from the workspace page in the Azure portal. The `{ParameterNameResourceId}=` prefix
+                        is optional for this parameter, as long as the resource ID is valid.
 
                         Alternatively, it can be identified by subscription ID, resource group name, and workspace name:
                         
@@ -77,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         $@"
                             Connect to an Azure Quantum workspace using its resource ID:
                             ```
-                            In []: %azure.connect {ParameterNameResourceId}=""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                            In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
@@ -109,7 +110,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Connect to an Azure Quantum workspace and force a credential prompt using
                             the `{ParameterNameRefresh}` option:
                             ```
-                            In []: %azure.connect {ParameterNameRefresh} {ParameterNameResourceId}=""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                            In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                     and enter the code [login code] to authenticate.
                                     Connected to Azure Quantum workspace WORKSPACE_NAME.
