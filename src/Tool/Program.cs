@@ -36,27 +36,18 @@ namespace Microsoft.Quantum.IQSharp
             => true;
 #endif
 
-        // Creates dictionary of kernelspec file names to the embedded resource path
-        // of all embedded resources found in `Kernel.csproj`.
-        public static Dictionary<string, string> GetEmbeddedKernelResources()
-        {
-            var res = new Dictionary<string, string>();
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (String.Equals(assembly.GetName().Name, "Microsoft.Quantum.IQSharp.Kernel"))
-                {
-                    foreach (var resName in assembly.GetManifestResourceNames())
-                    {
-                        // Compute "filename.extension"
-                        // Note: WithKernelSpecResources cannot handle keys that include directories
-                        // so we only use the filename without directory path.
-                        var fileName = String.Join(".", resName.Split(".").TakeLast(2));
-                        res.Add(fileName, resName);
-                    }
-                }
-            }
-            return res;
-        }
+        /// <summary>
+        /// Creates dictionary of kernelspec file names to the embedded resource path
+        /// of all embedded resources found in `Kernel.csproj`.
+        /// Note: `WithKernelSpecResources` cannot handle keys that include directories
+        /// so we treat all path names as period-separated file names.
+        /// </summary>
+        private static Dictionary<string, string> GetEmbeddedKernelResources() =>
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Single(asm => asm.GetName().Name == "Microsoft.Quantum.IQSharp.Kernel")
+                .GetManifestResourceNames()
+                // Take file name as substring after "Microsoft.Quantum.IQSharp.Kernel.res"
+                .ToDictionary(resName => string.Join(".", resName.Split(".").Skip(5)));
 
         public static int Main(string[] args)
         {
