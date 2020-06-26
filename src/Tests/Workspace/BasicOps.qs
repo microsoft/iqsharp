@@ -5,9 +5,14 @@ namespace Tests.qss {
     
     open Microsoft.Quantum.Intrinsic;
     open Microsoft.Quantum.Canon;
+
+    // Note that we specify multiple @EntryPoint() operations in this file
+    // to verify that these attributes have no impact on the compilation of
+    // the file for use in IQ#.
     
     /// # Summary: 
     ///     The simplest program. Just generate a debug Message on the console.
+    @EntryPoint()
     operation HelloQ() : Unit
     {
         Message($"Hello from quantum world!"); 
@@ -16,6 +21,7 @@ namespace Tests.qss {
     /// # Summary: 
     ///     A more sophisticated program that shows how to 
     ///     specify parameters, instantiate qubits, and return values.
+    @EntryPoint()
     operation HelloAgain(count: Int, name: String) : Result[]
     {
         Message($"Hello {name} again!"); 

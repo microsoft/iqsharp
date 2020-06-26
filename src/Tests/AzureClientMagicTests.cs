@@ -47,11 +47,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(AzureClientAction.GetConnectionStatus, azureClient.LastAction);
 
             // unrecognized input
-            connectMagic.Test($"invalid");
-            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            connectMagic.Test($"invalid", ExecuteStatus.Error);
 
-            // valid input with resource ID
-            connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            // valid input with resource ID (and to verify case-insensitivity of resourceId parsing)
+            connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);

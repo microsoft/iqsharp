@@ -148,7 +148,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // A valid resource ID looks like:
             // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
             var match = Regex.Match(resourceId,
-                @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$");
+                @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
+                RegexOptions.IgnoreCase);
             if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
@@ -166,6 +167,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: string.Empty);
                 resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: string.Empty);
                 workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: string.Empty);
+            }
+
+            if (string.IsNullOrWhiteSpace(subscriptionId) ||
+                string.IsNullOrWhiteSpace(resourceGroupName) ||
+                string.IsNullOrWhiteSpace(workspaceName))
+            {
+                channel.Stderr($"Please specify a valid {ParameterNameResourceId}, or specify a valid combination of " +
+                    $"{ParameterNameSubscriptionId}, {ParameterNameResourceGroupName}, and {ParameterNameWorkspaceName}.");
+                return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
