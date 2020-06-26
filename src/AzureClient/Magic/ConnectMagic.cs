@@ -147,9 +147,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // A valid resource ID looks like:
             // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
-            var match = Regex.Match(resourceId,
+            var resourceIdRegex = new Regex(
                 @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
                 RegexOptions.IgnoreCase);
+            if (string.IsNullOrEmpty(resourceId))
+            {
+                resourceId = inputParameters.Keys.FirstOrDefault(key => resourceIdRegex.IsMatch(key)) ?? string.Empty;
+            }
+
+            var match = resourceIdRegex.Match(resourceId);
             if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
