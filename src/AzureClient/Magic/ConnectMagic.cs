@@ -25,6 +25,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameResourceGroupName = "resourceGroup";
         private const string ParameterNameWorkspaceName = "workspace";
         private const string ParameterNameResourceId = "resourceId";
+        
+        // A valid resource ID looks like:
+        // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
+        private readonly static Regex ResourceIdRegex = new Regex(
+            @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
+            RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
@@ -146,17 +152,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var resourceGroupName = string.Empty;
             var workspaceName = string.Empty;
 
-            // A valid resource ID looks like:
-            // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
-            var resourceIdRegex = new Regex(
-                @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
-                RegexOptions.IgnoreCase);
             if (string.IsNullOrEmpty(resourceId))
             {
-                resourceId = inputParameters.Keys.FirstOrDefault(key => resourceIdRegex.IsMatch(key)) ?? string.Empty;
+                resourceId = inputParameters.Keys.FirstOrDefault(key => ResourceIdRegex.IsMatch(key)) ?? string.Empty;
             }
 
-            var match = resourceIdRegex.Match(resourceId);
+            var match = ResourceIdRegex.Match(resourceId);
             if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:
