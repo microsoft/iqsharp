@@ -25,6 +25,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameResourceGroupName = "resourceGroup";
         private const string ParameterNameWorkspaceName = "workspace";
         private const string ParameterNameResourceId = "resourceId";
+        
+        // A valid resource ID looks like:
+        // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
+        private readonly static Regex ResourceIdRegex = new Regex(
+            @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
+            RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectMagic"/> class.
@@ -52,7 +58,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The Azure Quantum workspace can be identified by resource ID:
 
                         - `{ParameterNameResourceId}=<string>`: The resource ID of the Azure Quantum workspace.
-                        This can be obtained from the workspace page in the Azure portal.
+                        This can be obtained from the workspace page in the Azure portal. The `{ParameterNameResourceId}=` prefix
+                        is optional for this parameter, as long as the resource ID is valid.
 
                         Alternatively, it can be identified by subscription ID, resource group name, and workspace name:
                         
@@ -77,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         $@"
                             Connect to an Azure Quantum workspace using its resource ID:
                             ```
-                            In []: %azure.connect {ParameterNameResourceId}=""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                            In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
@@ -109,7 +116,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Connect to an Azure Quantum workspace and force a credential prompt using
                             the `{ParameterNameRefresh}` option:
                             ```
-                            In []: %azure.connect {ParameterNameRefresh} {ParameterNameResourceId}=""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
+                            In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                     and enter the code [login code] to authenticate.
                                     Connected to Azure Quantum workspace WORKSPACE_NAME.
@@ -145,11 +152,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var resourceGroupName = string.Empty;
             var workspaceName = string.Empty;
 
-            // A valid resource ID looks like:
-            // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
-            var match = Regex.Match(resourceId,
-                @"^/subscriptions/([a-fA-F0-9-]*)/resourceGroups/([^\s/]*)/providers/Microsoft\.Quantum/Workspaces/([^\s/]*)$",
-                RegexOptions.IgnoreCase);
+            if (string.IsNullOrEmpty(resourceId))
+            {
+                resourceId = inputParameters.Keys.FirstOrDefault(key => ResourceIdRegex.IsMatch(key)) ?? string.Empty;
+            }
+
+            var match = ResourceIdRegex.Match(resourceId);
             if (match.Success)
             {
                 // match.Groups will be a GroupCollection containing four Group objects:

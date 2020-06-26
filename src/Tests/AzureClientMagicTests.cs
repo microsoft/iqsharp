@@ -58,6 +58,24 @@ namespace Tests.IQSharp
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
 
+            // valid input with implied resource ID key, without surrounding quotes
+            connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.IsFalse(azureClient.RefreshCredentials);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+
+            // valid input with implied resource ID key, with surrounding quotes
+            connectMagic.Test($"\"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}\"");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.IsFalse(azureClient.RefreshCredentials);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+
             // valid input with resource ID and storage account connection string
             connectMagic.Test(
                 @$"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}
@@ -102,6 +120,14 @@ namespace Tests.IQSharp
                    workspace={workspaceName}
                    storage={storageAccountConnectionString}");
             Assert.IsTrue(azureClient.RefreshCredentials);
+
+            // forced login with implied resource ID before, after, and missing
+            connectMagic.Test($"refresh /subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            Assert.IsTrue(azureClient.RefreshCredentials);
+            connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName} refresh");
+            Assert.IsTrue(azureClient.RefreshCredentials);
+            connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+            Assert.IsFalse(azureClient.RefreshCredentials);
         }
 
         [TestMethod]
