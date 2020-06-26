@@ -75,7 +75,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Register the token cache for serialization
             var cacheFileName = "iqsharp.bin";
-            var storageCreationProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDirectory, ClientId).Build();
+            var storageCreationProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDirectory, ClientId)
+                .WithMacKeyChain(
+                    serviceName: "Microsoft.Quantum.IQSharp",
+                    accountName: "MSALCache")
+                .WithLinuxKeyring(
+                    schemaName: "com.microsoft.quantum.iqsharp",
+                    collection: "default",
+                    secretLabel: "Credentials used by Microsoft IQ# kernel",
+                    attribute1: new KeyValuePair<string, string>("Version", typeof(AzureClient).Assembly.GetName().Version.ToString()),
+                    attribute2: new KeyValuePair<string, string>("ProductGroup", "QDK"))
+                .Build();
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
             var msalApp = PublicClientApplicationBuilder.Create(ClientId).WithAuthority(Authority).Build();
             cacheHelper.RegisterCache(msalApp.UserTokenCache);
