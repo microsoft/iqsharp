@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Kernel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,6 +35,28 @@ namespace Microsoft.Quantum.IQSharp
 #else
             => true;
 #endif
+
+        // Creates dictionary of kernelspec file names to the embedded resource path
+        // of all embedded resources found in `Kernel.csproj`.
+        public static Dictionary<string, string> GetEmbeddedKernelResources()
+        {
+            var res = new Dictionary<string, string>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (String.Equals(assembly.GetName().Name, "Microsoft.Quantum.IQSharp.Kernel"))
+                {
+                    foreach (var resName in assembly.GetManifestResourceNames())
+                    {
+                        // Compute "filename.extension"
+                        // Note: WithKernelSpecResources cannot handle keys that include directories
+                        // so we only use the filename without directory path.
+                        var fileName = String.Join(".", resName.Split(".").TakeLast(2));
+                        res.Add(fileName, resName);
+                    }
+                }
+            }
+            return res;
+        }
 
         public static int Main(string[] args)
         {
@@ -84,14 +107,7 @@ namespace Microsoft.Quantum.IQSharp
                         }
                     }
                 )
-                .WithKernelSpecResources<Kernel.IQSharpEngine>(
-                    new Dictionary<string, string>
-                    {
-                        ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Kernel.res.logo-64x64.png",
-                        ["kernel.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.kernel.js",
-                        ["telemetry.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.telemetry.js",
-                    }
-                );
+                .WithKernelSpecResources<Kernel.IQSharpEngine>(GetEmbeddedKernelResources());
                 app.Command(
                     "server",
                     cmd =>
