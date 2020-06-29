@@ -327,7 +327,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     <td>
                                     <p id=""round${count}""> 
                                     <script>
-                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0)};
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
                                     num = num.toFixed({measurementPrecision});
                                     var num_string = num + ""%"";
                                      document.getElementById(""round${count}"").innerHTML = num_string;
@@ -340,7 +340,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                 <td> 
                                     <p id=""round${count}""; style=""text-align: right""> 
                                     <script>
-                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0)};
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
                                     num = num.toFixed({measurementPrecision});
                                     var num_string = num + ""%"";
                                      document.getElementById(""round${count}"").innerHTML = num_string;
@@ -388,6 +388,24 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         </tbody>
                     </table>
                 "; 
+                if (ConfigurationSource.PhaseDisplayStyle == PhaseDisplayStyle.None) {
+                    outputTable = $@"
+                    <table style=""table-layout: fixed; width: 100%"">
+                        <thead>
+                            {qubitIdsRow}
+                            <tr>
+                                <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
+                                <th style=""width: 20ch"">Amplitude</th>
+                                <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {formattedData}
+                        </tbody>
+                    </table>
+                ";
+                };
                 if ( ConfigurationSource.MeasurementDisplayStyle == MeasurementDisplayStyle.None) {
                     outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
