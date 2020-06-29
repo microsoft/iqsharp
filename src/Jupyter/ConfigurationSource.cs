@@ -69,7 +69,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public PhaseDisplayStyle PhaseDisplayStyle =>
             GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
+
+        /// <summary>
+        ///
+        /// </summary>
+        public MeasurementDisplayStyle MeasurementDisplayStyle =>
+            GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarOnly);
     }
+
+
 
     /// <summary>
     ///     An implementation of the

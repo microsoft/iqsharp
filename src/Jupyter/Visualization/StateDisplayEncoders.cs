@@ -39,7 +39,34 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
         ///     dependent on the phase as well as display phase information in number
         ///     format.
+        /// </summary>
         ArrowsAndNumber
+    }
+
+    /// <summary> 
+    ///     Represents different styles for displaying the measurement probability
+    ///     of state vectors as HTML.
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum MeasurementDisplayStyle
+    {
+        /// <summary>
+        ///     Suppress measurement probability information.
+        /// </summary>
+        None,
+        /// <summary>
+        ///     Display measurement probability information as a horizontal histogram.
+        /// </summary>
+        BarOnly,
+        /// <summary>
+        ///     Display measurement probability information as a numerical percentage.
+        /// </summary>
+        NumberOnly,
+        /// <summary>
+        ///     Display measurement probability information as a horizontal histogram as well
+        ///     in a numerical percentage format.
+        /// </summary>
+        BarAndNumber
     }
 
     /// <summary>
@@ -203,7 +230,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class StateVectorToHtmlResultEncoder : IResultEncoder
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
-
+        private double count = 0.0;
         /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
         private IConfigurationSource ConfigurationSource;
@@ -268,10 +295,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
 
-                        return FormattableString.Invariant($@"
-                            <tr>
-                                <td>$\left|{basisLabel}\right\rangle$</td>
-                                <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
+                        count = count + 1;
+
+                        //different options for displaying measurement style
+    
+                        var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
+                        {
+                            MeasurementDisplayStyle.None =>FormattableString.Invariant($@"
+                                <td> 
+                                    
+                                </td>
+                            "),
+                            MeasurementDisplayStyle.BarOnly => FormattableString.Invariant($@"
                                 <td>
                                     <progress
                                         max=""100""
@@ -279,6 +314,43 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                         style=""width: 100%;""
                                     >
                                 </td>
+                            "),
+                            MeasurementDisplayStyle.BarAndNumber => FormattableString.Invariant($@"
+                                <td>
+                                    <progress
+                                        max=""100""
+                                        value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
+                                        style=""width: 70%;""
+                                    > 
+                                    <td>
+                                    <p id=""round${count}""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed(2);
+                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    </script> </p>
+                                    </td>
+                                </td>
+                            "), // not sure what style width does
+                            MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
+                                <td> 
+                                    <p id=""round${count}""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed(2);
+                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    </script> </p>
+                                    
+                                </td>
+                            "),
+                            _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.MeasurementDisplayStyle}")
+                        };
+
+                        return FormattableString.Invariant($@"
+                            <tr>
+                                <td>$\left|{basisLabel}\right\rangle$</td>
+                                <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
+                                {measurementCell}
                                 {phaseCell}
                             </tr>
                         ");
