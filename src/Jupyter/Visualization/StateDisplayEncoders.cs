@@ -231,6 +231,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
         private double count = 0.0;
+
+        private int measurement_off = 0; //when equal to 1 then if statement works
+
         /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
         private IConfigurationSource ConfigurationSource;
@@ -303,11 +306,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
-                            MeasurementDisplayStyle.None =>FormattableString.Invariant($@"
-                                <td> 
-                                    
-                                </td>
-                            "),
+                            MeasurementDisplayStyle.None => String.Empty,
+                            //measurement_off => 1;
                             MeasurementDisplayStyle.BarOnly => FormattableString.Invariant($@"
                                 <td>
                                     <progress
@@ -322,7 +322,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     <progress
                                         max=""100""
                                         value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
-                                        style=""width: 70%;""
+                                        style=""width: 100%;""
                                     > 
                                     <td>
                                     <p id=""round${count}""> 
@@ -338,7 +338,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             //TODO: fix viewing % (might have accomplished this)
                             MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    <p id=""round${count}""> 
+                                    <p id=""round${count}""; style=""text-align: right""> 
                                     <script>
                                     var num = {System.Math.Pow(amplitude.Magnitude, 2.0)};
                                     num = num.toFixed({measurementPrecision});
@@ -387,7 +387,25 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             {formattedData}
                         </tbody>
                     </table>
+                "; 
+                if ( ConfigurationSource.MeasurementDisplayStyle == MeasurementDisplayStyle.None) {
+                    outputTable = $@"
+                    <table style=""table-layout: fixed; width: 100%"">
+                        <thead>
+                            {qubitIdsRow}
+                            <tr>
+                                <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
+                                <th style=""width: 20ch"">Amplitude</th>
+                                <th style=""width: 6ch"">Phase</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {formattedData}
+                        </tbody>
+                    </table>
                 ";
+                };
                 return outputTable.ToEncodedData();
             }
             else return null;
