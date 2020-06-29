@@ -298,6 +298,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         count = count + 1;
 
                         //different options for displaying measurement style
+
+                        var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
     
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
@@ -325,20 +327,23 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     <td>
                                     <p id=""round${count}""> 
                                     <script>
-                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
-                                    num = num.toFixed(2);
-                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0)};
+                                    num = num.toFixed({measurementPrecision});
+                                    var num_string = num + ""%"";
+                                     document.getElementById(""round${count}"").innerHTML = num_string;
                                     </script> </p>
                                     </td>
                                 </td>
                             "), // not sure what style width does
+                            //TODO: fix viewing % (might have accomplished this)
                             MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
                                     <p id=""round${count}""> 
                                     <script>
-                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
-                                    num = num.toFixed(2);
-                                     document.getElementById(""round${count}"").innerHTML = num;
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0)};
+                                    num = num.toFixed({measurementPrecision});
+                                    var num_string = num + ""%"";
+                                     document.getElementById(""round${count}"").innerHTML = num_string;
                                     </script> </p>
                                     
                                 </td>
