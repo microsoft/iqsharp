@@ -28,7 +28,7 @@
   <!-- TypeScript compilation -->
   <ItemGroup>
     <EmbeddedResource Include="res\kernel.js" />
-    <EmbeddedResource Include="res\telemetry.js" />
+    <EmbeddedResource Include="res\compiled.js" />
     <Content Include="tsconfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>

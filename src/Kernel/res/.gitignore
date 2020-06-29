@@ -1,3 +1,2 @@
 # Ignore generated files.
-kernel.js
-telemetry.js
+compiled.js
