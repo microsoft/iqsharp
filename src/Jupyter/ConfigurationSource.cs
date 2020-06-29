@@ -73,7 +73,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///
         /// </summary>
-
         public MeasurementDisplayStyle MeasurementDisplayStyle =>
             GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarOnly);
     }
