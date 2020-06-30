@@ -26,7 +26,7 @@ function Pack-Exe() {
         -v $Env:BUILD_VERBOSITY `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
         /property:Version=$Env:ASSEMBLY_VERSION `
-        /property:InformationalVersion=$Env:SEMVER_VESRION `
+        /property:InformationalVersion=$Env:SEMVER_VERSION `
         /property:PackAsTool=false `
         /property:CopyOutputSymbolsToPublishDirectory=false
 
