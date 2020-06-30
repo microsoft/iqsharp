@@ -17,6 +17,7 @@ function Test-One {
         -v $Env:BUILD_VERBOSITY `
         --logger trx `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:InformationalVersion=$Env:SEMVER_VESRION `
         /property:Version=$Env:ASSEMBLY_VERSION
 
     if  ($LastExitCode -ne 0) {

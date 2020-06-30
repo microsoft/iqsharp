@@ -19,6 +19,7 @@ function Build-One {
         -v $Env:BUILD_VERBOSITY `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
         /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:InformationalVersion=$Env:SEMVER_VESRION `
         /property:QsharpDocsOutDir=$Env:DOCS_OUTDIR
 
     if  ($LastExitCode -ne 0) {
