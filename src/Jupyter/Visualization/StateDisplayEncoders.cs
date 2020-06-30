@@ -301,6 +301,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         count = count + 1;
 
                         //different options for displaying measurement style
+                        var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
 
                         var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
     
@@ -371,6 +372,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     BasisStateLabelingConvention.BigEndian => " (big endian)",
                     _ => ""
                 };
+                //TODO: rewrite all this code here for less code written
                 var outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
                         <thead>
@@ -406,7 +408,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     </table>
                 ";
                 };
-                if ( ConfigurationSource.MeasurementDisplayStyle == MeasurementDisplayStyle.None) {
+                if (ConfigurationSource.MeasurementDisplayStyle == MeasurementDisplayStyle.None) {
                     outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
                         <thead>
@@ -423,6 +425,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         </tbody>
                     </table>
                 ";
+                };
+                if (ConfigurationSource.MeasurementDisplayHistogram == true) {
+                    //TODO: define DivId somewhere else?
+                    outputTable += $@"<div id=""{vector.DivId}""></div>";
                 };
                 return outputTable.ToEncodedData();
             }

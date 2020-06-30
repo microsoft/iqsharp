@@ -84,6 +84,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public int MeasurementDisplayPrecision =>
             GetOptionOrDefault("dump.measurementDisplayPrecision", 4);
+
+        /// <summary>
+        ///     Allows for option to view basis states as a function of
+        ///     measurement probability in a vertical histogram format. 
+        /// </summary>
+        public bool MeasurementDisplayHistogram =>
+            GetOptionOrDefault("dump.measurementDisplayHistogram", false);
     }
 
 
