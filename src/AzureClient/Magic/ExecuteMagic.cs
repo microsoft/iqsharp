@@ -30,22 +30,79 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 new Documentation
                 {
                     Summary = "Executes a job in an Azure Quantum workspace.",
-                    Description = @"
-                        This magic command allows for executing a job in an Azure Quantum workspace
-                        corresponding to the Q# operation provided as an argument, and it waits
-                        for the job to complete before returning.
+                    Description = $@"
+                        This magic command allows for executing a Q# operation or function
+                        on the specified target in the current Azure Quantum workspace.
+                        The command waits a specified amount of time for the job to complete before returning.
 
-                        The Azure Quantum workspace must previously have been initialized
-                        using the %azure.connect magic command.
+                        The Azure Quantum workspace must have been previously initialized
+                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        and an execution target for the job must have been specified using the
+                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+
+                        #### Required parameters
+
+                        - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                        or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                        - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                        
+                        #### Optional parameters
+
+                        - `{AzureSubmissionContext.ParameterNameJobName}=<string>`: Friendly name to identify this job. If not specified,
+                        the Q# operation or function name will be used as the job name.
+                        - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
+                        specified Q# operation or function.
+                        - `{AzureSubmissionContext.ParameterNameTimeout}=<integer>` (default=30): Time to wait (in seconds) for job completion
+                        before the magic command returns.
+                        - `{AzureSubmissionContext.ParameterNamePollingInterval}=<integer>` (default=5): Interval (in seconds) to poll for
+                        job status while waiting for job execution to complete.
+                        
+                        #### Possible errors
+
+                        - {AzureClientError.NotConnected.ToMarkdown()}
+                        - {AzureClientError.NoTarget.ToMarkdown()}
+                        - {AzureClientError.NoOperationName.ToMarkdown()}
+                        - {AzureClientError.InvalidTarget.ToMarkdown()}
+                        - {AzureClientError.UnrecognizedOperationName.ToMarkdown()}
+                        - {AzureClientError.InvalidEntryPoint.ToMarkdown()}
+                        - {AzureClientError.JobSubmissionFailed.ToMarkdown()}
+                        - {AzureClientError.JobNotCompleted.ToMarkdown()}
+                        - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
                         @"
-                            Execute an operation in the current Azure Quantum workspace:
+                            Execute a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            on the active target in the current Azure Quantum workspace:
                             ```
-                            In []: %azure.execute OPERATION_NAME
-                            Out[]: Executing job on target TARGET_NAME...
-                                   <job results displayed here after execution completes>
+                            In []: %azure.execute MyOperation a=5 b=10
+                            Out[]: Submitting MyOperation to target provider.qpu...
+                                   Job successfully submitted for 500 shots.
+                                      Job name: MyOperation
+                                      Job ID: <Azure Quantum job ID>
+                                   Waiting up to 30 seconds for Azure Quantum job to complete...
+                                   [1:23:45 PM] Current job status: Waiting
+                                   [1:23:50 PM] Current job status: Executing
+                                   [1:23:55 PM] Current job status: Succeeded
+                                   <detailed results of completed job>
+                            ```
+                        ".Dedent(),
+                        @"
+                            Execute a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            on the active target in the current Azure Quantum workspace,
+                            specifying a custom job name, number of shots, timeout, and polling interval:
+                            ```
+                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100 timeout=60 poll=10
+                            Out[]: Submitting MyOperation to target provider.qpu...
+                                   Job successfully submitted for 100 shots.
+                                      Job name: My job
+                                      Job ID: <Azure Quantum job ID>
+                                   Waiting up to 60 seconds for Azure Quantum job to complete...
+                                   [1:23:45 PM] Current job status: Waiting
+                                   [1:23:55 PM] Current job status: Waiting
+                                   [1:24:05 PM] Current job status: Executing
+                                   [1:24:15 PM] Current job status: Succeeded
+                                   <detailed results of completed job>
                             ```
                         ".Dedent(),
                     },
