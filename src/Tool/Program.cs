@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Creates dictionary of kernelspec file names to the embedded resource path
         /// of all embedded resources found in <c>Kernel.csproj</c>.
-        /// Note: `WithKernelSpecResources` cannot handle keys that include directories
+        /// Note: <c>WithKernelSpecResources</c> cannot handle keys that include directories
         /// so we treat all path names as period-separated file names.
         /// </summary>
         private static Dictionary<string, string> GetEmbeddedKernelResources() =>
