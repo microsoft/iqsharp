@@ -15,6 +15,7 @@ function Test-One {
     dotnet test $project `
         -c $Env:BUILD_CONFIGURATION `
         -v $Env:BUILD_VERBOSITY `
+        --no-build `
         --logger trx `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
         /property:Version=$Env:ASSEMBLY_VERSION
@@ -35,7 +36,7 @@ function Test-Python {
 
     Write-Host "##[info]Installing IQ# kernel"
     Push-Location (Join-Path $PSScriptRoot '../src/Tool')
-        dotnet run  -c $Env:BUILD_CONFIGURATION -- install --user
+        dotnet run --no-build -- install --user
     Pop-Location
 
     Write-Host "##[info]Testing Python inside $testFolder"    
