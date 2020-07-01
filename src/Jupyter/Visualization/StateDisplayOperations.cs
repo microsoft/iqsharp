@@ -115,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 Header = new MessageHeader()
                 {
-                    MessageType = "iqsharp_my_message"
+                    MessageType = "iqsharp_state_dump"
                 },
                 Content = new MeasurementHistogramContent() //TODO: throwing error
                 {

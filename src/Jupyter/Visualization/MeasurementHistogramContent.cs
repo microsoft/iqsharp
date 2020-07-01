@@ -10,13 +10,16 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     internal class MeasurementHistogramContent : MessageContent
     {
-        [JsonProperty("divId")]
+        [JsonProperty("div_id")]
         public string DivId { get; set; }
-        [JsonProperty("qubit_Ids")]
+
+        [JsonProperty("qubit_ids")]
         public IEnumerable<int>? QubitIds { get; set; }
-        [JsonProperty("NQubits_property")]
+
+        [JsonProperty("n_qubits")]
         public int NQubits { get; set; }
-        [JsonProperty("Significant_Amplitudes")]
+
+        [JsonProperty("amplitudes")]
         public IEnumerable<(Complex, string)> Amplitudes { get; set; }
 
     }

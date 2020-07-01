@@ -130,7 +130,7 @@ class Kernel {
 
     setupMyMessageListener() {
         IPython.notebook.kernel.register_iopub_handler(
-            "iqsharp_my_message",
+            "iqsharp_state_dump",
             message => {
                 console.log("my message received", message);
                 message.content.amplitudes;
