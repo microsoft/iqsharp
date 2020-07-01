@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -18,11 +19,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             FriendlyName = "Q#",
             KernelName = "iqsharp",
-            KernelVersion = typeof(IQSharpEngine).Assembly.GetName().Version.ToString(),
+            KernelVersion =
+                typeof(IQSharpEngine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? typeof(IQSharpEngine).Assembly.GetName().Version.ToString(),
             DisplayName = "Q#",
 
             LanguageName = "qsharp",
-            LanguageVersion = "0.10",
+            LanguageVersion = "0.12",
             LanguageMimeType = "text/x-qsharp",
             LanguageFileExtension = ".qs",
 
