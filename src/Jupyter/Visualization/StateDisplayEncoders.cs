@@ -120,6 +120,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             );
 
         /// <summary>
+        ///     Where the vertical measurement probability histogram will be.
+        /// </summary>
+        public string DivId { get; set; }
+
+        /// <summary>
         ///     The indexes of each qubit on which this state is defined, or
         ///     <c>null</c> if these indexes are not known.
         /// </summary>
@@ -426,8 +431,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     </table>
                 ";
                 };
+                
                 if (ConfigurationSource.MeasurementDisplayHistogram == true) {
-                    //TODO: define DivId somewhere else?
                     outputTable += $@"<div id=""{vector.DivId}""></div>";
                 };
                 return outputTable.ToEncodedData();
