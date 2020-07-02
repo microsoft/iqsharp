@@ -27,7 +27,32 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public PerformanceMagic() : base(
             "performance",
             new Documentation {
-                Summary = "Reports current performance metrics for this kernel."
+                Summary = "Reports current performance metrics for this kernel.",
+                Description = @"
+                    Reports various performance metrics for the current IQ# kernel process, including:
+
+                    - Managed RAM usage
+                    - Total RAM usage
+                    - Virtual memory size
+                    - User time
+                    - Total time
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Display performance metrics for the current IQ# kernel process:
+                        ```
+                        In []: %performance
+                        Out[]: Metric                        Value
+                               ----------------------------  -------------
+                               Managed RAM usage (bytes)     4.985 MiB
+                               Total RAM usage (bytes)       54.543 MiB
+                               Virtual memory size (bytes)   2.005 TiB
+                               User time                     00:00:01.109
+                               Total time                    00:00:01.437
+                        ```
+                    ".Dedent(),
+                }
             })
         {
         }

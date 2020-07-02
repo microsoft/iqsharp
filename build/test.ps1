@@ -17,6 +17,7 @@ function Test-One {
         -v $Env:BUILD_VERBOSITY `
         --logger trx `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:InformationalVersion=$Env:SEMVER_VERSION `
         /property:Version=$Env:ASSEMBLY_VERSION
 
     if  ($LastExitCode -ne 0) {
@@ -41,7 +42,7 @@ function Test-Python {
     Write-Host "##[info]Testing Python inside $testFolder"    
     Push-Location (Join-Path $PSScriptRoot $testFolder)
         python --version
-        pytest -v
+        pytest -v --log-level=Debug
     Pop-Location
 
     if ($LastExitCode -ne 0) {
@@ -58,4 +59,3 @@ if (-not $all_ok)
 {
     throw "At least one project failed to compile. Check the logs."
 }
-

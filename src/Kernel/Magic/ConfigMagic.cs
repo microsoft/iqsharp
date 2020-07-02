@@ -25,14 +25,47 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ConfigMagic(IConfigurationSource configurationSource) : base(
             "config",
-            new Documentation {
+            new Documentation
+            {
                 Summary = "Allows setting or querying configuration options.",
                 Description = @"
                     This magic command allows for setting or querying
                     configuration options used to control the behavior of the
-                    IQ# kernel (e.g.: state visualization options), and to
-                    save those options to a JSON file in the current working
-                    directory.
+                    IQ# kernel (such as state visualization options). It also
+                    allows for saving those options to a JSON file in the current
+                    working directory (using the `--save` option).
+
+                    #### Configuration settings
+
+                    **`dump.basisStateLabelingConvention`**
+
+                    **Value:** `""LittleEndian""` (default), `""BigEndian""`, or `""Bitstring""`
+
+                    The convention to be used when labeling computational
+                    basis states in output from callables such as `DumpMachine` or `DumpRegister`.
+
+                    **`dump.truncateSmallAmplitudes`**
+
+                    **Value:** `true` or `false` (default)
+
+                    Hides basis states of a state vector whose measurement probabilities
+                    (i.e., squared amplitudes) are smaller than a particular threshold, as determined by
+                    the `dump.truncationThreshold` setting.
+
+                    **`dump.truncationThreshold`**
+
+                    **Value:** floating point number such as `0.001` or `1E-8` (default `1E-10`)
+
+                    If `dump.truncateSmallAmplitudes` is set to `true`, determines the
+                    threshold for measurement probabilities (i.e., squared amplitudes) below which to hide the display
+                    of basis states of a state vector.
+
+                    **`dump.phaseDisplayStyle`**
+
+                    **Value:** `""ArrowOnly""` (default), `""NumberOnly""`, `""ArrowAndNumber""`, or `""None""`
+
+                    Configures the phase visualization style in output from callables such as
+                    `DumpMachine` or `DumpRegister`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
                 ".Dedent(),
                 Examples = new []
                 {
@@ -45,13 +78,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                dump.basisStateLabelingConvention ""BigEndian""
                                dump.truncateSmallAmplitudes      true
                         ```
-                    ",
+                    ".Dedent(),
 
                     @"
                         Configure the `DumpMachine` and `DumpRegister` callables
                         to use big-endian convention:
                         ```
-                        In []: %config dump.basisStateLabelingConvention = ""BigEndian""
+                        In []: %config dump.basisStateLabelingConvention=""BigEndian""
                         Out[]: ""BigEndian""
                         ```
                     ".Dedent(),
@@ -109,7 +142,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 var parts = input.Split("=", 2);
                 if (parts.Length != 2)
                 {
-                    return "Expected config option in the form key = value."
+                    return "Expected config option in the form key=value."
                            .ToExecutionResult(ExecuteStatus.Error);
                 }
                 var key = parts[0].Trim();

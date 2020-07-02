@@ -18,6 +18,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class SimulateMagic : AbstractMagic
     {
+        private const string ParameterNameOperationName = "__operationName__";
+
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
         ///     operations and functions, and a configuration source used to set
@@ -25,8 +27,39 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
             "simulate",
-            new Documentation {
-                Summary = "Runs a given function or operation on the QuantumSimulator target machine"
+            new Documentation
+            {
+                Summary = "Runs a given function or operation on the QuantumSimulator target machine.",
+                Description = @"
+                    This magic command allows executing a given function or operation on the QuantumSimulator, 
+                    which performs a full-state simulation of the given function or operation
+                    and prints the resulting return value.
+
+                    See the [QuantumSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/full-state-simulator) to learn more.
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Simulate a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %simulate MyOperation
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Simulate a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %simulate MyOperation a=5 b=10
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.SymbolResolver = resolver;
@@ -55,15 +88,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
-            var (name, args) = ParseInput(input);
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             using var qsim = new QuantumSimulator()
                 .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
-            var value = await symbol.Operation.RunAsync(qsim, args);
+            var value = await symbol.Operation.RunAsync(qsim, inputParameters);
             return value.ToExecutionResult();
         }
     }

@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -104,7 +105,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of currently available snippets.
         /// </summary>
-        internal IEnumerable<Snippet> Items { get; set; }
+        public IEnumerable<Snippet> Items { get; set; }
 
         /// <summary>
         /// The list of Q# operations available across all snippets.
@@ -144,11 +145,7 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
-            {
-                QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary,   // Ignore any @EntryPoint() attributes found in snippets.
-            };
-            var logger = new QSharpLogger(Logger, errorCodesToIgnore);
+            var logger = new QSharpLogger(Logger);
 
             try
             {
@@ -166,10 +163,13 @@ namespace Microsoft.Quantum.IQSharp
                     {
                         id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
-                        warnings = logger.Logs.Where(m => m.Source == s.Uri.AbsolutePath).Select(logger.Format).ToArray(),
+                        warnings = logger.Logs
+                            .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri).Value)
+                            .Select(logger.Format)
+                            .ToArray(),
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
-                            .Where(c => c.SourceFile() == s.Uri.AbsolutePath)
+                            .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri).Value)
                             .ToArray()
                     };
 

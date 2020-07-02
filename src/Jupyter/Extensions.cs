@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -9,6 +11,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
+using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -94,6 +97,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // Next, we attach the display channel's standard output handling
             // to the log event.
             simulator.OnLog += channel.Stdout;
+            simulator.OnDisplayableDiagnostic += channel.Display;
 
             // Next, we register the generic version of the DumpMachine callable
             // as an ICallable with the simulator. Below, we'll provide our
@@ -173,6 +177,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // out common indenting.
             var leftTrimRegex = new Regex(@$"^[ \t]{{{minWhitespace}}}", RegexOptions.Multiline);
             return leftTrimRegex.Replace(text, "");
+        }
+
+        /// <summary>
+        ///      Retrieves and JSON-decodes the value for the given parameter name.
+        /// </summary>
+        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default)
+        {
+            if (!parameters.TryGetValue(parameterName, out string parameterValue))
+            {
+                return defaultValue;
+            }
+            return (T)System.Convert.ChangeType(JsonConvert.DeserializeObject(parameterValue), typeof(T)) ?? defaultValue;
         }
     }
 }
