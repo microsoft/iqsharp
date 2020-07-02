@@ -1,6 +1,6 @@
 requirejs.config({
     bundles: {
-        '../kernelspecs/iqsharp/compiled.js': ['kernel'],
+        '../kernelspecs/iqsharp/bundle.js': ['kernel'],
     }
 });
 

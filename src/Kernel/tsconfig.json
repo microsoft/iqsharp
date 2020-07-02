@@ -7,7 +7,7 @@
     "target": "ES5",
     "baseUrl": ".",
     "outDir": "res",
-    "outFile": "res/compiled.js",
+    "outFile": "res/bundle.js",
     "lib": [ "DOM", "ES2015" ],
     "module": "AMD"
   },
