@@ -39,6 +39,7 @@
     <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20071622-beta" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
 </Project>
