@@ -18,6 +18,7 @@ function Test-One {
         --no-build `
         --logger trx `
         /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+        /property:InformationalVersion=$Env:SEMVER_VERSION `
         /property:Version=$Env:ASSEMBLY_VERSION
 
     if  ($LastExitCode -ne 0) {
@@ -59,4 +60,3 @@ if (-not $all_ok)
 {
     throw "At least one project failed to compile. Check the logs."
 }
-
