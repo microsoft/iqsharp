@@ -30,7 +30,58 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "estimate",
             new Documentation
             {
-                Summary = "Runs a given function or operation on the ResourcesEstimator target machine."
+                Summary = "Runs a given function or operation on the ResourcesEstimator target machine.",
+                Description = @"
+                    The ResourcesEstimator estimates statistics about how many resources the given
+                    operation needs for execution. The resources it calculates include:
+
+                    - Counts for each primitive operation
+                    - Depth (lower bound for the T-gate depth of the quantum circuit)
+                    - Width (lower bound for the maximum number of qubits used for the computation)
+
+                    See the [ResourcesEstimator user guide](https://docs.microsoft.com/quantum/user-guide/machines/resources-estimator) to learn more.
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Estimate resources for a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %estimate MyOperation
+                        Out[]: Metric           Sum     
+                               ---------------- ----
+                               CNOT             0
+                               QubitClifford    4
+                               R                0
+                               Measure          8
+                               T                0
+                               Depth            0
+                               Width            4
+                               BorrowedWidth    0
+                        ```
+                    ".Dedent(),
+                    @"
+                        Estimate resources for a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %estimate MyOperation a=5 b=10
+                        Out[]: Metric           Sum     
+                               ---------------- ----
+                               CNOT             0
+                               QubitClifford    4
+                               R                0
+                               Measure          8
+                               T                0
+                               Depth            0
+                               Width            4
+                               BorrowedWidth    0
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.SymbolResolver = resolver;

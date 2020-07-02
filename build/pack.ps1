@@ -16,6 +16,7 @@ function Pack-Nuget() {
         -v $Env:BUILD_VERBOSITY `
         -o $Env:NUGET_OUTDIR `
         /property:Version=$Env:ASSEMBLY_VERSION `
+        /property:InformationalVersion=$Env:SEMVER_VERSION `
         /property:PackageVersion=$Env:NUGET_VERSION
 
     if  ($LastExitCode -ne 0) {

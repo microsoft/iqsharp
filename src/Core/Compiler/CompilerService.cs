@@ -101,15 +101,8 @@ namespace Microsoft.Quantum.IQSharp
             string WrapInNamespace(Snippet s) =>
                 $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
 
-            // Ignore any @EntryPoint() attributes found in snippets.
-            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
-
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
-
-            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
-
-            return assembly;
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
         }
 
         /// <summary>
@@ -118,7 +111,7 @@ namespace Microsoft.Quantum.IQSharp
         public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget: executionTarget);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
         }
 
         /// <summary>
@@ -128,17 +121,20 @@ namespace Microsoft.Quantum.IQSharp
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
+            // Ignore any @EntryPoint() attributes found in libraries.
+            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
             var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable);
+            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+
             if (logger.HasErrors) return null;
 
             try
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
                 var trees = new List<CodeAnalysis.SyntaxTree>();
-                NonNullable<string> GetFileId(Uri uri) => CompilationUnitManager.TryGetFileId(uri, out var id) ? id : NonNullable<string>.New(uri.AbsolutePath);
                 foreach (var file in sources.Keys)
                 {
-                    var sourceFile = GetFileId(file);
+                    var sourceFile = CompilationUnitManager.GetFileId(file);
                     var codegenContext = string.IsNullOrEmpty(executionTarget)
                         ? CodegenContext.Create(qsCompilation.Namespaces)
                         : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
