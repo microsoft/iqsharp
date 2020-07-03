@@ -1,34 +1,35 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Quantum.Simulation.Core;
 
 #nullable enable
 
-namespace Microsoft.Quantum.IQSharp
+namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
 {
     /// <summary>
     /// Traces through the operations in a given execution path of a Q# program by hooking on
-    /// to a simulator via the event listeners <c>OnOperationStartHandler</c> and
-    /// <c>OnOperationEndHandler</c>, and generates the corresponding <c>ExecutionPath</c>.
+    /// to a simulator via the event listeners <see cref="OnOperationStartHandler"/> and
+    /// <see cref="OnOperationEndHandler"/>, and generates the corresponding <see cref="ExecutionPath"/>.
     /// </summary>
     public class ExecutionPathTracer
     {
-        private int currDepth = 0;
+        private int currentDepth = 0;
         private int renderDepth;
         private IDictionary<int, QubitRegister> qubitRegisters = new Dictionary<int, QubitRegister>();
         private IDictionary<int, List<ClassicalRegister>> classicalRegisters = new Dictionary<int, List<ClassicalRegister>>();
         private List<Operation> operations = new List<Operation>();
-        private Type[] nestedTypes = new Type[]
-        {
-            typeof(Microsoft.Quantum.Canon.ApplyToEach<Qubit>),
-            typeof(Microsoft.Quantum.Canon.ApplyToEachC<Qubit>),
-            typeof(Microsoft.Quantum.Canon.ApplyToEachA<Qubit>),
-            typeof(Microsoft.Quantum.Canon.ApplyToEachCA<Qubit>),
-        };
+        private readonly ImmutableList<Type> nestedTypes =
+            ImmutableList.Create(
+                typeof(Microsoft.Quantum.Canon.ApplyToEach<Qubit>),
+                typeof(Microsoft.Quantum.Canon.ApplyToEachC<Qubit>),
+                typeof(Microsoft.Quantum.Canon.ApplyToEachA<Qubit>),
+                typeof(Microsoft.Quantum.Canon.ApplyToEachCA<Qubit>)
+            );
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecutionPathTracer"/> class.
@@ -36,32 +37,29 @@ namespace Microsoft.Quantum.IQSharp
         /// <param name="depth">
         /// The depth at which to render operations.
         /// </param>
-        public ExecutionPathTracer(int depth = 1) => this.renderDepth = depth + 1;
+        public ExecutionPathTracer(int depth = 1)
+            => this.renderDepth = depth + 1;
 
         /// <summary>
         /// Returns the generated <c>ExecutionPath</c>.
         /// </summary>
-        public ExecutionPath GetExecutionPath()
-        {
-            var qubits = this.qubitRegisters.Keys
-                .OrderBy(k => k)
-                .Select(k =>
-                {
-                    var qubitDecl = new QubitDeclaration(k);
-                    if (this.classicalRegisters.ContainsKey(k))
-                    {
-                        qubitDecl.NumChildren = this.classicalRegisters[k].Count;
-                    }
-
-                    return qubitDecl;
-                })
-                .ToArray();
-
-            return new ExecutionPath(qubits, this.operations.ToArray());
-        }
+        public ExecutionPath GetExecutionPath() =>
+            new ExecutionPath(
+                this.qubitRegisters.Keys
+                    .OrderBy(k => k)
+                    .Select(k => new QubitDeclaration(k,
+                        // Get number of classical registers associated with qubit register (null if none).
+                        (this.classicalRegisters.ContainsKey(k))
+                            ? this.classicalRegisters[k].Count
+                            : null as int?
+                    )),
+                this.operations
+            );
 
         /// <summary>
-        /// Provides the event listener to listen to <c>SimulatorBase</c>'s <c>OnOperationStart</c> event.
+        /// Provides the event listener to listen to
+        /// <see cref="Microsoft.Quantum.Simulation.Common.SimulatorBase"/>'s
+        /// <c>OnOperationStart</c> event.
         /// </summary>
         public void OnOperationStartHandler(ICallable operation, IApplyData arguments)
         {
@@ -69,26 +67,25 @@ namespace Microsoft.Quantum.IQSharp
             // those operations instead
             if (this.nestedTypes.Contains(operation.GetType())) return;
 
-            this.currDepth++;
+            this.currentDepth++;
 
             // Parse operations at specified depth
-            if (this.currDepth == this.renderDepth)
+            if (this.currentDepth == this.renderDepth)
             {
                 var parsedOp = this.ParseOperation(operation, arguments);
-                if (parsedOp != null)
-                {
-                    this.operations.Add(parsedOp);
-                }
+                if (parsedOp != null) this.operations.Add(parsedOp);
             }
         }
 
         /// <summary>
-        /// Provides the event listener to listen to <c>SimulatorBase</c>'s <c>OnOperationEnd</c> event.
+        /// Provides the event listener to listen to
+        /// <see cref="Microsoft.Quantum.Simulation.Common.SimulatorBase"/>'s
+        /// <c>OnOperationEnd</c> event.
         /// </summary>
         public void OnOperationEndHandler(ICallable operation, IApplyData result)
         {
             if (this.nestedTypes.Contains(operation.GetType())) return;
-            this.currDepth--;
+            this.currentDepth--;
         }
 
         private static bool IsPartialApplication(ICallable operation)
@@ -100,38 +97,24 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Retrieves the <c>QubitRegister</c> associated with the given <c>Qubit</c> or create a new
+        /// Retrieves the <see cref="QubitRegister"/> associated with the given <see cref="Qubit"/> or create a new
         /// one if it doesn't exist.
         /// </summary>
-        private QubitRegister GetQubitRegister(Qubit qubit)
-        {
-            if (!this.qubitRegisters.ContainsKey(qubit.Id))
-            {
-                this.qubitRegisters[qubit.Id] = new QubitRegister(qubit.Id);
-            }
+        private QubitRegister GetQubitRegister(Qubit qubit) =>
+            this.qubitRegisters.GetOrCreate(qubit.Id, new QubitRegister(qubit.Id));
 
-            return this.qubitRegisters[qubit.Id];
-        }
-
-        private List<QubitRegister> GetQubitRegisters(IEnumerable<Qubit> qubits)
-        {
-            return qubits.Select(this.GetQubitRegister).ToList();
-        }
+        private List<QubitRegister> GetQubitRegisters(IEnumerable<Qubit> qubits) =>
+            qubits.Select(this.GetQubitRegister).ToList();
 
         /// <summary>
-        /// Creates a new <c>ClassicalRegister</c> and associate it with the given <c>Qubit</c>.
+        /// Creates a new <see cref="ClassicalRegister"/> and associate it with the given <see cref="Qubit"/>.
         /// </summary>
         private ClassicalRegister CreateClassicalRegister(Qubit measureQubit)
         {
             var qId = measureQubit.Id;
+            var cId = this.classicalRegisters.GetOrCreate(qId).Count;
 
-            if (!this.classicalRegisters.ContainsKey(qId))
-            {
-                this.classicalRegisters[qId] = new List<ClassicalRegister>();
-            }
-
-            var cId = this.classicalRegisters[qId].Count;
-            ClassicalRegister register = new ClassicalRegister(qId, cId);
+            var register = new ClassicalRegister(qId, cId);
 
             // Add classical register under the given qubit id
             this.classicalRegisters[qId].Add(register);
@@ -140,7 +123,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Retrieves the most recent <c>ClassicalRegister</c> associated with the given <c>Qubit</c>.
+        /// Retrieves the most recent <see cref="ClassicalRegister"/> associated with the given <see cref="Qubit"/>.
         /// </summary>
         /// <remarks>
         /// Currently not used as this is intended for classically-controlled operations.
@@ -159,36 +142,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Given a <c>Type</c> and its value, extract its fields and format it as a string.
-        /// </summary>
-        private string? ExtractArgs(Type t, object value)
-        {
-            List<string?> fields = new List<string?>();
-
-            foreach (var f in t.GetFields())
-            {
-                // If field is a tuple, recursively extract its inner arguments and format as a tuple string.
-                if (f.FieldType.IsTuple())
-                {
-                    var nestedArgs = f.GetValue(value);
-                    if (nestedArgs != null)
-                    {
-                        var nestedFields = this.ExtractArgs(f.FieldType, nestedArgs);
-                        fields.Add(nestedFields);
-                    }
-                }
-                // Add field as an argument if it is not a Qubit type
-                else if (!f.FieldType.IsQubitsContainer())
-                {
-                    fields.Add(f.GetValue(value)?.ToString());
-                }
-            }
-
-            return fields.Any() ? $"({string.Join(",", fields.WhereNotNull())})" : null;
-        }
-
-        /// <summary>
-        /// Given an operation and its arguments, parse it into an <c>Operation</c> object.
+        /// Given an operation and its arguments, parse it into an <see cref="Operation"/> object.
         /// </summary>
         private Operation? ParseOperation(ICallable operation, IApplyData arguments)
         {
@@ -288,8 +242,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 // General operations
                 default:
-                    Type t = arguments.Value.GetType();
-                    var argStr = this.ExtractArgs(t, arguments.Value);
+                    var argStr = arguments.Value.GetType().ArgsToString(arguments.Value);
                     var qubitRegs = this.GetQubitRegisters(arguments.GetQubits());
 
                     return new Operation

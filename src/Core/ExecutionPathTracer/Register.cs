@@ -1,19 +1,27 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.Quantum.IQSharp
+#nullable enable
+
+namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
 {
     /// <summary>
     /// Enum for the 2 types of registers: Qubit and Classical.
     /// </summary>
     public enum RegisterType
     {
+        /// <summary>
+        /// Qubit register that holds a qubit.
+        /// </summary>
         Qubit,
+        /// <summary>
+        /// Classical register that holds a classical bit.
+        /// </summary>
         Classical,
     }
 
     /// <summary>
-    /// Represents a register used by an <c>Operation</c>.
+    /// Represents a register used by an <see cref="Operation"/>.
     /// </summary>
     public class Register
     {
@@ -34,12 +42,12 @@ namespace Microsoft.Quantum.IQSharp
     }
 
     /// <summary>
-    /// Represents a qubit register used by an <c>Operation</c>.
+    /// Represents a qubit register used by an <see cref="Operation"/>.
     /// </summary>
     public class QubitRegister : Register
     {
         /// <summary>
-        /// Creates a new <c>QubitRegister</c> with the given qubit id.
+        /// Creates a new <see cref="QubitRegister"/> with the given qubit id.
         /// </summary>
         /// <param name="qId">
         /// Id of qubit register.
@@ -53,12 +61,12 @@ namespace Microsoft.Quantum.IQSharp
     }
 
     /// <summary>
-    /// Represents a classical register used by an <c>Operation</c>.
+    /// Represents a classical register used by an <see cref="Operation"/>.
     /// </summary>
     public class ClassicalRegister : Register
     {
         /// <summary>
-        /// Creates a new <c>ClassicalRegister</c> with the given qubit id and classical bit id.
+        /// Creates a new <see cref="ClassicalRegister"/> with the given qubit id and classical bit id.
         /// </summary>
         /// <param name="qId">
         /// Id of qubit register.
