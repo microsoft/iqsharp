@@ -120,7 +120,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             );
 
         /// <summary>
-        ///     Where the vertical measurement probability histogram will be.
+        ///     ID for an HTML element where the vertical measurement probability histogram
+        ///     will be displayed.
         /// </summary>
         public string DivId { get; set; }
 
