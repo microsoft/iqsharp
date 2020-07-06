@@ -2,11 +2,12 @@
   "compilerOptions": {
     "noImplicitAny": false,
     "noEmitOnError": true,
-    "removeComments": false,
+    "removeComments": true,
     "sourceMap": false,
     "target": "ES5",
     "baseUrl": ".",
     "outDir": "res",
+    "outFile": "res/bundle.js",
     "lib": [ "DOM", "ES2015" ],
     "module": "AMD"
   },
