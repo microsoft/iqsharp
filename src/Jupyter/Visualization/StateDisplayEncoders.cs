@@ -433,7 +433,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 ";
                 };
                 
-                if (ConfigurationSource.MeasurementDisplayHistogram == true) {
+                if (ConfigurationSource.MeasurementDisplayHistogram) {
                     outputTable += $@"<div id=""{vector.DivId}""></div>";
                 };
                 return outputTable.ToEncodedData();
