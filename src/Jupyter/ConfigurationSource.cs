@@ -80,7 +80,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         /// <summary>
         ///     Allows for options to change measurement probability precision when viewing
-        ///     measurement in a decimal format. 
+        ///     measurement <span class="x x-first x-last">probabilities </span>in a decimal format. 
         /// </summary>
         public int MeasurementDisplayPrecision =>
             GetOptionOrDefault("dump.measurementDisplayPrecision", 4);
