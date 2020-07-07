@@ -236,9 +236,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class StateVectorToHtmlResultEncoder : IResultEncoder
     {
         private const double TWO_PI = 2.0 * System.Math.PI;
-        private double count = 0.0;
-
-        private int measurement_off = 0; //when equal to 1 then if statement works
 
         /// <inheritdoc />
         public string MimeType => MimeTypes.Html;
@@ -304,9 +301,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
 
-                        count = count + 1;
+                        var count = System.Guid.NewGuid(); //randomly generate ID for each <p>
 
-                        //different options for displaying measurement style
+                        //Different options for displaying measurement style.
                         var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
 
                         var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
@@ -314,7 +311,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
                             MeasurementDisplayStyle.None => String.Empty,
-                            //measurement_off => 1;
                             MeasurementDisplayStyle.BarOnly => FormattableString.Invariant($@"
                                 <td>
                                     <progress
@@ -341,11 +337,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                     </script> </p>
                                     </td>
                                 </td>
-                            "), // not sure what style width does
-                            //TODO: fix viewing % (might have accomplished this)
+                            "), 
+                            
                             MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    <p id=""round${count}""; style=""text-align: right""> 
+                                    <p id=""round${count}"" style=""text-align: right""> 
                                     <script>
                                     var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
                                     num = num.toFixed({measurementPrecision});
@@ -385,17 +381,24 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             {qubitIdsRow}
                             <tr>
                                 <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
-                                <th style=""width: 20ch"">Amplitude</th>
-                                <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
-                                <th style=""width: 6ch"">Phase</th>
+                                <th style=""width: 20ch"">Amplitude</th>";
+                if (ConfigurationSource.MeasurementDisplayStyle != MeasurementDisplayStyle.None) {
+                    outputTable += $@"<th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>";
+
+                };
+                if (ConfigurationSource.PhaseDisplayStyle != PhaseDisplayStyle.None) {
+                    outputTable += $@"<th style=""width: 6ch"">Phase</th>";
+
+                };
+                outputTable += $@"
                             </tr>
                         </thead>
-
                         <tbody>
-                            {formattedData}
+                        {formattedData}
                         </tbody>
-                    </table>
-                "; 
+                    </table>";
+
+                /*
                 if (ConfigurationSource.PhaseDisplayStyle == PhaseDisplayStyle.None) {
                     outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
@@ -432,6 +435,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     </table>
                 ";
                 };
+                */
                 
                 if (ConfigurationSource.MeasurementDisplayHistogram) {
                     outputTable += $@"<div id=""{vector.DivId}""></div>";

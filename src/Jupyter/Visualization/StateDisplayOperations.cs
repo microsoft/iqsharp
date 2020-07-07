@@ -99,7 +99,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // vector, so let's display it, counting on the right display
             // encoder to be there to pack it into a table.
 
-            var count = 0; //TODO: figure out how to increment
+            var id = System.Guid.NewGuid();
             var state = new DisplayableState
             {
                 // We cast here as we don't support a large enough number
@@ -107,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
                 NQubits = (int)_count,
                 Amplitudes = _data,
-                DivId = $"dump-machine-div-{count}" 
+                DivId = $"dump-machine-div-{id}" 
             };
             Channel.Display(state);
 
@@ -117,7 +117,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 {
                     MessageType = "iqsharp_state_dump"
                 },
-                Content = new MeasurementHistogramContent() //TODO: throwing error
+                Content = new MeasurementHistogramContent()
                 {
                     DivId = state.DivId,
                     QubitIds = state.QubitIds,

@@ -124,19 +124,20 @@ class Kernel {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
             this.requestEcho();
             this.requestClientInfo();
-            this.setupMyMessageListener(); //TODO: call this something else
+            this.setupMeasurementHistogramDataListener();
         });
     }
 
-    setupMyMessageListener() {
+    setupMeasurementHistogramDataListener() {
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_state_dump",
             message => {
                 console.log("my message received", message);
-                message.content.amplitudes;
-                var htmlGraph = "hi :) ";
-                document.getElementById(message.content.div_id).innerHTML = htmlGraph;
-
+                //message.content.amplitudes;
+                var htmlGraph = "hi :)";
+                if (message.content.div_id != null) {
+                    document.getElementById(message.content.div_id).innerHTML = htmlGraph;
+                }
             }
         )
     }
