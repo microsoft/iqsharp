@@ -135,8 +135,8 @@ class Kernel {
                 console.log("my message received", message);
                 //message.content.amplitudes;
                 var htmlGraph = "hi :)";
-                if (message.content.div_id != null) {
-                    document.getElementById(message.content.div_id).innerHTML = htmlGraph;
+                if (message.content.state.div_id != null) {
+                    document.getElementById(message.content.state.div_id).innerHTML = htmlGraph;
                 }
             }
         )

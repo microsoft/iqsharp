@@ -119,13 +119,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 },
                 Content = new MeasurementHistogramContent()
                 {
-                    DivId = state.DivId,
-                    QubitIds = state.QubitIds,
-                    NQubits = state.NQubits,
-                    Amplitudes = state.SignificantAmplitudes(
-                        BasisStateLabelingConvention,
-                        TruncateSmallAmplitudes,
-                        TruncationThreshold)
+                    State = state
                 },
             });
 

@@ -123,17 +123,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     ID for an HTML element where the vertical measurement probability histogram
         ///     will be displayed.
         /// </summary>
+        [JsonProperty("div_id")]
         public string DivId { get; set; }
 
         /// <summary>
         ///     The indexes of each qubit on which this state is defined, or
         ///     <c>null</c> if these indexes are not known.
         /// </summary>
+        [JsonProperty("qubit_ids")]
         public IEnumerable<int>? QubitIds { get; set; }
 
         /// <summary>
         ///     The number of qubits on which this state is defined.
         /// </summary>
+        [JsonProperty("n_qubits")]
         public int NQubits { get; set; }
 
         /// <remarks>
@@ -141,6 +144,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     labeled in little-endian order, as per the behavior of
         ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
         /// </remarks>
+        [JsonProperty("amplitudes")]
         public Complex[]? Amplitudes { get; set; }
 
         /// <summary>
