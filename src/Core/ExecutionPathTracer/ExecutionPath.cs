@@ -107,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <remarks>
         /// Currently not used as this is intended for classically-controlled operations.
         /// </remarks>
-        public IEnumerable<IEnumerable<Operation>> Children { get; set; } = new List<List<Operation>>();
+        public IEnumerable<IEnumerable<Operation>>? Children { get; set; }
 
         /// <summary>
         /// True if operation is a controlled operations.

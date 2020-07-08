@@ -37,8 +37,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <param name="depth">
         /// The depth at which to render operations.
         /// </param>
-        public ExecutionPathTracer(int depth = 1)
-            => this.renderDepth = depth + 1;
+        public ExecutionPathTracer(int depth = 1) =>
+            this.renderDepth = depth + 1;
 
         /// <summary>
         /// Returns the generated <c>ExecutionPath</c>.
@@ -72,7 +72,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             // Parse operations at specified depth
             if (this.currentDepth == this.renderDepth)
             {
-                var parsedOp = this.ParseOperation(operation, arguments);
+                var metadata = operation.GetRuntimeMetadata(arguments);
+                var parsedOp = this.MetadataToOperation(metadata);
                 if (parsedOp != null) this.operations.Add(parsedOp);
             }
         }
@@ -140,121 +141,37 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             var cId = this.classicalRegisters[qId].Count - 1;
             return this.classicalRegisters[qId][cId];
         }
-
+        
         /// <summary>
-        /// Given an operation and its arguments, parse it into an <see cref="Operation"/> object.
+        /// Parse <see cref="RuntimeMetadata"/> into its corresponding <see cref="Operation"/>.
         /// </summary>
-        private Operation? ParseOperation(ICallable operation, IApplyData arguments)
+        private Operation? MetadataToOperation(RuntimeMetadata? metadata)
         {
-            // If operation is a partial application, perform on baseOp recursively.
-            if (IsPartialApplication(operation))
-            {
-                dynamic partialOp = operation;
-                dynamic partialOpArgs = arguments;
+            if (metadata == null) return null;
 
-                // Recursively get base operation operations
-                var baseOp = partialOp.BaseOp;
-                var baseArgs = baseOp.__dataIn(partialOpArgs.Value);
-                return this.ParseOperation(baseOp, baseArgs);
+            var op = new Operation()
+            {
+                Gate = metadata.Label,
+                ArgStr = metadata.Args,
+                Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
+                Controlled = metadata.IsControlled,
+                Adjoint = metadata.IsAdjoint,
+                Controls = this.GetQubitRegisters(metadata.Controls),
+                Targets = this.GetQubitRegisters(metadata.Targets),
+            };
+
+            // Create classical registers for measurement operations
+            if (metadata.IsMeasurement)
+            {
+                var measureQubit = metadata.Targets.ElementAt(0);
+                var clsReg = this.CreateClassicalRegister(measureQubit);
+                // TODO: Change this to using IsMeasurement
+                op.Gate = "measure";
+                op.Controls = op.Targets;
+                op.Targets = new List<Register>() { clsReg };
             }
 
-            var controlled = operation.Variant == OperationFunctor.Controlled ||
-                             operation.Variant == OperationFunctor.ControlledAdjoint;
-            var adjoint = operation.Variant == OperationFunctor.Adjoint ||
-                          operation.Variant == OperationFunctor.ControlledAdjoint;
-
-            // If operation is controlled, perform on baseOp recursively and mark as controlled.
-            if (controlled)
-            {
-                dynamic ctrlOp = operation;
-                dynamic ctrlOpArgs = arguments;
-
-                var ctrls = ctrlOpArgs.Value.Item1;
-                var controlRegs = this.GetQubitRegisters(ctrls);
-
-                // Recursively get base operation operations
-                var baseOp = ctrlOp.BaseOp;
-                var baseArgs = baseOp.__dataIn(ctrlOpArgs.Value.Item2);
-                var parsedBaseOp = this.ParseOperation(baseOp, baseArgs);
-
-                parsedBaseOp.Controlled = true;
-                parsedBaseOp.Adjoint = adjoint;
-                parsedBaseOp.Controls.InsertRange(0, controlRegs);
-
-                return parsedBaseOp;
-            }
-
-            // Handle operation based on type
-            switch (operation)
-            {
-                // Handle CNOT operations as a Controlled X
-                case Microsoft.Quantum.Intrinsic.CNOT cnot:
-                case Microsoft.Quantum.Intrinsic.CCNOT ccnot:
-                    var ctrlRegs = new List<Register>();
-                    var targetRegs = new List<Register>();
-
-                    switch (arguments.Value)
-                    {
-                        case ValueTuple<Qubit, Qubit> cnotQs:
-                            var (ctrl, cnotTarget) = cnotQs;
-                            ctrlRegs.Add(this.GetQubitRegister(ctrl));
-                            targetRegs.Add(this.GetQubitRegister(cnotTarget));
-                            break;
-                        case ValueTuple<Qubit, Qubit, Qubit> ccnotQs:
-                            var (ctrl1, ctrl2, ccnotTarget) = ccnotQs;
-                            ctrlRegs.Add(this.GetQubitRegister(ctrl1));
-                            ctrlRegs.Add(this.GetQubitRegister(ctrl2));
-                            targetRegs.Add(this.GetQubitRegister(ccnotTarget));
-                            break;
-                    }
-
-                    return new Operation
-                    {
-                        Gate = "X",
-                        Controlled = true,
-                        Adjoint = adjoint,
-                        Controls = ctrlRegs,
-                        Targets = targetRegs,
-                    };
-
-                // Measurement operations
-                case Microsoft.Quantum.Intrinsic.M m:
-                case Microsoft.Quantum.Measurement.MResetX mx:
-                case Microsoft.Quantum.Measurement.MResetY my:
-                case Microsoft.Quantum.Measurement.MResetZ mz:
-                    var measureQubit = arguments.GetQubits().ElementAt(0);
-                    var measureReg = this.GetQubitRegister(measureQubit);
-                    var clsReg = this.CreateClassicalRegister(measureQubit);
-
-                    return new Operation
-                    {
-                        Gate = "measure",
-                        Controlled = false,
-                        Adjoint = adjoint,
-                        Controls = new List<Register>() { measureReg },
-                        Targets = new List<Register>() { clsReg },
-                    };
-
-                // Operations to ignore
-                case Microsoft.Quantum.Intrinsic.Reset reset:
-                case Microsoft.Quantum.Intrinsic.ResetAll resetAll:
-                    return null;
-
-                // General operations
-                default:
-                    var argStr = arguments.Value.GetType().ArgsToString(arguments.Value);
-                    var qubitRegs = this.GetQubitRegisters(arguments.GetQubits());
-
-                    return new Operation
-                    {
-                        Gate = operation.Name,
-                        ArgStr = argStr,
-                        Controlled = false,
-                        Adjoint = adjoint,
-                        Controls = new List<Register>(),
-                        Targets = qubitRegs.Cast<Register>().ToList(),
-                    };
-            }
+            return op;
         }
     }
 }
