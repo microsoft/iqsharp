@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Microsoft.Jupyter.Core;
+using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
@@ -97,13 +98,29 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // At this point, _data should be filled with the full state
             // vector, so let's display it, counting on the right display
             // encoder to be there to pack it into a table.
-            Channel.Display(new DisplayableState
+
+            var id = System.Guid.NewGuid();
+            var state = new DisplayableState
             {
                 // We cast here as we don't support a large enough number
                 // of qubits to saturate an int.
                 QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
                 NQubits = (int)_count,
-                Amplitudes = _data
+                Amplitudes = _data,
+                DivId = $"dump-machine-div-{id}" 
+            };
+            Channel.Display(state);
+
+            Channel.SendIoPubMessage(new Message
+            {
+                Header = new MessageHeader()
+                {
+                    MessageType = "iqsharp_state_dump"
+                },
+                Content = new MeasurementHistogramContent()
+                {
+                    State = state
+                },
             });
 
             // Clean up the state vector buffer.

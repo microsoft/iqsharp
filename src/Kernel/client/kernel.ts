@@ -20,7 +20,35 @@ class Kernel {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
             this.requestEcho();
             this.requestClientInfo();
+            this.setupMeasurementHistogramDataListener();
         });
+    }
+
+    setupMeasurementHistogramDataListener() {
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_state_dump",
+            message => {
+                console.log("my message received", message);
+
+                //create buttons as DOM objects in order to attach unique event handlers
+                let state_div = message.content.state.div_id;
+                if (state_div != null) {
+                    let div = document.getElementById(state_div);
+                    if (div != null) {
+                        let button = document.createElement("button");
+                        let p = document.createElement("p");
+                        button.appendChild(document.createTextNode("Number of Qubits"));
+                        button.addEventListener("click", event => {
+                            p.innerHTML = message.content.state.n_qubits;
+                        });
+                        div.appendChild(button);
+                        div.appendChild(p);
+                    }
+                    //message.content.state.div_id;
+                
+                }
+            }
+        )
     }
 
     requestEcho() {

@@ -71,10 +71,26 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
 
         /// <summary>
-        ///
+        ///     Allows for options to view measurement as horizontal histograms for each
+        ///     basis state, as well as the option to toggle measurement probability as
+        ///     a decimal, progress bar, both, or None. 
         /// </summary>
         public MeasurementDisplayStyle MeasurementDisplayStyle =>
             GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarOnly);
+
+        /// <summary>
+        ///     Allows for options to change measurement probability precision when viewing
+        ///     measurement <span class="x x-first x-last">probabilities </span>in a decimal format. 
+        /// </summary>
+        public int MeasurementDisplayPrecision =>
+            GetOptionOrDefault("dump.measurementDisplayPrecision", 4);
+
+        /// <summary>
+        ///     Allows for option to view basis states as a function of
+        ///     measurement probability in a vertical histogram format. 
+        /// </summary>
+        public bool MeasurementDisplayHistogram =>
+            GetOptionOrDefault("dump.measurementDisplayHistogram", true);
     }
 
 
