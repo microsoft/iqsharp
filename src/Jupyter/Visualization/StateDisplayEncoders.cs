@@ -305,7 +305,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
 
-                        var count = System.Guid.NewGuid(); //randomly generate ID for each <p>
+                        var elementId = $"round-{System.Guid.NewGuid()}"; //randomly generate ID for each <p>
 
                         //Different options for displaying measurement style.
                         var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
@@ -332,12 +332,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                         style=""width: 100%;""
                                     > 
                                     <td>
-                                    <p id=""round${count}""> 
+                                    <p id=""{elementId}""> 
                                     <script>
                                     var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
                                     num = num.toFixed({measurementPrecision});
                                     var num_string = num + ""%"";
-                                     document.getElementById(""round${count}"").innerHTML = num_string;
+                                     document.getElementById(""{elementId}"").innerHTML = num_string;
                                     </script> </p>
                                     </td>
                                 </td>
@@ -345,12 +345,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             
                             MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    <p id=""round${count}"" style=""text-align: right""> 
+                                    <p id=""{elementId}"" style=""text-align: right""> 
                                     <script>
                                     var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
                                     num = num.toFixed({measurementPrecision});
                                     var num_string = num + ""%"";
-                                     document.getElementById(""round${count}"").innerHTML = num_string;
+                                     document.getElementById(""{elementId}"").innerHTML = num_string;
                                     </script> </p>
                                     
                                 </td>
@@ -401,45 +401,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         {formattedData}
                         </tbody>
                     </table>";
-
-                /*
-                if (ConfigurationSource.PhaseDisplayStyle == PhaseDisplayStyle.None) {
-                    outputTable = $@"
-                    <table style=""table-layout: fixed; width: 100%"">
-                        <thead>
-                            {qubitIdsRow}
-                            <tr>
-                                <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
-                                <th style=""width: 20ch"">Amplitude</th>
-                                <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {formattedData}
-                        </tbody>
-                    </table>
-                ";
-                };
-                if (ConfigurationSource.MeasurementDisplayStyle == MeasurementDisplayStyle.None) {
-                    outputTable = $@"
-                    <table style=""table-layout: fixed; width: 100%"">
-                        <thead>
-                            {qubitIdsRow}
-                            <tr>
-                                <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
-                                <th style=""width: 20ch"">Amplitude</th>
-                                <th style=""width: 6ch"">Phase</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {formattedData}
-                        </tbody>
-                    </table>
-                ";
-                };
-                */
                 
                 if (ConfigurationSource.MeasurementDisplayHistogram) {
                     outputTable += $@"<div id=""{vector.DivId}""></div>";
