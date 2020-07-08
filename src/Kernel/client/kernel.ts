@@ -9,6 +9,12 @@ declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
 
+function importScript(url: string) {
+    let script = document.createElement("script");
+    script.setAttribute("src", url);
+    document.body.appendChild(script);
+}
+
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
 
@@ -228,6 +234,7 @@ class Kernel {
 
 export function onload() {
     defineQSharpMode();
+    importScript("https://cdn.jsdelivr.net/npm/chart.js@2.8.0");
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
