@@ -90,7 +90,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     measurement probability in a vertical histogram format. 
         /// </summary>
         public bool MeasurementDisplayHistogram =>
-            GetOptionOrDefault("dump.measurementDisplayHistogram", false);
+            GetOptionOrDefault("dump.measurementDisplayHistogram", true);
     }
 
 

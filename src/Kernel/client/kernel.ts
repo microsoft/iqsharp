@@ -133,10 +133,16 @@ class Kernel {
             "iqsharp_state_dump",
             message => {
                 console.log("my message received", message);
-                //message.content.amplitudes;
-                var htmlGraph = "hi :)";
+                //message.content.state.amplitudes;
+                function printNQubits() {
+                    document.getElementById("ex").innerHTML = message.content.n_qubits;
+                }
+                var htmlGraph = `<button onclick="printNQubits()"> NQubits </button> <p id="ex"> </p>`;
+
                 if (message.content.state.div_id != null) {
-                    document.getElementById(message.content.state.div_id).innerHTML = htmlGraph;
+                    if (document.getElementById(message.content.state.div_id).innerHTML != null) {
+                        document.getElementById(message.content.state.div_id).innerHTML = htmlGraph;
+                    }
                 }
             }
         )
