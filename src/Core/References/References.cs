@@ -36,11 +36,6 @@ namespace Microsoft.Quantum.IQSharp
             new AssemblyInfo(typeof(Intrinsic.X).Assembly)
         };
 
-        public static readonly string[] BUILT_IN_PACKAGES =
-        {
-            "Microsoft.Quantum.Standard"
-        };
-
 
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
@@ -55,11 +50,6 @@ namespace Microsoft.Quantum.IQSharp
             Nugets = new NugetPackages(options, logger);
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
-
-            foreach (var pkg in BUILT_IN_PACKAGES)
-            {
-                AddPackage(pkg).Wait();
-            }
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 

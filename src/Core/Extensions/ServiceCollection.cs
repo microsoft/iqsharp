@@ -21,5 +21,17 @@ namespace Microsoft.Quantum.IQSharp
             services.AddSingleton<PerformanceMonitor>();
             services.AddSingleton<IMetadataController, MetadataController>();
         }
+
+        public static void AddBuiltInPackages(this IServiceCollection services)
+        {
+            services.AddSingleton<IReferences, References>(provider =>
+            {
+                var refs = ActivatorUtilities.CreateInstance<References>(provider);
+                refs.AddPackage("Microsoft.Quantum.Standard").Wait();
+
+                return refs;
+            });
+
+        }
     }
 }
