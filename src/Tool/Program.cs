@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Kernel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,6 +35,19 @@ namespace Microsoft.Quantum.IQSharp
 #else
             => true;
 #endif
+
+        /// <summary>
+        /// Creates dictionary of kernelspec file names to the embedded resource path
+        /// of all embedded resources found in <c>Kernel.csproj</c>.
+        /// Note: <c>WithKernelSpecResources</c> cannot handle keys that include directories
+        /// so we treat all path names as period-separated file names.
+        /// </summary>
+        private static Dictionary<string, string> GetEmbeddedKernelResources() =>
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Single(asm => asm.GetName().Name == "Microsoft.Quantum.IQSharp.Kernel")
+                .GetManifestResourceNames()
+                // Take file name as substring after "Microsoft.Quantum.IQSharp.Kernel.res"
+                .ToDictionary(resName => string.Join(".", resName.Split(".").Skip(5)));
 
         public static int Main(string[] args)
         {
@@ -84,14 +98,7 @@ namespace Microsoft.Quantum.IQSharp
                         }
                     }
                 )
-                .WithKernelSpecResources<Kernel.IQSharpEngine>(
-                    new Dictionary<string, string>
-                    {
-                        ["logo-64x64.png"] = "Microsoft.Quantum.IQSharp.Kernel.res.logo-64x64.png",
-                        ["kernel.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.kernel.js",
-                        ["telemetry.js"] = "Microsoft.Quantum.IQSharp.Kernel.res.telemetry.js",
-                    }
-                );
+                .WithKernelSpecResources<Kernel.IQSharpEngine>(GetEmbeddedKernelResources());
                 app.Command(
                     "server",
                     cmd =>
