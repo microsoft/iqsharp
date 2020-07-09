@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Quantum.Simulation.Core;
 
@@ -23,13 +22,6 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         private IDictionary<int, QubitRegister> qubitRegisters = new Dictionary<int, QubitRegister>();
         private IDictionary<int, List<ClassicalRegister>> classicalRegisters = new Dictionary<int, List<ClassicalRegister>>();
         private List<Operation> operations = new List<Operation>();
-        private readonly ImmutableList<Type> nestedTypes =
-            ImmutableList.Create(
-                typeof(Microsoft.Quantum.Canon.ApplyToEach<Qubit>),
-                typeof(Microsoft.Quantum.Canon.ApplyToEachC<Qubit>),
-                typeof(Microsoft.Quantum.Canon.ApplyToEachA<Qubit>),
-                typeof(Microsoft.Quantum.Canon.ApplyToEachCA<Qubit>)
-            );
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecutionPathTracer"/> class.
@@ -63,10 +55,6 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// </summary>
         public void OnOperationStartHandler(ICallable operation, IApplyData arguments)
         {
-            // If the operation type is one of the nestedTypes, go one depth deeper and parse
-            // those operations instead
-            if (this.nestedTypes.Contains(operation.GetType())) return;
-
             this.currentDepth++;
 
             // Parse operations at specified depth
@@ -85,16 +73,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// </summary>
         public void OnOperationEndHandler(ICallable operation, IApplyData result)
         {
-            if (this.nestedTypes.Contains(operation.GetType())) return;
             this.currentDepth--;
-        }
-
-        private static bool IsPartialApplication(ICallable operation)
-        {
-            var t = operation.GetType();
-            if (t == null) return false;
-
-            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OperationPartial<,,>);
         }
 
         /// <summary>
@@ -141,7 +120,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             var cId = this.classicalRegisters[qId].Count - 1;
             return this.classicalRegisters[qId][cId];
         }
-        
+
         /// <summary>
         /// Parse <see cref="RuntimeMetadata"/> into its corresponding <see cref="Operation"/>.
         /// </summary>
