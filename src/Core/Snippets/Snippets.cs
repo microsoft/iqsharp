@@ -150,6 +150,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 var snippets = SelectSnippetsToCompile(code).ToArray();
+                Compiler.AutoOpenNamespaces.UnionWith(Compiler.IdentifyOpenedNamespaces(code));
                 var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)

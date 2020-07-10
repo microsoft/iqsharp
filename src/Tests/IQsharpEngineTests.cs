@@ -130,6 +130,19 @@ namespace Tests.IQSharp
             Assert.AreEqual("[4,3,2]", results);
         }
 
+        [TestMethod]
+        public async Task OpenNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces1);
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces2);
+            await AssertCompile(engine, SNIPPETS.DependsOnMeasurementNamespace, "DependsOnMeasurementNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnMeasurementNamespace", "Hello from DependsOnMeasurementNamespace");
+        }
 
         [TestMethod]
         public async Task Estimate()
