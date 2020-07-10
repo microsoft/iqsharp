@@ -57,14 +57,14 @@ namespace Microsoft.Quantum.IQSharp
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
 
+            eventService?.TriggerServiceInitialized<IReferences>(this);
+
             foreach (var pkg in BUILT_IN_PACKAGES)
             {
                 AddPackage(pkg).Wait();
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
-
-            eventService?.TriggerServiceInitialized<IReferences>(this);
 
             AssemblyLoadContext.Default.Resolving += Resolve;
         }
@@ -78,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The plain list of Assemblies to be used as References. 
         /// </summary>
-        public ImmutableArray<AssemblyInfo> Assemblies { get; internal set; }
+        public ImmutableArray<AssemblyInfo> Assemblies { get; private set; }
 
         public CompilerMetadata CompilerMetadata => _metadata.Value;
 
