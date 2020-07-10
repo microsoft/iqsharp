@@ -6,7 +6,6 @@ import {
     labelFontSize,
     argsFontSize,
 } from './constants';
-import fontSizes from './fontSizes';
 
 /**
  * Calculate the width of a gate, given its metadata.
@@ -35,16 +34,19 @@ const getGateWidth = ({ type, label, argStr, width }: Metadata): number => {
 /**
  * Get the width of a string with font-size `fontSize` and font-family Arial.
  * 
- * @param str      Input string.
- * @param fontSize Font size of `str`. 
+ * @param text     Input string.
+ * @param fontSize Font size of `text`. 
  * 
  * @returns Pixel width of given string.
  */
-const _getStringWidth = (str: string, fontSize: number = labelFontSize): number => {
-    const scale = fontSize / 100;
-    const unScaledWidth = str.split('').reduce(
-        (totalLen: number, ch: string) => totalLen + fontSizes[ch][0], 0);
-    return scale * unScaledWidth;
+const _getStringWidth = (text: string, fontSize: number = labelFontSize): number => {
+    var canvas: HTMLCanvasElement = document.createElement("canvas");
+    var context: CanvasRenderingContext2D | null = canvas.getContext("2d");
+    if (context == null) throw new Error("Null canvas");
+    
+    context.font = `${fontSize}px Arial`;
+    var metrics: TextMetrics = context.measureText(text);
+    return metrics.width;
 };
 
 export {

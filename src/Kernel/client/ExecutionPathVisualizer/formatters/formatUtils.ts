@@ -49,7 +49,7 @@ export const line = (x1: number, y1: number, x2: number, y2: number, strokeWidth
  * @returns SVG string for unitary box.
  */
 export const box = (x: number, y: number, width: number, height: number): string =>
-    `<rect x="${x}" y ="${y}" width="${width}" height="${height}" stroke="black" fill="white" stroke-width="1"></rect>`;
+    `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" fill="white" stroke-width="1"></rect>`;
 
 /**
  * Generate the SVG text element from a given text string.
