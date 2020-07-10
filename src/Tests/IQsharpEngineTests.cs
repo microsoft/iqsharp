@@ -264,8 +264,8 @@ namespace Tests.IQSharp
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
-            Assert.IsNotNull(result);
-            var initialCount = result.Length;
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result[0]);
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
@@ -279,11 +279,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(initialCount + 1, result.Length);
+            Assert.AreEqual(2, result.Length);
 
             // Now it should compile:
             await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");
-
         }
 
         [TestMethod]

@@ -29,7 +29,6 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of assemblies that are automatically included for compilation. Namely:
         ///   * Quantum.Core
         ///   * Quantum.Intrinsic
-        ///   * Quantum.Standard
         /// </summary>
         public static readonly AssemblyInfo[] QUANTUM_CORE_ASSEMBLIES =
         {
@@ -37,16 +36,32 @@ namespace Microsoft.Quantum.IQSharp
             new AssemblyInfo(typeof(Intrinsic.X).Assembly)
         };
 
+
+        /// <summary>
+        /// The list of Packages that are automatically included for compilation. Namely:
+        ///   * Microsoft.Quantum.Standard
+        /// </summary>
+        public static readonly string[] BUILT_IN_PACKAGES =
+        {
+            "Microsoft.Quantum.Standard"
+        };
+
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-            INugetPackages packages,
-            IEventService eventService
-            )
+                INugetPackages packages,
+                IEventService eventService
+                )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
+
+            foreach (var pkg in BUILT_IN_PACKAGES)
+            {
+                AddPackage(pkg).Wait();
+            }
+
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             eventService?.TriggerServiceInitialized<IReferences>(this);

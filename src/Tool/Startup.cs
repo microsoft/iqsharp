@@ -26,7 +26,6 @@ namespace Microsoft.Quantum.IQSharp
             services.AddIQSharp();
             services.AddIQSharpKernel();
             services.AddAzureClient();
-            services.AddBuiltInPackages();
 
             var assembly = typeof(PackagesController).Assembly;
             services.AddControllers()
