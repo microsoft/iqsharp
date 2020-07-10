@@ -9,8 +9,10 @@
     "outDir": "res",
     "outFile": "res/bundle.js",
     "lib": [ "DOM", "ES2017" ],
-    "module": "AMD"
+    "module": "AMD",
+    "paths": {
+      "chart.js": ["/kernelspecs/iqsharp/chart.js"]
+    }
   },
-  "exclude": ["wwwroot"],
-  "include": ["node_modules/**/*", "client/**/*"]
+  "include": ["client/**/*"]
 }

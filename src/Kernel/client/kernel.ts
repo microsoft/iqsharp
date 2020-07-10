@@ -10,7 +10,6 @@ declare var IPython : IPython;
 import { Telemetry, ClientInfo } from "./telemetry";
 import { initializePlotting, DisplayableState, createBarChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
-import * as ChartJs from "chart.js";
 
 class Kernel {
     hostingEnvironment : string | undefined;

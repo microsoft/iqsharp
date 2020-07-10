@@ -1,8 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as ChartJs from "chart.js";
-
+// This is a bit of a hack needed to map the requireJS
+// call made by TypeScript onto the URL that Jupyter
+// makes our kernelspec available at.
+//
+// Using this hack, we can split the type import and
+// the runtime import apart, then glue them back
+// together using a declare global to solve TS2686.
+/// <amd-dependency path="/kernelspecs/iqsharp/chart.js" name="Chart" />
+import type * as ChartJs from "chart.js";
+declare global {
+    const Chart: typeof ChartJs;
+}
 
 export interface Complex {
     Real: number;
@@ -30,7 +40,7 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
     let newCount = amps.length;
     let nQubits = Math.log2(newCount) >>> 0;
 
-    var measurementHistogram = new window.Chart(element, {
+    var measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
             labels: Array.from(Array(amps.length).keys()).map(idx => {

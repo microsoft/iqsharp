@@ -29,6 +29,7 @@
   <ItemGroup>
     <EmbeddedResource Include="res\kernel.js" />
     <EmbeddedResource Include="res\bundle.js" />
+    <EmbeddedResource Include="node_modules\chart.js\dist\Chart.bundle.min.js" Link="res\chart.js" />
     <Content Include="tsconfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
