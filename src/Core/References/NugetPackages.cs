@@ -37,8 +37,7 @@ namespace Microsoft.Quantum.IQSharp
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
 
         // The list of settings for this class. It extends Workspace.Settings so it can get things
-        // list root and cache folder. 
-        // TODO
+        // list root and cache folder.
         public class Settings : Workspace.Settings
         {
             public string[]? DefaultPackageVersions { get; set; } = null;
