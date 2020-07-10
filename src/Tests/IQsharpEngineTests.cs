@@ -256,6 +256,7 @@ namespace Tests.IQSharp
         {
             var engine = Init();
             var snippets = engine.Snippets as Snippets;
+            
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
@@ -264,7 +265,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Length);
+            var initialCount = result.Length;
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
@@ -278,7 +279,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(initialCount + 1, result.Length);
 
             // Now it should compile:
             await AssertCompile(engine, SNIPPETS.TrotterEstimateEnergy, "TrotterEstimateEnergy");
@@ -293,15 +294,14 @@ namespace Tests.IQSharp
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
 
-            var response = await pkgMagic.Execute("microsoft.quantum", channel);
+            var response = await pkgMagic.Execute("microsoft.invalid.quantum", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(1, channel.errors.Count);
-            Assert.IsTrue(channel.errors[0].StartsWith("Unable to find package 'microsoft.quantum'"));
+            Assert.IsTrue(channel.errors[0].StartsWith("Unable to find package 'microsoft.invalid.quantum'"));
             Assert.IsNull(result);
         }
-
 
         [TestMethod]
         public async Task TestWho()
@@ -368,7 +368,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(3, result.Length);
 
-            // Now compilation must work:
+            // Compilation must work:
             await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
 
             // Check an invalid command
@@ -409,11 +409,6 @@ namespace Tests.IQSharp
             symbol = resolver.Resolve("CCNOTDriver");
             Assert.IsNotNull(symbol);
             Assert.AreEqual("Tests.qss.CCNOTDriver", symbol.Name);
-
-            /// From Canon:
-            symbol = resolver.Resolve("ApplyToEach");
-            Assert.IsNotNull(symbol);
-            Assert.AreEqual("Microsoft.Quantum.Canon.ApplyToEach", symbol.Name);
 
             // Snippets:
             symbol = resolver.Resolve("HelloQ");

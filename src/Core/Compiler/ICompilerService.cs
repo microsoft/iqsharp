@@ -13,6 +13,11 @@ namespace Microsoft.Quantum.IQSharp
     public interface ICompilerService
     {
         /// <summary>
+        /// List of auto-opened namespaces when compiling Q# snippets.
+        /// </summary>
+        public IEnumerable<string> AutoOpenNamespaces { get; set; }
+
+        /// <summary>
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>

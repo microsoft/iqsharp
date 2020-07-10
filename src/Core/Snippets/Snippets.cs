@@ -84,23 +84,23 @@ namespace Microsoft.Quantum.IQSharp
         ///  The Workspace these Snippets depend on. Snippets may call operations
         ///  defined in this Workspace.
         /// </summary>
-        internal IWorkspace Workspace { get; }
+        public IWorkspace Workspace { get; }
 
         /// <summary>
         /// The assembly references that should be provided to the compiler when
         /// building all snippets.
         /// </summary>
-        internal IReferences GlobalReferences { get; }
+        public IReferences GlobalReferences { get; }
 
         /// <summary>
         /// The service that takes care of compiling code.
         /// </summary>
-        internal ICompilerService Compiler { get; }
+        public ICompilerService Compiler { get; }
 
         /// <summary>
         /// Logger instance used for .net core logging.
         /// </summary>
-        internal ILogger Logger { get; }
+        public ILogger Logger { get; }
 
         /// <summary>
         /// The list of currently available snippets.

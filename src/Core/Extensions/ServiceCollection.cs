@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Quantum.IQSharp
@@ -24,14 +26,29 @@ namespace Microsoft.Quantum.IQSharp
 
         public static void AddBuiltInPackages(this IServiceCollection services)
         {
+            
             services.AddSingleton<IReferences, References>(provider =>
             {
                 var refs = ActivatorUtilities.CreateInstance<References>(provider);
-                refs.AddPackage("Microsoft.Quantum.Standard").Wait();
+
+                void AddOne(string name)
+                {
+                    try
+                    {
+                        refs.AddPackage(name).Wait();
+                    }
+                    catch (Exception e)
+                    {
+                        // Since this is under initialization, just print in console:
+                        Console.WriteLine($"Cannot load package '{name}': {e.Message}");
+                    }
+
+                }
+
+                AddOne("Microsoft.Quantum.Standard");
 
                 return refs;
             });
-
         }
     }
 }

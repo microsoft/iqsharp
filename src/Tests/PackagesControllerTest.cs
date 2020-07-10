@@ -4,6 +4,7 @@
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NuGet.Packaging.Core;
 using System.Threading.Tasks;
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -27,8 +28,7 @@ namespace Tests.IQSharp
 
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.IsTrue(response.Result.Length == 1);
-            Assert.IsTrue(response.Result[0].StartsWith("Microsoft.Quantum.Standard"));
+            Assert.AreEqual(0, response.Result.Length);
         }
 
         [TestMethod]
@@ -36,22 +36,24 @@ namespace Tests.IQSharp
         {
             var controller = Init();
             var response = await controller.List();
+            Assert.AreEqual(0, response.Messages.Length);
 
+            var initCount = response.Result.Length;
+
+            response = await controller.Add($"Microsoft.Quantum.Standard");
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.IsTrue(response.Result.Length == 1);
-            Assert.IsTrue(response.Result[0].StartsWith("Microsoft.Quantum.Standard"));
+            Assert.AreEqual(initCount, response.Result.Length);
 
-            response = await controller.Add("Microsoft.Quantum.Chemistry");
+            response = await controller.Add($"microsoft.quantum.standard::0.11.2003.3107");
+            Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.IsTrue(response.Result.Length == 2);
-            Assert.IsTrue(response.Result[0].StartsWith("Microsoft.Quantum.Standard"));
-            Assert.IsTrue(response.Result[1].StartsWith("Microsoft.Quantum.Chemistry"));
+            Assert.AreEqual(initCount, response.Result.Length);
 
-            response = await controller.Add("Microsoft.Quantum.Research::0.10.1911.2805-alpha");
+            response = await controller.Add($"jquery::3.5.0.1");
+            Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.IsTrue(response.Result.Length == 3);
-            Assert.AreEqual("Microsoft.Quantum.Research::0.10.1911.2805-alpha", response.Result[2]);
+            Assert.AreEqual(initCount + 1, response.Result.Length);
         }
     }
 }

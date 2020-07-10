@@ -52,7 +52,6 @@ namespace Microsoft.Quantum.IQSharp
             {
                 endpoints.MapControllers();
             });
-
         }
     }
 }

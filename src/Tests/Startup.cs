@@ -31,11 +31,11 @@ namespace Tests.IQSharp
             services.Configure<NugetPackages.Settings>(config);
 
             services.AddLogging();
-            services.AddMocks();
             services.AddTelemetry();
             services.AddIQSharp();
             services.AddIQSharpKernel();
             services.AddAzureClient();
+            services.AddMocks();
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();

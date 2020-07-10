@@ -10,6 +10,8 @@ using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Extensions.Logging;
 
+#nullable enable
+
 namespace Tests.IQSharp
 {
     public class MockKernelOptions : IOptions<KernelContext>
@@ -34,9 +36,9 @@ namespace Tests.IQSharp
 
     public class MockShell : IShellServer
     {
-        public event Action<Message> KernelInfoRequest;
-        public event Action<Message> ExecuteRequest;
-        public event Action<Message> ShutdownRequest; 
+        public event Action<Message>? KernelInfoRequest;
+        public event Action<Message>? ExecuteRequest;
+        public event Action<Message>? ShutdownRequest; 
 
         internal void Handle(Message message)
         {
@@ -72,10 +74,12 @@ namespace Tests.IQSharp
             this.shell = shell;
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task Handle(Message message)
         {
             shell.Handle(message);
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         public void RegisterFallback(Func<Message, Task?> fallback)
         {

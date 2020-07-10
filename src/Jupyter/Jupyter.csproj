@@ -6,6 +6,7 @@
     <RootNamespace>Microsoft.Quantum.IQSharp.Jupyter</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.Jupyter</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

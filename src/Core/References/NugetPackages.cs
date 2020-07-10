@@ -38,6 +38,7 @@ namespace Microsoft.Quantum.IQSharp
 
         // The list of settings for this class. It extends Workspace.Settings so it can get things
         // list root and cache folder. 
+        // TODO
         public class Settings : Workspace.Settings
         {
             public string[]? DefaultPackageVersions { get; set; } = null;
@@ -271,7 +272,13 @@ namespace Microsoft.Quantum.IQSharp
             if (pkg == null || IsSystemPackage(pkg)) return Enumerable.Empty<AssemblyInfo>();
 
             var pkgInfo = LocalPackagesFinder.GetPackage(pkg, Logger, CancellationToken.None);
-            var packageReader = pkgInfo?.GetReader();
+            if (pkgInfo == null)
+            {
+                Logger.LogWarning($"Could not find Package {pkg}");
+                return Enumerable.Empty<AssemblyInfo>();
+            }
+
+            var packageReader = pkgInfo.GetReader();
             var libs = packageReader?.GetLibItems();
 
             // If package contains no dlls:

@@ -34,6 +34,12 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class CompilerService : ICompilerService
     {
+        public IEnumerable<string> AutoOpenNamespaces { get; set; } = new String[]
+        {
+            "Microsoft.Quantum.Intrinsic",
+            "Microsoft.Quantum.Canon"
+        };
+
         /// <summary>
         /// Compiles the given Q# code and returns the list of elements found in it.
         /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
@@ -98,8 +104,10 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
+            string open_stmtms = string.Join("", AutoOpenNamespaces.Select(ns => $"open {ns};"));
+                
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {open_stmtms} {s.code} }}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
             return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);

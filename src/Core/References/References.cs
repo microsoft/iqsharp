@@ -7,12 +7,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -36,36 +37,36 @@ namespace Microsoft.Quantum.IQSharp
             new AssemblyInfo(typeof(Intrinsic.X).Assembly)
         };
 
-
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-            IOptions<NugetPackages.Settings> options, 
+            IOptions<NugetPackages.Settings> options,
             ILogger<References> logger,
             IEventService eventService
             )
         {
+            Logger = logger;
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = new NugetPackages(options, logger);
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             AssemblyLoadContext.Default.Resolving += Resolve;
-
-            Reset();
         }
 
         /// Manages nuget packages.
         internal NugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
+        private ILogger Logger {get;}
 
-        public event EventHandler<PackageLoadedEventArgs> PackageLoaded;
+        public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 
         /// <summary>
         /// The plain list of Assemblies to be used as References. 
         /// </summary>
-        public ImmutableArray<AssemblyInfo> Assemblies { get; private set; }
+        public ImmutableArray<AssemblyInfo> Assemblies { get; internal set; }
 
         public CompilerMetadata CompilerMetadata => _metadata.Value;
 
@@ -78,22 +79,29 @@ namespace Microsoft.Quantum.IQSharp
                 ?.Select(p => $"{p.Id}::{p.Version}");
 
         /// <summary>
+        /// Adds the given assemblies.
+        /// </summary>
+        public void AddAssemblies(params AssemblyInfo[] assemblies)
+        {
+            Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
+            Reset();
+        }
+
+        /// <summary>
         /// Adds the libraries from the given nuget package to the list of assemblies.
         /// If version is not provided. It automatically picks up the latest version.
         /// </summary>
         public async Task AddPackage(string name, Action<string>? statusCallback = null)
         {
-            var duration = Stopwatch.StartNew();
-
             if (Nugets == null)
             {
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            var pkg = await Nugets.Add(name, statusCallback);
+            var duration = Stopwatch.StartNew();
 
-            Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();
-            Reset();
+            var pkg = await Nugets.Add(name, statusCallback);
+            AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version.ToNormalizedString(), duration.Elapsed));

@@ -33,23 +33,13 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Creates a SymbolResolver from a Snippets implementation. Only used for testing.
-        /// </summary>
-        internal OperationResolver(Snippets snippets)
-        {
-            this.snippets = snippets;
-            this.workspace = snippets.Workspace;
-            this.references = snippets.GlobalReferences;
-        }
-
-        /// <summary>
         ///     Enumerates over all assemblies that should be searched
         ///     when resolving symbols.
         /// </summary>
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
-            if (snippets.AssemblyInfo != null) yield return snippets.AssemblyInfo;
-            if (workspace.AssemblyInfo != null) yield return workspace.AssemblyInfo;
+            if (snippets?.AssemblyInfo != null) yield return snippets.AssemblyInfo;
+            if (workspace?.AssemblyInfo != null) yield return workspace.AssemblyInfo;
 
             foreach (var asm in references.Assemblies)
             {
