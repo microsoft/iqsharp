@@ -41,14 +41,12 @@ namespace Microsoft.Quantum.IQSharp
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-            IOptions<NugetPackages.Settings> options,
-            ILogger<References> logger,
+            INugetPackages packages,
             IEventService eventService
             )
         {
-            Logger = logger;
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
-            Nugets = new NugetPackages(options, logger);
+            Nugets = packages;
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
@@ -57,9 +55,8 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// Manages nuget packages.
-        internal NugetPackages Nugets { get; }
+        internal INugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
-        private ILogger Logger {get;}
 
         public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 

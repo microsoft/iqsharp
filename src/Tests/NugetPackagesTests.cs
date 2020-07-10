@@ -28,8 +28,8 @@ namespace Tests.IQSharp
 
         public NugetPackages Init()
         {
-            var service = Startup.Create<References>("Workspace");
-            return service.Nugets;
+            var service = Startup.Create<NugetPackages>("Workspace");
+            return service;
         }
 
         [TestMethod]

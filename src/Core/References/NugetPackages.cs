@@ -31,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp
     /// This class takes care of managing Nuget packages: it provides support
     /// for adding packages by finding all its dependencies and downloading them if necessary.
     /// </summary>
-    public class NugetPackages
+    public class NugetPackages : INugetPackages
     {
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
@@ -109,7 +109,10 @@ namespace Microsoft.Quantum.IQSharp
         // packages to use, since all of them need to be in-sync.
         public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
-        public NugetPackages(IOptions<Settings>? config, Microsoft.Extensions.Logging.ILogger logger)
+        public NugetPackages(
+            IOptions<Settings> config,
+            ILogger<References> logger
+        )
         {
             this.Logger = new NuGetLogger(logger);
 
@@ -490,16 +493,6 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 catch (NuGetProtocolException) { }
             }
-        }
-
-        /// <summary>
-        ///  Helper method that creates a new instance with default dependencies.
-        ///  Used mainly for testing.
-        /// </summary>
-        internal static NugetPackages Create()
-        {
-            var logger = new LoggerFactory().CreateLogger<NugetPackages>();
-            return new NugetPackages(null, logger);
         }
     }
 }
