@@ -100,7 +100,7 @@ const style = `
  * 
  * @returns HTML representation of circuit.
  */
-const _jsonToHtml = (json: ExecutionPath): string => {
+const jsonToHtml = (json: ExecutionPath): string => {
     const { qubits, operations } = json;
     const { qubitWires, registers, svgHeight } = formatInputs(qubits);
     const { metadataList, svgWidth } = processOperations(operations, registers);

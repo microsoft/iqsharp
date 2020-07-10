@@ -102,13 +102,14 @@ const _unitary = (label: string, x: number, y: number[], width: number, argStr?:
 
     // Group adjacent registers
     let prevY: number = y[0];
-    const regGroups: number[][] = y.reduce((acc: number[][], currY: number) => {
+    const regGroups: number[][] = y.reduce((groups: number[][], currY: number) => {
         // Registers are defined to be adjacent if they differ by registerHeight in their y coord
-        // Raphael: Is there a better way of doing this? (i.e. split into y and heights in processOperations)
-        if (acc.length === 0 || currY - prevY > registerHeight) acc.push([currY]);
-        else acc[acc.length - 1].push(currY);
+        // NOTE: This method of group registers by height difference might break if we want to add
+        // registers with variable heights.
+        if (groups.length === 0 || currY - prevY > registerHeight) groups.push([currY]);
+        else groups[groups.length - 1].push(currY);
         prevY = currY;
-        return acc;
+        return groups;
     }, []);
 
     // Render each group as a separate unitary boxes
