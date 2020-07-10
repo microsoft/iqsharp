@@ -43,17 +43,12 @@ namespace Tests.IQSharp
             response = await controller.Add($"Microsoft.Quantum.Standard");
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.AreEqual(initCount, response.Result.Length);
-
-            response = await controller.Add($"microsoft.quantum.standard::0.11.2003.3107");
-            Assert.AreEqual(Status.Success, response.Status);
-            Assert.AreEqual(0, response.Messages.Length);
-            Assert.AreEqual(initCount, response.Result.Length);
+            Assert.AreEqual(initCount + 1, response.Result.Length);
 
             response = await controller.Add($"jquery::3.5.0.1");
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.AreEqual(initCount + 1, response.Result.Length);
+            Assert.AreEqual(initCount + 2, response.Result.Length);
         }
     }
 }

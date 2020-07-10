@@ -28,8 +28,7 @@ namespace Tests.IQSharp
 
         public NugetPackages Init()
         {
-            var service = Startup.Create<NugetPackages>("Workspace");
-            return service;
+            return Startup.Create<NugetPackages>("Workspace");
         }
 
         [TestMethod]
@@ -211,6 +210,20 @@ namespace Tests.IQSharp
                 // Make sure we're case insensitive.
                 await mgr.Add($"microsoft.quantum.chemistry::{QDK_LIBRARIES_VERSION}  ");
                 Assert.AreEqual(start + 2, mgr.Items.Count());
+            }
+        }
+
+        [TestMethod]
+        public async Task AddInvaliPackage()
+        {
+            var mgr = Init();
+
+            using (var context = new SourceCacheContext())
+            {
+                var start = mgr.Items.Count();
+
+                await Assert.ThrowsExceptionAsync<NuGet.Resolver.NuGetResolverInputException>(() => mgr.Add("microsoft.invalid.quantum"));
+                Assert.AreEqual(start, mgr.Items.Count());
             }
         }
     }

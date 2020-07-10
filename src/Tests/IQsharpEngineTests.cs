@@ -269,11 +269,11 @@ namespace Tests.IQSharp
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
-            response = await engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel);
+            response = await engine.ExecuteMundane(SNIPPETS.UseJordanWignerEncodingData, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("mock.chemistry", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -282,7 +282,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(initialCount + 1, result.Length);
 
             // Now it should compile:
-            await AssertCompile(engine, SNIPPETS.TrotterEstimateEnergy, "TrotterEstimateEnergy");
+            await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");
 
         }
 
@@ -350,10 +350,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(0, channel.msgs.Count);
 
             // Add dependencies:
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("mock.chemistry", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            response = await pkgMagic.Execute("microsoft.quantum.research", channel);
+            response = await pkgMagic.Execute("mock.research", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
@@ -366,7 +366,7 @@ namespace Tests.IQSharp
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            Assert.AreEqual(3, result.Length);
+            Assert.AreEqual(2, result.Length);
 
             // Compilation must work:
             await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");

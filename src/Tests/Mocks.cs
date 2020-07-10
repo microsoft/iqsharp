@@ -9,6 +9,10 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Extensions.Logging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 #nullable enable
 
@@ -127,6 +131,39 @@ namespace Tests.IQSharp
         public OperationInfo Resolve(string input)
         {
             return new OperationInfo(null, null);
+        }
+    }
+
+    public class MockNugetPackages : INugetPackages
+    {
+        private static readonly AssemblyInfo MockChemistryAssembly = new AssemblyInfo(typeof(Mock.Chemistry.JordanWignerEncodingData).Assembly);
+
+        List<PackageIdentity> _items = new List<PackageIdentity>();
+
+        public IEnumerable<PackageIdentity> Items => _items;
+
+        public IEnumerable<AssemblyInfo> Assemblies
+        {
+            get
+            {
+                if (_items.Select(p => p.Id).Contains("mock.chemistry"))
+                {
+                    yield return MockChemistryAssembly;
+                }
+            }
+        }
+
+
+        public Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
+        {
+            if (package == "microsoft.invalid.quantum")
+            {
+                throw new NuGet.Resolver.NuGetResolverInputException($"Unable to find package 'microsoft.invalid.quantum'");
+            }
+
+            var pkg = new PackageIdentity(package, NuGetVersion.Parse("0.0.0"));
+            _items.Add(pkg);
+            return Task.FromResult(pkg);
         }
     }
 }

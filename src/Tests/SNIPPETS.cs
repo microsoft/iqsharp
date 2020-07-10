@@ -156,38 +156,28 @@ namespace Tests.IQSharp
     /// # Summary
     ///     This scripts depend on the Chemistry.Workspace correctly loaded.
     ///     
-    open Microsoft.Quantum.Chemistry.Samples;
-    open Microsoft.Quantum.Chemistry.JordanWigner; 
+    open Tests.IQSharp.Chemistry.Samples;
+    open Mock.Chemistry;
 
     operation DependsOnChemistryWorkspace() : ((JordanWignerEncodingData, Int, Double) => (Double, Double))
     {
-        return TrotterEstimateEnergy;
+        return UseJordanWignerEncodingData;
     }
 ";
 
-        public static string TrotterEstimateEnergy =
+        public static string UseJordanWignerEncodingData =
 @"
-
-    /// # Summary
-    ///     This script depends on the Chemistry package to compile.
+    open Microsoft.Quantum.Convert;
+    open Microsoft.Quantum.Math;
+    open Mock.Chemistry;
     
-    open Microsoft.Quantum.Chemistry.JordanWigner;    
-    open Microsoft.Quantum.Characterization;
-    open Microsoft.Quantum.Simulation;
-    
-    operation TrotterEstimateEnergy (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {
-        
+    operation UseJordanWignerEncodingData (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {        
         let (nSpinOrbitals, data, statePrepData, energyShift) = qSharpData!;
-        
-        // Order of integrator
-        let trotterOrder = 1;
-        let (nQubits, (rescaleFactor, oracle)) = TrotterStepOracle(qSharpData, trotterStepSize, trotterOrder);
-        
+                
         // Prepare ProductState
-        let statePrep =  PrepareTrialState(statePrepData, _);
-        let phaseEstAlgorithm = RobustPhaseEstimation(nBitsPrecision, _, _);
-        let estPhase = EstimateEnergy(nQubits, statePrep, oracle, phaseEstAlgorithm);
-        let estEnergy = estPhase * rescaleFactor + energyShift;
+        let estPhase = 2.0;
+        let estEnergy = 3.0;
+
         return (estPhase, estEnergy);
     }
 ";

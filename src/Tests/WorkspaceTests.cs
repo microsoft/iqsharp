@@ -76,11 +76,11 @@ namespace Tests.IQSharp
             ws.Reload();
             Assert.IsTrue(ws.HasErrors);
 
-            ws.GlobalReferences.AddPackage($"Microsoft.Quantum.Research::{NugetPackagesTests.QDK_LIBRARIES_VERSION}").Wait();
+            ws.GlobalReferences.AddPackage($"mock.chemistry").Wait();
             ws.Reload();
             Assert.IsFalse(ws.HasErrors);
 
-            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Microsoft.Quantum.Chemistry.Samples.OptimizedTrotterEstimateEnergy");
+            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
             Assert.IsNotNull(op);
         }
     }
