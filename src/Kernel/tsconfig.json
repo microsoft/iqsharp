@@ -8,9 +8,9 @@
     "baseUrl": ".",
     "outDir": "res",
     "outFile": "res/bundle.js",
-    "lib": [ "DOM", "ES2015" ],
+    "lib": [ "DOM", "ES2017" ],
     "module": "AMD"
   },
-  "exclude": ["node_modules", "wwwroot"],
-  "include": ["client/**/*"]
+  "exclude": ["wwwroot"],
+  "include": ["node_modules/**/*", "client/**/*"]
 }

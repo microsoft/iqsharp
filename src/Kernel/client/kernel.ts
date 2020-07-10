@@ -8,8 +8,9 @@ import { IPython } from "./ipython";
 declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import { initializePlotting } from "./plotting";
+import { initializePlotting, DisplayableState, createBarChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
+import * as ChartJs from "chart.js";
 
 class Kernel {
     hostingEnvironment : string | undefined;
@@ -31,7 +32,8 @@ class Kernel {
                 console.log("my message received", message);
 
                 //create buttons as DOM objects in order to attach unique event handlers
-                let state_div = message.content.state.div_id;
+                let state: DisplayableState = message.content.state;
+                let state_div = state.div_id;
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
@@ -43,8 +45,36 @@ class Kernel {
                         });
                         div.appendChild(button);
                         div.appendChild(p);
+                        // todo: make a new div
+                        
+                        let button2 = document.createElement("button");
+                        let printthingy = document.createElement("p");
+
+                        let graph = document.createElement("canvas");
+                        button2.appendChild(document.createTextNode("Show Graph"));
+                        button.addEventListener("click", event => {
+                            var txt = "";
+                            var x;
+                            var amps = state.amplitudes;
+
+                            let newCount = amps.length;
+                            let nQubits = Math.log2(newCount) >>> 0;
+                            let bit = [];
+                            bit = Array.from(Array(amps.length).keys()).map(idx => {
+                                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+                                return `|${bitstring}⟩`;
+                            });
+                            for (x in amps) {  
+                                txt += 'Basis State Label: ' + bit[x] + ' Percentage: ' + (amps[x].Magnitude ** 2)+ '\n';
+                            }
+                            printthingy.innerHTML = txt;
+                        });
+                        
+                        div.appendChild(button2);
+                        div.appendChild(printthingy);
+                        createBarChart(graph, state);
+                        div.appendChild(graph);
                     }
-                    //message.content.state.div_id;
                 
                 }
             }

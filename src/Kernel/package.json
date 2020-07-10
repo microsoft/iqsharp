@@ -1,5 +1,9 @@
 {
+    "dependencies": {
+        "chart.js": "2.8.0"
+    },
     "devDependencies": {
-        "@types/codemirror": "0.0.56"
+        "@types/codemirror": "0.0.56",
+        "@types/chart.js": "2.8.0"
     }
 }
