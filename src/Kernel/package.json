@@ -1,5 +1,6 @@
 {
     "devDependencies": {
-        "@types/codemirror": "0.0.56"
+        "@types/codemirror": "0.0.56",
+        "@types/node": "^14.0.12"
     }
 }
