@@ -1,4 +1,4 @@
-# Python Interoperability for Q# #
+# Q# Interoperability for Python #
 
 The `qsharp` package for Python provides interoperability with the Quantum Development Kit and with the Q# language, making it easy to simulate Q# operations and functions from within Python.
 
@@ -15,7 +15,7 @@ conda install -c quantum-engineering qsharp
 ## Installing from Source ##
 
 If you'd like to contribute to or experiment with the Python interoperability feature, it may be useful to install from source rather than from the `qsharp` package on the Python Package Index (PyPI).
-To do so, make sure that you are in the `src` directory, and run `setup.py` with the `install` argument:
+To do so, make sure that you are in the `Python` directory, and run `setup.py` with the `install` argument:
 
 ```bash
 cd iqsharp/src/Python/
@@ -33,4 +33,4 @@ python setup.py bdist_wheel
 ```
 
 By default, this will create a `qsharp` wheel in `dist/` with the version number set to 0.0.0.1.
-To provide a more useful version number, set the `ASSEMBLY_VERSION` environment variable before running `setup.py`.
+To provide a more useful version number, set the `PYTHON_VERSION` environment variable before running `setup.py`.
