@@ -214,7 +214,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task AddInvaliPackage()
+        public async Task AddInvalidPackage()
         {
             var mgr = Init();
 

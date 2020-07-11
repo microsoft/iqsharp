@@ -104,10 +104,10 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
-            string open_stmtms = string.Join("", AutoOpenNamespaces.Select(ns => $"open {ns};"));
+            string openStatements = string.Join("", AutoOpenNamespaces.Select(ns => $"open {ns};"));
                 
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {open_stmtms} {s.code} }}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements} {s.code} }}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
             return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
