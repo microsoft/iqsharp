@@ -42,16 +42,21 @@ namespace Microsoft.Quantum.IQSharp
             "Microsoft.Quantum.Canon"
         };
 
+        private CompilationLoader CreateTemporaryLoader(string source)
+        {
+            var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
+            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {source} }}" } }.ToImmutableDictionary();
+            var loadOptions = new CompilationLoader.Configuration();
+            return new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
+        }
+
         /// <inheritdoc/>
         public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
         {
-            var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
+            var loader = CreateTemporaryLoader(source);
+            if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
             var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
-            var loadOptions = new CompilationLoader.Configuration();
-            var loaded = new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
-            if (loaded.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
-            return loaded.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
+            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
                    ? tree.Elements
                    : ImmutableArray<QsNamespaceElement>.Empty;
         }
@@ -59,13 +64,9 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public IEnumerable<string> IdentifyOpenedNamespaces(string source)
         {
-            var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
-            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
-            var loadOptions = new CompilationLoader.Configuration();
-            var loaded = new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
-            if (loaded.VerifiedCompilation == null) { return ImmutableArray<string>.Empty; }
-            return loaded.VerifiedCompilation.Tokenization.Values
+            var loader = CreateTemporaryLoader(source);
+            if (loader.VerifiedCompilation == null) { return ImmutableArray<string>.Empty; }
+            return loader.VerifiedCompilation.Tokenization.Values
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
                 .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind).Item1.Symbol)
