@@ -57,7 +57,7 @@ Test-One '../iqsharp.sln'
 if ($Env:ENABLE_PYTHON -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Testing Python packages. Env:ENABLE_PYTHON was set to 'false'."
 } else {
-    Test-Python '../src/Python' '../src/Python/qsharp/tests'
+    Test-Python '../src/Python/qsharp-core' '../src/Python/qsharp-core/qsharp/tests'
 }
 
 if (-not $all_ok) 
