@@ -26,11 +26,7 @@ function Build-One {
     }
 }
 
-# Fetch TypeScript definitions
-Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
-    npm install
-Pop-Location
-
+Write-Host "##[info]Starting iqsharp build..."
 Build-One build '../iqsharp.sln'
 
 Write-Host "##[info]Verifying manifest..."
