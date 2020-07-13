@@ -5,9 +5,10 @@
 ///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
-declare var IPython : IPython;
+declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
+import jsonToHtml from "./ExecutionPathVisualizer/pathVisualizer.js";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -116,9 +117,9 @@ function defineQSharpMode() {
 }
 
 class Kernel {
-    hostingEnvironment : string | undefined;
-    iqsharpVersion : string | undefined;
-    telemetryOptOut? : boolean | null;
+    hostingEnvironment: string | undefined;
+    iqsharpVersion: string | undefined;
+    telemetryOptOut?: boolean | null;
 
     constructor() {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
@@ -147,7 +148,7 @@ class Kernel {
         // are replies to other messages.
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_echo_request",
-            {value: value},
+            { value: value },
             {
                 shell: {
                     reply: (message) => {
