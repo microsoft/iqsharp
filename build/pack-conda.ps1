@@ -75,7 +75,7 @@ function Copy-Wheels {
         If (-not (Test-Path -Path $Path)) { 
             $_ = [IO.Directory]::CreateDirectory($Path) 
         }    
-        Copy-Item $Env:PYTHON_OUTDIR\*.whl $Path
+        Copy-Item $Env:PYTHON_OUTDIR/*.whl $Path
     }
 }
 
