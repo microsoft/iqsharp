@@ -52,7 +52,7 @@ describe("Testing _getStringWidth", () => {
     });
 
     test("varying size strings", () => {
-        expect(_getStringWidth("H", 14)).toBeCloseTo(9);
-        expect(_getStringWidth("GateWithASuperLongName", 14)).toBeCloseTo(174);
+        expect(_getStringWidth("H", 14)).toEqual(9);
+        expect(_getStringWidth("GateWithASuperLongName", 14)).toEqual(174);
     });
 });
