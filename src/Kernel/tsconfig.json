@@ -8,7 +8,7 @@
     "baseUrl": ".",
     "outDir": "res",
     "outFile": "res/bundle.js",
-    "lib": [ "DOM", "ES2015" ],
+    "lib": [ "DOM", "ES2019" ],
     "module": "AMD"
   },
   "exclude": ["node_modules", "wwwroot"],
