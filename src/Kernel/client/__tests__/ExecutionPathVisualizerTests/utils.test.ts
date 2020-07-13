@@ -52,7 +52,7 @@ describe("Testing _getStringWidth", () => {
     });
 
     test("varying size strings", () => {
-        expect(_getStringWidth("I", 14)).toEqual(3);
+        expect(_getStringWidth("Ry", 14)).toEqual(17);
         expect(_getStringWidth("GateWithASuperLongName", 14)).toEqual(174);
     });
 });
