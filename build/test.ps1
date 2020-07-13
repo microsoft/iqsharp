@@ -51,9 +51,34 @@ function Test-Python {
     }
 }
 
+function Test-JavaScript {
+    Param([string] $packageFolder, [string] $options)
+
+    Write-Host "##[info]Installing JS packages from $packageFolder"
+    Push-Location (Join-Path $PSScriptRoot $packageFolder)
+        npm install
+    Pop-Location
+
+    Write-Host "##[info]Testing JS inside $packageFolder"    
+    Push-Location (Join-Path $PSScriptRoot $packageFolder)
+        if (!$options) {
+            npm test
+        } else {
+            npm test -- $options
+        }
+    Pop-Location
+
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to test JS inside $packageFolder"
+        $script:all_ok = $False
+    }
+}
+
 Test-One '../iqsharp.sln'
 
 Test-Python '../src/Python' '../src/Python/qsharp/tests'
+
+Test-JavaScript '../src/Kernel'
 
 if (-not $all_ok) 
 {

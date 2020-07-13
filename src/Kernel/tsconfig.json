@@ -11,6 +11,6 @@
     "lib": [ "DOM", "ES2019" ],
     "module": "AMD"
   },
-  "exclude": ["node_modules", "wwwroot"],
+  "exclude": ["node_modules", "wwwroot", "client/__test__"],
   "include": ["client/**/*"]
 }
