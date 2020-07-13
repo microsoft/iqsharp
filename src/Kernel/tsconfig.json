@@ -9,8 +9,9 @@
     "outDir": "res",
     "outFile": "res/bundle.js",
     "lib": [ "DOM", "ES2019" ],
-    "module": "AMD"
+    "module": "AMD",
+    "moduleResolution": "node"
   },
-  "exclude": ["node_modules", "wwwroot"],
+  "exclude": ["node_modules", "wwwroot", "client/__test__"],
   "include": ["client/**/*"]
 }
