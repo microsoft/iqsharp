@@ -5,7 +5,6 @@
     "devDependencies": {
         "@types/codemirror": "0.0.56",
         "@types/jest": "^26.0.4",
-        "@types/node": "^14.0.12",
         "canvas": "^2.6.1",
         "jest": "^26.1.0",
         "ts-jest": "^26.1.2",
