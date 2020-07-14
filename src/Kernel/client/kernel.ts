@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import { initializePlotting, DisplayableState, createBarChart } from "./plotting";
+import { initializePlotting, DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 
 class Kernel {
@@ -36,9 +36,37 @@ class Kernel {
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
+                        let button1 = document.createElement("button");
                         let graph = document.createElement("canvas");
-                        createBarChart(graph, state);
-                        div.appendChild(graph);
+                        button1.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
+                        button1.addEventListener("click", event => {
+                            createBarChart(graph, state);
+                            div.appendChild(graph);
+                        });
+                        div.appendChild(button1);
+                        
+
+                        let button = document.createElement("button");
+                        let realImagGraph = document.createElement("canvas");
+                        button.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
+                        button.addEventListener("click", event => { 
+                            createBarChartRealImagOption(realImagGraph, state);
+                            div.appendChild(realImagGraph);
+                        });
+                        div.appendChild(button);
+
+                        let button2 = document.createElement("button");
+                        let amplitudePhaseGraph = document.createElement("canvas");
+                        button2.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
+                        button2.addEventListener("click", event => {
+                            createBarChartAmplitudePhaseOption(amplitudePhaseGraph, state);
+                            div.appendChild(amplitudePhaseGraph);
+                        });
+                        div.appendChild(button2);
+
+                        //make buttons that show the 3 options
+                        //real + imag, amplitude + phase, original view
+                        //idk how to calculate this
                     }
                 
                 }

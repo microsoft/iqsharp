@@ -52,13 +52,13 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
                 data: Array.from(Array(amps.length).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
-                backgroundColor: "#4c4cff",
-                    borderColor: "#4c4cff",
+                backgroundColor: "#5390d9",
+                borderColor: "#5390d9",
                 }
             ],
         },
     options: {
-            responsive: true,
+            responsive: false,
         legend: {
             display: false,
         },
@@ -76,10 +76,139 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Measurement Probability'
+                        labelString: 'Meas. Probability'
                     },
                     ticks: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        suggestedMax: 1,
+                        suggestedMin: 0
+                    }
+                }]
+            }
+        }
+    });
+
+};
+
+export function createBarChartRealImagOption(element: HTMLCanvasElement, state: DisplayableState) {
+    var amps = state.amplitudes;
+
+    let newCount = amps.length;
+    let nQubits = Math.log2(newCount) >>> 0;
+
+    var measurementHistogram = new Chart(element, {
+        type: 'bar',
+        data: {
+            labels: Array.from(Array(amps.length).keys()).map(idx => {
+                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+                return `|${bitstring}⟩`;
+            }), //basis state labels
+            datasets: [
+                {
+                    data: Array.from(Array(amps.length).keys()).map(idx => {
+                        return (amps[idx].Real);
+                    }),
+                    backgroundColor: "#5390d9",
+                    borderColor: "#5390d9",
+                    label: "Real"
+                },
+                {
+                    data: Array.from(Array(amps.length).keys()).map(idx => {
+                        return (amps[idx].Imag);
+                    }),
+                    backgroundColor: "#48bfe3",
+                    borderColor: "#48bfe3",
+                    label: "Imag"
+                }
+            ],
+        },
+        options: {
+            responsive: false,
+            legend: {
+                display: true,
+            },
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Basis States'
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Meas. Probability'
+                    },
+                    ticks: {
+                        suggestedMax: 1,
+                        suggestedMin: -1
+                    }
+                }]
+            }
+        }
+    });
+
+};
+
+export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, state: DisplayableState) {
+    var amps = state.amplitudes;
+
+    let newCount = amps.length;
+    let nQubits = Math.log2(newCount) >>> 0;
+
+    var measurementHistogram = new Chart(element, {
+        type: 'bar',
+        data: {
+            labels: Array.from(Array(amps.length).keys()).map(idx => {
+                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+                return `|${bitstring}⟩`;
+            }), //basis state labels
+            datasets: [
+                {
+                    data: Array.from(Array(amps.length).keys()).map(idx => {
+                        return (amps[idx].Magnitude);
+                    }),
+                    backgroundColor: "#4c4cff",
+                    borderColor: "#4c4cff",
+                    label: "Amplitude"
+                },
+                {
+                    data: Array.from(Array(amps.length).keys()).map(idx => {
+                        return (amps[idx].Phase);
+                    }),
+                    backgroundColor: "#4c4cff",
+                    borderColor: "#4c4cff",
+                    label: "Phase"
+                }
+            ],
+        },
+        options: {
+            responsive: false,
+            legend: {
+                display: false,
+            },
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Basis States'
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Meas. Probability'
+                    },
+                    ticks: {
+                        beginAtZero: true,
                     }
                 }]
             }
