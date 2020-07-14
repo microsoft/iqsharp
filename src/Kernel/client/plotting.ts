@@ -52,18 +52,18 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
                 data: Array.from(Array(amps.length).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
-                    backgroundColor: "#ff0000",
-                    borderColor: "#ff0000",
+                backgroundColor: "#4c4cff",
+                    borderColor: "#4c4cff",
                 }
             ],
         },
     options: {
-            responsive: false,
+            responsive: true,
             scales: {
                 xAxes: [{
                     ticks: {
-                        maxRotation: 90,
-                        minRotation: 80
+                        maxRotation: 0,
+                        minRotation: 0
                     }
                 }],
                 yAxes: [{
