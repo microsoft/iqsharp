@@ -59,14 +59,25 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
         },
     options: {
             responsive: true,
+        legend: {
+            display: false,
+        },
             scales: {
                 xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Basis States'
+                    },
                     ticks: {
                         maxRotation: 0,
                         minRotation: 0
                     }
                 }],
                 yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Measurement Probability'
+                    },
                     ticks: {
                         beginAtZero: true
                     }
