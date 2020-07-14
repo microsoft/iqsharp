@@ -66,22 +66,7 @@ function Pack-CondaRecipe() {
     }
 }
 
-function Copy-Wheels {
-    param(
-        [string] $Path
-    );
-
-    if ($Env:PYTHON_OUTDIR -ne "") {
-        If (-not (Test-Path -Path $Path)) { 
-            $_ = [IO.Directory]::CreateDirectory($Path) 
-        }    
-        Copy-Item $Env:PYTHON_OUTDIR\*.whl $Path
-    }
-}
-
 Write-Host "##[info]Packing conda recipes..."
-
-Copy-Wheels -Path (Join-Path $PSScriptRoot "../src/Python/dist")
 
 Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/iqsharp")
 Pack-CondaRecipe -Path (Join-Path $PSScriptRoot "../conda-recipes/qsharp")
