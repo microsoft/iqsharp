@@ -197,7 +197,7 @@ def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str)
     )
     metadata = {
         'title': "IQ# Magic Commands",
-        'author': rmshaffer,
+        'author': 'rmshaffer',
         'uid': f"{uid_base}.index",
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
         'ms.topic': 'article'
