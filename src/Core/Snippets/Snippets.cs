@@ -153,15 +153,16 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 var snippets = SelectSnippetsToCompile(code).ToArray();
-                foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
-                {
-                    Compiler.AutoOpenNamespaces[entry.Key] = entry.Value;
-                }
                 var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)
                 {
                     throw new CompilationErrorsException(logger.Errors.ToArray());
+                }
+
+                foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
+                {
+                    Compiler.AutoOpenNamespaces[entry.Key] = entry.Value;
                 }
 
                 // populate the original snippet with the results of the compilation:

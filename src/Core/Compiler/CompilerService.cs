@@ -70,9 +70,10 @@ namespace Microsoft.Quantum.IQSharp
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
                 .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind))
+                .Where(openDirective => !string.IsNullOrEmpty(openDirective.Item1.Symbol?.AsDeclarationName(null)))
                 .ToDictionary(
                     openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
-                    openDirective => openDirective.Item2.ValueOr(null)?.Symbol.AsDeclarationName(null));
+                    openDirective => openDirective.Item2.ValueOr(null)?.Symbol?.AsDeclarationName(null));
         }
 
         /// <summary> 
