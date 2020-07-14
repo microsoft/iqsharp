@@ -120,7 +120,7 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     uid = f"{uid_base}.{safe_name}"
     metadata = {
         'title': f"{magic_name} (magic command)",
-        'author': rmshaffer,
+        'author': 'rmshaffer',
         'uid': uid,
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
         'ms.topic': 'article'
