@@ -114,13 +114,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 {
                     // Look for display encoders in the new assembly.
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
-                    var relevantTypes = assembly
-                        .GetTypes()
-                        .Where(type =>
-                            !type.IsAbstract &&
-                            !type.IsInterface &&
-                            typeof(IResultEncoder).IsAssignableFrom(type)
+
+                    // If types from an assembly cannot be loaded, log a warning and continue.
+                    var relevantTypes = Enumerable.Empty<Type>();
+                    try
+                    {
+                        relevantTypes = assembly
+                            .GetTypes()
+                            .Where(type =>
+                                !type.IsAbstract &&
+                                !type.IsInterface &&
+                                typeof(IResultEncoder).IsAssignableFrom(type)
+                            );
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Encountered exception loading types from {AssemblyName}.",
+                            assembly.FullName
                         );
+                        continue;
+                    }
 
                     foreach (var type in relevantTypes)
                     {
