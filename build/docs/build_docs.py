@@ -120,8 +120,9 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     uid = f"{uid_base}.{safe_name}"
     metadata = {
         'title': f"{magic_name} (magic command)",
+        'author': rmshaffer,
         'uid': uid,
-        'ms.date': datetime.date.today().isoformat(),
+        'ms.date': datetime.date.today().strftime("%m-%d-%Y"),
         'ms.topic': 'article'
     }
     header = f"# `{magic_name}`"
@@ -196,13 +197,14 @@ def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str)
     )
     metadata = {
         'title': "IQ# Magic Commands",
+        'author': rmshaffer,
         'uid': f"{uid_base}.index",
-        'ms.date': datetime.date.today().isoformat(),
+        'ms.date': datetime.date.today().strftime("%m-%d-%Y"),
         'ms.topic': 'article'
     }
     return cleanup_markdown(f"""
 # IQ# Magic Commands
-
+{metadata}
 | Magic Command | Summary |
 |---------------|---------|
 {index_content}
