@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
-import jsonToHtml from "./ExecutionPathVisualizer/pathVisualizer.js";
+import renderExecutionPath from "./ExecutionPathVisualizer/pathVisualizer.js";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -225,6 +225,16 @@ class Kernel {
         });
         Telemetry.initAsync();
     }
+
+    initExecutionPathVisualizer() {
+        IPython.notebook.kernel.register_iopub_handler(
+            "render_execution_path",
+            message => {
+                const { json, id } = message.content;
+                renderExecutionPath(JSON.parse(json), id);
+            }
+        );
+    }
 }
 
 export function onload() {
@@ -232,4 +242,3 @@ export function onload() {
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
-
