@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+$ErrorActionPreference = 'Stop'
+
 & "$PSScriptRoot/set-env.ps1"
 
 $all_ok = $True
@@ -26,7 +28,11 @@ function Build-One {
     }
 }
 
-Write-Host "##[info]Starting iqsharp build..."
+# Fetch TypeScript definitions
+Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
+    npm install
+Pop-Location
+
 Build-One build '../iqsharp.sln'
 
 Write-Host "##[info]Verifying manifest..."
