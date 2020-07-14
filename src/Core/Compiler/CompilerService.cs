@@ -36,10 +36,10 @@ namespace Microsoft.Quantum.IQSharp
     public class CompilerService : ICompilerService
     {
         /// <inheritdoc/>
-        public ISet<string> AutoOpenNamespaces { get; set; } = new HashSet<string>
+        public IDictionary<string, string> AutoOpenNamespaces { get; set; } = new Dictionary<string, string>
         {
-            "Microsoft.Quantum.Intrinsic",
-            "Microsoft.Quantum.Canon"
+            ["Microsoft.Quantum.Intrinsic"] = null,
+            ["Microsoft.Quantum.Canon"] = null
         };
 
         private CompilationLoader CreateTemporaryLoader(string source)
@@ -62,16 +62,17 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public IEnumerable<string> IdentifyOpenedNamespaces(string source)
+        public IDictionary<string, string> IdentifyOpenedNamespaces(string source)
         {
             var loader = CreateTemporaryLoader(source);
-            if (loader.VerifiedCompilation == null) { return ImmutableArray<string>.Empty; }
+            if (loader.VerifiedCompilation == null) { return ImmutableDictionary<string, string>.Empty; }
             return loader.VerifiedCompilation.Tokenization.Values
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
-                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind).Item1.Symbol)
-                .Select(symbol => symbol.AsDeclarationName(null))
-                .Where(symbolName => !string.IsNullOrEmpty(symbolName));
+                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind))
+                .ToDictionary(
+                    openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
+                    openDirective => openDirective.Item2.ValueOr(null)?.Symbol.AsDeclarationName(null));
         }
 
         /// <summary> 
@@ -121,17 +122,27 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
-            string openStatements = string.Join("", AutoOpenNamespaces.Select(ns => $"open {ns};"));
+            string openStatements = string.Join("", AutoOpenNamespaces.Select(
+                entry => string.IsNullOrEmpty(entry.Value) 
+                    ? $"open {entry.Key};"
+                    : $"open {entry.Key} as {entry.Value};"
+                ));
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements} {s.code} }}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.code} }}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 
-            // Ignore warning about already-open namespaces when compiling snippets.
-            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.TypeRedefinition);
+            // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
+            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            {
+                QsCompiler.Diagnostics.ErrorCode.TypeRedefinition,
+                QsCompiler.Diagnostics.ErrorCode.TypeConstructorOverlapWithCallable,
+            };
+
+            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Add(code));
             var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
-            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.TypeRedefinition);
-            
+            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Remove(code));
+
             return assembly;
         }
 

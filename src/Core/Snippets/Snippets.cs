@@ -145,12 +145,18 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var logger = new QSharpLogger(Logger);
+
+            // We add exactly one line of boilerplate code at the beginning of each snippet,
+            // so tell the logger to subtract one from all displayed line numbers.
+            var logger = new QSharpLogger(Logger, lineNrOffset: -1);
 
             try
             {
                 var snippets = SelectSnippetsToCompile(code).ToArray();
-                Compiler.AutoOpenNamespaces.UnionWith(Compiler.IdentifyOpenedNamespaces(code));
+                foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
+                {
+                    Compiler.AutoOpenNamespaces[entry.Key] = entry.Value;
+                }
                 var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)

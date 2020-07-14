@@ -119,6 +119,24 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string OpenAliasedNamespace =
+@"
+    open Microsoft.Quantum.Measurement as Meas;
+";
+        
+        public static string DependsOnAliasedNamespace =
+ @"
+    operation DependsOnAliasedNamespace() : Result[]
+    {
+        using (qubits = Qubit[3])
+        {
+            Message(""Hello from DependsOnAliasedNamespace"");
+            ApplyToEach(H, qubits);
+            return Meas.MultiM(qubits);
+        }
+    }
+";
+
         public static string DependsOnWorkspace =
 @"
     /// # Summary

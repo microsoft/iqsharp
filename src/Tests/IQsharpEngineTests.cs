@@ -145,6 +145,19 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task OpenAliasedNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenAliasedNamespace);
+            await AssertCompile(engine, SNIPPETS.DependsOnAliasedNamespace, "DependsOnAliasedNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnAliasedNamespace", "Hello from DependsOnAliasedNamespace");
+        }
+
+        [TestMethod]
         public async Task Estimate()
         {
             var engine = Init();
