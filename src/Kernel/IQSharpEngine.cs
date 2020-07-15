@@ -63,7 +63,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DataTableToTextEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
-            RegisterDisplayEncoder(new ExecutionPathToHtmlEncoder());
+            RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
             RegisterJsonEncoder(
                 JsonConverters.AllConverters

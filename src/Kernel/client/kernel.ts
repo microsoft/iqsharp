@@ -230,8 +230,8 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
             message => {
-                const { json, id } = message.content;
-                renderExecutionPath(JSON.parse(json), id);
+                const { executionPath, id } = message.content;
+                renderExecutionPath(JSON.parse(executionPath), id);
             }
         );
     }

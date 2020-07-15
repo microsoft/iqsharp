@@ -9,6 +9,7 @@ using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -20,19 +21,19 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     {
         /// <summary>
         ///     Initializes <see cref="ExecutionPathVisualizerContent"/> with the
-        ///     given JSON string and HTML div ID.
+        ///     given <see cref="ExecutionPath"/> (as a <see cref="JToken"/>) and HTML div ID.
         /// </summary>
-        public ExecutionPathVisualizerContent(string json, string id)
+        public ExecutionPathVisualizerContent(JToken executionPath, string id)
         {
-            this.Json = json;
+            this.ExecutionPath = executionPath;
             this.Id = id;
         }
 
         /// <summary>
-        ///     JSON representation of the <see cref="ExecutionPath"/>.
+        ///     The <see cref="ExecutionPath"/> (as a <see cref="JToken"/>) to be rendered.
         /// </summary>
-        [JsonProperty("json")]
-        public string Json { get; }
+        [JsonProperty("executionPath")]
+        public JToken ExecutionPath { get; }
 
         /// <summary>
         ///     ID of the HTML div that will contain the visualization.
@@ -107,10 +108,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // Retrieve the `ExecutionPath` traced out by the `ExecutionPathTracer`
             var executionPath = tracer.GetExecutionPath();
 
+            // Convert executionPath to JToken for serialization
+            var executionPathJToken = JToken.FromObject(executionPath,
+                new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore });
+
             // Render empty div with unique ID as cell output
             var divId = $"execution-path-container-{Guid.NewGuid().ToString()}";
-            var content = new ExecutionPathVisualizerContent(executionPath.ToJson(), divId);
-            channel.DisplayUpdatable(new ExecutionPathDisplayable(content.Id));
+            var content = new ExecutionPathVisualizerContent(executionPathJToken, divId);
+            channel.DisplayUpdatable(new DisplayableHtmlElement($"<div id='{divId}' />"));
 
             // Send execution path to JavaScript via iopub for rendering
             channel.SendIoPubMessage(
