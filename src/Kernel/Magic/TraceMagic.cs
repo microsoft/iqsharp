@@ -15,7 +15,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///      Contains the JSON representation of the <see cref="ExecutionPath"/>
-    ///      and the ID of the HTML div that will contain the visualization.
+    ///      and the ID of the HTML div that will contain the visualization of the
+    ///      execution path.
     /// </summary>
     public class ExecutionPathVisualizerContent : MessageContent
     {
@@ -44,9 +45,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
     /// <summary>
     ///     A magic command that can be used to visualize the execution
-    ///     paths of operations and functions.
+    ///     path of operations and functions traced out by the simulator.
     /// </summary>
-    public class ViewMagic : AbstractMagic
+    public class TraceMagic : AbstractMagic
     {
         private const string ParameterNameOperationName = "__operationName__";
 
@@ -55,13 +56,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public ViewMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
-            "view",
+        public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
+            "trace",
             new Documentation
             {
-                Summary = "Outputs an HTML-based visualization of the execution path of the given operation.",
+                Summary = "Outputs the HTML-based visualization of an execution path of the given operation.",
                 Description = @"
-                    This magic command renders an HTML-based visualization of the runtime execution path of the
+                    This magic command renders an HTML-based visualization of a runtime execution path of the
                     given operation using the QuantumSimulator.
 
                     #### Required parameters
@@ -73,16 +74,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Examples = new []
                 {
                     @"
-                        Visualize a Q# operation defined as `operation MyOperation() : Result`:
+                        Visualize the execution path of a Q# operation defined as `operation MyOperation() : Result`:
                         ```
-                        In []: %view MyOperation
+                        In []: %trace MyOperation
                         Out[]: <HTML visualization of the operation>
                         ```
                     ".Dedent(),
                     @"
-                        Visualize a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        Visualize the execution path of a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
                         ```
-                        In []: %view MyOperation a=5 b=10
+                        In []: %trace MyOperation a=5 b=10
                         Out[]: <HTML visualization of the operation>
                         ```
                     ".Dedent(),
@@ -110,8 +111,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RunAsync(input, channel).Result;
 
         /// <summary>
-        ///     Outputs a visualization of an operation given a string with its name and a JSON
-        ///     encoding of its arguments.
+        ///     Outputs a visualization of a runtime execution path of an operation given
+        ///     a string with its name and a JSON encoding of its arguments.
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
         {
@@ -124,7 +125,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             var tracer = new ExecutionPathTracer();
 
-            // Simulate operation and attach `ExecutionPathTracer` to keep track of operations performed
+            // Simulate operation and attach `ExecutionPathTracer` to trace out operations performed
             // in its execution path
             using var qsim = new QuantumSimulator()
                 .WithJupyterDisplay(channel, ConfigurationSource)
