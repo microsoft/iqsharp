@@ -59,7 +59,34 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "view",
             new Documentation
             {
-                Summary = "Outputs an HTML-based visualization of the execution path of a given operation."
+                Summary = "Outputs an HTML-based visualization of the execution path of the given operation.",
+                Description = @"
+                    This magic command renders an HTML-based visualization of the runtime execution path of the
+                    given operation using the QuantumSimulator.
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
+                Examples = new []
+                {
+                    @"
+                        Visualize a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %view MyOperation
+                        Out[]: <HTML visualization of the operation>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Visualize a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %view MyOperation a=5 b=10
+                        Out[]: <HTML visualization of the operation>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.SymbolResolver = resolver;
