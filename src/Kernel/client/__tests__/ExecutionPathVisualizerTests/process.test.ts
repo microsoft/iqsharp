@@ -513,7 +513,7 @@ describe("Testing _opToMetadata", () => {
         };
         let op: Operation = {
             gate: "RX",
-            argStr: "(0.25)",
+            displayArgs: "(0.25)",
             controlled: false,
             adjoint: false,
             controls: [],
@@ -525,7 +525,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [],
             targetsY: [startY],
             label: "RX",
-            argStr: "(0.25)",
+            displayArgs: "(0.25)",
             width: 52
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -533,7 +533,7 @@ describe("Testing _opToMetadata", () => {
         // Test long argument
         op = {
             gate: "RX",
-            argStr: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             controlled: false,
             adjoint: false,
             controls: [],
@@ -545,7 +545,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [],
             targetsY: [startY],
             label: "RX",
-            argStr: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             width: 188
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -553,7 +553,7 @@ describe("Testing _opToMetadata", () => {
         // Test controlled
         op = {
             gate: "RX",
-            argStr: "(0.25)",
+            displayArgs: "(0.25)",
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -565,7 +565,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [startY + registerHeight],
             targetsY: [startY],
             label: "RX",
-            argStr: "(0.25)",
+            displayArgs: "(0.25)",
             width: 52
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -578,7 +578,7 @@ describe("Testing _opToMetadata", () => {
         };
         let op: Operation = {
             gate: "U",
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             controlled: false,
             adjoint: false,
             controls: [],
@@ -593,7 +593,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [],
             targetsY: [startY, startY + registerHeight],
             label: "U",
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             width: 77
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -601,7 +601,7 @@ describe("Testing _opToMetadata", () => {
         // Test long argument
         op = {
             gate: "U",
-            argStr: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             controlled: false,
             adjoint: false,
             controls: [],
@@ -616,7 +616,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [],
             targetsY: [startY, startY + registerHeight],
             label: "U",
-            argStr: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             width: 188
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -624,7 +624,7 @@ describe("Testing _opToMetadata", () => {
         // Test controlled
         op = {
             gate: "U",
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -639,7 +639,7 @@ describe("Testing _opToMetadata", () => {
             controlsY: [startY + registerHeight],
             targetsY: [startY, startY + registerHeight * 2],
             label: "U",
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             width: 77
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
@@ -1192,7 +1192,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "RX",
-                argStr: "(0.25)",
+                displayArgs: "(0.25)",
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1234,7 +1234,7 @@ describe("Testing processOperations", () => {
                 controlsY: [],
                 targetsY: [startY + registerHeight],
                 label: "RX",
-                argStr: "(0.25)",
+                displayArgs: "(0.25)",
                 width: rxWidth,
             }
         ];

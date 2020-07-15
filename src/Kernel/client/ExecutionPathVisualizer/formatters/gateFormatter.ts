@@ -42,12 +42,12 @@ const formatGates = (opsMetadata: Metadata[]): string => {
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, label, argStr, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, width } = metadata;
     switch (type) {
         case GateType.Measure:
             return _measure(x, controlsY[0], targetsY[0]);
         case GateType.Unitary:
-            return _unitary(label, x, targetsY, width, argStr);
+            return _unitary(label, x, targetsY, width, displayArgs);
         case GateType.Swap:
             if (controlsY.length > 0) return _controlledGate(metadata);
             else return _swap(x, targetsY);
@@ -89,12 +89,12 @@ const _measure = (x: number, qy: number, cy: number): string => {
  * @param x                x coord of gate.
  * @param y                Array of y coords of registers acted upon by gate.
  * @param width            Width of gate.
- * @param argStr           Arguments passed in to gate.
+ * @param displayArgs           Arguments passed in to gate.
  * @param renderDashedLine If true, draw dashed lines between non-adjacent unitaries.
  * 
  * @returns SVG representation of unitary gate.
  */
-const _unitary = (label: string, x: number, y: number[], width: number, argStr?: string, renderDashedLine: boolean = true): string => {
+const _unitary = (label: string, x: number, y: number[], width: number, displayArgs?: string, renderDashedLine: boolean = true): string => {
     if (y.length === 0) return "";
 
     // Sort y in ascending order
@@ -116,7 +116,7 @@ const _unitary = (label: string, x: number, y: number[], width: number, argStr?:
     const unitaryBoxes: string[] = regGroups.map((group: number[]) => {
         const maxY: number = group[group.length - 1], minY: number = group[0];
         const height: number = maxY - minY + gateHeight;
-        return _unitaryBox(label, x, minY, width, height, argStr);
+        return _unitaryBox(label, x, minY, width, height, displayArgs);
     });
 
     // Draw dashed line between disconnected unitaries
@@ -135,19 +135,19 @@ const _unitary = (label: string, x: number, y: number[], width: number, argStr?:
  * @param y      y coord of gate.
  * @param width  Width of gate.
  * @param height Height of gate.
- * @param argStr Arguments passed in to gate.
+ * @param displayArgs Arguments passed in to gate.
  * 
  * @returns SVG representation of unitary box.
  */
-const _unitaryBox = (label: string, x: number, y: number, width: number, height: number = gateHeight, argStr?: string): string => {
+const _unitaryBox = (label: string, x: number, y: number, width: number, height: number = gateHeight, displayArgs?: string): string => {
     y -= gateHeight / 2;
     const uBox: string = box(x - width / 2, y, width, height);
-    const labelY = y + height / 2 - ((argStr == null) ? 0 : 7);
+    const labelY = y + height / 2 - ((displayArgs == null) ? 0 : 7);
     const labelText: string = text(label, x, labelY);
     const elems = [uBox, labelText];
-    if (argStr != null) {
+    if (displayArgs != null) {
         const argStrY = y + height / 2 + 8;
-        const argText: string = text(argStr, x, argStrY, argsFontSize);
+        const argText: string = text(displayArgs, x, argStrY, argsFontSize);
         elems.push(argText);
     }
     const svg: string = group(elems);
@@ -194,7 +194,7 @@ const _cross = (x: number, y: number): string => {
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, targetsY, label, argStr, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, width } = metadata;
     // Get SVG for target gates
     switch (type) {
         case GateType.Cnot:
@@ -204,7 +204,7 @@ const _controlledGate = (metadata: Metadata): string => {
             targetsY.forEach(y => targetGateSvgs.push(_cross(x, y)));
             break;
         case GateType.ControlledUnitary:
-            targetGateSvgs.push(_unitary(label, x, targetsY, width, argStr, false));
+            targetGateSvgs.push(_unitary(label, x, targetsY, width, displayArgs, false));
             break;
         default:
             throw new Error(`ERROR: Unrecognized gate: ${label} of type ${type}`);

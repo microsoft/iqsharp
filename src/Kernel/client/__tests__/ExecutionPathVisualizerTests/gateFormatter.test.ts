@@ -449,7 +449,7 @@ describe("Testing _formatGate", () => {
             controlsY: [],
             targetsY: [startY],
             label: 'Ry',
-            argStr: '(0.25)',
+            displayArgs: '(0.25)',
             width: 52,
         };
         expect(_formatGate(metadata)).toMatchSnapshot();
@@ -473,7 +473,7 @@ describe("Testing _formatGate", () => {
             controlsY: [],
             targetsY: [startY, startY + registerHeight],
             label: 'U',
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             width: 77,
         };
         expect(_formatGate(metadata)).toMatchSnapshot();
@@ -529,7 +529,7 @@ describe("Testing _formatGate", () => {
             controlsY: [startY],
             targetsY: [startY + registerHeight],
             label: 'U',
-            argStr: "('foo', 'bar')",
+            displayArgs: "('foo', 'bar')",
             width: 77,
         };
         expect(_formatGate(metadata)).toMatchSnapshot();

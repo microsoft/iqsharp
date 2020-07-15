@@ -108,9 +108,11 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         public string Gate { get; set; } = "";
 
         /// <summary>
-        /// Non-qubit arguments provided to gate.
+        /// Arguments (except <see cref="Qubit" /> types) provided to gate that
+        /// will be displayed by the visualizer.
         /// </summary>
-        public string? ArgStr { get; set; }
+        [JsonProperty("displayArgs")]
+        public string? DisplayArgs { get; set; }
 
         /// <summary>
         /// Group of operations for each classical branch.

@@ -185,7 +185,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
 
     if (op == null) return metadata;
 
-    let { gate, argStr, controlled, adjoint, controls, targets, children } = op;
+    let { gate, displayArgs, controlled, adjoint, controls, targets, children } = op;
 
     // Set y coords
     metadata.controlsY = controls.map(reg => _getRegY(reg, registers));
@@ -233,7 +233,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     if (adjoint && metadata.label.length > 0) metadata.label += "'";
 
     // If gate has extra arguments, display them
-    if (argStr != null) metadata.argStr = argStr;
+    if (displayArgs != null) metadata.displayArgs = displayArgs;
 
     // Set gate width
     metadata.width = getGateWidth(metadata);

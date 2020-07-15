@@ -159,7 +159,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Rx",
-                    ArgStr = "(2)",
+                    DisplayArgs = "(2)",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
             };
@@ -252,7 +252,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Foo",
-                    ArgStr = "(2.1,(bar))",
+                    DisplayArgs = "(2.1, (bar))",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
             };
@@ -274,7 +274,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Foo",
-                    ArgStr = "(2.1,(bar))",
+                    DisplayArgs = "(2.1, (bar))",
                     Controlled = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
@@ -365,7 +365,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Ry",
-                    ArgStr = "(2.5)",
+                    DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
             };
@@ -403,13 +403,13 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Ry",
-                    ArgStr = "(2.5)",
+                    DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
                 new Operation()
                 {
                     Gate = "Bar",
-                    ArgStr = "((1,2.1),(foo))",
+                    DisplayArgs = "((1, 2.1), (foo))",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
                 new Operation()
@@ -434,7 +434,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "Bar",
-                    ArgStr = "((1,2.1),(foo))",
+                    DisplayArgs = "((1, 2.1), (foo))",
                     Controlled = true,
                     Adjoint = true,
                     Controls = new List<Register>() { new QubitRegister(2) },

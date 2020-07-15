@@ -129,7 +129,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             var op = new Operation()
             {
                 Gate = metadata.Label,
-                ArgStr = metadata.Args,
+                DisplayArgs = (metadata.FormattedNonQubitArgs.Length > 0) ? metadata.FormattedNonQubitArgs : null,
                 Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
                 Controlled = metadata.IsControlled,
                 Adjoint = metadata.IsAdjoint,
