@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 Summary = "Lists currently opened namespaces and their aliases.",
                 Description = @"
-                    This magic command lists any namespaces have been made
+                    This magic command lists any namespaces that have been made
                     available using `open` statements, along with any aliases
                     that may have been assigned to those namespaces.
                 ".Dedent(),
