@@ -19,6 +19,7 @@ using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
+using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
@@ -34,30 +35,54 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class CompilerService : ICompilerService
     {
-        /// <summary>
-        /// Compiles the given Q# code and returns the list of elements found in it.
-        /// The compiler does this on a best effort, so it will return the elements even if the compilation fails.
-        /// </summary>
-        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        /// <inheritdoc/>
+        public IDictionary<string, string> AutoOpenNamespaces { get; set; } = new Dictionary<string, string>
+        {
+            ["Microsoft.Quantum.Intrinsic"] = null,
+            ["Microsoft.Quantum.Canon"] = null
+        };
+
+        private CompilationLoader CreateTemporaryLoader(string source)
         {
             var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
-            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {ns.Value} {{ {source} }}" } }.ToImmutableDictionary();
+            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {source} }}" } }.ToImmutableDictionary();
             var loadOptions = new CompilationLoader.Configuration();
-            var loaded = new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
-            if (loaded.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
-            return loaded.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
+            return new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        {
+            var loader = CreateTemporaryLoader(source);
+            if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
+            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
+            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
                    ? tree.Elements
                    : ImmutableArray<QsNamespaceElement>.Empty;
         }
 
+        /// <inheritdoc/>
+        public IDictionary<string, string> IdentifyOpenedNamespaces(string source)
+        {
+            var loader = CreateTemporaryLoader(source);
+            if (loader.VerifiedCompilation == null) { return ImmutableDictionary<string, string>.Empty; }
+            return loader.VerifiedCompilation.Tokenization.Values
+                .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
+                .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
+                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind))
+                .Where(openDirective => !string.IsNullOrEmpty(openDirective.Item1.Symbol?.AsDeclarationName(null)))
+                .ToDictionary(
+                    openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
+                    openDirective => openDirective.Item2.ValueOr(null)?.Symbol?.AsDeclarationName(null));
+        }
+
         /// <summary> 
-        /// Compiles the given Q# code and returns the list of elements found in it. 
-        /// Removes all currently tracked source files in the CompilationManager and replaces them with the given ones.  
-        /// The compiler does this on a best effort, so it will return the elements even if the compilation fails. 
-        /// If the given references are not null, reloads the references loaded in by the CompilationManager  
-        /// if the keys of the given references differ from the currently loaded ones. 
-        /// Returns an enumerable of all namespaces, including the content from both source files and references.  
+        /// Compiles the given Q# code and returns the list of elements found in it.
+        /// Removes all currently tracked source files in the CompilationManager and replaces them with the given ones.
+        /// The compiler does this on a best effort basis, so it will return the elements even if the compilation fails.
+        /// If the given references are not null, reloads the references loaded in by the CompilationManager
+        /// if the keys of the given references differ from the currently loaded ones.
+        /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
         private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, QSharpLogger logger = null, bool compileAsExecutable = false)
         {
@@ -98,11 +123,28 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
         {
+            string openStatements = string.Join("", AutoOpenNamespaces.Select(
+                entry => string.IsNullOrEmpty(entry.Value) 
+                    ? $"open {entry.Key};"
+                    : $"open {entry.Key} as {entry.Value};"
+                ));
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ open Microsoft.Quantum.Intrinsic; open Microsoft.Quantum.Canon; {s.code} }}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.code} }}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
+
+            // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
+            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            {
+                QsCompiler.Diagnostics.ErrorCode.TypeRedefinition,
+                QsCompiler.Diagnostics.ErrorCode.TypeConstructorOverlapWithCallable,
+            };
+
+            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Add(code));
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
+            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Remove(code));
+
+            return assembly;
         }
 
         /// <summary>

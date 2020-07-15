@@ -130,6 +130,32 @@ namespace Tests.IQSharp
             Assert.AreEqual("[4,3,2]", results);
         }
 
+        [TestMethod]
+        public async Task OpenNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces1);
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces2);
+            await AssertCompile(engine, SNIPPETS.DependsOnMeasurementNamespace, "DependsOnMeasurementNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnMeasurementNamespace", "Hello from DependsOnMeasurementNamespace");
+        }
+
+        [TestMethod]
+        public async Task OpenAliasedNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenAliasedNamespace);
+            await AssertCompile(engine, SNIPPETS.DependsOnAliasedNamespace, "DependsOnAliasedNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnAliasedNamespace", "Hello from DependsOnAliasedNamespace");
+        }
 
         [TestMethod]
         public async Task Estimate()
