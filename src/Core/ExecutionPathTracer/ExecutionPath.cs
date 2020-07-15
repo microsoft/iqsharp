@@ -33,13 +33,13 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// A list of <see cref="QubitDeclaration"/> that represents the declared qubits used in the execution path.
         /// </summary>
         [JsonProperty("qubits")]
-        public IEnumerable<QubitDeclaration> Qubits { get; private set; }
+        public IEnumerable<QubitDeclaration> Qubits { get; }
 
         /// <summary>
         /// A list of <see cref="Operation"/> that represents the operations used in the execution path.
         /// </summary>
         [JsonProperty("operations")]
-        public IEnumerable<Operation> Operations { get; private set; }
+        public IEnumerable<Operation> Operations { get; }
 
         /// <summary>
         /// Serializes <see cref="ExecutionPath"/> into its JSON representation.
@@ -81,13 +81,13 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// Id of qubit.
         /// </summary>
         [JsonProperty("id")]
-        public int Id { get; private set; }
+        public int Id { get; }
 
         /// <summary>
         /// Number of associated classical registers.
         /// </summary>
         [JsonProperty("numChildren")]
-        public int NumChildren { get; private set; }
+        public int NumChildren { get; }
 
         /// <summary>
         /// Used by <see cref="Newtonsoft" /> to determine if <see cref="NumChildren" />

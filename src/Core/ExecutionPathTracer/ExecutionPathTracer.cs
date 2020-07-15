@@ -24,16 +24,15 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         private List<Operation> operations = new List<Operation>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExecutionPathTracer"/> class.
+        /// Initializes a new instance of the <see cref="ExecutionPathTracer"/> class with the depth to render operations at.
         /// </summary>
         /// <param name="depth">
         /// The depth at which to render operations.
         /// </param>
-        public ExecutionPathTracer(int depth = 1) =>
-            this.renderDepth = depth + 1;
+        public ExecutionPathTracer(int depth = 1) => this.renderDepth = depth + 1;
 
         /// <summary>
-        /// Returns the generated <c>ExecutionPath</c>.
+        /// Returns the generated <see cref="ExecutionPath"/>.
         /// </summary>
         public ExecutionPath GetExecutionPath() =>
             new ExecutionPath(
@@ -69,10 +68,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <see cref="Microsoft.Quantum.Simulation.Common.SimulatorBase"/>'s
         /// <c>OnOperationEnd</c> event.
         /// </summary>
-        public void OnOperationEndHandler(ICallable operation, IApplyData result)
-        {
-            this.currentDepth--;
-        }
+        public void OnOperationEndHandler(ICallable operation, IApplyData result) => this.currentDepth--;
 
         /// <summary>
         /// Retrieves the <see cref="QubitRegister"/> associated with the given <see cref="Qubit"/> or create a new
