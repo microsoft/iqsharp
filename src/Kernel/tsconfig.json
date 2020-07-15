@@ -12,6 +12,6 @@
     "module": "AMD",
     "moduleResolution": "node"
   },
-  "exclude": ["node_modules", "wwwroot", "client/__test__"],
+  "exclude": ["node_modules", "wwwroot", "client/__tests__"],
   "include": ["client/**/*"]
 }
