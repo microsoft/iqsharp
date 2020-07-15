@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
@@ -13,9 +14,10 @@ namespace Microsoft.Quantum.IQSharp
     public interface ICompilerService
     {
         /// <summary>
-        /// List of auto-opened namespaces when compiling Q# snippets.
+        /// Dictionary of auto-opened namespaces when compiling Q# snippets.
+        /// Key is the full namespace name, value (if non-null) is the name under which the namespace is opened.
         /// </summary>
-        public IEnumerable<string> AutoOpenNamespaces { get; set; }
+        public IDictionary<string, string> AutoOpenNamespaces { get; set; }
 
         /// <summary>
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
@@ -35,9 +37,16 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <summary>
         /// Returns the names of all declared callables and types. 
-        /// The compiler does this on a best effort, so it will return the elements even if the compilation fails. 
-        /// The compiler does this on a best effort, and in particular without relying on any context and/or type information, 
+        /// The compiler does this on a best effort basis, and in particular without relying on any context and/or type information, 
         /// so it will return the elements even if the compilation fails.
+        /// </summary>
         IEnumerable<QsNamespaceElement> IdentifyElements(string source);
+
+        /// <summary>
+        /// Returns a dictionary of all opened namespaces. The key is the full name, and the value (if non-null) is the alias
+        /// under which the namespace is opened.
+        /// The compiler does this on a best effort basis, so it will return the elements even if the compilation fails. 
+        /// </summary>
+        IDictionary<string, string> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
     }
 }
