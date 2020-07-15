@@ -37,10 +37,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         Print a list of all currently opened namespaces:
                         ```
                         In []: %lsopen
-                        Out[]: Namespace                         Alias
-                               --------------------------------- -----------
-                               dump.basisStateLabelingConvention ""BigEndian""
-                               dump.truncateSmallAmplitudes      true
+                        Out[]: Namespace                     Alias
+                               ----------------------------- ----
+                               Microsoft.Quantum.Canon
+                               Microsoft.Quantum.Diagnostics Diag
+                               Microsoft.Quantum.Intrinsic
                         ```
                     ".Dedent()
                 }
