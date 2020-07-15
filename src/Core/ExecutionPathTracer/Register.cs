@@ -3,6 +3,9 @@
 
 #nullable enable
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
 namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
 {
     /// <summary>
@@ -28,16 +31,19 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <summary>
         /// Type of register.
         /// </summary>
+        [JsonProperty("type")]
         public virtual RegisterType Type { get; set; }
 
         /// <summary>
         /// Qubit id of register.
         /// </summary>
+        [JsonProperty("qId")]
         public virtual int QId { get; set; }
 
         /// <summary>
-        /// Classical bit id of register.
+        /// Classical bit id of register. <c>null</c> if register is a qubit register.
         /// </summary>
+        [JsonProperty("cId")]
         public virtual int? CId { get; set; }
     }
 
@@ -52,10 +58,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <param name="qId">
         /// Id of qubit register.
         /// </param>
-        public QubitRegister(int qId)
-        {
+        public QubitRegister(int qId) =>
             this.QId = qId;
-        }
 
         public override RegisterType Type => RegisterType.Qubit;
     }

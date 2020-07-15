@@ -4,7 +4,8 @@
 #nullable enable
 
 using System.Collections.Generic;
-using System.Text.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
 {
@@ -31,11 +32,13 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <summary>
         /// A list of <see cref="QubitDeclaration"/> that represents the declared qubits used in the execution path.
         /// </summary>
+        [JsonProperty("qubits")]
         public IEnumerable<QubitDeclaration> Qubits { get; private set; }
 
         /// <summary>
         /// A list of <see cref="Operation"/> that represents the operations used in the execution path.
         /// </summary>
+        [JsonProperty("operations")]
         public IEnumerable<Operation> Operations { get; private set; }
 
         /// <summary>
@@ -45,12 +48,11 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// Pretty prints the JSON (i.e. with white space and indents) if <c>true</c>.
         /// </param>
         public string ToJson(bool prettyPrint = false) =>
-            JsonSerializer.Serialize(this,
-                new JsonSerializerOptions
+            JsonConvert.SerializeObject(this,
+                (prettyPrint) ? Formatting.Indented : Formatting.None,
+                new JsonSerializerSettings
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    IgnoreNullValues = true,
-                    WriteIndented = prettyPrint,
+                    NullValueHandling = NullValueHandling.Ignore,
                 }
             );
     }
@@ -69,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <param name="numChildren">
         /// Number of associated classical registers.
         /// </param>
-        public QubitDeclaration(int id, int? numChildren = null)
+        public QubitDeclaration(int id, int numChildren = 0)
         {
             this.Id = id;
             this.NumChildren = numChildren;
@@ -78,12 +80,20 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <summary>
         /// Id of qubit.
         /// </summary>
+        [JsonProperty("id")]
         public int Id { get; private set; }
 
         /// <summary>
         /// Number of associated classical registers.
         /// </summary>
-        public int? NumChildren { get; private set; }
+        [JsonProperty("numChildren")]
+        public int NumChildren { get; private set; }
+
+        /// <summary>
+        /// Used by <see cref="Newtonsoft" /> to determine if <see cref="NumChildren" />
+        /// should be included in the JSON serialization.
+        /// </summary>
+        public bool ShouldSerializeNumChildren() => NumChildren > 0;
     }
 
     /// <summary>
@@ -94,6 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <summary>
         /// Label of gate.
         /// </summary>
+        [JsonProperty("gate")]
         public string Gate { get; set; } = "";
 
         /// <summary>
@@ -107,26 +118,31 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <remarks>
         /// Currently not used as this is intended for classically-controlled operations.
         /// </remarks>
+        [JsonProperty("children")]
         public IEnumerable<IEnumerable<Operation>>? Children { get; set; }
 
         /// <summary>
         /// True if operation is a controlled operations.
         /// </summary>
+        [JsonProperty("controlled")]
         public bool Controlled { get; set; }
 
         /// <summary>
         /// True if operation is an adjoint operations.
         /// </summary>
+        [JsonProperty("adjoint")]
         public bool Adjoint { get; set; }
 
         /// <summary>
         /// List of control registers.
         /// </summary>
+        [JsonProperty("controls")]
         public IEnumerable<Register> Controls { get; set; } = new List<Register>();
 
         /// <summary>
         /// List of target registers.
         /// </summary>
+        [JsonProperty("targets")]
         public IEnumerable<Register> Targets { get; set; } = new List<Register>();
     }
 }

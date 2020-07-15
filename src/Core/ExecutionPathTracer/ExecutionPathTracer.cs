@@ -39,11 +39,9 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             new ExecutionPath(
                 this.qubitRegisters.Keys
                     .OrderBy(k => k)
-                    .Select(k => new QubitDeclaration(k,
-                        // Get number of classical registers associated with qubit register (null if none).
-                        (this.classicalRegisters.ContainsKey(k))
-                            ? this.classicalRegisters[k].Count
-                            : null as int?
+                    .Select(k => new QubitDeclaration(k, (this.classicalRegisters.ContainsKey(k))
+                        ? this.classicalRegisters[k].Count
+                        : 0
                     )),
                 this.operations
             );
