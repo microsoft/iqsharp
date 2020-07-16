@@ -177,7 +177,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                     label: "Amplitude"
                 },
                 {
-                    data: Array.from(Array(amps.length).keys()).map(idx => {
+amps.map(amp => amp.Phase),
                         return (amps[idx].Phase);
                     }),
                     backgroundColor: "#4c4cff",
@@ -216,4 +216,3 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
     });
 
 };
-
