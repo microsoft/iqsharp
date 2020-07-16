@@ -169,7 +169,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(amps.length).keys()).map(idx => {
+amps.map(amp => amp.Magnitude),
                         return (amps[idx].Magnitude);
                     }),
                     backgroundColor: "#4c4cff",
