@@ -185,6 +185,13 @@ describe("Testing _groupOperations", () => {
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0], [0, 1], [1], []]);
     });
+    test("no qubits", () => {
+        const operations: Operation[] = [
+            { gate: "NoOp1", controlled: false, adjoint: false, controls: [], targets: [] },
+            { gate: "NoOp2", controlled: false, adjoint: false, controls: [], targets: [] },
+        ];
+        expect(_groupOperations(operations, registers)).toEqual([[], [], [], []]);
+    });
 });
 
 describe("Testing _alignOps", () => {
