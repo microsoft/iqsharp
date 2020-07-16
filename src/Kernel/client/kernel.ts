@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import { initializePlotting, DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption } from "./plotting";
+import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 
 class Kernel {
