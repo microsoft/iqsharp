@@ -125,6 +125,7 @@ class Kernel {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
             this.requestEcho();
             this.requestClientInfo();
+            this.initExecutionPathVisualizer();
         });
     }
 
@@ -231,7 +232,7 @@ class Kernel {
             "render_execution_path",
             message => {
                 const { executionPath, id } = message.content;
-                renderExecutionPath(JSON.parse(executionPath), id);
+                renderExecutionPath(executionPath, id);
             }
         );
     }
