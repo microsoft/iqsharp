@@ -50,6 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class TraceMagic : AbstractMagic
     {
         private const string ParameterNameOperationName = "__operationName__";
+        private const string ParameterNameDepth = "depth";
 
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
@@ -61,7 +62,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             new Documentation
             {
                 Summary = "Outputs the HTML-based visualization of an execution path of the given operation.",
-                Description = @"
+                Description = $@"
                     This magic command renders an HTML-based visualization of a runtime execution path of the
                     given operation using the QuantumSimulator.
 
@@ -70,6 +71,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
                     or function name that has been defined either in the notebook or in a Q# file in the same folder.
                     - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+
+                    #### Optional parameters
+
+                    - `{ParameterNameDepth}=<integer>` (default=1): The depth at which to render operations along
+                    the execution path.
                 ".Dedent(),
                 Examples = new []
                 {
@@ -84,6 +90,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         Visualize the execution path of a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
                         ```
                         In []: %trace MyOperation a=5 b=10
+                        Out[]: <HTML visualization of the operation>
+                        ```
+                    ".Dedent(),
+                    $@"
+                        Visualize operations at depth 2 on the execution path of a Q# operation defined
+                        as `operation MyOperation() : Result`:
+                        ```
+                        In []: %trace MyOperation {ParameterNameDepth}=2
                         Out[]: <HTML visualization of the operation>
                         ```
                     ".Dedent(),
@@ -123,7 +137,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var tracer = new ExecutionPathTracer();
+            var depth = inputParameters.DecodeParameter<int>(ParameterNameDepth, defaultValue: 1);
+            if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
+
+            var tracer = new ExecutionPathTracer(depth);
 
             // Simulate operation and attach `ExecutionPathTracer` to trace out operations performed
             // in its execution path

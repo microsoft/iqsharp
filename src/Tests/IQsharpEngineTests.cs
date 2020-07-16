@@ -492,10 +492,45 @@ namespace Tests.IQSharp
                         Gate = "H",
                         Targets = new List<Register>() { new QubitRegister(0) },
                     },
-                    // TODO: Remove Reset/ResetAll gates once we don't need to zero out qubits
                     new Operation()
                     {
                         Gate = "Reset",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should only see depth-1 operations
+            await AssertTrace("Depth2Circ", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "FooBar",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should see depth-2 operations
+            await AssertTrace("Depth2Circ depth=2", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "X",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "H",
                         Targets = new List<Register>() { new QubitRegister(0) },
                     },
                 }

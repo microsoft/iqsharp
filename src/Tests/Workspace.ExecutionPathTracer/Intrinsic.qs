@@ -96,6 +96,14 @@ namespace Tests.ExecutionPathTracer {
         }
     }
 
+    operation NestedCirc() : Unit {
+        using (q = Qubit()) {
+            H(q);
+            HCirc();
+            Reset(q);
+        }
+    }
+
     operation FooBar(q : Qubit) : Unit {
         H(q);
         X(q);
@@ -105,7 +113,6 @@ namespace Tests.ExecutionPathTracer {
     operation Depth2Circ() : Unit {
         using (q = Qubit()) {
             FooBar(q);
-            Reset(q);
         }
     }
 
