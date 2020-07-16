@@ -174,7 +174,6 @@ class Kernel {
 
 export function onload() {
     defineQSharpMode();
-    initializePlotting();
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
