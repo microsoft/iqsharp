@@ -113,7 +113,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     label: "Real"
                 },
                 {
-                    data: Array.from(Array(amps.length).keys()).map(idx => {
+data: amps.map(amp => amp.Imag),
                         return (amps[idx].Imag);
                     }),
                     backgroundColor: "#48bfe3",
