@@ -86,7 +86,8 @@ namespace Tests.ExecutionPathTracer {
     operation UnusedQubitCirc() : Unit {
         using (qs = Qubit[3]) {
             CNOT(qs[2], qs[0]);
-            ResetAll(qs);
+            Reset(qs[0]);
+            Reset(qs[2]);
         }
     }
 
