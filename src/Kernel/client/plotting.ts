@@ -35,21 +35,21 @@ export function initializePlotting() {
 
 
 export function createBarChart(element: HTMLCanvasElement, state: DisplayableState) {
-    var amps = state.amplitudes;
+    let amps = state.amplitudes;
 
-    let newCount = amps.length;
+    let newCount = state.n_qubits;
     let nQubits = Math.log2(newCount) >>> 0;
 
-    var measurementHistogram = new Chart(element, {
+    const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(amps.length).keys()).map(idx => {
-                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
         datasets: [
                 {
-                data: Array.from(Array(amps.length).keys()).map(idx => {
+                data: Array.from(Array(newCount).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -91,21 +91,21 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
 };
 
 export function createBarChartRealImagOption(element: HTMLCanvasElement, state: DisplayableState) {
-    var amps = state.amplitudes;
+    let amps = state.amplitudes;
 
-    let newCount = amps.length;
+    let newCount = state.n_qubits;
     let nQubits = Math.log2(newCount) >>> 0;
 
-    var measurementHistogram = new Chart(element, {
+    const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(amps.length).keys()).map(idx => {
-                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(amps.length).keys()).map(idx => {
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Real);
                     }),
                     backgroundColor: "#5390d9",
@@ -113,7 +113,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     label: "Real"
                 },
                 {
-data: amps.map(amp => amp.Imag),
+                    data: Array.from(Array(newCount).keys()).map(idx => { //originally amps.length
                         return (amps[idx].Imag);
                     }),
                     backgroundColor: "#48bfe3",
@@ -155,21 +155,21 @@ data: amps.map(amp => amp.Imag),
 };
 
 export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, state: DisplayableState) {
-    var amps = state.amplitudes;
+    let amps = state.amplitudes;
 
-    let newCount = amps.length;
+    let newCount = state.n_qubits;
     let nQubits = Math.log2(newCount) >>> 0;
 
-    var measurementHistogram = new Chart(element, {
+    const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(amps.length).keys()).map(idx => {
-                var bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nQubits, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-amps.map(amp => amp.Magnitude),
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Magnitude);
                     }),
                     backgroundColor: "#4c4cff",
@@ -177,7 +177,7 @@ amps.map(amp => amp.Magnitude),
                     label: "Amplitude"
                 },
                 {
-amps.map(amp => amp.Phase),
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Phase);
                     }),
                     backgroundColor: "#4c4cff",

@@ -36,37 +36,36 @@ class Kernel {
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
-                        let button1 = document.createElement("button");
+                        let amplitudeSquaredButton = document.createElement("button");
                         let graph = document.createElement("canvas");
-                        button1.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
-                        button1.addEventListener("click", event => {
+                        amplitudeSquaredButton.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
+                        amplitudeSquaredButton.addEventListener("click", event => {
                             createBarChart(graph, state);
                             div.appendChild(graph);
                         });
-                        div.appendChild(button1);
+                        div.appendChild(amplitudeSquaredButton);
                         
 
-                        let button = document.createElement("button");
+                        let realImagButton = document.createElement("button");
                         let realImagGraph = document.createElement("canvas");
-                        button.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
-                        button.addEventListener("click", event => { 
+                        realImagButton.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
+                        realImagButton.addEventListener("click", event => { 
                             createBarChartRealImagOption(realImagGraph, state);
                             div.appendChild(realImagGraph);
                         });
-                        div.appendChild(button);
+                        div.appendChild(realImagButton);
 
-                        let button2 = document.createElement("button");
+                        let amplitudePhaseButton = document.createElement("button");
                         let amplitudePhaseGraph = document.createElement("canvas");
-                        button2.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
-                        button2.addEventListener("click", event => {
+                        amplitudePhaseButton.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
+                        amplitudePhaseButton.addEventListener("click", event => {
                             createBarChartAmplitudePhaseOption(amplitudePhaseGraph, state);
                             div.appendChild(amplitudePhaseGraph);
                         });
-                        div.appendChild(button2);
+                        div.appendChild(amplitudePhaseButton);
 
                         //make buttons that show the 3 options
                         //real + imag, amplitude + phase, original view
-                        //idk how to calculate this
                     }
                 
                 }
