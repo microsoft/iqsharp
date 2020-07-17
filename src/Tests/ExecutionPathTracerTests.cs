@@ -580,6 +580,47 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
+
+        [TestMethod]
+        public void CompositeTest()
+        {
+            var path = GetExecutionPath("ApplyToEachCirc");
+            var qubits = new QubitDeclaration[]
+            {
+                new QubitDeclaration(0),
+                new QubitDeclaration(1),
+                new QubitDeclaration(2),
+            };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "H",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "H",
+                    Targets = new List<Register>() { new QubitRegister(1) },
+                },
+                new Operation()
+                {
+                    Gate = "H",
+                    Targets = new List<Register>() { new QubitRegister(2) },
+                },
+                new Operation()
+                {
+                    Gate = "ResetAll",
+                    Targets = new List<Register>() {
+                        new QubitRegister(0),
+                        new QubitRegister(1),
+                        new QubitRegister(2),
+                    },
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
     }
 
     [TestClass]
