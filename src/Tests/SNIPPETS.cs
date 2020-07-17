@@ -97,42 +97,41 @@ namespace Tests.IQSharp
         public static string OpenNamespaces1 =
 @"
     open Microsoft.Quantum.Intrinsic;
-    open Microsoft.Quantum.Measurement;
+    open Microsoft.Quantum.Diagnostics;
 ";
 
         public static string OpenNamespaces2 =
 @"
-    open Microsoft.Quantum.Canon;
-    open Microsoft.Quantum.Measurement;
+    open Tests.qss;
+    open Microsoft.Quantum.Diagnostics;
 ";
 
         public static string DependsOnMeasurementNamespace =
 @"
-    operation DependsOnMeasurementNamespace() : Result[]
+    operation DependsOnMeasurementNamespace() : Unit
     {
         using (qubits = Qubit[3])
         {
             Message(""Hello from DependsOnMeasurementNamespace"");
-            ApplyToEach(H, qubits);
-            return MultiM(qubits);
+            HelloQ();
+            DumpMachine();
         }
     }
 ";
 
         public static string OpenAliasedNamespace =
 @"
-    open Microsoft.Quantum.Measurement as Meas;
+    open Microsoft.Quantum.Diagnostics as Diag;
 ";
         
         public static string DependsOnAliasedNamespace =
  @"
-    operation DependsOnAliasedNamespace() : Result[]
+    operation DependsOnAliasedNamespace() : Unit
     {
         using (qubits = Qubit[3])
         {
             Message(""Hello from DependsOnAliasedNamespace"");
-            ApplyToEach(H, qubits);
-            return Meas.MultiM(qubits);
+            Diag.DumpMachine();
         }
     }
 ";

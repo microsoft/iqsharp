@@ -141,7 +141,7 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.DependsOnMeasurementNamespace, "DependsOnMeasurementNamespace");
 
             // Run:
-            await AssertSimulate(engine, "DependsOnMeasurementNamespace", "Hello from DependsOnMeasurementNamespace");
+            await AssertSimulate(engine, "DependsOnMeasurementNamespace", "Hello from DependsOnMeasurementNamespace", "Hello from quantum world!");
         }
 
         [TestMethod]
