@@ -102,6 +102,7 @@ namespace Tests.IQSharp
     {
         public List<string> errors = new List<string>();
         public List<string> msgs = new List<string>();
+        public List<Message> iopubMessages = new List<Message>();
 
         public void Display(object displayable)
         {
@@ -112,6 +113,8 @@ namespace Tests.IQSharp
         {
             return new MockUpdatableDisplay();
         }
+
+        public void SendIoPubMessage(Message message) => iopubMessages.Add(message);
 
         public void Stderr(string message) => errors.Add(message);
 
