@@ -51,7 +51,8 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public References(
                 INugetPackages packages,
-                IEventService eventService
+                IEventService eventService,
+                ILogger<References> logger
                 )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
@@ -61,7 +62,14 @@ namespace Microsoft.Quantum.IQSharp
 
             foreach (var pkg in BUILT_IN_PACKAGES)
             {
-                AddPackage(pkg).Wait();
+                try
+                {
+                    this.AddPackage(pkg).Wait();
+                }
+                catch (AggregateException e)
+                {
+                    logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
+                }
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
