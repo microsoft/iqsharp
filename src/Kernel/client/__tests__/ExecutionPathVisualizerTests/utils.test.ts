@@ -27,7 +27,7 @@ describe("Testing getGateWidth", () => {
         expect(getGateWidth(Object.assign({ type: GateType.Unitary, label: 'zz' })))
             .toEqual(minGateWidth));
     test("unitary gate with arguments", () =>
-        expect(getGateWidth(Object.assign({ type: GateType.Unitary, argStr: '(0.25)', label: 'RX' })))
+        expect(getGateWidth(Object.assign({ type: GateType.Unitary, displayArgs: '(0.25)', label: 'RX' })))
             .toEqual(52));
     test("invalid", () =>
         expect(getGateWidth(Object.assign({ type: GateType.Invalid, label: '' })))
