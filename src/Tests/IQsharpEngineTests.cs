@@ -10,12 +10,11 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
-using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
 using System.Data;
-using Microsoft.Quantum.IQSharp.AzureClient;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -84,6 +83,28 @@ namespace Tests.IQSharp
             CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
 
             return response.Output?.ToString();
+        }
+
+        private async Task AssertTrace(string name, ExecutionPath expectedPath)
+        {
+            var engine = Init("Workspace.ExecutionPathTracer");
+            var configSource = new ConfigurationSource(skipLoading: true);
+            var traceMagic = new TraceMagic(engine.SymbolsResolver, configSource);
+            var channel = new MockChannel();
+
+            var response = await traceMagic.Execute(name, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            var message = channel.iopubMessages.ElementAtOrDefault(0);
+            Assert.IsNotNull(message);
+            Assert.AreEqual("render_execution_path", message.Header.MessageType);
+
+            var content = message.Content as ExecutionPathVisualizerContent;
+            Assert.IsNotNull(content);
+
+            var path = content.ExecutionPath.ToObject<ExecutionPath>();
+            Assert.IsNotNull(path);
+            Assert.AreEqual(expectedPath.ToJson(), path.ToJson());
         }
 
         [TestMethod]
@@ -477,6 +498,63 @@ namespace Tests.IQSharp
             Assert.IsNotNull(resolver.Resolve("%azure.status"));
             Assert.IsNotNull(resolver.Resolve("%azure.output"));
             Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
+        }
+
+        [TestMethod]
+        public async Task TestTraceMagic()
+        {
+            await AssertTrace("HCirc", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "Reset",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should only see depth-1 operations
+            await AssertTrace("Depth2Circ", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "FooBar",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should see depth-2 operations
+            await AssertTrace("Depth2Circ depth=2", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "X",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
         }
     }
 }

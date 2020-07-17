@@ -34,7 +34,6 @@ namespace Tests.IQSharp
             return tracer.GetExecutionPath();
         }
 
-
         [TestMethod]
         public void HTest()
         {
@@ -50,7 +49,6 @@ namespace Tests.IQSharp
                     Gate = "H",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
-                // TODO: Remove Reset/ResetAll gates once we don't need to zero out qubits
                 new Operation()
                 {
                     Gate = "Reset",
@@ -360,10 +358,7 @@ namespace Tests.IQSharp
         public void Depth2Test()
         {
             var path = GetExecutionPath("Depth2Circ", 2);
-            var qubits = new QubitDeclaration[]
-            {
-                new QubitDeclaration(0, 1),
-            };
+            var qubits = new QubitDeclaration[] { new QubitDeclaration(0) };
             var operations = new Operation[]
             {
                 new Operation()
@@ -380,12 +375,6 @@ namespace Tests.IQSharp
                 {
                     Gate = "H",
                     Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "measure",
-                    Controls = new List<Register>() { new QubitRegister(0) },
-                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -437,6 +426,32 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("EmptyCirc");
             var qubits = new QubitDeclaration[] { };
             var operations = new Operation[] { };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+        
+        [TestMethod]
+        public void NestedTest()
+        {
+            var path = GetExecutionPath("NestedCirc");
+            var qubits = new QubitDeclaration[] { new QubitDeclaration(0) };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "H",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "HCirc",
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+            };
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
