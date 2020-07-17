@@ -122,3 +122,7 @@ packages = Packages(client)
 # Make sure that we're last on the meta_path so that actual modules are loaded
 # first.
 sys.meta_path.append(QSharpModuleFinder())
+
+# Needed to recognize PEP 420 packages as subpackages.
+from pkgutil import extend_path
+__path__ = extend_path(__path__, __name__)
