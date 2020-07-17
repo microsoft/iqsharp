@@ -434,11 +434,7 @@ namespace Tests.IQSharp
         public void NestedTest()
         {
             var path = GetExecutionPath("NestedCirc");
-            var qubits = new QubitDeclaration[]
-            {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
-            };
+            var qubits = new QubitDeclaration[] { new QubitDeclaration(0) };
             var operations = new Operation[]
             {
                 new Operation()
