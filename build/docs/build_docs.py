@@ -205,8 +205,8 @@ def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str)
         'ms.topic': 'article'
     }
     return cleanup_markdown(f"""
-# IQ# Magic Commands
 {as_yaml_header(metadata)}
+# IQ# Magic Commands                                 
 | Magic Command | Summary |
 |---------------|---------|
 {index_content}
