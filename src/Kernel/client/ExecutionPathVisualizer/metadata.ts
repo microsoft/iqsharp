@@ -16,7 +16,7 @@ export interface Metadata {
     /** Gate label. */
     label: string;
     /** Gate arguments as string. */
-    argStr?: string,
+    displayArgs?: string,
     /** Gate width. */
     width: number;
     /** Classically-controlled gates.

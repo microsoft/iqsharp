@@ -25,8 +25,8 @@ export interface Qubit {
 export interface Operation {
     /** Gate label. */
     gate: string;
-    /** Gate arguments as string. */
-    argStr?: string,
+    /** Formatted gate arguments to be displayed. */
+    displayArgs?: string,
     /** Classically-controlled gates.
      *  - children[0]: gates when classical control bit is 0.
      *  - children[1]: gates when classical control bit is 1.

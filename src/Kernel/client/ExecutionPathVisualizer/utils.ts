@@ -14,7 +14,7 @@ import {
  * 
  * @returns Width of given gate (in pixels).
  */
-const getGateWidth = ({ type, label, argStr, width }: Metadata): number => {
+const getGateWidth = ({ type, label, displayArgs, width }: Metadata): number => {
     switch (type) {
         case GateType.ClassicalControlled:
             // Already computed before.
@@ -25,7 +25,7 @@ const getGateWidth = ({ type, label, argStr, width }: Metadata): number => {
             return minGateWidth;
         default:
             const labelWidth = _getStringWidth(label);
-            const argsWidth = (argStr != null) ? _getStringWidth(argStr, argsFontSize) : 0;
+            const argsWidth = (displayArgs != null) ? _getStringWidth(displayArgs, argsFontSize) : 0;
             const textWidth = Math.max(labelWidth, argsWidth) + labelPadding * 2;
             return Math.max(minGateWidth, textWidth);
     }
