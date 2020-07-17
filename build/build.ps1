@@ -28,7 +28,11 @@ function Build-One {
 
 # Fetch TypeScript definitions
 Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
-    npm install
+    Try {
+        npm install
+    } Catch {
+        Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
+    }
 Pop-Location
 
 Build-One build '../iqsharp.sln'
