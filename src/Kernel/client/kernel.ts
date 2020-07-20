@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import { initializePlotting } from "./plotting";
+import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 
 class Kernel {
@@ -31,20 +31,42 @@ class Kernel {
                 console.log("my message received", message);
 
                 //create buttons as DOM objects in order to attach unique event handlers
-                let state_div = message.content.state.div_id;
+                let state: DisplayableState = message.content.state;
+                let state_div = state.div_id;
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
-                        let button = document.createElement("button");
-                        let p = document.createElement("p");
-                        button.appendChild(document.createTextNode("Number of Qubits"));
-                        button.addEventListener("click", event => {
-                            p.innerHTML = message.content.state.n_qubits;
+                        let amplitudeSquaredButton = document.createElement("button");
+                        let graph = document.createElement("canvas");
+                        amplitudeSquaredButton.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
+                        amplitudeSquaredButton.addEventListener("click", event => {
+                            createBarChart(graph, state);
+                            div.appendChild(graph);
                         });
-                        div.appendChild(button);
-                        div.appendChild(p);
+                        div.appendChild(amplitudeSquaredButton);
+                        
+
+                        let realImagButton = document.createElement("button");
+                        let realImagGraph = document.createElement("canvas");
+                        realImagButton.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
+                        realImagButton.addEventListener("click", event => { 
+                            createBarChartRealImagOption(realImagGraph, state);
+                            div.appendChild(realImagGraph);
+                        });
+                        div.appendChild(realImagButton);
+
+                        let amplitudePhaseButton = document.createElement("button");
+                        let amplitudePhaseGraph = document.createElement("canvas");
+                        amplitudePhaseButton.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
+                        amplitudePhaseButton.addEventListener("click", event => {
+                            createBarChartAmplitudePhaseOption(amplitudePhaseGraph, state);
+                            div.appendChild(amplitudePhaseGraph);
+                        });
+                        div.appendChild(amplitudePhaseButton);
+
+                        //make buttons that show the 3 options
+                        //real + imag, amplitude + phase, original view
                     }
-                    //message.content.state.div_id;
                 
                 }
             }
@@ -152,7 +174,6 @@ class Kernel {
 
 export function onload() {
     defineQSharpMode();
-    initializePlotting();
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
