@@ -29,17 +29,18 @@ export interface DisplayableState {
 
 export function createBarChart(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
+    let newCount = amps.length;
 
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(state.n_qubits).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(state.n_qubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
         datasets: [
                 {
-                data: Array.from(Array(state.n_qubits).keys()).map(idx => {
+                data: Array.from(Array(newCount).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -82,17 +83,18 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
 
 export function createBarChartRealImagOption(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
+    let newCount = amps.length;
     
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(state.n_qubits).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(state.n_qubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(state.n_qubits).keys()).map(idx => {
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Real);
                     }),
                     backgroundColor: "#5390d9",
@@ -100,7 +102,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     label: "Real"
                 },
                 {
-                    data: Array.from(Array(state.n_qubits).keys()).map(idx => { 
+                    data: Array.from(Array(newCount).keys()).map(idx => { 
                         return (amps[idx].Imag);
                     }),
                     backgroundColor: "#48bfe3",
@@ -128,7 +130,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Meas. Probability'
+                        labelString: 'Amplitude'
                     },
                     ticks: {
                         suggestedMax: 1,
@@ -143,17 +145,18 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
 
 export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
+    let newCount = amps.length;
 
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(state.n_qubits).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(state.n_qubits, "0");
+            labels: Array.from(Array(newCount).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(state.n_qubits).keys()).map(idx => {
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Magnitude);
                     }),
                     backgroundColor: "#4c4cff",
@@ -161,7 +164,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                     label: "Amplitude"
                 },
                 {
-                    data: Array.from(Array(state.n_qubits).keys()).map(idx => {
+                    data: Array.from(Array(newCount).keys()).map(idx => {
                         return (amps[idx].Phase);
                     }),
                     backgroundColor: "#4c4cff",
@@ -189,7 +192,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Meas. Probability'
+                        labelString: 'Value'
                     },
                     ticks: {
                         beginAtZero: true,
