@@ -72,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         return FormattableString.Invariant($@"
                             <tr>
                                 <td style=""{columnStyle}"">{result}</td>
-                                <td style=""{columnStyle}"">{frequency}</td>
+                                <td style=""{columnStyle}"">{frequency:F6}</td>
                                 <td style=""{lastColumnStyle}"">
                                     <progress
                                         max=""100""
