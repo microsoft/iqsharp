@@ -9,21 +9,31 @@ $all_ok = $True
 Write-Host "Testing IQ#:"
 
 function Test-One {
-    Param($project)
+    Param([string] $project, [string[]] $testClassFilters = @())
 
     Write-Host "##[info]Testing $project"
-    dotnet test $project `
-        -c $Env:BUILD_CONFIGURATION `
-        -v $Env:BUILD_VERBOSITY `
-        --no-build `
-        --logger trx `
-        /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
-        /property:InformationalVersion=$Env:SEMVER_VERSION `
-        /property:Version=$Env:ASSEMBLY_VERSION
+    if ($testClassFilters) {
+        $filterArgs = $testClassFilters | foreach { "ClassName~$_" }
+        $filterArgs += "(" + (($testClassFilters | foreach { "(ClassName!~$_)" }) -join " & ") + ")"
+    }
+    else {
+        $filterArgs = @("FullyQualifiedName!=_fake_")
+    }
+    $filterArgs | foreach {
+        dotnet test $project `
+            -c $Env:BUILD_CONFIGURATION `
+            -v $Env:BUILD_VERBOSITY `
+            --no-build `
+            --logger trx `
+            --filter $_ `
+            /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
+            /property:InformationalVersion=$Env:SEMVER_VERSION `
+            /property:Version=$Env:ASSEMBLY_VERSION
 
-    if  ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error;]Failed to test $project"
-        $script:all_ok = $False
+        if ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.logissue type=error;]Failed to test $project with filter $_"
+            $script:all_ok = $False
+        }
     }
 }
 
@@ -52,7 +62,7 @@ function Test-Python {
     }
 }
 
-Test-One '../iqsharp.sln'
+Test-One '../iqsharp.sln' @("AzureClient", "IQSharpEngine", "Workspace")
 
 Test-Python '../src/Python' '../src/Python/qsharp/tests'
 
