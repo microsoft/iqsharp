@@ -101,7 +101,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 // Except assemblies known at compile-time as well.
                 .Add(typeof(StateVectorToHtmlResultEncoder).Assembly.GetName())
                 .Add(typeof(AzureClientErrorToHtmlEncoder).Assembly.GetName());
-            foreach (var knownAssembly in knownAssemblies) System.Console.WriteLine($"{knownAssembly.FullName}");
 
             // Register new display encoders when packages load.
             references.PackageLoaded += (sender, args) =>
