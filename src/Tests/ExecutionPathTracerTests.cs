@@ -35,7 +35,7 @@ namespace Tests.IQSharp
     }
 
     [TestClass]
-    public class IntrisincTests : ExecutionPathTracerTests
+    public class IntrinsicTests : ExecutionPathTracerTests
     {
         [TestMethod]
         public void HTest()
