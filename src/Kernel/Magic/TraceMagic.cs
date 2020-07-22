@@ -50,7 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class TraceMagic : AbstractMagic
     {
         private const string ParameterNameOperationName = "__operationName__";
-        private const string ParameterNameDepth = "depth";
+        private const string ParameterNameDepth = "--depth";
 
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
@@ -61,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "trace",
             new Documentation
             {
-                Summary = "Outputs the HTML-based visualization of an execution path of the given operation.",
+                Summary = "Visualizes the execution path of the given operation.",
                 Description = $@"
                     This magic command renders an HTML-based visualization of a runtime execution path of the
                     given operation using the QuantumSimulator.
