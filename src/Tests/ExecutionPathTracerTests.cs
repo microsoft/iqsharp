@@ -580,9 +580,13 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
+    }
 
+    [TestClass]
+    public class CanonTests : ExecutionPathTracerTests
+    {
         [TestMethod]
-        public void CompositeTest()
+        public void ApplyToEachTest()
         {
             var path = GetExecutionPath("ApplyToEachCirc");
             var qubits = new QubitDeclaration[]
@@ -685,6 +689,34 @@ namespace Tests.IQSharp
                         Gate = "MResetZ",
                         IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
+                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                    },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
+        public void ForEachMeasureCirc()
+        {
+            var path = GetExecutionPath("ForEachMeasureCirc");
+            var qubits = new QubitDeclaration[]
+            {
+                    new QubitDeclaration(0, 1),
+                    new QubitDeclaration(1, 1),
+            };
+            var operations = new Operation[]
+            {
+                    new Operation()
+                    {
+                        Gate = "measure",
+                        Controls = new List<Register>() { new QubitRegister(0) },
+                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "measure",
+                        Controls = new List<Register>() { new QubitRegister(1) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
             };

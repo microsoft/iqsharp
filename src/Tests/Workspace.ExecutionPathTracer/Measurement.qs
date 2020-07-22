@@ -4,6 +4,7 @@
 namespace Tests.ExecutionPathTracer {
     
     open Microsoft.Quantum.Measurement;
+    open Microsoft.Quantum.Arrays;
     
     operation MResetXCirc() : Unit {
         using (q = Qubit()) {
@@ -20,6 +21,12 @@ namespace Tests.ExecutionPathTracer {
     operation MResetZCirc() : Unit {
         using (q = Qubit()) {
             let res = MResetZ(q);
+        }
+    }
+
+    operation ForEachMeasureCirc() : Unit {
+        using (qs = Qubit[2]) {
+            let res = ForEach(MResetZ, qs);
         }
     }
     
