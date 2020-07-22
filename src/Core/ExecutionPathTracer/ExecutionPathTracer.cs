@@ -122,10 +122,17 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         {
             if (metadata == null) return null;
 
+            var displayArgs = (metadata.FormattedNonQubitArgs.Length > 0)
+                ? metadata.FormattedNonQubitArgs
+                : null;
+
+            // Add surrounding parentheses around displayArgs if it doesn't already have it (i.e. not a tuple)
+            if (displayArgs != null && !displayArgs.StartsWith("(")) displayArgs = $"({displayArgs})";
+
             var op = new Operation()
             {
                 Gate = metadata.Label,
-                DisplayArgs = (metadata.FormattedNonQubitArgs.Length > 0) ? metadata.FormattedNonQubitArgs : null,
+                DisplayArgs = displayArgs,
                 Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
                 Controlled = metadata.IsControlled,
                 Adjoint = metadata.IsAdjoint,
