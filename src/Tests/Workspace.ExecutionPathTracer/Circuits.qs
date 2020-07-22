@@ -42,6 +42,13 @@ namespace Tests.ExecutionPathTracer {
         NoQubitCirc(2);
     }
 
+    operation OperationCirc(op : (Qubit => Unit), n : Int) : Unit {
+    }
+
+    operation OperationArgsCirc() : Unit {
+        OperationCirc(H, 5);
+    }
+
     operation NestedCirc() : Unit {
         using (q = Qubit()) {
             H(q);
