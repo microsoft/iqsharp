@@ -9,6 +9,23 @@ $all_ok = $True
 Write-Host "Testing IQ#:"
 
 function Test-One {
+    <#
+    .SYNOPSIS
+        Runs dotnet test for the specified project, optionally
+        split into separate runs using the specified filters.
+    .DESCRIPTION
+        This function always runs all tests contained in the specified project.
+        
+        If no testClassFilters are specified, then all tests are run as part of
+        a single dotnet test invocation.
+
+        If testClassFilters is not empty, then dotnet test will be run multiple times:
+        - once per filter using `--filter ClassName~filter1`, `--filter ClassName~filter2`,
+          etc., where `filter1`, etc. represents each of the items in testClassFilters.
+        - once with `--filter (ClassName!~filter1 & ClassName!~filter2)`, where the
+          filter string runs all remaining tests and excludes all of the tests that were
+          previously run.
+    #>
     Param([string] $project, [string[]] $testClassFilters = @())
 
     Write-Host "##[info]Testing $project"
