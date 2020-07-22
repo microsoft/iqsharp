@@ -10,8 +10,7 @@ using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
 
 namespace Tests.IQSharp
 {
-    [TestClass]
-    public class IntrinsicTests
+    public class ExecutionPathTracerTests
     {
         public Workspace InitWorkspace()
         {
@@ -33,7 +32,11 @@ namespace Tests.IQSharp
 
             return tracer.GetExecutionPath();
         }
+    }
 
+    [TestClass]
+    public class IntrisincTests : ExecutionPathTracerTests
+    {
         [TestMethod]
         public void HTest()
         {
@@ -275,7 +278,11 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
+    }
 
+    [TestClass]
+    public class Circuits : ExecutionPathTracerTests
+    {
         [TestMethod]
         public void FooTest()
         {
@@ -429,7 +436,24 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
-        
+
+        [TestMethod]
+        public void NoQubitArgsTest()
+        {
+            var path = GetExecutionPath("NoQubitArgsCirc");
+            var qubits = new QubitDeclaration[] {};
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "NoQubitCirc",
+                    DisplayArgs = "(2)",
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
         [TestMethod]
         public void NestedTest()
         {
@@ -528,6 +552,73 @@ namespace Tests.IQSharp
                         new QubitRegister(2),
                     },
                 },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+    }
+
+    [TestClass]
+    public class MeasurementTests : ExecutionPathTracerTests
+    {
+        [TestMethod]
+        public void MResetXTest()
+        {
+            var path = GetExecutionPath("MResetXCirc");
+            var qubits = new QubitDeclaration[]
+            {
+                    new QubitDeclaration(0, 1),
+            };
+            var operations = new Operation[]
+            {
+                    new Operation()
+                    {
+                        Gate = "measure",
+                        Controls = new List<Register>() { new QubitRegister(0) },
+                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                    },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
+        public void MResetYTest()
+        {
+            var path = GetExecutionPath("MResetYCirc");
+            var qubits = new QubitDeclaration[]
+            {
+                    new QubitDeclaration(0, 1),
+            };
+            var operations = new Operation[]
+            {
+                    new Operation()
+                    {
+                        Gate = "measure",
+                        Controls = new List<Register>() { new QubitRegister(0) },
+                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                    },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
+        public void MResetZTest()
+        {
+            var path = GetExecutionPath("MResetZCirc");
+            var qubits = new QubitDeclaration[]
+            {
+                    new QubitDeclaration(0, 1),
+            };
+            var operations = new Operation[]
+            {
+                    new Operation()
+                    {
+                        Gate = "measure",
+                        Controls = new List<Register>() { new QubitRegister(0) },
+                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                    },
             };
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
