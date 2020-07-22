@@ -534,7 +534,7 @@ namespace Tests.IQSharp
             ));
 
             // Should see depth-2 operations
-            await AssertTrace("Depth2Circ depth=2", new ExecutionPath(
+            await AssertTrace("Depth2Circ --depth=2", new ExecutionPath(
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
