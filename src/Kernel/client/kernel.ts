@@ -21,18 +21,49 @@ class Kernel {
             this.requestEcho();
             this.requestClientInfo();
             this.setupMeasurementHistogramDataListener();
+            this.setupMeasurementHistogramDebugger();
         });
     }
 
     setupMeasurementHistogramDebugger() {
-        let value = "value";
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_debug_opstart",
+            message => {
+                console.log("iqsharp_debug_opstart message received", message);
+
+                //check to see if there's already a button
+
+                let state: DisplayableState = message.content.state;
+                let state_div = state.div_id;
+                if (state_div != null) {
+                    let div = document.getElementById(state_div);
+                    if (div != null) {
+                        //handle displaying dumpMachine stuff here
+                        if (document.getElementById("ye") == null) {
+                            //make button here and call debugger function in onclick message
+                            let debuggerFunctionButton = document.createElement("button");
+                            debuggerFunctionButton.id = "ye"
+                            debuggerFunctionButton.appendChild(document.createTextNode("Step through Program"));
+                            debuggerFunctionButton.addEventListener("click", event => {
+                                this.advanceMeasurementHistogramDebugger(state);
+                            });
+                            div.appendChild(debuggerFunctionButton);
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+    advanceMeasurementHistogramDebugger(state: DisplayableState) {
+        console.log("entered advanceMeasurementHistogramDebugger");
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_debug_advance",
-            { value: value },
+            { debug_session: state.div_id },
             {
                 shell: {
                     reply: (message) => {
-                        console.log("Got echo reply:", message);
+                        console.log("Got iqsharp_debug_advance reply:", message);
                     }
                 }
             }
@@ -94,13 +125,6 @@ class Kernel {
 
                         //make buttons that show the 3 options
                         //real + imag, amplitude + phase, original view
-
-                        //make button here and call debugger function in onclick message
-                        let debuggerFunctionButton = document.createElement("button");
-                        debuggerFunctionButton.appendChild(document.createTextNode("Step through Program"));
-                        debuggerFunctionButton.addEventListener("click", event => {
-                            this.setupMeasurementHistogramDebugger();
-                        });
                     }
                 
                 }

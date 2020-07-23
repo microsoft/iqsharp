@@ -17,7 +17,8 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter
+
+namespace Microsoft.Quantum.IQSharp.Kernel
 {
     public class RawHtmlPayload
     {
@@ -54,6 +55,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             router.RegisterHandler("iqsharp_debug_advance", this.HandleAdvanceMessage);
         }
 
+        private const string ParameterNameOperationName = "__operationName__";
         private ConcurrentDictionary<Guid, ManualResetEvent> sessionAdvanceEvents
             = new ConcurrentDictionary<Guid, ManualResetEvent>();
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -73,14 +75,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public IConfigurationSource ConfigurationSource { get; }
 
         /// <inheritdoc />
-        public override async Task<ExecutionResult> Run(string input, IChannel channel)
-        {
-            // Run the async task in a new thread so that we don't block the
-            // server thread.
-            return await Task.Run(() => RunAsync(input, channel));
-        }
+        public override ExecutionResult Run(string input, IChannel channel) =>
+            RunAsync(input, channel).Result;
 
-        private void HandleStartMessage(Message message)
+        private async Task HandleStartMessage(Message message) => await Task.Run(() =>
         {
             var content = (message.Content as UnknownContent);
             var session = content?.Data?["debug_session"];
@@ -108,9 +106,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     .AsReplyTo(message)
                 );
             }
-        }
+        });
 
-        private void HandleAdvanceMessage(Message message)
+        private async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
         {
             logger.LogDebug("Got debug advance message:", message);
             var content = (message.Content as UnknownContent);
@@ -129,7 +127,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 }
                 @event.Set();
             }
-        }
+        });
 
         private async Task WaitForAdvance(Guid session)
         {
@@ -151,9 +149,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     encoding of its arguments.
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
-        {
-            var (name, args) = ParseInput(input);
 
+        {
+            var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
+
+            var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
@@ -173,14 +173,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         {
                             MessageType = "iqsharp_debug_opstart"
                         },
-                        Content = new UnknownContent
+                        Content = new MeasurementHistogramContent
                         {
                             //change this stuff here too?
-                            Data = new Dictionary<string, object>
-                            {
-                                ["debug_session"] = session,
-                                ["callable"] = callable.FullName,
-                                ["args"] = args
+                            State = new DisplayableState {
+
+                                //QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
+                                //NQubits = (int)_count,
+                                //Amplitudes = _data,
+                                DivId = $"{session}"
                             }
                         }
                     }
@@ -191,17 +192,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 //needs to be changed?
                 Value = $@"
-                    <a id=""iqsharp-next-{session}"">Next</a>
-                    <script type=""text/javascript""><![CDATA[
-                        IQSharp.start_debug(""{session}"");
-                        // TODO: move this to kernel.ts.
-                        $(""#iqsharp-next-{session}"").on(""click"", () => {{
-                            IQSharp.advance_debug(""{session}"");
-                        }});
-                    ]]></script>
+                    <div id=""{session}""></div>
                 "
             });
-            var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, args));
+            var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters));
             return value.ToExecutionResult();
         }
     }
