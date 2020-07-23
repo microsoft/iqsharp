@@ -432,7 +432,12 @@ namespace Tests.IQSharp
         {
             var path = GetExecutionPath("EmptyCirc");
             var qubits = new QubitDeclaration[] { };
-            var operations = new Operation[] { };
+            var operations = new Operation[] {
+                new Operation()
+                {
+                    Gate = "EmptyCirc",
+                },
+            };
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }

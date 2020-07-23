@@ -19,6 +19,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
     {
         private int currentDepth = 0;
         private int renderDepth;
+        private Operation? currentOperation = null;
         private IDictionary<int, QubitRegister> qubitRegisters = new Dictionary<int, QubitRegister>();
         private IDictionary<int, List<ClassicalRegister>> classicalRegisters = new Dictionary<int, List<ClassicalRegister>>();
         private List<Operation> operations = new List<Operation>();
@@ -54,12 +55,15 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         {
             this.currentDepth++;
 
-            // Parse operations at specified depth
-            if (this.currentDepth == this.renderDepth)
+            // Parse operations at or above specified depth
+            if (this.currentDepth <= this.renderDepth)
             {
                 var metadata = operation.GetRuntimeMetadata(arguments);
-                var parsedOp = this.MetadataToOperation(metadata);
-                if (parsedOp != null) this.operations.Add(parsedOp);
+
+                // Save parsed operation as a potential candidate for rendering.
+                // We only want to render the operation at the lowest depth, so we keep
+                // a running track of the lowest operation seen in the stack thus far.
+                this.currentOperation = this.MetadataToOperation(metadata);
             }
         }
 
@@ -68,7 +72,17 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         /// <see cref="Microsoft.Quantum.Simulation.Common.SimulatorBase"/>'s
         /// <c>OnOperationEnd</c> event.
         /// </summary>
-        public void OnOperationEndHandler(ICallable operation, IApplyData result) => this.currentDepth--;
+        public void OnOperationEndHandler(ICallable operation, IApplyData result)
+        {
+            this.currentDepth--;
+            // Add parsed operation to list of operations, if not null
+            if (this.currentOperation != null)
+            {
+                this.operations.Add(this.currentOperation);
+                // Reset current operation to null
+                this.currentOperation = null;
+            }
+        }
 
         /// <summary>
         /// Retrieves the <see cref="QubitRegister"/> associated with the given <see cref="Qubit"/> or create a new
