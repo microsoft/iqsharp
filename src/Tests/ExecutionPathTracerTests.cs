@@ -74,7 +74,8 @@ namespace Tests.IQSharp
             {
                 new Operation()
                 {
-                    Gate = "measure",
+                    Gate = "M",
+                    IsMeasurement = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
@@ -561,7 +562,8 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "measure",
+                    Gate = "M",
+                    IsMeasurement = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
@@ -595,7 +597,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetX",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
@@ -616,7 +619,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetY",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
@@ -637,7 +641,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetZ",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },

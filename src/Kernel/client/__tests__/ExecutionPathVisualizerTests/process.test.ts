@@ -34,62 +34,62 @@ describe("Testing _groupOperations", () => {
     };
     test("single qubit gates on 1 qubit register", () => {
         const operations: Operation[] = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1, 2], [], [], []]);
     });
     test("single qubit gates on multiple qubit registers", () => {
         const operations: Operation[] = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "H", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "T", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "H", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "T", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 3], [1, 4], [2], []]);
     });
     test("single and multiple qubit(s) gates", () => {
         let operations: Operation[] = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1, 2], [1], [], []]);
         operations = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1, 2], [1], [], []]);
         operations = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1, 2], [2], [], []]);
         operations = [
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1, 2], [0], [], []]);
         operations = [
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1], [0, 2], [], []]);
     });
     test("multiple qubit gates in ladder format", () => {
         const operations: Operation[] = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "Z", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "H", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "T", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "Z", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "H", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "T", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 5], [0, 1, 4, 5], [1, 2, 3, 4], [2, 3]]);
 
@@ -97,48 +97,48 @@ describe("Testing _groupOperations", () => {
     test("multiple qubit gates in ladder format with single qubit gate", () => {
         let numRegs: number = 4;
         let operations: Operation[] = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "Z", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "H", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "T", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "Z", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "H", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "T", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 8], [0, 1, 2, 6, 7, 8], [2, 3, 4, 5, 6], [3, 5]]);
 
         numRegs = 3;
         operations = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Y", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
-            { gate: "T", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "Y", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "H", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "H", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "H", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "H", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Y", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "T", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 2 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "Y", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "H", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "H", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "H", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "H", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 6, 7, 8, 9, 10], [0, 1, 2, 4, 5, 10], [2, 3, 4], []]);
     });
     test("interleaved multiqubit gates", () => {
         let operations: Operation[] = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[1], [0, 1], [0, 1], [0]]);
         operations = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 2 }, { type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 2 }, { type: RegisterType.Qubit, qId: 3 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1], [0, 1], [0, 1], [0, 1]]);
         operations = [
-            { gate: "Foo", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 2 }, { type: RegisterType.Qubit, qId: 3 }] },
-            { gate: "Bar", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 1 }, { type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "Foo", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 2 }, { type: RegisterType.Qubit, qId: 3 }] },
+            { gate: "Bar", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }, { type: RegisterType.Qubit, qId: 1 }, { type: RegisterType.Qubit, qId: 2 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1], [0, 1], [0, 1], [0]]);
     });
@@ -158,37 +158,37 @@ describe("Testing _groupOperations", () => {
             3: { type: RegisterType.Qubit, y: startY + registerHeight + classicalRegHeight * 4 },
         }
         let operations: Operation[] = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0, 1], [0], [0], [0]]);
         operations = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0], [0, 1], [0], [0]]);
         operations = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 1, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 1 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Classical, qId: 1, cId: 0 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[1], [0, 1], [1], [1]]);
     });
     test("skipped registers", () => {
         let operations: Operation[] = [
-            { gate: "X", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "X", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0], [], [1], []]);
         operations = [
-            { gate: "X", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
-            { gate: "Z", controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
+            { gate: "X", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 0 }] },
+            { gate: "Z", isMeasurement: false, controlled: true, adjoint: false, controls: [{ type: RegisterType.Qubit, qId: 1 }], targets: [{ type: RegisterType.Qubit, qId: 2 }] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[0], [0, 1], [1], []]);
     });
     test("no qubits", () => {
         const operations: Operation[] = [
-            { gate: "NoOp1", controlled: false, adjoint: false, controls: [], targets: [] },
-            { gate: "NoOp2", controlled: false, adjoint: false, controls: [], targets: [] },
+            { gate: "NoOp1", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [] },
+            { gate: "NoOp2", isMeasurement: false, controlled: false, adjoint: false, controls: [], targets: [] },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[], [], [], []]);
     });
@@ -262,6 +262,7 @@ describe("Testing _opToMetadata", () => {
     test("single qubit gate", () => {
         const op: Operation = {
             gate: "X",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -284,6 +285,7 @@ describe("Testing _opToMetadata", () => {
     test("adjoint gate", () => {
         const op: Operation = {
             gate: "Foo",
+            isMeasurement: false,
             controlled: false,
             adjoint: true,
             controls: [],
@@ -305,7 +307,8 @@ describe("Testing _opToMetadata", () => {
     });
     test("measure gate", () => {
         const op: Operation = {
-            gate: "measure",
+            gate: "M",
+            isMeasurement: true,
             controlled: false,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -327,6 +330,7 @@ describe("Testing _opToMetadata", () => {
     test("swap gate", () => {
         const op: Operation = {
             gate: "SWAP",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -352,6 +356,7 @@ describe("Testing _opToMetadata", () => {
     test("controlled swap gate", () => {
         const op: Operation = {
             gate: "SWAP",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -378,6 +383,7 @@ describe("Testing _opToMetadata", () => {
     test("single qubit unitary gate", () => {
         const op: Operation = {
             gate: "X",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -404,6 +410,7 @@ describe("Testing _opToMetadata", () => {
         };
         let op: Operation = {
             gate: "ZZ",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -423,6 +430,7 @@ describe("Testing _opToMetadata", () => {
         expect(_opToMetadata(op, registers)).toEqual(metadata);
         op = {
             gate: "XX",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -450,6 +458,7 @@ describe("Testing _opToMetadata", () => {
         };
         let op: Operation = {
             gate: "ZZ",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -466,6 +475,7 @@ describe("Testing _opToMetadata", () => {
         expect(_opToMetadata(op, registers)).toEqual(metadata);
         op = {
             gate: "XX",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -485,6 +495,7 @@ describe("Testing _opToMetadata", () => {
         expect(_opToMetadata(op, registers)).toEqual(metadata);
         op = {
             gate: "Foo",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [
@@ -514,6 +525,7 @@ describe("Testing _opToMetadata", () => {
         let op: Operation = {
             gate: "RX",
             displayArgs: "(0.25)",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -534,6 +546,7 @@ describe("Testing _opToMetadata", () => {
         op = {
             gate: "RX",
             displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -554,6 +567,7 @@ describe("Testing _opToMetadata", () => {
         op = {
             gate: "RX",
             displayArgs: "(0.25)",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -579,6 +593,7 @@ describe("Testing _opToMetadata", () => {
         let op: Operation = {
             gate: "U",
             displayArgs: "('foo', 'bar')",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -602,6 +617,7 @@ describe("Testing _opToMetadata", () => {
         op = {
             gate: "U",
             displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -625,6 +641,7 @@ describe("Testing _opToMetadata", () => {
         op = {
             gate: "U",
             displayArgs: "('foo', 'bar')",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -647,6 +664,7 @@ describe("Testing _opToMetadata", () => {
     test("classically controlled gates", () => {
         const op: Operation = {
             gate: "X",
+            isMeasurement: false,
             controlled: true,
             adjoint: false,
             controls: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
@@ -657,6 +675,7 @@ describe("Testing _opToMetadata", () => {
             children: [
                 [{
                     gate: "X",
+                    isMeasurement: false,
                     controlled: false,
                     adjoint: false,
                     controls: [],
@@ -664,6 +683,7 @@ describe("Testing _opToMetadata", () => {
                 }],
                 [{
                     gate: "H",
+                    isMeasurement: false,
                     controlled: false,
                     adjoint: false,
                     controls: [],
@@ -717,6 +737,7 @@ describe("Testing _opToMetadata", () => {
     test("Invalid register", () => {
         let op: Operation = {
             gate: "X",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -730,6 +751,7 @@ describe("Testing _opToMetadata", () => {
 
         op = {
             gate: "X",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [{ type: RegisterType.Classical, qId: 0, cId: 2 }],
@@ -741,6 +763,7 @@ describe("Testing _opToMetadata", () => {
     test("skipped registers", () => {
         const op: Operation = {
             gate: "X",
+            isMeasurement: false,
             controlled: false,
             adjoint: false,
             controls: [],
@@ -1171,6 +1194,7 @@ describe("Testing processOperations", () => {
         const operations: Operation[] = [
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1178,6 +1202,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1185,6 +1210,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1193,6 +1219,7 @@ describe("Testing processOperations", () => {
             {
                 gate: "RX",
                 displayArgs: "(0.25)",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1248,6 +1275,7 @@ describe("Testing processOperations", () => {
         const operations: Operation[] = [
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1255,6 +1283,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "FooBar",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1262,6 +1291,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1307,6 +1337,7 @@ describe("Testing processOperations", () => {
         const operations: Operation[] = [
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1314,6 +1345,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "X",
+                isMeasurement: false,
                 controlled: true,
                 adjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -1321,6 +1353,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1366,13 +1399,15 @@ describe("Testing processOperations", () => {
         const operations: Operation[] = [
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
                 targets: [{ type: RegisterType.Qubit, qId: 0 }]
             },
             {
-                gate: "measure",
+                gate: "M",
+                isMeasurement: true,
                 controlled: false,
                 adjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -1380,13 +1415,15 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
                 targets: [{ type: RegisterType.Qubit, qId: 1 }]
             },
             {
-                gate: "measure",
+                gate: "M",
+                isMeasurement: true,
                 controlled: false,
                 adjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -1447,6 +1484,7 @@ describe("Testing processOperations", () => {
         const operations: Operation[] = [
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
@@ -1454,6 +1492,7 @@ describe("Testing processOperations", () => {
             },
             {
                 gate: "H",
+                isMeasurement: false,
                 controlled: false,
                 adjoint: false,
                 controls: [],
