@@ -53,12 +53,12 @@ namespace Tests.ExecutionPathTracer {
     operation FooBar(q : Qubit) : Unit {
         H(q);
         X(q);
-        H(q);
     }
 
     operation Depth2Circ() : Unit {
         using (q = Qubit()) {
             FooBar(q);
+            H(q);
         }
     }
 

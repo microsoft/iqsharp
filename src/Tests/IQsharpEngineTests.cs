@@ -530,6 +530,11 @@ namespace Tests.IQSharp
                         Gate = "FooBar",
                         Targets = new List<Register>() { new QubitRegister(0) },
                     },
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
                 }
             ));
 
