@@ -24,6 +24,22 @@ class Kernel {
         });
     }
 
+    setupMeasurementHistogramDebugger() {
+        let value = "value";
+        IPython.notebook.kernel.send_shell_message(
+            "iqsharp_debug_advance",
+            { value: value },
+            {
+                shell: {
+                    reply: (message) => {
+                        console.log("Got echo reply:", message);
+                    }
+                }
+            }
+        );
+
+    }
+
     setupMeasurementHistogramDataListener() {
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_state_dump",
@@ -38,34 +54,53 @@ class Kernel {
                     if (div != null) {
                         let amplitudeSquaredButton = document.createElement("button");
                         let graph = document.createElement("canvas");
+                        graph.id = "first";
                         amplitudeSquaredButton.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
                         amplitudeSquaredButton.addEventListener("click", event => {
                             createBarChart(graph, state);
                             div.appendChild(graph);
+                            document.getElementById("first").style.display = "block";
+                            document.getElementById("second").style.display = "none";
+                            document.getElementById("third").style.display = "none";
                         });
                         div.appendChild(amplitudeSquaredButton);
                         
 
                         let realImagButton = document.createElement("button");
                         let realImagGraph = document.createElement("canvas");
+                        realImagGraph.id = "second";
                         realImagButton.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
                         realImagButton.addEventListener("click", event => { 
                             createBarChartRealImagOption(realImagGraph, state);
                             div.appendChild(realImagGraph);
+                            document.getElementById("second").style.display = "block";
+                            document.getElementById("first").style.display = "none";
+                            document.getElementById("third").style.display = "none";
                         });
                         div.appendChild(realImagButton);
 
                         let amplitudePhaseButton = document.createElement("button");
                         let amplitudePhaseGraph = document.createElement("canvas");
+                        amplitudePhaseGraph.id = "third";
                         amplitudePhaseButton.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
                         amplitudePhaseButton.addEventListener("click", event => {
                             createBarChartAmplitudePhaseOption(amplitudePhaseGraph, state);
                             div.appendChild(amplitudePhaseGraph);
+                            document.getElementById("third").style.display = "block";
+                            document.getElementById("first").style.display = "none";
+                            document.getElementById("second").style.display = "none";
                         });
                         div.appendChild(amplitudePhaseButton);
 
                         //make buttons that show the 3 options
                         //real + imag, amplitude + phase, original view
+
+                        //make button here and call debugger function in onclick message
+                        let debuggerFunctionButton = document.createElement("button");
+                        debuggerFunctionButton.appendChild(document.createTextNode("Step through Program"));
+                        debuggerFunctionButton.addEventListener("click", event => {
+                            this.setupMeasurementHistogramDebugger();
+                        });
                     }
                 
                 }
