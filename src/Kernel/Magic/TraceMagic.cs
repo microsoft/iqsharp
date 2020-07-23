@@ -77,7 +77,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     - `{ParameterNameDepth}=<integer>` (default=1): The depth at which to render operations along
                     the execution path.
                 ".Dedent(),
-                Examples = new []
+                Examples = new[]
                 {
                     @"
                         Visualize the execution path of a Q# operation defined as `operation MyOperation() : Result`:
@@ -137,7 +137,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var depth = inputParameters.DecodeParameter<int>(ParameterNameDepth, defaultValue: 1);
+            var depth = inputParameters.DecodeParameter<int>(
+                ParameterNameDepth,
+                defaultValue: this.ConfigurationSource.TraceVisualizationDefaultDepth
+            );
             if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
 
             var tracer = new ExecutionPathTracer(depth);
