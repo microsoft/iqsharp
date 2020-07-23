@@ -446,13 +446,30 @@ namespace Tests.IQSharp
         public void NoQubitArgsTest()
         {
             var path = GetExecutionPath("NoQubitArgsCirc");
-            var qubits = new QubitDeclaration[] {};
+            var qubits = new QubitDeclaration[] { };
             var operations = new Operation[]
             {
                 new Operation()
                 {
                     Gate = "NoQubitCirc",
                     DisplayArgs = "(2)",
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
+        public void OperationArgsTest()
+        {
+            var path = GetExecutionPath("OperationArgsCirc");
+            var qubits = new QubitDeclaration[] { };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "OperationCirc",
+                    DisplayArgs = "(H, 5)",
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
