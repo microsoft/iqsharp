@@ -6,10 +6,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -76,6 +82,11 @@ namespace Microsoft.Quantum.IQSharp
         /// The root folder.
         /// </summary>
         public string Root { get; set; }
+
+        /// <summary>
+        /// Gets the project files present in this Workspace folder.
+        /// </summary>
+        public IEnumerable<string> ProjectFiles => Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly);
 
         /// <summary>
         /// Gets the source files to be built for this Workspace.
@@ -217,13 +228,28 @@ namespace Microsoft.Quantum.IQSharp
             return true;
         }
 
+        private void LoadReferencedPackages(string projectFile)
+        {
+            var packageReferences = XDocument.Load(projectFile)
+                .XPathSelectElements("//PackageReference")
+                .Select(element => new PackageReference(
+                    new PackageIdentity(
+                        id: element.Attribute("Include").Value,
+                        version: new NuGetVersion(element.Attribute("Version").Value)),
+                    NuGetFramework.AnyFramework));
+            foreach (var packageReference in packageReferences)
+            {
+                GlobalReferences.AddPackage($"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}");
+            }
+        }
+
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
         public void Reload()
         {
             var duration = Stopwatch.StartNew();
-            var files = new string[0];
+            var files = SourceFiles;
             var errorIds = new string[0];
 
             try
@@ -235,12 +261,29 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
 
-                files = SourceFiles.ToArray();
-
-                if (files.Length > 0)
+                if (ProjectFiles.Count() == 1)
                 {
-                    Logger?.LogDebug($"{files.Length} found in workspace. Compiling.");
-                    AssemblyInfo = Compiler.BuildFiles(files, GlobalReferences.CompilerMetadata, logger, CacheDll);
+                    var projectFile = ProjectFiles.Single();
+                    LoadReferencedPackages(projectFile);
+
+                    var projectReferences = XDocument.Load(projectFile)
+                        .XPathSelectElements("//ProjectReference")
+                        .Select(element => element.Attribute("Include").Value);
+
+                    foreach (var csprojRelativePath in projectReferences)
+                    {
+                        var csprojAbsolutePath = Path.Combine(Root, csprojRelativePath);
+                        LoadReferencedPackages(csprojAbsolutePath);
+
+                        var csprojFolder = Path.GetDirectoryName(csprojAbsolutePath);
+                        files = files.Concat(Directory.EnumerateFiles(csprojFolder, "*.qs", SearchOption.TopDirectoryOnly));
+                    }
+                }
+
+                if (files.Count() > 0)
+                {
+                    Logger?.LogDebug($"{files.Count()} found in workspace. Compiling.");
+                    AssemblyInfo = Compiler.BuildFiles(files.ToArray(), GlobalReferences.CompilerMetadata, logger, CacheDll);
                     ErrorMessages = logger.Errors.ToArray();
                     errorIds = logger.ErrorIds.ToArray();
                 }
@@ -258,7 +301,7 @@ namespace Microsoft.Quantum.IQSharp
                 var status = this.HasErrors ? "error" : "ok";
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
-                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, files.Length, errorIds, duration.Elapsed));
+                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, files.Count(), errorIds, duration.Elapsed));
             }
         }
     }
