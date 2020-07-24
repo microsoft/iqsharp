@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -13,8 +15,6 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-
-#nullable enable
 
 namespace Tests.IQSharp
 {

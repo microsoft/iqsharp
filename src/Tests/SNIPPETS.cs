@@ -106,13 +106,13 @@ namespace Tests.IQSharp
     open Microsoft.Quantum.Diagnostics;
 ";
 
-        public static string DependsOnMeasurementNamespace =
+        public static string DependsOnNamespace =
 @"
-    operation DependsOnMeasurementNamespace() : Unit
+    operation DependsOnNamespace() : Unit
     {
         using (qubits = Qubit[3])
         {
-            Message(""Hello from DependsOnMeasurementNamespace"");
+            Message(""Hello from DependsOnNamespace"");
             HelloQ();
             DumpMachine();
         }

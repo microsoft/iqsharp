@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 
-///
-/// These are mock classes that resemble the data structures defined in the chemistry library
-///
+//
+// These are mock classes that resemble the data structures defined in the chemistry library
+//
 namespace Mock.Chemistry {
     open Microsoft.Quantum.Intrinsic;
     open Microsoft.Quantum.Canon;
