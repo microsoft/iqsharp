@@ -84,14 +84,42 @@ namespace Microsoft.Quantum.IQSharp
         public string Root { get; set; }
 
         /// <summary>
-        /// Gets the project files present in this Workspace folder.
+        /// Gets the project files to be built for this Workspace.
         /// </summary>
-        public IEnumerable<string> ProjectFiles => Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly);
+        public IEnumerable<string> ProjectFiles
+        {
+            get
+            {
+                var projectFiles = Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly);
+                if (projectFiles.Count() != 1) return Enumerable.Empty<string>();
+
+                var projectFilesToResolve = projectFiles.ToArray();
+                while (projectFilesToResolve.Any())
+                {
+                    projectFilesToResolve = projectFilesToResolve
+                        .SelectMany(projectFile =>
+                            XDocument.Load(projectFile)
+                                .XPathSelectElements("//ProjectReference")
+                                .Select(element => Path.Combine(Path.GetDirectoryName(projectFile), element.Attribute("Include").Value)))
+                        .Where(projectFile => !projectFiles.Contains(projectFile))
+                        .ToArray();
+
+                    projectFiles = projectFiles.Concat(projectFilesToResolve);
+                }
+
+                return projectFiles.Distinct();
+            }
+        }
 
         /// <summary>
         /// Gets the source files to be built for this Workspace.
         /// </summary>
-        public IEnumerable<string> SourceFiles => Directory.EnumerateFiles(Root, "*.qs", SearchOption.TopDirectoryOnly);
+        public IEnumerable<string> SourceFiles =>
+            ProjectFiles
+                .Select(projectFile => Path.GetDirectoryName(projectFile))
+                .Append(Root)
+                .Distinct()
+                .SelectMany(folder => Directory.EnumerateFiles(folder, "*.qs", SearchOption.TopDirectoryOnly));
 
         /// <summary>
         /// Information about the assembly built from this Workspace.
@@ -208,15 +236,15 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Compares the timestamp of the cache.dll with the timestamp of each of the .qs files
-        /// and returns false if any of the .qs files is more recent.
+        /// Compares the timestamp of the cache.dll with the timestamp of each of the .qs and .csproj files
+        /// and returns false if any of the .qs or .csproj files is more recent.
         /// </summary>
         private bool IsCacheFresh()
         {
             if (!File.Exists(CacheDll)) return false;
             var last = File.GetLastWriteTime(CacheDll);
 
-            foreach (var f in SourceFiles)
+            foreach (var f in SourceFiles.Concat(ProjectFiles))
             {
                 if (File.GetLastWriteTime(f) > last)
                 {
@@ -237,9 +265,12 @@ namespace Microsoft.Quantum.IQSharp
                         id: element.Attribute("Include").Value,
                         version: new NuGetVersion(element.Attribute("Version").Value)),
                     NuGetFramework.AnyFramework));
+
             foreach (var packageReference in packageReferences)
             {
-                GlobalReferences.AddPackage($"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}");
+                var package = $"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}";
+                Logger?.LogInformation($"Loading package {package} for project {projectFile}.");
+                GlobalReferences.AddPackage(package);
             }
         }
 
@@ -249,7 +280,7 @@ namespace Microsoft.Quantum.IQSharp
         public void Reload()
         {
             var duration = Stopwatch.StartNew();
-            var files = SourceFiles;
+            var files = new string[0];
             var errorIds = new string[0];
 
             try
@@ -261,29 +292,17 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
 
-                if (ProjectFiles.Count() == 1)
+                foreach (var projectFile in ProjectFiles)
                 {
-                    var projectFile = ProjectFiles.Single();
                     LoadReferencedPackages(projectFile);
-
-                    var projectReferences = XDocument.Load(projectFile)
-                        .XPathSelectElements("//ProjectReference")
-                        .Select(element => element.Attribute("Include").Value);
-
-                    foreach (var csprojRelativePath in projectReferences)
-                    {
-                        var csprojAbsolutePath = Path.Combine(Root, csprojRelativePath);
-                        LoadReferencedPackages(csprojAbsolutePath);
-
-                        var csprojFolder = Path.GetDirectoryName(csprojAbsolutePath);
-                        files = files.Concat(Directory.EnumerateFiles(csprojFolder, "*.qs", SearchOption.TopDirectoryOnly));
-                    }
                 }
 
-                if (files.Count() > 0)
+                files = SourceFiles.ToArray();
+
+                if (files.Length > 0)
                 {
-                    Logger?.LogDebug($"{files.Count()} found in workspace. Compiling.");
-                    AssemblyInfo = Compiler.BuildFiles(files.ToArray(), GlobalReferences.CompilerMetadata, logger, CacheDll);
+                    Logger?.LogDebug($"{files.Length} found in workspace. Compiling.");
+                    AssemblyInfo = Compiler.BuildFiles(files, GlobalReferences.CompilerMetadata, logger, CacheDll);
                     ErrorMessages = logger.Errors.ToArray();
                     errorIds = logger.ErrorIds.ToArray();
                 }
@@ -301,7 +320,7 @@ namespace Microsoft.Quantum.IQSharp
                 var status = this.HasErrors ? "error" : "ok";
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
-                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, files.Count(), errorIds, duration.Elapsed));
+                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, files.Length, errorIds, duration.Elapsed));
             }
         }
     }
