@@ -69,6 +69,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public PhaseDisplayStyle PhaseDisplayStyle =>
             GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
+
+        /// <summary>
+        ///     Allows for setting the default depth for visualizing Q# operations using the
+        ///     <c>%trace</c> command.
+        /// </summary>
+        public int TraceVisualizationDefaultDepth =>
+            GetOptionOrDefault("trace.defaultDepth", 1);
     }
 
     /// <summary>
