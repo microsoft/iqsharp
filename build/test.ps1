@@ -83,7 +83,11 @@ function Test-Python {
 
 Test-One '../iqsharp.sln' @("AzureClient", "IQSharpEngine", "Workspace")
 
-Test-Python '../src/Python' '../src/Python/qsharp/tests'
+if ($Env:ENABLE_PYTHON -eq "false") {
+    Write-Host "##vso[task.logissue type=warning;]Skipping Testing Python packages. Env:ENABLE_PYTHON was set to 'false'."
+} else {
+    Test-Python '../src/Python/qsharp-core' '../src/Python/qsharp-core/qsharp/tests'
+}
 
 if (-not $all_ok) 
 {
