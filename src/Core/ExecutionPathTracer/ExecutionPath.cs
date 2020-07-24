@@ -124,16 +124,22 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         public IEnumerable<IEnumerable<Operation>>? Children { get; set; }
 
         /// <summary>
+        /// True if operation is a measurement operations.
+        /// </summary>
+        [JsonProperty("isMeasurement")]
+        public bool IsMeasurement { get; set; }
+
+        /// <summary>
         /// True if operation is a controlled operations.
         /// </summary>
-        [JsonProperty("controlled")]
-        public bool Controlled { get; set; }
+        [JsonProperty("isControlled")]
+        public bool IsControlled { get; set; }
 
         /// <summary>
         /// True if operation is an adjoint operations.
         /// </summary>
-        [JsonProperty("adjoint")]
-        public bool Adjoint { get; set; }
+        [JsonProperty("isAdjoint")]
+        public bool IsAdjoint { get; set; }
 
         /// <summary>
         /// List of control registers.

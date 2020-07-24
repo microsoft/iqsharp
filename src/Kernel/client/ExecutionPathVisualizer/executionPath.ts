@@ -32,10 +32,12 @@ export interface Operation {
      *  - children[1]: gates when classical control bit is 1.
     */
     children?: Operation[][];
+    /** Whether gate is a measurement operation. */
+    isMeasurement: boolean;
     /** Whether gate is a controlled operation. */
-    controlled: boolean;
+    isControlled: boolean;
     /** Whether gate is an adjoint operation. */
-    adjoint: boolean;
+    isAdjoint: boolean;
     /** Control registers the gate acts on. */
     controls: Register[];
     /** Target registers the gate acts on. */

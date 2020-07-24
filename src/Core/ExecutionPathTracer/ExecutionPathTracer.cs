@@ -148,8 +148,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
                 Gate = metadata.Label,
                 DisplayArgs = displayArgs,
                 Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
-                Controlled = metadata.IsControlled,
-                Adjoint = metadata.IsAdjoint,
+                IsControlled = metadata.IsControlled,
+                IsAdjoint = metadata.IsAdjoint,
                 Controls = this.GetQubitRegisters(metadata.Controls),
                 Targets = this.GetQubitRegisters(metadata.Targets),
             };
@@ -159,8 +159,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             {
                 var measureQubit = metadata.Targets.ElementAt(0);
                 var clsReg = this.CreateClassicalRegister(measureQubit);
-                // TODO: Change this to using IsMeasurement
-                op.Gate = "measure";
+                op.IsMeasurement = true;
                 op.Controls = op.Targets;
                 op.Targets = new List<Register>() { clsReg };
             }

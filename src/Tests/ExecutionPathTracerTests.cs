@@ -74,7 +74,8 @@ namespace Tests.IQSharp
             {
                 new Operation()
                 {
-                    Gate = "measure",
+                    Gate = "M",
+                    IsMeasurement = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
@@ -97,7 +98,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
@@ -126,7 +127,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(2) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
@@ -205,7 +206,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "H",
-                    Adjoint = true,
+                    IsAdjoint = true,
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
                 new Operation()
@@ -232,7 +233,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
@@ -264,8 +265,8 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "S",
-                    Controlled = true,
-                    Adjoint = true,
+                    IsControlled = true,
+                    IsAdjoint = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
@@ -319,7 +320,7 @@ namespace Tests.IQSharp
                 {
                     Gate = "Foo",
                     DisplayArgs = "(2.1, (\"bar\"))",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
@@ -342,7 +343,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(2) },
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
@@ -403,7 +404,7 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "H",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
                     Targets = new List<Register>() { new QubitRegister(2) },
                 },
@@ -539,14 +540,14 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
                     Targets = new List<Register>() { new QubitRegister(2) },
                 },
                 new Operation()
                 {
                     Gate = "X",
-                    Controlled = true,
+                    IsControlled = true,
                     Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
                     Targets = new List<Register>() { new QubitRegister(2) },
                 },
@@ -554,14 +555,15 @@ namespace Tests.IQSharp
                 {
                     Gate = "Bar",
                     DisplayArgs = "((1, 2.1), (\"foo\"))",
-                    Controlled = true,
-                    Adjoint = true,
+                    IsControlled = true,
+                    IsAdjoint = true,
                     Controls = new List<Register>() { new QubitRegister(2) },
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
                 new Operation()
                 {
-                    Gate = "measure",
+                    Gate = "M",
+                    IsMeasurement = true,
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
@@ -595,7 +597,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetX",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
@@ -616,7 +619,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetY",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
@@ -637,7 +641,8 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetZ",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },

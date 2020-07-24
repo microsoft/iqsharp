@@ -185,7 +185,16 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
 
     if (op == null) return metadata;
 
-    let { gate, displayArgs, controlled, adjoint, controls, targets, children } = op;
+    let {
+        gate,
+        displayArgs,
+        isMeasurement,
+        isControlled,
+        isAdjoint,
+        controls,
+        targets,
+        children
+    } = op;
 
     // Set y coords
     metadata.controlsY = controls.map(reg => _getRegY(reg, registers));
@@ -216,11 +225,11 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         // around all quantum registers.
         const qubitsY: number[] = Object.values(registers).map(({ y }) => y);
         metadata.targetsY = [Math.min(...qubitsY), Math.max(...qubitsY)];
-    } else if (gate === 'measure') {
+    } else if (isMeasurement) {
         metadata.type = GateType.Measure;
     } else if (gate === 'SWAP') {
         metadata.type = GateType.Swap;
-    } else if (controlled) {
+    } else if (isControlled) {
         metadata.type = (gate === 'X') ? GateType.Cnot : GateType.ControlledUnitary;
         metadata.label = gate;
     } else {
@@ -230,7 +239,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     }
 
     // If adjoint, add ' to the end of gate label
-    if (adjoint && metadata.label.length > 0) metadata.label += "'";
+    if (isAdjoint && metadata.label.length > 0) metadata.label += "'";
 
     // If gate has extra arguments, display them
     if (displayArgs != null) metadata.displayArgs = displayArgs;
