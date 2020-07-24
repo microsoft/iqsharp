@@ -189,8 +189,8 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         gate,
         displayArgs,
         isMeasurement,
-        controlled,
-        adjoint,
+        isControlled,
+        isAdjoint,
         controls,
         targets,
         children
@@ -229,7 +229,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         metadata.type = GateType.Measure;
     } else if (gate === 'SWAP') {
         metadata.type = GateType.Swap;
-    } else if (controlled) {
+    } else if (isControlled) {
         metadata.type = (gate === 'X') ? GateType.Cnot : GateType.ControlledUnitary;
         metadata.label = gate;
     } else {
@@ -239,7 +239,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     }
 
     // If adjoint, add ' to the end of gate label
-    if (adjoint && metadata.label.length > 0) metadata.label += "'";
+    if (isAdjoint && metadata.label.length > 0) metadata.label += "'";
 
     // If gate has extra arguments, display them
     if (displayArgs != null) metadata.displayArgs = displayArgs;
