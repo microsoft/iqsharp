@@ -29,9 +29,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<TargetStatus, string>)>
                 {
-                    ("Target ID", target => target.Id),
-                    ("Current Availability", target => target.CurrentAvailability),
-                    ("Average Queue Time (Seconds)", target => target.AverageQueueTime.ToString()),
+                    ("Target ID", target => target.Id ?? string.Empty),
+                    ("Current Availability", target => target.CurrentAvailability ?? string.Empty),
+                    ("Average Queue Time (Seconds)", target => target.AverageQueueTime?.ToString() ?? string.Empty),
                 },
                 Rows = targets.ToList()
             };

@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureClient", "src\AzureCli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jupyter", "src\Jupyter\Jupyter.csproj", "{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mock.Chemistry", "src\Mock.Chemistry\Mock.Chemistry.csproj", "{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x64.Build.0 = Release|Any CPU
 		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.ActiveCfg = Release|Any CPU
 		{19A9E2AB-8842-47E2-8E6A-6DD292B49E97}.Release|x86.Build.0 = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|x64.Build.0 = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Debug|x86.Build.0 = Debug|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|x64.ActiveCfg = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|x64.Build.0 = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|x86.ActiveCfg = Release|Any CPU
+		{2243DB2D-EFAC-4594-A44B-A25B399CE4DE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

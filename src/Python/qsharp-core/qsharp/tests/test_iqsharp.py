@@ -82,34 +82,3 @@ def test_multi_compile():
     r = ops[1].simulate()
     assert r == qsharp.Result.One
 
-
-def test_chemistry_compile():
-    """
-    Verifies that that adding packages and compile works
-    """
-    qsharp.packages.add("microsoft.quantum.chemistry")
-    op = qsharp.compile( """
-    open Microsoft.Quantum.Characterization;
-    open Microsoft.Quantum.Chemistry.JordanWigner;    
-    open Microsoft.Quantum.Simulation;
-
-    /// # Summary
-    /// We can now use Canon's phase estimation algorithms to
-    /// learn the ground state energy using the above simulation.
-    operation TrotterEstimateEnergy (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {
-        
-        let (nSpinOrbitals, data, statePrepData, energyShift) = qSharpData!;
-        
-        // Order of integrator
-        let trotterOrder = 1;
-        let (nQubits, (rescaleFactor, oracle)) = TrotterStepOracle(qSharpData, trotterStepSize, trotterOrder);
-        
-        // Prepare ProductState
-        let statePrep =  PrepareTrialState(statePrepData, _);
-        let phaseEstAlgorithm = RobustPhaseEstimation(nBitsPrecision, _, _);
-        let estPhase = EstimateEnergyWithAdiabaticEvolution(nQubits, statePrep, NoOp<Qubit[]>, oracle, phaseEstAlgorithm);
-        let estEnergy = estPhase * rescaleFactor + energyShift;
-        return (estPhase, estEnergy);
-    }
-""")
-    assert op._name == "TrotterEstimateEnergy"
