@@ -18,6 +18,10 @@ steps:
     packageType: sdk
     version: '3.1.100'
 
+- pwsh: .\bootstrap.ps1
+  displayName: "Bootstrap"
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
+
 ##
 # Build, test & pack
 ##

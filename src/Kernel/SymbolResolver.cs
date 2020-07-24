@@ -91,7 +91,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         internal SymbolResolver(Snippets snippets)
         {
-            this.opsResolver = new OperationResolver(snippets);
+            this.opsResolver = new OperationResolver(snippets, snippets.Workspace, snippets.GlobalReferences);
         }
 
 
