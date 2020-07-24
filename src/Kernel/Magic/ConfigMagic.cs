@@ -67,7 +67,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     **`trace.defaultDepth`**
 
-                    **Value:** integer (default `1`)
+                    **Value:** positive integer (default `1`)
 
                     Configures the default depth used in the `%trace` command for visualizing Q# operations.
                 ".Dedent(),
