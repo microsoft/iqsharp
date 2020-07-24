@@ -37,6 +37,8 @@ function Test-One {
         $filterArgs = @("FullyQualifiedName!=_fake_")
     }
     $filterArgs | foreach {
+        Write-Host "##[info]Testing $project with filter $_"
+
         dotnet test $project `
             -c $Env:BUILD_CONFIGURATION `
             -v $Env:BUILD_VERBOSITY `
