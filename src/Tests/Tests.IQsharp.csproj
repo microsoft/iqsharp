@@ -28,6 +28,7 @@
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
     <ProjectReference Include="..\Kernel\Kernel.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Mock.Chemistry\Mock.Chemistry.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -9,6 +11,10 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Extensions.Logging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace Tests.IQSharp
 {
@@ -34,9 +40,9 @@ namespace Tests.IQSharp
 
     public class MockShell : IShellServer
     {
-        public event Action<Message> KernelInfoRequest;
-        public event Action<Message> ExecuteRequest;
-        public event Action<Message> ShutdownRequest; 
+        public event Action<Message>? KernelInfoRequest;
+        public event Action<Message>? ExecuteRequest;
+        public event Action<Message>? ShutdownRequest; 
 
         internal void Handle(Message message)
         {
@@ -72,10 +78,12 @@ namespace Tests.IQSharp
             this.shell = shell;
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task Handle(Message message)
         {
             shell.Handle(message);
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         public void RegisterFallback(Func<Message, Task?> fallback)
         {
@@ -123,6 +131,39 @@ namespace Tests.IQSharp
         public OperationInfo Resolve(string input)
         {
             return new OperationInfo(null, null);
+        }
+    }
+
+    public class MockNugetPackages : INugetPackages
+    {
+        private static readonly AssemblyInfo MockChemistryAssembly = new AssemblyInfo(typeof(Mock.Chemistry.JordanWignerEncodingData).Assembly);
+
+        List<PackageIdentity> _items = new List<PackageIdentity>();
+
+        public IEnumerable<PackageIdentity> Items => _items;
+
+        public IEnumerable<AssemblyInfo> Assemblies
+        {
+            get
+            {
+                if (_items.Select(p => p.Id).Contains("mock.chemistry"))
+                {
+                    yield return MockChemistryAssembly;
+                }
+            }
+        }
+
+
+        public Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
+        {
+            if (package == "microsoft.invalid.quantum")
+            {
+                throw new NuGet.Resolver.NuGetResolverInputException($"Unable to find package 'microsoft.invalid.quantum'");
+            }
+
+            var pkg = new PackageIdentity(package, NuGetVersion.Parse("0.0.0"));
+            _items.Add(pkg);
+            return Task.FromResult(pkg);
         }
     }
 }

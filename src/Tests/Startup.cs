@@ -31,11 +31,11 @@ namespace Tests.IQSharp
             services.Configure<NugetPackages.Settings>(config);
 
             services.AddLogging();
-            services.AddMocks();
             services.AddTelemetry();
             services.AddIQSharp();
             services.AddIQSharpKernel();
             services.AddAzureClient();
+            services.AddMocks();
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();
@@ -51,6 +51,7 @@ namespace Tests.IQSharp
             services.AddSingleton<IShellServer>(shell);
             services.AddSingleton<IShellRouter>(new MockShellRouter(shell));
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());
+            services.AddSingleton<INugetPackages>(new MockNugetPackages());
         }
 
         public static void AddTelemetry(this IServiceCollection services)

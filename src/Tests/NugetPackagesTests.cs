@@ -19,10 +19,16 @@ namespace Tests.IQSharp
     [TestClass]
     public class NugetPackagesTests
     {
+        /// This is the version of the QDK libraries that we use to run tests
+        /// that load packages and compile Q# code that depend on them.
+        /// We use a known-good version to avoid breaking IQ# tests due to changes in Libraries
+        /// also, to make sure an end-to-end QDK build does not have circular build dependencies
+        /// between Libraries and IQ#.
+        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.12.20070124");
+
         public NugetPackages Init()
         {
-            var service = Startup.Create<References>("Workspace");
-            return service.Nugets;
+            return Startup.Create<NugetPackages>("Workspace");
         }
 
         [TestMethod]
@@ -77,13 +83,13 @@ namespace Tests.IQSharp
         public async Task FindDependencies()
         {
             var mgr = Init();
-            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", NuGetVersion.Parse("0.4.1901.3104"));
+            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", QDK_LIBRARIES_VERSION);
 
             using (var context = new SourceCacheContext())
             {
                 var dependencies = new HashSet<SourcePackageDependencyInfo>(PackageIdentityComparer.Default);
                 await mgr.FindDependencies(pkgId, context, dependencies);
-                Assert.AreEqual(198, dependencies.Count());
+                Assert.AreEqual(144, dependencies.Count());
             }
         }
 
@@ -91,7 +97,7 @@ namespace Tests.IQSharp
         public async Task ResolveDependencyGraph()
         {
             var mgr = Init();
-            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", NuGetVersion.Parse("0.4.1901.3104"));
+            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", QDK_LIBRARIES_VERSION);
             
             using (var context = new SourceCacheContext())
             {
@@ -99,8 +105,8 @@ namespace Tests.IQSharp
                 await mgr.FindDependencies(pkgId, context, dependencies);
                 var list = mgr.ResolveDependencyGraph(pkgId, dependencies).ToArray();
 
-                Assert.AreEqual(198, dependencies.Count());
-                Assert.AreEqual(131, list.Length);
+                Assert.AreEqual(144, dependencies.Count());
+                Assert.AreEqual(107, list.Length);
             }
         }
 
@@ -109,13 +115,13 @@ namespace Tests.IQSharp
         public async Task GetPackageDependencies()
         {
             var mgr = Init();
-            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", NuGetVersion.Parse("0.4.1901.3104"));
+            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", QDK_LIBRARIES_VERSION);
 
             using (var context = new SourceCacheContext())
             {
                 var dependencies = await mgr.GetPackageDependencies(pkgId, context);
 
-                Assert.AreEqual(131, dependencies.Count());
+                Assert.AreEqual(107, dependencies.Count());
             }
         }
 
@@ -136,8 +142,8 @@ namespace Tests.IQSharp
             }
 
             // Remove "Microsoft.Quantum.Chemistry" and "Microsoft.Quantum.Research" from local cache,
-            // Do this on an old version, to make sure we don't try to delete a loaded assembly:
-            var version = NuGetVersion.Parse("0.3.1811.2802-preview ");
+            // Do this on an old/different version, to make sure we don't try to delete an assembly already loaded by some other test:
+            var version = NuGetVersion.Parse("0.5.1904.1302");
             ClearCache("Microsoft.Quantum.Chemistry", version);
             ClearCache("Microsoft.Quantum.Research", version);
 
@@ -162,16 +168,15 @@ namespace Tests.IQSharp
         public async Task GetAssemblies()
         {
             var mgr = Init();
-            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry", NuGetVersion.Parse("0.4.1901.3104"));
+            var pkgId = new PackageIdentity("Microsoft.Quantum.Chemistry.DataModel", QDK_LIBRARIES_VERSION);
 
             using (var context = new SourceCacheContext())
             {
                 await mgr.Add(pkgId);
 
                 var libs = mgr.GetAssemblies(pkgId).Select(s => s.Assembly.GetName().Name).ToArray();
-                Assert.AreEqual(2, libs.Length);
+                Assert.AreEqual(1, libs.Length);
                 CollectionAssert.Contains(libs, "Microsoft.Quantum.Chemistry.DataModel");
-                CollectionAssert.Contains(libs, "Microsoft.Quantum.Chemistry.Runtime");
             }
         }
 
@@ -189,22 +194,36 @@ namespace Tests.IQSharp
                 // package for this test, and since that can change without
                 // breaking user code, we use a known-good version instead of
                 // the latest for the purpose of this test.
-                await mgr.Add("Microsoft.Quantum.Research::0.11.2003.3107");
+                await mgr.Add($"Microsoft.Quantum.Research::{QDK_LIBRARIES_VERSION}");
                 var libsResearch = mgr.Assemblies.Select(s => s.Assembly.GetName().Name).ToArray();
                 Assert.AreEqual(start + 1, mgr.Items.Count());
-                CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Research");
+                CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Research.Simulation.Qsp");
                 CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Chemistry.DataModel");
                 CollectionAssert.Contains(libsResearch, "Microsoft.Quantum.Chemistry.Runtime");
 
-                await mgr.Add("Microsoft.Quantum.Chemistry::0.11.2003.3107");
+                await mgr.Add($"Microsoft.Quantum.Chemistry::{QDK_LIBRARIES_VERSION}");
                 var libsChem = mgr.Assemblies.Select(s => s.Assembly.GetName().Name).ToArray();
                 Assert.AreEqual(start + 2, mgr.Items.Count());
                 // Chemistry assembly was already by research, no new Assemblies should be added:
                 Assert.AreEqual(libsResearch.Length, libsChem.Length);
 
                 // Make sure we're case insensitive.
-                await mgr.Add("microsoft.quantum.chemistry::0.11.2003.3107  ");
+                await mgr.Add($"microsoft.quantum.chemistry::{QDK_LIBRARIES_VERSION}  ");
                 Assert.AreEqual(start + 2, mgr.Items.Count());
+            }
+        }
+
+        [TestMethod]
+        public async Task AddInvalidPackage()
+        {
+            var mgr = Init();
+
+            using (var context = new SourceCacheContext())
+            {
+                var start = mgr.Items.Count();
+
+                await Assert.ThrowsExceptionAsync<NuGet.Resolver.NuGetResolverInputException>(() => mgr.Add("microsoft.invalid.quantum"));
+                Assert.AreEqual(start, mgr.Items.Count());
             }
         }
     }

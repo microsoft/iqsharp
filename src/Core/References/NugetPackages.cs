@@ -31,13 +31,13 @@ namespace Microsoft.Quantum.IQSharp
     /// This class takes care of managing Nuget packages: it provides support
     /// for adding packages by finding all its dependencies and downloading them if necessary.
     /// </summary>
-    public class NugetPackages
+    public class NugetPackages : INugetPackages
     {
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
 
         // The list of settings for this class. It extends Workspace.Settings so it can get things
-        // list root and cache folder. 
+        // list root and cache folder.
         public class Settings : Workspace.Settings
         {
             public string[]? DefaultPackageVersions { get; set; } = null;
@@ -108,7 +108,10 @@ namespace Microsoft.Quantum.IQSharp
         // packages to use, since all of them need to be in-sync.
         public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
-        public NugetPackages(IOptions<Settings>? config, Microsoft.Extensions.Logging.ILogger logger)
+        public NugetPackages(
+            IOptions<Settings> config,
+            ILogger<NugetPackages> logger
+        )
         {
             this.Logger = new NuGetLogger(logger);
 
@@ -271,7 +274,13 @@ namespace Microsoft.Quantum.IQSharp
             if (pkg == null || IsSystemPackage(pkg)) return Enumerable.Empty<AssemblyInfo>();
 
             var pkgInfo = LocalPackagesFinder.GetPackage(pkg, Logger, CancellationToken.None);
-            var packageReader = pkgInfo?.GetReader();
+            if (pkgInfo == null)
+            {
+                Logger.LogWarning($"Could not find Package {pkg}");
+                return Enumerable.Empty<AssemblyInfo>();
+            }
+
+            var packageReader = pkgInfo.GetReader();
             var libs = packageReader?.GetLibItems();
 
             // If package contains no dlls:
@@ -483,16 +492,6 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 catch (NuGetProtocolException) { }
             }
-        }
-
-        /// <summary>
-        ///  Helper method that creates a new instance with default dependencies.
-        ///  Used mainly for testing.
-        /// </summary>
-        internal static NugetPackages Create()
-        {
-            var logger = new LoggerFactory().CreateLogger<NugetPackages>();
-            return new NugetPackages(null, logger);
         }
     }
 }

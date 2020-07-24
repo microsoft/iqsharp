@@ -5,9 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Microsoft.Quantum.IQSharp.Common;
-
-
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -70,6 +67,5 @@ namespace Microsoft.Quantum.IQSharp
         /// Adds a nuget package and its corresponding assemblies to the list of references.
         /// </summary>
         Task AddPackage(string name, Action<string>? statusCallback = null);
-
     }
 }
