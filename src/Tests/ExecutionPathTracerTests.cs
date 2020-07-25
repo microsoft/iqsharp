@@ -104,8 +104,13 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -133,13 +138,18 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>()
-                    {
-                        new QubitRegister(0),
-                        new QubitRegister(1),
-                        new QubitRegister(2),
-                    },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(2) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -239,8 +249,13 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -272,8 +287,13 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -416,12 +436,13 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() {
-                        new QubitRegister(0),
-                        new QubitRegister(1),
-                        new QubitRegister(2),
-                    },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -569,12 +590,18 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() {
-                        new QubitRegister(0),
-                        new QubitRegister(1),
-                        new QubitRegister(2),
-                    },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(2) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -614,12 +641,18 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "ResetAll",
-                    Targets = new List<Register>() {
-                        new QubitRegister(0),
-                        new QubitRegister(1),
-                        new QubitRegister(2),
-                    },
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(1) },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(2) },
                 },
             };
             var expected = new ExecutionPath(qubits, operations);

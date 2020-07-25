@@ -4,6 +4,7 @@
 namespace Tests.ExecutionPathTracer {
     
     open Microsoft.Quantum.Canon;
+    open Microsoft.Quantum.Intrinsic;
     
     operation ApplyToEachCirc() : Unit {
         using (qs = Qubit[3]) {
