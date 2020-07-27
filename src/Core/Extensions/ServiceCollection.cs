@@ -15,6 +15,7 @@ namespace Microsoft.Quantum.IQSharp
             services.AddSingleton<IEventService, EventService>();
             services.AddSingleton<ICompilerService, CompilerService>();
             services.AddSingleton<IOperationResolver, OperationResolver>();
+            services.AddSingleton<INugetPackages, NugetPackages>();
             services.AddSingleton<IReferences, References>();
             services.AddSingleton<IWorkspace, Workspace>();
             services.AddSingleton<ISnippets, Snippets>();

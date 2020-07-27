@@ -7,12 +7,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -28,7 +29,6 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of assemblies that are automatically included for compilation. Namely:
         ///   * Quantum.Core
         ///   * Quantum.Intrinsic
-        ///   * Quantum.Standard
         /// </summary>
         public static readonly AssemblyInfo[] QUANTUM_CORE_ASSEMBLIES =
         {
@@ -36,41 +36,52 @@ namespace Microsoft.Quantum.IQSharp
             new AssemblyInfo(typeof(Intrinsic.X).Assembly)
         };
 
+
+        /// <summary>
+        /// The list of Packages that are automatically included for compilation. Namely:
+        ///   * Microsoft.Quantum.Standard
+        /// </summary>
         public static readonly string[] BUILT_IN_PACKAGES =
         {
             "Microsoft.Quantum.Standard"
         };
 
-
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-            IOptions<NugetPackages.Settings> options, 
-            ILogger<References> logger,
-            IEventService eventService
-            )
+                INugetPackages packages,
+                IEventService eventService,
+                ILogger<References> logger
+                )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
-            Nugets = new NugetPackages(options, logger);
+            Nugets = packages;
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             foreach (var pkg in BUILT_IN_PACKAGES)
             {
-                AddPackage(pkg).Wait();
+                try
+                {
+                    this.AddPackage(pkg).Wait();
+                }
+                catch (AggregateException e)
+                {
+                    logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
+                }
             }
 
-            AssemblyLoadContext.Default.Resolving += Resolve;
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
-            Reset();
+            AssemblyLoadContext.Default.Resolving += Resolve;
         }
 
         /// Manages nuget packages.
-        internal NugetPackages Nugets { get; }
+        internal INugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
 
-        public event EventHandler<PackageLoadedEventArgs> PackageLoaded;
+        public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 
         /// <summary>
         /// The plain list of Assemblies to be used as References. 
@@ -88,22 +99,29 @@ namespace Microsoft.Quantum.IQSharp
                 ?.Select(p => $"{p.Id}::{p.Version}");
 
         /// <summary>
+        /// Adds the given assemblies.
+        /// </summary>
+        public void AddAssemblies(params AssemblyInfo[] assemblies)
+        {
+            Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
+            Reset();
+        }
+
+        /// <summary>
         /// Adds the libraries from the given nuget package to the list of assemblies.
         /// If version is not provided. It automatically picks up the latest version.
         /// </summary>
         public async Task AddPackage(string name, Action<string>? statusCallback = null)
         {
-            var duration = Stopwatch.StartNew();
-
             if (Nugets == null)
             {
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            var pkg = await Nugets.Add(name, statusCallback);
+            var duration = Stopwatch.StartNew();
 
-            Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();
-            Reset();
+            var pkg = await Nugets.Add(name, statusCallback);
+            AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version.ToNormalizedString(), duration.Elapsed));

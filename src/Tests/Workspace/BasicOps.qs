@@ -4,7 +4,6 @@
 namespace Tests.qss {
     
     open Microsoft.Quantum.Intrinsic;
-    open Microsoft.Quantum.Canon;
 
     // Note that we specify multiple @EntryPoint() operations in this file
     // to verify that these attributes have no impact on the compilation of
@@ -41,7 +40,6 @@ namespace Tests.qss {
     operation CCNOTDriver(applyT : Bool) : Unit {
         using(qubits = Qubit[3]) {
             CCNOT(qubits[0], qubits[1], qubits[2]);
-            ApplyIf(T, applyT, qubits[0]);
         } 
     }
 }

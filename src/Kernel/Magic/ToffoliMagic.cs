@@ -85,6 +85,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new ToffoliSimulator().WithStackTraceDisplay(channel);
+            qsim.OnDisplayableDiagnostic += channel.Display;
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
 
