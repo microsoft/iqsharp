@@ -96,15 +96,34 @@ namespace Microsoft.Quantum.IQSharp
                 var projectFilesToResolve = projectFiles.ToArray();
                 while (projectFilesToResolve.Any())
                 {
-                    projectFilesToResolve = projectFilesToResolve
-                        .SelectMany(projectFile =>
-                            XDocument.Load(projectFile)
-                                .XPathSelectElements("//ProjectReference")
-                                .Select(element => Path.Combine(Path.GetDirectoryName(projectFile), element.Attribute("Include").Value)))
-                        .Where(projectFile => !projectFiles.Contains(projectFile))
-                        .ToArray();
+                    try
+                    {
+                        Logger?.LogInformation($"Looking for project references in .csproj files: {string.Join(";", projectFilesToResolve)}");
 
-                    projectFiles = projectFiles.Concat(projectFilesToResolve);
+                        projectFilesToResolve = projectFilesToResolve
+                            .SelectMany(projectFile =>
+                                XDocument.Load(projectFile)
+                                    .XPathSelectElements("//ProjectReference")
+                                    .Select(element => Path.Combine(Path.GetDirectoryName(projectFile), element.Attribute("Include").Value)))
+                            .Where(projectFile => !projectFiles.Contains(projectFile))
+                            .ToArray();
+
+                        var missingFiles = projectFilesToResolve.Where(projectFile => !File.Exists(projectFile));
+                        if (missingFiles.Any())
+                        {
+                            Logger?.LogError($"Skipping invalid project references: {string.Join(";", missingFiles)}");
+                            projectFilesToResolve = projectFilesToResolve.Except(missingFiles).ToArray();
+                        }
+
+                        Logger?.LogInformation($"Adding project references: {string.Join(";", projectFilesToResolve)}");
+
+                        projectFiles = projectFiles.Concat(projectFilesToResolve);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger?.LogError(e, $"Failed to resolve all project references: {e.Message}");
+                        projectFilesToResolve = Array.Empty<string>();
+                    }
                 }
 
                 return projectFiles.Distinct();
@@ -173,6 +192,10 @@ namespace Microsoft.Quantum.IQSharp
             if (!LoadFromCache())
             {
                 Reload();
+            }
+            else
+            {
+                LoadReferencedPackages();
             }
 
             if (monitor)
@@ -256,21 +279,38 @@ namespace Microsoft.Quantum.IQSharp
             return true;
         }
 
-        private void LoadReferencedPackages(string projectFile)
+        private void LoadReferencedPackages()
         {
-            var packageReferences = XDocument.Load(projectFile)
-                .XPathSelectElements("//PackageReference")
-                .Select(element => new PackageReference(
-                    new PackageIdentity(
-                        id: element.Attribute("Include").Value,
-                        version: new NuGetVersion(element.Attribute("Version").Value)),
-                    NuGetFramework.AnyFramework));
-
-            foreach (var packageReference in packageReferences)
+            foreach (var projectFile in ProjectFiles)
             {
-                var package = $"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}";
-                Logger?.LogInformation($"Loading package {package} for project {projectFile}.");
-                GlobalReferences.AddPackage(package);
+                try
+                {
+                    var packageReferences = XDocument.Load(projectFile)
+                        .XPathSelectElements("//PackageReference")
+                        .Select(element => new PackageReference(
+                            new PackageIdentity(
+                                id: element.Attribute("Include").Value,
+                                version: new NuGetVersion(element.Attribute("Version").Value)),
+                            NuGetFramework.AnyFramework));
+
+                    foreach (var packageReference in packageReferences)
+                    {
+                        var package = $"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}";
+                        try
+                        {
+                            Logger?.LogInformation($"Loading package {package} for project {projectFile}.");
+                            GlobalReferences.AddPackage(package);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger?.LogError(e, $"Failed to load package {package} for project {projectFile}: {e.Message}");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger?.LogError(e, $"Failure loading packages for project {projectFile}: {e.Message}");
+                }
             }
         }
 
@@ -292,10 +332,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
 
-                foreach (var projectFile in ProjectFiles)
-                {
-                    LoadReferencedPackages(projectFile);
-                }
+                LoadReferencedPackages();
 
                 files = SourceFiles.ToArray();
 

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Quantum.Xunit" Version="0.12.20072031" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <ProjectReference Include="ProjectA\ProjectA.csproj" />
+    <ProjectReference Include="ProjectB\InvalidProjectReference.csproj" />
+  </ItemGroup>
+
+</Project>

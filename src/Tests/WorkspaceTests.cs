@@ -68,6 +68,15 @@ namespace Tests.IQSharp
             Assert.IsTrue(ws.HasErrors);
         }
 
+        [TestMethod]
+        public void ProjectReferencesWorkspace()
+        {
+            var ws = Startup.Create<Workspace>("Workspace.ProjectReferences");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors);
+            Assert.IsTrue(ws.AssemblyInfo.Operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(ws.AssemblyInfo.Operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+        }
 
         [TestMethod]
         public void ChemistryWorkspace()
