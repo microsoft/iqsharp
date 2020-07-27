@@ -10,7 +10,7 @@ namespace Tests.ProjectReferences {
     {
         using (q = Qubit()) {
             return RotateAndMeasure(q);
-		}
+        }
     }
 }
 
