@@ -11,5 +11,3 @@ namespace Tests.ProjectReferences.ProjectA {
         return M(q);
     }
 }
-
-
