@@ -53,10 +53,15 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             public bool MonitorWorkspace { get; set; }
+
+            /// <summary>
+            /// Whether to skip automatically loading the .csproj from the workspace's root folder.
+            /// </summary>
+            public bool SkipAutoLoadProject { get; set; }
         }
 
         // We use this to keep track of file changes in the workspace and trigger a reload.
-        private FileSystemWatcher Watcher;
+        private FileSystemWatcher[] Watchers = Array.Empty<FileSystemWatcher>();
 
         /// <summary>
         /// This event is triggered when ever the workspace is reloaded.
@@ -84,6 +89,11 @@ namespace Microsoft.Quantum.IQSharp
         public string Root { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to skip automatically loading the .csproj from the workspace's root folder.
+        /// </summary>
+        private bool SkipAutoLoadProject { get; set; }
+
+        /// <summary>
         /// Gets the project files to be built for this Workspace.
         /// </summary>
         public IEnumerable<string> ProjectFiles
@@ -91,7 +101,7 @@ namespace Microsoft.Quantum.IQSharp
             get
             {
                 var projectFiles = Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly);
-                if (projectFiles.Count() != 1) return Enumerable.Empty<string>();
+                if (SkipAutoLoadProject || projectFiles.Count() != 1) return Enumerable.Empty<string>();
 
                 var projectFilesToResolve = projectFiles.ToArray();
                 while (projectFilesToResolve.Any())
@@ -133,14 +143,19 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Gets the source files to be built for this Workspace.
+        /// Gets the source folders containing source files to be built for this Workspace.
         /// </summary>
-        public IEnumerable<string> SourceFiles =>
+        private IEnumerable<string> SourceFolders =>
             ProjectFiles
                 .Select(projectFile => Path.GetDirectoryName(projectFile))
                 .Append(Root)
-                .Distinct()
-                .SelectMany(folder => Directory.EnumerateFiles(folder, "*.qs", SearchOption.TopDirectoryOnly));
+                .Distinct();
+
+        /// <summary>
+        /// Gets the source files to be built for this Workspace.
+        /// </summary>
+        public IEnumerable<string> SourceFiles =>
+            SourceFolders.SelectMany(folder => Directory.EnumerateFiles(folder, "*.qs", SearchOption.TopDirectoryOnly));
 
         /// <summary>
         /// Information about the assembly built from this Workspace.
@@ -186,6 +201,7 @@ namespace Microsoft.Quantum.IQSharp
 
             Root = config?.Value.Workspace;
             CacheFolder = config?.Value.CacheFolder;
+            SkipAutoLoadProject = config?.Value.SkipAutoLoadProject ?? false;
 
             var monitor = config?.Value.MonitorWorkspace == true;
 
@@ -213,20 +229,25 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private void StartFileWatching()
         {
-            // Create a new FileSystemWatcher and set its properties.
-            Watcher = new FileSystemWatcher(Root, "*.qs");
-            Watcher.IncludeSubdirectories = true;
-            Watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+            // Create a new FileSystemWatcher for each source folder and set its properties.
+            Watchers = SourceFolders.Select(folder =>  new FileSystemWatcher(folder, "*.qs"))
+                .Concat(SourceFolders.Select(folder => new FileSystemWatcher(folder, "*.csproj")))
+                .ToArray();
 
+            foreach (var watcher in Watchers)
+            {
+                watcher.IncludeSubdirectories = false;
+                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
 
-            // Add event handlers.
-            Watcher.Changed += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Created += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Deleted += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Renamed += new RenamedEventHandler(OnFilesRenamed);
+                // Add event handlers.
+                watcher.Changed += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Created += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Deleted += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Renamed += new RenamedEventHandler(OnFilesRenamed);
 
-            // Begin watching.
-            Watcher.EnableRaisingEvents = true;
+                // Begin watching.
+                watcher.EnableRaisingEvents = true;
+            }
         }
 
         private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload();
