@@ -104,7 +104,9 @@ namespace Microsoft.Quantum.IQSharp
                             .SelectMany(projectFile =>
                                 XDocument.Load(projectFile)
                                     .XPathSelectElements("//ProjectReference")
-                                    .Select(element => Path.Combine(Path.GetDirectoryName(projectFile), element.Attribute("Include").Value)))
+                                    .Select(element => Path.Combine(
+                                        Path.GetDirectoryName(projectFile),
+                                        element.Attribute("Include").Value.Replace('\\', Path.DirectorySeparatorChar))))
                             .Where(projectFile => !projectFiles.Contains(projectFile))
                             .ToArray();
 
