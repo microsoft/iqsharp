@@ -162,7 +162,7 @@ namespace Microsoft.Quantum.IQSharp
                 "All .qs files inside this folder will be automatically compiled and the corresponding " +
                 "operations available for simulation.", CommandOptionType.SingleValue);
             var skipAutoLoadProjectOption = app.Option("--skipAutoLoadProject",
-                "Skips automatically loading the .csproj from the workspace's root folder.", CommandOptionType.NoValue);
+                "Specifies whether to skip automatically loading the .csproj from the workspace's root folder.", CommandOptionType.SingleValue);
 
             foreach (var command in app.Commands.Where(c => c.Name == "kernel" || c.Name == "server"))
             {
