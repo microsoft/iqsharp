@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -33,10 +34,7 @@ using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
 {
-    internal class CompilerOptions
-    {
-        public string? AutoOpenNamespaces { get; set; }
-    }
+
 
     /// <summary>
     /// Default implementation of ICompilerService.
@@ -44,6 +42,20 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class CompilerService : ICompilerService
     {
+        /// <summary>
+        ///     Settings for controlling how the compiler service creates
+        ///     assemblies from snippets.
+        /// </summary>
+        public class Settings
+        {
+            /// <summary>
+            ///     A list of namespaces to be automatically opened in snippets,
+            ///     separated by <c>,</c>. If <c>"$null"</c>, then no namespaces
+            ///     are opened. Aliases can be provided by using <c>=</c>.
+            /// </summary>
+            public string? AutoOpenNamespaces { get; set; }
+        }
+
         /// <inheritdoc/>
         public IDictionary<string, string?> AutoOpenNamespaces { get; set; } = new Dictionary<string, string?>
         {
@@ -51,14 +63,13 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(ILogger<CompilerService>? logger, IConfiguration? configuration)
+        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options)
         {
-            var options = configuration?.Get<CompilerOptions>();
-            if (options?.AutoOpenNamespaces is string namespaces)
+            if (options?.Value?.AutoOpenNamespaces is string namespaces)
             {
                 logger?.LogInformation(
                     "Auto-open namespaces overridden by startup options: \"{0}\"",
-                    options.AutoOpenNamespaces
+                    namespaces
                 );
                 AutoOpenNamespaces =
                     namespaces.Trim() == "$null"

@@ -27,8 +27,9 @@ namespace Microsoft.Quantum.IQSharp
         {
             services.Configure<Workspace.Settings>(Configuration);
             services.Configure<NugetPackages.Settings>(Configuration);
+            services.Configure<References.Settings>(Configuration);
+            services.Configure<CompilerService.Settings>(Configuration);
             services.Configure<ClientInformation>(Configuration);
-            services.AddSingleton<IConfiguration>(Configuration);
 
             services.AddSingleton(typeof(ITelemetryService), GetTelemetryServiceType());
             services.AddIQSharp();
