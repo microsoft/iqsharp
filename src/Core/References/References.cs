@@ -20,7 +20,7 @@ namespace Microsoft.Quantum.IQSharp
 {
     internal class ReferencesOptions
     {
-        public string? BuiltInPackages { get; set; }
+        public string? AutoLoadPackages { get; set; }
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
         /// </summary>
-        public readonly ImmutableList<string> BuiltInPackages =
+        public readonly ImmutableList<string> AutoLoadPackages =
             ImmutableList.Create(
                 "Microsoft.Quantum.Standard"
             );
@@ -68,13 +68,13 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             var referencesOptions = configuration.Get<ReferencesOptions>();
-            if (referencesOptions?.BuiltInPackages is string pkgs)
+            if (referencesOptions?.AutoLoadPackages is string pkgs)
             {
                 logger.LogInformation(
-                    "Built-in packages overridden by startup options: \"{0}\"",
-                    referencesOptions.BuiltInPackages
+                    "Auto-load packages overridden by startup options: \"{0}\"",
+                    referencesOptions.AutoLoadPackages
                 );
-                BuiltInPackages =
+                AutoLoadPackages =
                     pkgs.Trim() == "$null"
                     ? ImmutableList<string>.Empty
                     : pkgs
@@ -83,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp
                       .ToImmutableList();
             }
 
-            foreach (var pkg in BuiltInPackages)
+            foreach (var pkg in AutoLoadPackages)
             {
                 try
                 {

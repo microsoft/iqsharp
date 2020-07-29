@@ -75,7 +75,7 @@ namespace Microsoft.Quantum.IQSharp
                             ["USER_AGENT"] = "UserAgent",
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath",
-                            ["BUILTIN_PACKAGES"] = "BuiltinPackages",
+                            ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces"
                         }
                     })
