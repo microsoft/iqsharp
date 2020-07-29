@@ -51,12 +51,12 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(ILogger<CompilerService> logger, IConfiguration configuration)
+        public CompilerService(ILogger<CompilerService>? logger, IConfiguration? configuration)
         {
-            var options = configuration.Get<CompilerOptions>();
+            var options = configuration?.Get<CompilerOptions>();
             if (options?.AutoOpenNamespaces is string namespaces)
             {
-                logger.LogInformation(
+                logger?.LogInformation(
                     "Auto-open namespaces overridden by startup options: \"{0}\"",
                     options.AutoOpenNamespaces
                 );
