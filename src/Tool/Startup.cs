@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -15,12 +16,19 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class Startup
     {
+        private readonly IConfiguration Configuration;
+        public Startup(IConfiguration configuration)
+        {
+            this.Configuration = configuration;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public virtual void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<Workspace.Settings>(Program.Configuration);
-            services.Configure<NugetPackages.Settings>(Program.Configuration);
-            services.Configure<ClientInformation>(Program.Configuration);
+            services.Configure<Workspace.Settings>(Configuration);
+            services.Configure<NugetPackages.Settings>(Configuration);
+            services.Configure<ClientInformation>(Configuration);
+            services.AddSingleton<IConfiguration>(Configuration);
 
             services.AddSingleton(typeof(ITelemetryService), GetTelemetryServiceType());
             services.AddIQSharp();

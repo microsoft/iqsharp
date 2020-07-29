@@ -68,13 +68,19 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             var referencesOptions = configuration.Get<ReferencesOptions>();
-            if (!(referencesOptions?.BuiltInPackages is null))
+            if (referencesOptions?.BuiltInPackages is string pkgs)
             {
-                BUILT_IN_PACKAGES = referencesOptions
-                    .BuiltInPackages
-                    .Split(",")
-                    .Select(pkg => pkg.Trim())
-                    .ToImmutableList();
+                logger.LogInformation(
+                    "Built-in packages overridden by startup options: \"{0}\"",
+                    referencesOptions.BuiltInPackages
+                );
+                BUILT_IN_PACKAGES =
+                    pkgs.Trim() == "$null"
+                    ? ImmutableList<string>.Empty
+                    : pkgs
+                      .Split(",")
+                      .Select(pkg => pkg.Trim())
+                      .ToImmutableList();
             }
 
             foreach (var pkg in BUILT_IN_PACKAGES)

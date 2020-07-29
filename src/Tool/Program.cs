@@ -82,7 +82,7 @@ namespace Microsoft.Quantum.IQSharp
                     .Build();
 
                 var app = new IQSharpKernelApp(
-                    Kernel.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
+                    Kernel.Constants.IQSharpKernelProperties, new Startup(Configuration).ConfigureServices
                 )
                 .ConfigureLogging(
                     loggingBuilder => {

@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -50,19 +51,25 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(IConfiguration configuration)
+        public CompilerService(ILogger<CompilerService> logger, IConfiguration configuration)
         {
             var options = configuration.Get<CompilerOptions>();
-            if (!(options?.AutoOpenNamespaces is null))
+            if (options?.AutoOpenNamespaces is string namespaces)
             {
-                AutoOpenNamespaces = options
-                    .AutoOpenNamespaces
-                    .Split(",")
-                    .Select(ns => ns.Split("=", 2).Select(part => part.Trim()).ToArray())
-                    .ToDictionary(
-                        nsParts => nsParts[0],
-                        nsParts => nsParts.Length > 1 ? nsParts[1] : null
-                    );
+                logger.LogInformation(
+                    "Auto-open namespaces overridden by startup options: \"{0}\"",
+                    options.AutoOpenNamespaces
+                );
+                AutoOpenNamespaces =
+                    namespaces.Trim() == "$null"
+                    ? new Dictionary<string, string?>()
+                    : namespaces
+                      .Split(",")
+                      .Select(ns => ns.Split("=", 2).Select(part => part.Trim()).ToArray())
+                      .ToDictionary(
+                          nsParts => nsParts[0],
+                          nsParts => nsParts.Length > 1 ? nsParts[1] : null
+                      );
             }
         }
 
@@ -86,10 +93,10 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public IDictionary<string, string> IdentifyOpenedNamespaces(string source)
+        public IDictionary<string, string?> IdentifyOpenedNamespaces(string source)
         {
             var loader = CreateTemporaryLoader(source);
-            if (loader.VerifiedCompilation == null) { return ImmutableDictionary<string, string>.Empty; }
+            if (loader.VerifiedCompilation == null) { return ImmutableDictionary<string, string?>.Empty; }
             return loader.VerifiedCompilation.Tokenization.Values
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
@@ -108,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones.
         /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
-        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences references = null, QSharpLogger logger = null, bool compileAsExecutable = false)
+        private QsCompilation UpdateCompilation(ImmutableDictionary<Uri, string> sources, QsReferences? references = null, QSharpLogger? logger = null, bool compileAsExecutable = false)
         {
             var loadOptions = new CompilationLoader.Configuration
             {
@@ -120,7 +127,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
+        public AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -145,7 +152,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
         /// with the same name as the snippet id.
         /// </summary>
-        public AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
+        public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null)
         {
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
@@ -174,7 +181,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        public AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null)
+        public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
             return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget: executionTarget);
@@ -183,7 +190,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private AssemblyInfo BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string executionTarget)
+        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
