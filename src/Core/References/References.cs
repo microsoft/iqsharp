@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
         /// </summary>
-        public readonly ImmutableList<string> BUILT_IN_PACKAGES =
+        public readonly ImmutableList<string> BuiltInPackages =
             ImmutableList.Create(
                 "Microsoft.Quantum.Standard"
             );
@@ -74,7 +74,7 @@ namespace Microsoft.Quantum.IQSharp
                     "Built-in packages overridden by startup options: \"{0}\"",
                     referencesOptions.BuiltInPackages
                 );
-                BUILT_IN_PACKAGES =
+                BuiltInPackages =
                     pkgs.Trim() == "$null"
                     ? ImmutableList<string>.Empty
                     : pkgs
@@ -83,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp
                       .ToImmutableList();
             }
 
-            foreach (var pkg in BUILT_IN_PACKAGES)
+            foreach (var pkg in BuiltInPackages)
             {
                 try
                 {
