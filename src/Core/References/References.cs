@@ -11,12 +11,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
+
     /// <summary>
     /// Default implementation of IReferences.
     /// This service keeps track of references (assemblies) needed for compilation
@@ -25,6 +27,21 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class References : IReferences
     {
+        /// <summary>
+        ///     Settings that control how references are discovered and loaded.
+        /// </summary>
+        public class Settings
+        {
+            /// <summary>
+            ///      A list of packages to be loaded when the kernel initially
+            ///      starts. Package names should be seperated by <c>,</c>, and
+            ///      may have optional version specifiers. To suppress all
+            ///      automatic package loading, the string <c>"$null"</c> can
+            ///      be provided.
+            /// </summary>
+            public string? AutoLoadPackages { get; set; }
+        }
+
         /// <summary>
         /// The list of assemblies that are automatically included for compilation. Namely:
         ///   * Quantum.Core
@@ -41,10 +58,10 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
         /// </summary>
-        public static readonly string[] BUILT_IN_PACKAGES =
-        {
-            "Microsoft.Quantum.Standard"
-        };
+        public readonly ImmutableList<string> AutoLoadPackages =
+            ImmutableList.Create(
+                "Microsoft.Quantum.Standard"
+            );
 
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
@@ -52,7 +69,8 @@ namespace Microsoft.Quantum.IQSharp
         public References(
                 INugetPackages packages,
                 IEventService eventService,
-                ILogger<References> logger
+                ILogger<References> logger,
+                IOptions<Settings> options
                 )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
@@ -60,7 +78,23 @@ namespace Microsoft.Quantum.IQSharp
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
-            foreach (var pkg in BUILT_IN_PACKAGES)
+            var referencesOptions = options.Value;
+            if (referencesOptions?.AutoLoadPackages is string pkgs)
+            {
+                logger.LogInformation(
+                    "Auto-load packages overridden by startup options: \"{0}\"",
+                    referencesOptions.AutoLoadPackages
+                );
+                AutoLoadPackages =
+                    pkgs.Trim() == "$null"
+                    ? ImmutableList<string>.Empty
+                    : pkgs
+                      .Split(",")
+                      .Select(pkg => pkg.Trim())
+                      .ToImmutableList();
+            }
+
+            foreach (var pkg in AutoLoadPackages)
             {
                 try
                 {

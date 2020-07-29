@@ -27,6 +27,7 @@ namespace Tests.IQSharp
 
             var services = new ServiceCollection();
 
+            services.AddSingleton<IConfiguration>(config);
             services.Configure<Workspace.Settings>(config);
             services.Configure<NugetPackages.Settings>(config);
 
