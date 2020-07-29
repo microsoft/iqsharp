@@ -230,7 +230,7 @@ namespace Microsoft.Quantum.IQSharp
         private void StartFileWatching()
         {
             // Create a new FileSystemWatcher for each source folder and set its properties.
-            Watchers = SourceFolders.Select(folder =>  new FileSystemWatcher(folder, "*.qs"))
+            Watchers = SourceFolders.Select(folder => new FileSystemWatcher(folder, "*.qs"))
                 .Concat(SourceFolders.Select(folder => new FileSystemWatcher(folder, "*.csproj")))
                 .ToArray();
 
