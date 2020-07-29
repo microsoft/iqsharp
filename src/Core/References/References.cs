@@ -11,12 +11,18 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    internal class ReferencesOptions
+    {
+        public string? BuiltInPackages { get; set; }
+    }
+
     /// <summary>
     /// Default implementation of IReferences.
     /// This service keeps track of references (assemblies) needed for compilation
@@ -41,10 +47,10 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
         /// </summary>
-        public static readonly string[] BUILT_IN_PACKAGES =
-        {
-            "Microsoft.Quantum.Standard"
-        };
+        public readonly ImmutableList<string> BUILT_IN_PACKAGES =
+            ImmutableList.Create(
+                "Microsoft.Quantum.Standard"
+            );
 
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
@@ -52,13 +58,24 @@ namespace Microsoft.Quantum.IQSharp
         public References(
                 INugetPackages packages,
                 IEventService eventService,
-                ILogger<References> logger
+                ILogger<References> logger,
+                IConfiguration configuration
                 )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
+
+            var referencesOptions = configuration.Get<ReferencesOptions>();
+            if (!(referencesOptions?.BuiltInPackages is null))
+            {
+                BUILT_IN_PACKAGES = referencesOptions
+                    .BuiltInPackages
+                    .Split(",")
+                    .Select(pkg => pkg.Trim())
+                    .ToImmutableList();
+            }
 
             foreach (var pkg in BUILT_IN_PACKAGES)
             {

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,6 +13,7 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -29,6 +32,11 @@ using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    internal class CompilerOptions
+    {
+        public string? AutoOpenNamespaces { get; set; }
+    }
+
     /// <summary>
     /// Default implementation of ICompilerService.
     /// This service is capable of building .net core assemblies on the fly from Q# code.
@@ -36,11 +44,27 @@ namespace Microsoft.Quantum.IQSharp
     public class CompilerService : ICompilerService
     {
         /// <inheritdoc/>
-        public IDictionary<string, string> AutoOpenNamespaces { get; set; } = new Dictionary<string, string>
+        public IDictionary<string, string?> AutoOpenNamespaces { get; set; } = new Dictionary<string, string?>
         {
             ["Microsoft.Quantum.Intrinsic"] = null,
             ["Microsoft.Quantum.Canon"] = null
         };
+
+        public CompilerService(IConfiguration configuration)
+        {
+            var options = configuration.Get<CompilerOptions>();
+            if (!(options?.AutoOpenNamespaces is null))
+            {
+                AutoOpenNamespaces = options
+                    .AutoOpenNamespaces
+                    .Split(",")
+                    .Select(ns => ns.Split("=", 2).Select(part => part.Trim()).ToArray())
+                    .ToDictionary(
+                        nsParts => nsParts[0],
+                        nsParts => nsParts.Length > 1 ? nsParts[1] : null
+                    );
+            }
+        }
 
         private CompilationLoader CreateTemporaryLoader(string source)
         {

@@ -74,7 +74,9 @@ namespace Microsoft.Quantum.IQSharp
                             ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
                             ["USER_AGENT"] = "UserAgent",
                             ["HOSTING_ENV"] = "HostingEnvironment",
-                            ["LOG_PATH"] = "LogPath"
+                            ["LOG_PATH"] = "LogPath",
+                            ["BUILTIN_PACKAGES"] = "BuiltinPackages",
+                            ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces"
                         }
                     })
                     .Build();
