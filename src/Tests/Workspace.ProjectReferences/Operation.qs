@@ -6,8 +6,7 @@ namespace Tests.ProjectReferences {
     open Microsoft.Quantum.Intrinsic;
     open Tests.ProjectReferences.ProjectA;
 
-    operation MeasureSingleQubit() : Result
-    {
+    operation MeasureSingleQubit() : Result {
         using (q = Qubit()) {
             return RotateAndMeasure(q);
         }
