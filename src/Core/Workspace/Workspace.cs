@@ -100,10 +100,10 @@ namespace Microsoft.Quantum.IQSharp
         {
             get
             {
-                var projectFiles = Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly);
+                var projectFiles = Directory.EnumerateFiles(Root, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
                 if (SkipAutoLoadProject || projectFiles.Count() != 1) return Enumerable.Empty<string>();
 
-                var projectFilesToResolve = projectFiles.ToArray();
+                var projectFilesToResolve = projectFiles.ToList();
                 while (projectFilesToResolve.Any())
                 {
                     try
@@ -118,23 +118,23 @@ namespace Microsoft.Quantum.IQSharp
                                         Path.GetDirectoryName(projectFile),
                                         element.Attribute("Include").Value.Replace('\\', Path.DirectorySeparatorChar))))
                             .Where(projectFile => !projectFiles.Contains(projectFile))
-                            .ToArray();
+                            .ToList();
 
                         var missingFiles = projectFilesToResolve.Where(projectFile => !File.Exists(projectFile));
                         if (missingFiles.Any())
                         {
                             Logger?.LogError($"Skipping invalid project references: {string.Join(";", missingFiles)}");
-                            projectFilesToResolve = projectFilesToResolve.Except(missingFiles).ToArray();
+                            projectFilesToResolve = projectFilesToResolve.Except(missingFiles).ToList();
                         }
 
                         Logger?.LogInformation($"Adding project references: {string.Join(";", projectFilesToResolve)}");
 
-                        projectFiles = projectFiles.Concat(projectFilesToResolve);
+                        projectFiles.AddRange(projectFilesToResolve);
                     }
                     catch (Exception e)
                     {
                         Logger?.LogError(e, $"Failed to resolve all project references: {e.Message}");
-                        projectFilesToResolve = Array.Empty<string>();
+                        projectFilesToResolve = Enumerable.Empty<string>().ToList();
                     }
                 }
 
