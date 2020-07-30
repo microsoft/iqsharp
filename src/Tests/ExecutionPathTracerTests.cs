@@ -3,10 +3,12 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.Simulation.Simulators;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
+using Microsoft.Quantum.Simulation.Simulators;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
 {
@@ -14,9 +16,17 @@ namespace Tests.IQSharp
     {
         public Workspace InitWorkspace()
         {
-            var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
+            var engine = Startup.Create<IQSharpEngine>("Workspace.ExecutionPathTracer");
+            var snippets = engine.Snippets as Snippets;
+
+            var pkgMagic = new PackageMagic(snippets.GlobalReferences);
+            var channel = new MockChannel();
+            pkgMagic.Execute("mock.standard", channel).Wait();
+
+            var ws = snippets.Workspace as Workspace;
             ws.Reload();
             Assert.IsFalse(ws.HasErrors);
+
             return ws;
         }
 
@@ -444,6 +454,11 @@ namespace Tests.IQSharp
                     Gate = "Reset",
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(2) },
+                },
             };
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
@@ -742,15 +757,17 @@ namespace Tests.IQSharp
             {
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetZ",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(0) },
                         Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                     },
                     new Operation()
                     {
-                        Gate = "measure",
+                        Gate = "MResetZ",
+                        IsMeasurement = true,
                         Controls = new List<Register>() { new QubitRegister(1) },
-                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                        Targets = new List<Register>() { new ClassicalRegister(1, 0) },
                     },
             };
             var expected = new ExecutionPath(qubits, operations);

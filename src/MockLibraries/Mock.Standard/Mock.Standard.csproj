@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.Quantum.Sdk/0.12.20072412-beta">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>    <!-- otherwise the standard library is included by the Sdk -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20072412-beta" />
+  </ItemGroup>
+</Project>
