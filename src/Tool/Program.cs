@@ -74,13 +74,15 @@ namespace Microsoft.Quantum.IQSharp
                             ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
                             ["USER_AGENT"] = "UserAgent",
                             ["HOSTING_ENV"] = "HostingEnvironment",
-                            ["LOG_PATH"] = "LogPath"
+                            ["LOG_PATH"] = "LogPath",
+                            ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
+                            ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces"
                         }
                     })
                     .Build();
 
                 var app = new IQSharpKernelApp(
-                    Kernel.Constants.IQSharpKernelProperties, new Startup().ConfigureServices
+                    Kernel.Constants.IQSharpKernelProperties, new Startup(Configuration).ConfigureServices
                 )
                 .ConfigureLogging(
                     loggingBuilder => {
