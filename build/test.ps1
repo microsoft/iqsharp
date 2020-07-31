@@ -102,7 +102,7 @@ function Test-JavaScript {
     }
 }
 
-Test-One '../iqsharp.sln' @("AzureClient", "IQSharpEngine", "Workspace")
+Test-One '../iqsharp.sln'
 
 if ($Env:ENABLE_PYTHON -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Testing Python packages. Env:ENABLE_PYTHON was set to 'false'."
