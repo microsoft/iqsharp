@@ -5,9 +5,10 @@
 ///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
-declare var IPython : IPython;
+declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
+import renderExecutionPath from "./ExecutionPathVisualizer/pathVisualizer.js";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -66,7 +67,7 @@ function defineQSharpMode() {
         {
             // built-in magic commands
             token: "builtin",
-            regex: String.raw`(%(config|estimate|lsmagic|package|performance|simulate|toffoli|version|who|workspace))\b`,
+            regex: String.raw`(%(config|estimate|lsmagic|lsopen|package|performance|simulate|toffoli|trace|version|who|workspace))\b`,
             beginWord: true,
         },
         {
@@ -116,14 +117,15 @@ function defineQSharpMode() {
 }
 
 class Kernel {
-    hostingEnvironment : string | undefined;
-    iqsharpVersion : string | undefined;
-    telemetryOptOut? : boolean | null;
+    hostingEnvironment: string | undefined;
+    iqsharpVersion: string | undefined;
+    telemetryOptOut?: boolean | null;
 
     constructor() {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
             this.requestEcho();
             this.requestClientInfo();
+            this.initExecutionPathVisualizer();
         });
     }
 
@@ -147,7 +149,7 @@ class Kernel {
         // are replies to other messages.
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_echo_request",
-            {value: value},
+            { value: value },
             {
                 shell: {
                     reply: (message) => {
@@ -224,6 +226,16 @@ class Kernel {
         });
         Telemetry.initAsync();
     }
+
+    initExecutionPathVisualizer() {
+        IPython.notebook.kernel.register_iopub_handler(
+            "render_execution_path",
+            message => {
+                const { executionPath, id } = message.content;
+                renderExecutionPath(executionPath, id);
+            }
+        );
+    }
 }
 
 export function onload() {
@@ -231,4 +243,3 @@ export function onload() {
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
-
