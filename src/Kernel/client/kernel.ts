@@ -67,7 +67,7 @@ function defineQSharpMode() {
         {
             // built-in magic commands
             token: "builtin",
-            regex: String.raw`(%(config|estimate|lsmagic|package|performance|simulate|toffoli|version|who|workspace))\b`,
+            regex: String.raw`(%(config|estimate|lsmagic|package|performance|simulate|toffoli|version|who|workspace|trace))\b`,
             beginWord: true,
         },
         {
