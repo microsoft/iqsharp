@@ -90,14 +90,25 @@ namespace Tests.IQSharp
             var engine = Init("Workspace.ExecutionPathTracer");
             var snippets = engine.Snippets as Snippets;
             var configSource = new ConfigurationSource(skipLoading: true);
+
+            var wsMagic = new WorkspaceMagic(snippets.Workspace);
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var traceMagic = new TraceMagic(engine.SymbolsResolver, configSource);
+
             var channel = new MockChannel();
 
+            // Add dependencies:
             var response = await pkgMagic.Execute("mock.standard", channel);
+            PrintResult(response, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            // Reload workspace:
+            response = await wsMagic.Execute("reload", channel);
+            PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
             response = await traceMagic.Execute(name, channel);
+            PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
             var message = channel.iopubMessages.ElementAtOrDefault(0);
