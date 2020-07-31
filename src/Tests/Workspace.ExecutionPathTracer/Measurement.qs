@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 namespace Tests.ExecutionPathTracer {
-    
+
     open Microsoft.Quantum.Measurement;
-    
+    open Microsoft.Quantum.Arrays;
+    open Mock.Standard;    
+
     operation MResetXCirc() : Unit {
         using (q = Qubit()) {
             let res = MResetX(q);
@@ -22,7 +24,13 @@ namespace Tests.ExecutionPathTracer {
             let res = MResetZ(q);
         }
     }
-    
+
+    operation ForEachMeasureCirc() : Unit {
+        using (qs = Qubit[2]) {
+            let res = ForEach(MResetZ, qs);
+        }
+    }
+
 }
 
 

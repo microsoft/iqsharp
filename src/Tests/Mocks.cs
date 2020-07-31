@@ -141,6 +141,8 @@ namespace Tests.IQSharp
     {
         private static readonly AssemblyInfo MockChemistryAssembly = new AssemblyInfo(typeof(Mock.Chemistry.JordanWignerEncodingData).Assembly);
 
+        private static readonly AssemblyInfo MockStandardAssembly = new AssemblyInfo(typeof(Mock.Standard.ApplyToEach<QubitState>).Assembly);
+
         List<PackageIdentity> _items = new List<PackageIdentity>();
 
         public IEnumerable<PackageIdentity> Items => _items;
@@ -149,9 +151,14 @@ namespace Tests.IQSharp
         {
             get
             {
-                if (_items.Select(p => p.Id).Contains("mock.chemistry"))
+                var packageIds = _items.Select(p => p.Id);
+                if (packageIds.Contains("mock.chemistry"))
                 {
                     yield return MockChemistryAssembly;
+                }
+                else if (packageIds.Contains("mock.standard"))
+                {
+                    yield return MockStandardAssembly;
                 }
             }
         }

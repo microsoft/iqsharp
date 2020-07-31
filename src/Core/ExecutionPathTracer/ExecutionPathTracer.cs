@@ -19,6 +19,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
     {
         private int currentDepth = 0;
         private int renderDepth;
+        private ICallable? currCompositeOp = null;
+        private ExecutionPathTracer? compositeTracer = null;
         private Operation? currentOperation = null;
         private IDictionary<int, QubitRegister> qubitRegisters = new Dictionary<int, QubitRegister>();
         private IDictionary<int, List<ClassicalRegister>> classicalRegisters = new Dictionary<int, List<ClassicalRegister>>();
@@ -55,16 +57,36 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         {
             this.currentDepth++;
 
-            // Parse operations at or above specified depth
-            if (this.currentDepth <= this.renderDepth)
+            // If `compositeTracer` is initialized, pass operations into it instead
+            if (this.compositeTracer != null)
             {
-                var metadata = operation.GetRuntimeMetadata(arguments);
-
-                // Save parsed operation as a potential candidate for rendering.
-                // We only want to render the operation at the lowest depth, so we keep
-                // a running track of the lowest operation seen in the stack thus far.
-                this.currentOperation = this.MetadataToOperation(metadata);
+                this.compositeTracer.OnOperationStartHandler(operation, arguments);
+                return;
             }
+
+            // Only parse operations at or above (i.e. <= `renderDepth`) specified depth
+            if (this.currentDepth > this.renderDepth) return;
+
+            var metadata = operation.GetRuntimeMetadata(arguments);
+
+            // If metadata is a composite operation (i.e. want to trace its components instead),
+            // we recursively create a tracer that traces its components instead
+            if (metadata != null && metadata.IsComposite)
+            {
+                this.compositeTracer = new ExecutionPathTracer(0);
+                // Attach our registers by reference to compositeTracer
+                this.compositeTracer.qubitRegisters = this.qubitRegisters;
+                this.compositeTracer.classicalRegisters = this.classicalRegisters;
+                this.currCompositeOp = operation;
+                // Set currentOperation to null so we don't render higher-depth operations unintentionally.
+                this.currentOperation = null;
+                return;
+            }
+
+            // Save parsed operation as a potential candidate for rendering.
+            // We only want to render the operation at the lowest depth, so we keep
+            // a running track of the lowest operation seen in the stack thus far.
+            this.currentOperation = this.MetadataToOperation(metadata);
         }
 
         /// <summary>
@@ -75,11 +97,30 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         public void OnOperationEndHandler(ICallable operation, IApplyData result)
         {
             this.currentDepth--;
-            // Add parsed operation to list of operations, if not null
+
+            // If `compositeTracer` is not null, handle the incoming operation recursively.
+            if (this.compositeTracer != null)
+            {
+                // If the current operation is the composite operation we started with, append
+                // the operations traced out by the `compositeTracer` to the current list of
+                // operations and reset.
+                if (operation == this.currCompositeOp)
+                {
+                    this.AddCompositeOperations();
+                    this.currCompositeOp = null;
+                    this.compositeTracer = null;
+                    return;
+                }
+
+                // Pass operations down to it for handling
+                this.compositeTracer.OnOperationEndHandler(operation, result);
+                return;
+            }
+
+            // Add latest parsed operation to list of operations, if not null
             if (this.currentOperation != null)
             {
                 this.operations.Add(this.currentOperation);
-                // Reset current operation to null
                 this.currentOperation = null;
             }
         }
@@ -127,6 +168,18 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             // Get most recent measurement on given control qubit
             var cId = this.classicalRegisters[qId].Count - 1;
             return this.classicalRegisters[qId][cId];
+        }
+
+        /// <summary>
+        /// Parse <see cref="Operations"/>s traced out by the <c>compositeTracer</c>.
+        /// </summary>
+        private void AddCompositeOperations()
+        {
+            if (this.compositeTracer == null)
+                throw new NullReferenceException("ERROR: compositeTracer not initialized.");
+
+            // The composite tracer has done its job and we retrieve the operations it traced
+            this.operations.AddRange(this.compositeTracer.operations);
         }
 
         /// <summary>
