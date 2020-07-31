@@ -33,7 +33,8 @@
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
     <ProjectReference Include="..\Kernel\Kernel.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Mock.Chemistry\Mock.Chemistry.csproj" />
+    <ProjectReference Include="..\MockLibraries\Mock.Chemistry\Mock.Chemistry.csproj" />
+    <ProjectReference Include="..\MockLibraries\Mock.Standard\Mock.Standard.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>
@@ -64,6 +65,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Workspace\NoOp.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ExecutionPathTracer\Canon.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ExecutionPathTracer\Circuits.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ExecutionPathTracer\Intrinsic.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ExecutionPathTracer\Measurement.qs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

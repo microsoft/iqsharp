@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -66,6 +64,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     Configures the phase visualization style in output from callables such as
                     `DumpMachine` or `DumpRegister`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
+
+                    **`trace.defaultDepth`**
+
+                    **Value:** positive integer (default `1`)
+
+                    Configures the default depth used in the `%trace` command for visualizing Q# operations.
                 ".Dedent(),
                 Examples = new []
                 {

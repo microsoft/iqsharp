@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-
 //
 // These are mock classes that resemble the data structures defined in the chemistry library
 //
 namespace Mock.Chemistry {
     open Microsoft.Quantum.Intrinsic;
     open Microsoft.Quantum.Canon;
-    
     
     /// # Summary
     /// Format of data passed from C# to Q# to represent a term of the Hamiltonian.

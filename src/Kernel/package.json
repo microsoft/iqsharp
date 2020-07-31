@@ -1,5 +1,22 @@
 {
+    "scripts": {
+        "test": "jest"
+    },
     "devDependencies": {
-        "@types/codemirror": "0.0.56"
+        "@types/codemirror": "0.0.56",
+        "@types/jest": "^26.0.4",
+        "canvas": "^2.6.1",
+        "jest": "^26.1.0",
+        "ts-jest": "^26.1.2",
+        "typescript": "^3.9.6"
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "moduleFileExtensions": [
+            "ts",
+            "js"
+        ]
     }
 }
