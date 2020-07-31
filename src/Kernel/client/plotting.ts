@@ -27,7 +27,7 @@ export interface DisplayableState {
     amplitudes: Complex[] | null;
 };
 
-export function removeData(element: Chart) {
+function removeData(element: Chart) {
     element.data.labels.pop();
     element.data.datasets.forEach((dataset) => {
         dataset.data.pop();
@@ -36,7 +36,7 @@ export function removeData(element: Chart) {
 
 };
 
-export function addData(element: Chart, label: string, data) {
+function addData(element: Chart, label: string, data) {
     element.data.labels.push(label);
     element.data.datasets.forEach((dataset) => {
         dataset.data.push(data);
@@ -45,69 +45,190 @@ export function addData(element: Chart, label: string, data) {
 
 }
 
+function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
+    let amps = state.amplitudes;
+    let newCount = amps.length;
+    chart.data = {
+        labels: Array.from(Array(newCount).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            return `|${bitstring}⟩`;
+        }), //basis state labels
+        datasets: [
+            {
+                data: Array.from(Array(newCount).keys()).map(idx => {
+                    return (amps[idx].Magnitude);
+                }),
+                backgroundColor: "#4c4cff",
+                borderColor: "#4c4cff",
+                label: "Amplitude"
+            },
+            {
+                data: Array.from(Array(newCount).keys()).map(idx => {
+                    return (amps[idx].Phase);
+                }),
+                backgroundColor: "#4c4cff",
+                borderColor: "#4c4cff",
+                label: "Phase"
+            }  
+        ],
+    };
+    chart.options.legend = {
+        display: false,
+    };
+    chart.options.scales = {
+        xAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Basis States'
+            },
+            ticks: {
+                maxRotation: 0,
+                minRotation: 0
+            }
+        }],
+        yAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Meas. Probability'
+            },
+            ticks: {
+                beginAtZero: true
+            }
+        }]
+    };
+    chart.update();
+
+}
+
+function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState) {
+    let amps = state.amplitudes;
+    let newCount = amps.length;
+    chart.data = {
+        labels: Array.from(Array(newCount).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            return `|${bitstring}⟩`;
+        }), //basis state labels
+        datasets: [
+            {
+                data: Array.from(Array(newCount).keys()).map(idx => {
+                    return (amps[idx].Magnitude ** 2);
+                }),
+                backgroundColor: "#5390d9",
+                borderColor: "#5390d9",
+            }
+        ],
+    };
+    chart.options.legend = {
+        display: false,
+    };
+    chart.options.scales = {
+        xAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Basis States'
+            },
+            ticks: {
+                maxRotation: 0,
+                minRotation: 0
+            }
+        }],
+        yAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Meas. Probability'
+            },
+            ticks: {
+                beginAtZero: true,
+                suggestedMax: 1,
+                suggestedMin: 0
+            }
+        }]
+    };
+
+    chart.update();
+}
+
+function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
+    let amps = state.amplitudes;
+    let newCount = amps.length;
+    
+    chart.data = {
+        labels: Array.from(Array(newCount).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            return `|${bitstring}⟩`;
+        }), //basis state labels
+        datasets: [
+            {
+                data: Array.from(Array(newCount).keys()).map(idx => {
+                    return (amps[idx].Real);
+                }),
+                backgroundColor: "#5390d9",
+                borderColor: "#5390d9",
+                label: "Real"
+            },
+            {
+                data: Array.from(Array(newCount).keys()).map(idx => {
+                    return (amps[idx].Imag);
+                }),
+                backgroundColor: "#48bfe3",
+                borderColor: "#48bfe3",
+                label: "Imag"
+            }
+        ],
+    };
+    chart.options.legend = {
+        display: false,
+    };
+    chart.options.scales = {
+        xAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Basis States'
+            },
+            ticks: {
+                maxRotation: 0,
+                minRotation: 0
+            }
+        }],
+        yAxes: [{
+            scaleLabel: {
+                display: true,
+                labelString: 'Meas. Probability'
+            },
+            ticks: {
+                beginAtZero: true,
+                suggestedMax: 1,
+                suggestedMin: -1
+            }
+        }]
+    };
+
+    chart.update();
+}
+
 export function createCombinedBarChart(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
     let newCount = amps.length;
 
     let measurementHistogram = new Chart(element, {
         type: 'bar',
-        data: {
-            labels: Array.from(Array(newCount).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
-                return `|${bitstring}⟩`;
-            }), //basis state labels
-            datasets: [
-                {
-                    data: Array.from(Array(newCount).keys()).map(idx => {
-                        return (amps[idx].Magnitude ** 2);
-                    }),
-                    backgroundColor: "#5390d9",
-                    borderColor: "#5390d9",
-                }
-            ],
-        },
         options: {
-            responsive: false,
-            legend: {
-                display: false,
-            },
-            scales: {
-                xAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Basis States'
-                    },
-                    ticks: {
-                        maxRotation: 0,
-                        minRotation: 0
-                    }
-                }],
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Meas. Probability'
-                    },
-                    ticks: {
-                        beginAtZero: true,
-                        suggestedMax: 1,
-                        suggestedMin: 0
-                    }
-                }]
-            }
+            responsive: false
         }
     });
+    updateWithAmplitudeSquaredData(measurementHistogram, state);
 
     //create legend and append to state div
-    let body = document.createElement("div");
-    body.id = "body";
+    let legendDiv = document.createElement("div");
+    legendDiv.id = "legendDiv";
    
     let state_div = state.div_id;
     let div = document.getElementById(state_div);
-    div.appendChild(body);
+    div.appendChild(legendDiv);
 
     //style the legend
-    document.getElementById("body").style.border = "thin solid #000000";
-    document.getElementById("body").style.textAlign = "center";
+    document.getElementById("legendDiv").style.border = "thin solid #000000";
+    document.getElementById("legendDiv").style.textAlign = "center";
 
     let legendTitle = document.createElement("p");
     legendTitle.innerHTML = "Select Graph";
@@ -127,172 +248,20 @@ export function createCombinedBarChart(element: HTMLCanvasElement, state: Displa
     button3.id = "ye";
 
     //append button to legend
-    body.appendChild(legendTitle);
-    body.appendChild(button);
-    body.appendChild(button2);
-    body.appendChild(button3);
+    legendDiv.appendChild(legendTitle);
+    legendDiv.appendChild(button);
+    legendDiv.appendChild(button2);
+    legendDiv.appendChild(button3);
 
     //create event listeners
     button.addEventListener("click", function() {
-        //step one: remove each item currently in the dataset
-        let i = 0;
-        for (i = 0; i < newCount; i++){
-            removeData(measurementHistogram);
-        }
-
-        for (i = 0; i < newCount; i++) {
-            removeData(measurementHistogram);
-        }
-        //step two: repopulate the canvas with the new data
-        let y = Array.from(Array(newCount).keys()).map(idx => {
-            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
-            return `|${bitstring}⟩`;
-        });
-        let x = Array.from(Array(newCount).keys()).map(idx => {
-            return (amps[idx].Magnitude ** 2);
-        });
-
-        for (i = 0; i < newCount; i++){
-            addData(measurementHistogram, y[i], x[i]);
-        }
-
+        updateWithAmplitudeSquaredData(measurementHistogram, state);
     });
     button2.addEventListener("click", function () {
-        let i = 0;
-        for (i = 0; i < newCount; i++) {
-            removeData(measurementHistogram);
-        }
-        for (i = 0; i < newCount; i++) {
-            removeData(measurementHistogram);
-        }
-
-        //step two: might need to rewrite this
-        measurementHistogram = new Chart(element, {
-            type: 'bar',
-            data: {
-                labels: Array.from(Array(newCount).keys()).map(idx => {
-                    let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
-                    return `|${bitstring}⟩`;
-                }), //basis state labels
-                datasets: [
-                    {
-                        data: Array.from(Array(newCount).keys()).map(idx => {
-                            return (amps[idx].Magnitude);
-                        }),
-                        backgroundColor: "#4c4cff",
-                        borderColor: "#4c4cff",
-                        label: "Amplitude"
-                    },
-                    {
-                        data: Array.from(Array(newCount).keys()).map(idx => {
-                            return (amps[idx].Phase);
-                        }),
-                        backgroundColor: "#4c4cff",
-                        borderColor: "#4c4cff",
-                        label: "Phase"
-                    }
-                ],
-            },
-            options: {
-                responsive: false,
-                legend: {
-                    display: false,
-                },
-                scales: {
-                    xAxes: [{
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Basis States'
-                        },
-                        ticks: {
-                            maxRotation: 0,
-                            minRotation: 0
-                        }
-                    }],
-                    yAxes: [{
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Value'
-                        },
-                        ticks: {
-                            beginAtZero: true,
-                        }
-                    }]
-                }
-            }
-        });
-        measurementHistogram.update();
-
-
+        updateWithAmplitudePhaseData(measurementHistogram, state);
     });
     button3.addEventListener("click", function () {
-        let i = 0;
-        for (i = 0; i < newCount; i++) {
-            removeData(measurementHistogram);
-        }
-        for (i = 0; i < newCount; i++) {
-            removeData(measurementHistogram);
-        }
-
-        //step two: set measurement to new chart
-        measurementHistogram = new Chart(element, {
-            type: 'bar',
-            data: {
-                labels: Array.from(Array(newCount).keys()).map(idx => {
-                    let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
-                    return `|${bitstring}⟩`;
-                }), //basis state labels
-                datasets: [
-                    {
-                        data: Array.from(Array(newCount).keys()).map(idx => {
-                            return (amps[idx].Real);
-                        }),
-                        backgroundColor: "#5390d9",
-                        borderColor: "#5390d9",
-                        label: "Real"
-                    },
-                    {
-                        data: Array.from(Array(newCount).keys()).map(idx => {
-                            return (amps[idx].Imag);
-                        }),
-                        backgroundColor: "#48bfe3",
-                        borderColor: "#48bfe3",
-                        label: "Imag"
-                    }
-                ],
-            },
-            options: {
-                responsive: false,
-                legend: {
-                    display: true,
-                },
-                scales: {
-                    xAxes: [{
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Basis States'
-                        },
-                        ticks: {
-                            maxRotation: 0,
-                            minRotation: 0
-                        }
-                    }],
-                    yAxes: [{
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Amplitude'
-                        },
-                        ticks: {
-                            suggestedMax: 1,
-                            suggestedMin: -1
-                        }
-                    }]
-                }
-            }
-        });
-
-        measurementHistogram.update();
-
+        updateWithRealImagData(measurementHistogram, state);
     });
 
 };

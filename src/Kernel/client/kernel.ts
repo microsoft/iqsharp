@@ -136,7 +136,6 @@ class Kernel {
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
-                        let amplitudeSquaredButton = document.createElement("button");
                         let graph = document.createElement("canvas");
                         createCombinedBarChart(graph, state);
                         div.appendChild(graph);
