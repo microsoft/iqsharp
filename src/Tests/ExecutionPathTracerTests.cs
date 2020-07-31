@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
 using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,17 +15,10 @@ namespace Tests.IQSharp
     {
         public Workspace InitWorkspace()
         {
-            var engine = Startup.Create<IQSharpEngine>("Workspace.ExecutionPathTracer");
-            var snippets = engine.Snippets as Snippets;
-
-            var pkgMagic = new PackageMagic(snippets.GlobalReferences);
-            var channel = new MockChannel();
-            pkgMagic.Execute("mock.standard", channel).Wait();
-
-            var ws = snippets.Workspace as Workspace;
+            var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
+            ws.GlobalReferences.AddPackage("mock.standard").Wait();
             ws.Reload();
             Assert.IsFalse(ws.HasErrors);
-
             return ws;
         }
 
