@@ -16,6 +16,8 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
+using System.Linq;
+using System.Numerics;
 
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -34,6 +36,27 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             ? payload.Value.ToEncodedData()
             : (Nullable<EncodedData>)null;
     }
+
+        public class DebugStateDumper: QuantumSimulator.StateDumper {
+            public DebugStateDumper (QuantumSimulator qsim) : base(qsim)
+            {
+
+            }
+
+            public override bool Callback(uint idx, double real, double img)
+            {
+                if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
+                _data[idx] = new Complex(real, img);
+                return true;
+            }
+            private Complex[]? _data = null;
+            public Complex[] getAmplitudes() {
+                var count = this.Simulator.QubitManager.GetAllocatedQubitsCount();
+                _data = new Complex[1 << ((int)count)];
+                var result = base.Dump();
+                    return _data;
+            }
+        }
 
     public class DebugMagic : AbstractMagic
     {
@@ -175,12 +198,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         },
                         Content = new MeasurementHistogramContent
                         {
-                            //change this stuff here too?
                             State = new DisplayableState {
 
-                                //QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
-                                //NQubits = (int)_count,
-                                //Amplitudes = _data,
+                                QubitIds = qsim.QubitIds.Select(q => (int)q),
+                                NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
+                                Amplitudes = new DebugStateDumper(qsim).getAmplitudes(),
                                 DivId = $"{session}"
                             }
                         }
