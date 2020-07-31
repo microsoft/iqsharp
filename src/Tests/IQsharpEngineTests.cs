@@ -88,11 +88,16 @@ namespace Tests.IQSharp
         private async Task AssertTrace(string name, ExecutionPath expectedPath)
         {
             var engine = Init("Workspace.ExecutionPathTracer");
+            var snippets = engine.Snippets as Snippets;
             var configSource = new ConfigurationSource(skipLoading: true);
+            var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var traceMagic = new TraceMagic(engine.SymbolsResolver, configSource);
             var channel = new MockChannel();
 
-            var response = await traceMagic.Execute(name, channel);
+            var response = await pkgMagic.Execute("mock.standard", channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            response = await traceMagic.Execute(name, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
             var message = channel.iopubMessages.ElementAtOrDefault(0);
@@ -303,7 +308,7 @@ namespace Tests.IQSharp
         {
             var engine = Init();
             var snippets = engine.Snippets as Snippets;
-            
+
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
