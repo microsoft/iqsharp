@@ -74,8 +74,10 @@ namespace Tests.IQSharp
             var ws = Startup.Create<Workspace>("Workspace.ProjectReferences");
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
-            Assert.IsTrue(ws.AssemblyInfo.Operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
-            Assert.IsTrue(ws.AssemblyInfo.Operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
         }
 
         [TestMethod]

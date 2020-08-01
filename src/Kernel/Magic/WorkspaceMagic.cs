@@ -106,7 +106,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             CheckIfReady();
 
-            var names = Workspace?.AssemblyInfo?.Operations?
+            var names = Workspace?
+                .Assemblies?
+                .SelectMany(asm => asm.Operations)
                 .Select(c => c.FullName)
                 .OrderBy(name => name)
                 .ToArray();
