@@ -93,7 +93,29 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
                 if (Workspace is Workspace workspace)
                 {
-                    WorkspaceAssemblies = workspace.BuildAssemblies(logger, compilerMetadata, "entrypoint", executionTarget).ToArray();
+                    WorkspaceAssemblies = workspace
+                        .Projects
+                        .Where(p => p.SourceFiles.Any())
+                        .Select(project =>
+                            {
+                                try
+                                {
+                                    return Compiler.BuildFiles(
+                                        project.SourceFiles.ToArray(),
+                                        compilerMetadata,
+                                        logger,
+                                        $"__entrypoint{project.CacheDllName}",
+                                        executionTarget);
+                                }
+                                catch (Exception e)
+                                {
+                                    logger.LogError(
+                                        "IQS004",
+                                        $"Error compiling project {project.ProjectFile} for execution target {executionTarget}: {e.Message}");
+                                    return new AssemblyInfo(null, null, null);
+                                }
+                            })
+                        .ToArray();
                 }
 
                 if (!WorkspaceAssemblies.Any() || logger.HasErrors)

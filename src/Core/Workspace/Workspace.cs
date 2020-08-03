@@ -322,12 +322,6 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
-        public IEnumerable<AssemblyInfo> BuildAssemblies(QSharpLogger logger, CompilerMetadata compilerMetadata, string prefix, string executionTarget) =>
-            Projects
-                .Where(p => p.SourceFiles.Any())
-                .Select(project => Compiler.BuildFiles(
-                    project.SourceFiles.ToArray(), compilerMetadata, logger, $"__{prefix}{project.CacheDllName}", executionTarget));
-
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
@@ -372,11 +366,22 @@ namespace Microsoft.Quantum.IQSharp
                     if (project.SourceFiles.Count() > 0)
                     {
                         Logger?.LogDebug($"{project.SourceFiles.Count()} found in project {project.ProjectFile}. Compiling.");
-                        project.AssemblyInfo = Compiler.BuildFiles(
-                            project.SourceFiles.ToArray(),
-                            GlobalReferences.CompilerMetadata,
-                            logger,
-                            project.CacheDllPath);
+
+                        try
+                        {
+                            project.AssemblyInfo = Compiler.BuildFiles(
+                                project.SourceFiles.ToArray(),
+                                GlobalReferences.CompilerMetadata,
+                                logger,
+                                project.CacheDllPath);
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError(
+                                "IQS003",
+                                $"Error compiling project {project.ProjectFile}: {e.Message}");
+                            project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        }
 
                         ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
                         errorIds.AddRange(logger.ErrorIds.ToArray());
