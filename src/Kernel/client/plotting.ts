@@ -45,7 +45,7 @@ function addData(element: Chart, label: string, data) {
 
 }
 
-function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
+export function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
     let amps = state.amplitudes;
     let newCount = amps.length;
     chart.data = {
@@ -206,18 +206,30 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
     chart.update();
 }
 
-export function createCombinedBarChart(element: HTMLCanvasElement, state: DisplayableState) {
-    let amps = state.amplitudes;
-    let newCount = amps.length;
-
-    let measurementHistogram = new Chart(element, {
+export function createNewCanvas(
+    parentNode: HTMLElement, initalState?: DisplayableState | null
+): { canvas: HTMLCanvasElement, chart: ChartJs } {
+    let canvas = document.createElement("canvas");
+    let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
             responsive: false
         }
     });
-    updateWithAmplitudeSquaredData(measurementHistogram, state);
 
+    if (initalState !== null && initalState !== undefined) {
+        updateWithAmplitudeSquaredData(measurementHistogram, initalState);
+    }
+
+    parentNode.appendChild(canvas);
+
+    return {
+        canvas: canvas,
+        chart: measurementHistogram
+    };
+}
+
+export function attachDumpMachineToolbar(element: HTMLCanvasElement, chart: ChartJs, state: DisplayableState) {
     //create legend and append to state div
     let legendDiv = document.createElement("div");
     legendDiv.id = "legendDiv";
@@ -237,15 +249,12 @@ export function createCombinedBarChart(element: HTMLCanvasElement, state: Displa
     //create buttons
     let button = document.createElement("button");
     button.innerHTML = "amplitude^2";
-    button.id = "ye";
 
     let button2 = document.createElement("button");
     button2.innerHTML = "amplitude/phase";
-    button2.id = "ye";
 
     var button3 = document.createElement("button");
     button3.innerHTML = "real/imag";
-    button3.id = "ye";
 
     //append button to legend
     legendDiv.appendChild(legendTitle);
@@ -255,13 +264,13 @@ export function createCombinedBarChart(element: HTMLCanvasElement, state: Displa
 
     //create event listeners
     button.addEventListener("click", function() {
-        updateWithAmplitudeSquaredData(measurementHistogram, state);
+        updateWithAmplitudeSquaredData(chart, state);
     });
     button2.addEventListener("click", function () {
-        updateWithAmplitudePhaseData(measurementHistogram, state);
+        updateWithAmplitudePhaseData(chart, state);
     });
     button3.addEventListener("click", function () {
-        updateWithRealImagData(measurementHistogram, state);
+        updateWithRealImagData(chart, state);
     });
 
 };

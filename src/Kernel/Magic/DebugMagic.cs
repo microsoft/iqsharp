@@ -37,7 +37,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             : (Nullable<EncodedData>)null;
     }
 
-        public class DebugStateDumper: QuantumSimulator.StateDumper {
+        public class DebugStateDumper: QuantumSimulator.StateDumper
+        {
             public DebugStateDumper (QuantumSimulator qsim) : base(qsim)
             {
 
@@ -181,10 +182,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var session = Guid.NewGuid();
+            var divId = session.ToString();
             lock (sessionAdvanceEvents)
             {
                 sessionAdvanceEvents[session] = new ManualResetEvent(true);
             }
+
             using var qsim = new QuantumSimulator();
             qsim.OnOperationStart += (callable, args) =>
             {
@@ -196,27 +199,46 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         {
                             MessageType = "iqsharp_debug_opstart"
                         },
-                        Content = new MeasurementHistogramContent
+                        Content = new DebugStatusContent
                         {
-                            State = new DisplayableState {
+                            DebugSession = session.ToString(),
+                            State = new DisplayableState
+                            {
 
                                 QubitIds = qsim.QubitIds.Select(q => (int)q),
                                 NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
                                 Amplitudes = new DebugStateDumper(qsim).getAmplitudes(),
-                                DivId = $"{session}"
+                                DivId = divId
                             }
                         }
                     }
                 );
                 WaitForAdvance(session).Wait();
             };
+
             channel.Display(new RawHtmlPayload
             {
                 //needs to be changed?
                 Value = $@"
-                    <div id=""{session}""></div>
+                    <div id=""{divId}""></div>
                 "
             });
+
+            shellServer.SendIoPubMessage(
+                new Message
+                {
+                    Header = new MessageHeader
+                    {
+                        MessageType = "iqsharp_debug_sessionstart"
+                    },
+                    Content = new DebugSessionContent
+                    {
+                        DivId = divId,
+                        DebugSession = session.ToString(),                        
+                    }
+                }
+            );
+
             var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters));
             return value.ToExecutionResult();
         }

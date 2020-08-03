@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 ///<amd-dependency path="codemirror/lib/codemirror" />
 ///<amd-dependency path="codemirror/addon/mode/simple" />
 
@@ -8,7 +7,8 @@ import { IPython } from "./ipython";
 declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, createCombinedBarChart } from "./plotting";
+import type * as ChartJs from "chart.js";
+import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, updateWithAmplitudePhaseData } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 
 class Kernel {
@@ -21,49 +21,53 @@ class Kernel {
             this.requestEcho();
             this.requestClientInfo();
             this.setupMeasurementHistogramDataListener();
-            this.setupMeasurementHistogramDebugger();
+            this.setupDebugSessionHandlers();
         });
     }
 
-    setupMeasurementHistogramDebugger() {
+    setupDebugSessionHandlers() {
+        let sessionCharts = new Map<string, ChartJs>();
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_debug_sessionstart", message => {
+                let debugSession: string = message.content.debug_session;
+                let stateDiv: (string | null) = message.content.div_id;
+                
+                if (stateDiv != null) {
+                    let div = document.getElementById(stateDiv);
+                    if (div != null) {
+                        let { canvas: graph, chart: chart } = createNewCanvas(div);
+                        sessionCharts[debugSession] = chart;
+                        let startDebugToolbar = document.createElement("button");
+                        startDebugToolbar.appendChild(document.createTextNode("Step through Program"));
+                        div.appendChild(startDebugToolbar);
+
+                        startDebugToolbar.addEventListener("click", event => {
+                            this.advanceMeasurementHistogramDebugger(debugSession);
+                        });
+
+                    }
+                }
+                
+            }
+        );
+
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_debug_opstart",
             message => {
                 console.log("iqsharp_debug_opstart message received", message);
 
-                //check to see if there's already a button
-
                 let state: DisplayableState = message.content.state;
-                let state_div = state.div_id;
-                if (state_div != null) {
-                    let div = document.getElementById(state_div);
-                    if (div != null) {
-                        //handle displaying dumpMachine stuff here
-                        if (document.getElementById("ye") != null) {
-                            //make button here and call debugger function in onclick message
-                           let button = document.getElementById("ye");
-                           button.parentNode.removeChild(button);
-                        }
-                        let debuggerFunctionButton = document.createElement("button");
-                        debuggerFunctionButton.id = "ye"
-                        debuggerFunctionButton.appendChild(document.createTextNode("Step through Program"));
-                        debuggerFunctionButton.addEventListener("click", event => {
-                            //update the state every time click happens
-                            this.advanceMeasurementHistogramDebugger(state);
-                        });
-                        div.appendChild(debuggerFunctionButton);
-                    }
-                }
+                let debugSession: string = message.content.debug_session;
+                updateWithAmplitudePhaseData(sessionCharts[debugSession], state);
             }
         );
     }
 
-    advanceMeasurementHistogramDebugger(state: DisplayableState) {
+    advanceMeasurementHistogramDebugger(debugSession: string) {
         console.log("entered advanceMeasurementHistogramDebugger");
-        this.createHistogramFromStateData(state);
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_debug_advance",
-            { debug_session: state.div_id },
+            { debug_session: debugSession },
             {
                 shell: {
                     reply: (message) => {
@@ -72,56 +76,6 @@ class Kernel {
                 }
             }
         );
-
-    }
-
-    createHistogramFromStateData(state: DisplayableState) {
-        //create buttons as DOM objects in order to attach unique event handlers
-        let state_div = state.div_id;
-        if (state_div != null) {
-            let div = document.getElementById(state_div);
-            if (div != null) {
-                let amplitudeSquaredButton = document.createElement("button");
-                let graph = document.createElement("canvas");
-                graph.id = "first";
-                amplitudeSquaredButton.appendChild(document.createTextNode("Show Basis States vs Amplitude Squared"));
-                amplitudeSquaredButton.addEventListener("click", event => {
-                    createBarChart(graph, state);
-                    div.appendChild(graph);
-                    document.getElementById("first").style.display = "block";
-                    document.getElementById("second").style.display = "none";
-                    document.getElementById("third").style.display = "none";
-                });
-                div.appendChild(amplitudeSquaredButton);
-
-
-                let realImagButton = document.createElement("button");
-                let realImagGraph = document.createElement("canvas");
-                realImagGraph.id = "second";
-                realImagButton.appendChild(document.createTextNode("Show Basis States vs Real,Imag"));
-                realImagButton.addEventListener("click", event => {
-                    createBarChartRealImagOption(realImagGraph, state);
-                    div.appendChild(realImagGraph);
-                    document.getElementById("second").style.display = "block";
-                    document.getElementById("first").style.display = "none";
-                    document.getElementById("third").style.display = "none";
-                });
-                div.appendChild(realImagButton);
-
-                let amplitudePhaseButton = document.createElement("button");
-                let amplitudePhaseGraph = document.createElement("canvas");
-                amplitudePhaseGraph.id = "third";
-                amplitudePhaseButton.appendChild(document.createTextNode("Show Basis States vs Amplitude,Phase"));
-                amplitudePhaseButton.addEventListener("click", event => {
-                    createBarChartAmplitudePhaseOption(amplitudePhaseGraph, state);
-                    div.appendChild(amplitudePhaseGraph);
-                    document.getElementById("third").style.display = "block";
-                    document.getElementById("first").style.display = "none";
-                    document.getElementById("second").style.display = "none";
-                });
-                div.appendChild(amplitudePhaseButton);
-            }
-        }
 
     }
 
@@ -136,9 +90,8 @@ class Kernel {
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
                     if (div != null) {
-                        let graph = document.createElement("canvas");
-                        createCombinedBarChart(graph, state);
-                        div.appendChild(graph);
+                        let { canvas: graph, chart: chart} = createNewCanvas(div, state);
+                        attachDumpMachineToolbar(graph, chart, state);
                     }
                 }
                         //make buttons that show the 3 options
