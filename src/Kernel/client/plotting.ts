@@ -45,7 +45,25 @@ function addData(element: Chart, label: string, data) {
 
 }
 
-export function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
+export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
+
+export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: DisplayableState) {
+    switch (plotStyle) {
+        case "amplitude-phase":
+            updateWithAmplitudePhaseData(chart, state);
+            break;
+
+        case "amplitude-squared":
+            updateWithAmplitudeSquaredData(chart, state);
+            break;
+
+        case "real-imag":
+            updateWithRealImagData(chart, state);
+            break;
+    }
+}
+
+function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
     let amps = state.amplitudes;
     let newCount = amps.length;
     chart.data = {

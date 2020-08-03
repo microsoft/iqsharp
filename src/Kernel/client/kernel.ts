@@ -8,7 +8,7 @@ declare var IPython : IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
 import type * as ChartJs from "chart.js";
-import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, updateWithAmplitudePhaseData } from "./plotting";
+import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 
 class Kernel {
@@ -26,7 +26,21 @@ class Kernel {
     }
 
     setupDebugSessionHandlers() {
-        let sessionCharts = new Map<string, ChartJs>();
+        let activeSessions = new Map<string, {
+            chart: ChartJs,
+            lastState: DisplayableState | null,
+            plotStyle: PlotStyle
+        }>();
+        let update = (debugSession: string) => {
+            let state = (activeSessions.get(debugSession)).lastState;
+            if (state !== null) {
+                updateChart(
+                    activeSessions.get(debugSession).plotStyle,
+                    activeSessions.get(debugSession).chart,
+                    state
+                );
+            }
+        };
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_debug_sessionstart", message => {
                 let debugSession: string = message.content.debug_session;
@@ -36,13 +50,46 @@ class Kernel {
                     let div = document.getElementById(stateDiv);
                     if (div != null) {
                         let { canvas: graph, chart: chart } = createNewCanvas(div);
-                        sessionCharts[debugSession] = chart;
+                        activeSessions.set(debugSession, {
+                            chart: chart,
+                            lastState: null,
+                            plotStyle: "amplitude-phase"
+                        });
                         let startDebugToolbar = document.createElement("button");
                         startDebugToolbar.appendChild(document.createTextNode("Step through Program"));
                         div.appendChild(startDebugToolbar);
 
                         startDebugToolbar.addEventListener("click", event => {
                             this.advanceMeasurementHistogramDebugger(debugSession);
+                        });
+
+                        //create buttons that will set the plotstyle to one of three options
+                        //update function handles switching between plotstyle
+                        let amplitudePhaseButton = document.createElement("button");
+                        amplitudePhaseButton.appendChild(document.createTextNode("Amplitude/Phase"));
+                        div.appendChild(amplitudePhaseButton);
+
+                        amplitudePhaseButton.addEventListener("click", event => {
+                            activeSessions.get(debugSession).plotStyle = "amplitude-phase";
+                            update(debugSession);
+                        });
+
+                        let amplitudeSquaredButton = document.createElement("button");
+                        amplitudeSquaredButton.appendChild(document.createTextNode("Amplitude^2"));
+                        div.appendChild(amplitudeSquaredButton);
+
+                        amplitudeSquaredButton.addEventListener("click", event => {
+                            activeSessions.get(debugSession).plotStyle = "amplitude-squared";
+                            update(debugSession);
+                        });
+
+                        let realImagButton = document.createElement("button");
+                        realImagButton.appendChild(document.createTextNode("Real/Imag"));
+                        div.appendChild(realImagButton);
+
+                        realImagButton.addEventListener("click", event => {
+                            activeSessions.get(debugSession).plotStyle = "real-imag";
+                            update(debugSession);
                         });
 
                     }
@@ -58,7 +105,8 @@ class Kernel {
 
                 let state: DisplayableState = message.content.state;
                 let debugSession: string = message.content.debug_session;
-                updateWithAmplitudePhaseData(sessionCharts[debugSession], state);
+                activeSessions.get(debugSession).lastState = state;
+                update(debugSession);
             }
         );
     }
