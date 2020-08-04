@@ -188,7 +188,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 try
                 {
-                    Logger?.LogInformation($"Looking for project references in .csproj files: {string.Join(";", projectsToResolve.Select(p => p.ProjectFile))}");
+                    Logger?.LogInformation($"Looking for project references in .csproj files: {projectsToResolve.ToLogString()}");
                     projectsToResolve = projectsToResolve
                         .SelectMany(project => project.ProjectReferences)
                         .Where(project => !projects.Select(p => p.ProjectFile).Contains(project.ProjectFile))
@@ -197,11 +197,41 @@ namespace Microsoft.Quantum.IQSharp
                     var invalidProjects = projectsToResolve.Where(project => !File.Exists(project.ProjectFile));
                     if (invalidProjects.Any())
                     {
-                        Logger?.LogError($"Skipping invalid project references: {string.Join(";", invalidProjects.Select(p => p.ProjectFile))}");
+                        Logger?.LogError($"Skipping invalid project references: {invalidProjects.ToLogString()}");
                         projectsToResolve = projectsToResolve.Except(invalidProjects).ToList();
                     }
 
-                    Logger?.LogInformation($"Adding project references: {string.Join(";", projectsToResolve.Select(p => p.ProjectFile))}");
+                    const string sdkPackageName = "Microsoft.Quantum.Sdk";
+                    var nonSdkProjects = projectsToResolve.Where(project => !project.Sdk.StartsWith($"{sdkPackageName}/"));
+                    if (nonSdkProjects.Any())
+                    {
+                        Logger?.LogInformation($"Skipping project references that do not reference Microsoft.Quantum.Sdk: {nonSdkProjects.ToLogString()}");
+                        projectsToResolve = projectsToResolve.Except(nonSdkProjects).ToList();
+                    }
+
+                    if (GlobalReferences is References references)
+                    {
+                        const string standardPackageName = "Microsoft.Quantum.Standard";
+                        var currentVersion = references
+                            .Nugets
+                            ?.Items
+                            ?.Where(package => package.Id == standardPackageName)
+                            .FirstOrDefault()
+                            ?.Version
+                            ?.ToString();
+                        if (!string.IsNullOrEmpty(currentVersion))
+                        {
+                            foreach (var project in projectsToResolve.Where(project => !project.Sdk.EndsWith(currentVersion)))
+                            {
+                                Logger?.LogWarning(
+                                    $"Project {project.ProjectFile} references {project.Sdk}, " +
+                                    $"but IQ# is using version {currentVersion} of {standardPackageName}. " +
+                                    $"Project will be compiled using version {currentVersion}.");
+                            }
+                        }
+                    }
+
+                    Logger?.LogInformation($"Adding project references: {projectsToResolve.ToLogString()}");
                     projects.AddRange(projectsToResolve);
                 }
                 catch (Exception e)

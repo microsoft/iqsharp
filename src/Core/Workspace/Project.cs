@@ -9,15 +9,19 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    internal static class ProjectExtensions
+    {
+        public static string ToLogString(this IEnumerable<Project> projects) =>
+            string.Join(";", projects.Select(p => p.ProjectFile));
+    }
+
     public class Project
     {
         public readonly string ProjectFile;
@@ -30,9 +34,11 @@ namespace Microsoft.Quantum.IQSharp
             ? Enumerable.Empty<Project>()
             : XDocument.Load(ProjectFile)
                 .XPathSelectElements("//ProjectReference")
-                .Select(element => Path.Combine(
+                .Select(element => element.Attribute("Include")?.Value)
+                .Where(include => !string.IsNullOrEmpty(include))
+                .Select(include => Path.Combine(
                     Path.GetDirectoryName(ProjectFile),
-                    element.Attribute("Include").Value.Replace('\\', Path.DirectorySeparatorChar)))
+                    include!.Replace('\\', Path.DirectorySeparatorChar)))
                 .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
 
         public IEnumerable<PackageReference> PackageReferences =>
@@ -42,9 +48,18 @@ namespace Microsoft.Quantum.IQSharp
                 .XPathSelectElements("//PackageReference")
                 .Select(element => new PackageReference(
                     new PackageIdentity(
-                        id: element.Attribute("Include").Value,
-                        version: new NuGetVersion(element.Attribute("Version").Value)),
+                        id: element.Attribute("Include")?.Value,
+                        version: new NuGetVersion(element.Attribute("Version")?.Value)),
                     NuGetFramework.AnyFramework));
+
+        public string Sdk =>
+            string.IsNullOrEmpty(ProjectFile)
+            ? string.Empty
+            : XDocument.Load(ProjectFile)
+                .XPathSelectElements("//Project")
+                .Select(element => element.Attribute("Sdk")?.Value)
+                .FirstOrDefault()
+            ?? string.Empty;
 
         public bool IncludeSubdirectories =>
             !string.IsNullOrEmpty(ProjectFile);
@@ -61,7 +76,7 @@ namespace Microsoft.Quantum.IQSharp
         public string CacheDllName =>
             string.IsNullOrEmpty(ProjectFile)
                 ? "__ws__.dll"
-                : $"__{string.Join("_", ProjectFile.Split(Path.GetInvalidFileNameChars()))}__.dll";
+                : $"__ws__{string.Join("_", ProjectFile.Split(Path.GetInvalidFileNameChars()))}__.dll";
 
         /// <summary>
         ///     Creates a <see cref="Project"/> for the given workspace folder.
@@ -97,14 +112,13 @@ namespace Microsoft.Quantum.IQSharp
             ProjectFile = projectFile;
             RootFolder = rootFolder;
             CacheFolder = cacheFolder;
-            Watchers = new FileSystemWatcher[]
-            {
-                CreateWatcher("*.qs"), CreateWatcher("*.csproj")
-            };
+            Watchers = File.Exists(RootFolder)
+                ? new FileSystemWatcher[] { CreateWatcher(RootFolder, "*.qs"), CreateWatcher(RootFolder, "*.csproj") }
+                : Enumerable.Empty<FileSystemWatcher>();
         }
 
-        private FileSystemWatcher CreateWatcher(string filter) =>
-            new FileSystemWatcher(RootFolder, filter)
+        private FileSystemWatcher CreateWatcher(string folder, string filter) =>
+            new FileSystemWatcher(folder, filter)
             {
                 IncludeSubdirectories = IncludeSubdirectories,
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
