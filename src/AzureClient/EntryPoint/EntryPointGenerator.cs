@@ -104,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                         project.SourceFiles.ToArray(),
                                         compilerMetadata,
                                         logger,
-                                        $"__entrypoint{project.CacheDllName}",
+                                        Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"),
                                         executionTarget);
                                 }
                                 catch (Exception e)
