@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Tests.ProjectReferences.ProjectA {
+namespace Tests.ProjectReferences.ProjectB {
     
     open Microsoft.Quantum.Intrinsic;
 

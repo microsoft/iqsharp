@@ -101,7 +101,9 @@ namespace Microsoft.Quantum.IQSharp
         private bool SkipAutoLoadProject { get; set; }
 
         /// <summary>
-        /// Gets the projects to be built for this Workspace.
+        /// Gets the projects to be built for this Workspace. The order of the enumeration
+        /// indicates the order in which the projects should be built, i.e., the first
+        /// project in the enumeration should be built first.
         /// </summary>
         public IEnumerable<Project> Projects { get; set; }
 
@@ -189,26 +191,40 @@ namespace Microsoft.Quantum.IQSharp
                 try
                 {
                     Logger?.LogInformation($"Looking for project references in .csproj files: {projectsToResolve.ToLogString()}");
-                    projectsToResolve = projectsToResolve
-                        .SelectMany(project => project.ProjectReferences)
-                        .Where(project => !projects.Select(p => p.ProjectFile).Contains(project.ProjectFile))
-                        .ToList();
+                    projectsToResolve = projectsToResolve.SelectMany(project => project.ProjectReferences).ToList();
 
+                    // Move any already-referenced projects to the end of the list, since other projects depend on them.
+                    var alreadyReferencedProjects = projectsToResolve
+                        .Where(project => projects.Contains(project, new ProjectFileComparer()));
+                    if (alreadyReferencedProjects.Any())
+                    {
+                        // TODO - this Except call isn't working.
+                        projects = projects
+                            .Except(alreadyReferencedProjects, new ProjectFileComparer())
+                            .Concat(alreadyReferencedProjects)
+                            .ToList();
+                        projectsToResolve = projectsToResolve.Except(alreadyReferencedProjects).ToList();
+                    }
+
+                    // Skip projects that do not exist on disk.
                     var invalidProjects = projectsToResolve.Where(project => !File.Exists(project.ProjectFile));
                     if (invalidProjects.Any())
                     {
                         Logger?.LogError($"Skipping invalid project references: {invalidProjects.ToLogString()}");
-                        projectsToResolve = projectsToResolve.Except(invalidProjects).ToList();
+                        projectsToResolve = projectsToResolve.Except(invalidProjects, new ProjectFileComparer()).ToList();
                     }
 
+                    // Skip projects that do not reference Microsoft.Quantum.Sdk.
                     const string sdkPackageName = "Microsoft.Quantum.Sdk";
                     var nonSdkProjects = projectsToResolve.Where(project => !project.Sdk.StartsWith($"{sdkPackageName}/"));
                     if (nonSdkProjects.Any())
                     {
-                        Logger?.LogInformation($"Skipping project references that do not reference Microsoft.Quantum.Sdk: {nonSdkProjects.ToLogString()}");
-                        projectsToResolve = projectsToResolve.Except(nonSdkProjects).ToList();
+                        Logger?.LogInformation($"Skipping project references that do not reference {sdkPackageName}: {nonSdkProjects.ToLogString()}");
+                        projectsToResolve = projectsToResolve.Except(nonSdkProjects, new ProjectFileComparer()).ToList();
                     }
 
+                    // Warn if any projects reference a Microsoft.Quantum.Sdk version that is different than
+                    // the version of Microsoft.Quantum.Standard we have currently loaded.
                     if (GlobalReferences is References references)
                     {
                         const string standardPackageName = "Microsoft.Quantum.Standard";
@@ -241,6 +257,8 @@ namespace Microsoft.Quantum.IQSharp
                 }
             }
 
+            // The list must now be reversed to reflect the order in which the projects must be built.
+            projects.Reverse();
             Projects = projects;
         }
 
@@ -401,7 +419,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             project.AssemblyInfo = Compiler.BuildFiles(
                                 project.SourceFiles.ToArray(),
-                                GlobalReferences.CompilerMetadata,
+                                GlobalReferences.CompilerMetadata.WithAssemblies(Assemblies.ToArray()),
                                 logger,
                                 project.CacheDllPath);
                         }

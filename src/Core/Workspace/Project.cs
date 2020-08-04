@@ -22,6 +22,13 @@ namespace Microsoft.Quantum.IQSharp
             string.Join(";", projects.Select(p => p.ProjectFile));
     }
 
+    internal class ProjectFileComparer : EqualityComparer<Project>
+    {
+        public override bool Equals(Project p1, Project p2) => p1.ProjectFile == p2.ProjectFile;
+
+        public override int GetHashCode(Project project) => project.ProjectFile.GetHashCode();
+    }
+
     public class Project
     {
         public readonly string ProjectFile;
@@ -36,9 +43,9 @@ namespace Microsoft.Quantum.IQSharp
                 .XPathSelectElements("//ProjectReference")
                 .Select(element => element.Attribute("Include")?.Value)
                 .Where(include => !string.IsNullOrEmpty(include))
-                .Select(include => Path.Combine(
-                    Path.GetDirectoryName(ProjectFile),
-                    include!.Replace('\\', Path.DirectorySeparatorChar)))
+                .Select(include => Path.GetFullPath(
+                    include!.Replace('\\', Path.DirectorySeparatorChar),
+                    Path.GetDirectoryName(ProjectFile)))
                 .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
 
         public IEnumerable<PackageReference> PackageReferences =>
@@ -68,7 +75,13 @@ namespace Microsoft.Quantum.IQSharp
             Directory.EnumerateFiles(RootFolder, "*.qs",
                 IncludeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
-        public AssemblyInfo? AssemblyInfo { get; set; }
+        private AssemblyInfo? _assemblyInfo;
+
+        public AssemblyInfo? AssemblyInfo
+        {
+            get => File.Exists(_assemblyInfo?.Location) ? _assemblyInfo : null;
+            set => _assemblyInfo = value;
+        }
 
         public string CacheDllPath =>
             Path.Combine(CacheFolder, CacheDllName);

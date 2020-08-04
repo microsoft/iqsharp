@@ -91,39 +91,37 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (workspaceFiles.Any())
             {
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
+
+                var workspaceAssemblies = new List<AssemblyInfo>();
                 if (Workspace is Workspace workspace)
                 {
-                    WorkspaceAssemblies = workspace
-                        .Projects
-                        .Where(p => p.SourceFiles.Any())
-                        .Select(project =>
-                            {
-                                try
-                                {
-                                    return Compiler.BuildFiles(
-                                        project.SourceFiles.ToArray(),
-                                        compilerMetadata,
-                                        logger,
-                                        Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"),
-                                        executionTarget);
-                                }
-                                catch (Exception e)
-                                {
-                                    logger.LogError(
-                                        "IQS004",
-                                        $"Error compiling project {project.ProjectFile} for execution target {executionTarget}: {e.Message}");
-                                    return new AssemblyInfo(null, null, null);
-                                }
-                            })
-                        .ToArray();
+                    foreach (var project in workspace.Projects.Where(p => p.SourceFiles.Any()))
+                    {
+                        try
+                        {
+                            workspaceAssemblies.Add(Compiler.BuildFiles(
+                                project.SourceFiles.ToArray(),
+                                compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
+                                logger,
+                                Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"),
+                                executionTarget));
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError(
+                                "IQS004",
+                                $"Error compiling project {project.ProjectFile} for execution target {executionTarget}: {e.Message}");
+                        }
+                    }
                 }
 
-                if (!WorkspaceAssemblies.Any() || logger.HasErrors)
+                if (!workspaceAssemblies.Any() || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling workspace.");
                     throw new CompilationErrorsException(logger.Errors.ToArray());
                 }
 
+                WorkspaceAssemblies = workspaceAssemblies.ToArray();
                 compilerMetadata = compilerMetadata.WithAssemblies(WorkspaceAssemblies);
             }
 
