@@ -84,7 +84,11 @@ function Test-JavaScript {
 
     Write-Host "##[info]Installing JS packages from $packageFolder"
     Push-Location (Join-Path $PSScriptRoot $packageFolder)
-        npm install
+        Try {
+            npm install
+        } Catch {
+            Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
+        }
     Pop-Location
 
     Write-Host "##[info]Testing JS inside $packageFolder"    
