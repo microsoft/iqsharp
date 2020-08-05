@@ -211,7 +211,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Meas. Probability'
+                labelString: 'Real/Imag'
             },
             ticks: {
                 beginAtZero: true,
