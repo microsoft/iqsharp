@@ -9,13 +9,13 @@ using Microsoft.Quantum.Simulation.Common;
 namespace Microsoft.Quantum.IQSharp.Tracer
 {
     /// <summary>
-    /// Extension methods to be used with and by <see cref="ExecutionPathTracer">.
+    /// Extension methods to be used with and by <see cref="ExecutionPathTracer"/>.
     /// </summary>
     public static class Extensions
     {
         /// <summary>
-        /// Attaches <see cref="ExecutionPathTracer"> event listeners to the simulator to generate
-        /// the <see cref="ExecutionPath"> of the operation performed by the simulator.
+        /// Attaches <see cref="ExecutionPathTracer"/> event listeners to the simulator to generate
+        /// the <see cref="ExecutionPath"/> of the operation performed by the simulator.
         /// </summary>
         public static T WithExecutionPathTracer<T>(this T sim, ExecutionPathTracer tracer)
             where T : SimulatorBase

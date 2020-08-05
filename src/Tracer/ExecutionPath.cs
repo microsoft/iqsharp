@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Microsoft.Quantum.Simulation.Core;
 
 namespace Microsoft.Quantum.IQSharp.Tracer
 {

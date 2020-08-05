@@ -171,7 +171,7 @@ namespace Microsoft.Quantum.IQSharp.Tracer
         }
 
         /// <summary>
-        /// Parse <see cref="Operations"/>s traced out by the <c>compositeTracer</c>.
+        /// Parse <see cref="Operation"/>s traced out by the <c>compositeTracer</c>.
         /// </summary>
         private void AddCompositeOperations()
         {
