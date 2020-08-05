@@ -51,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 return true;
             }
             private Complex[]? _data = null;
-            public Complex[] GetAmplitudes()
+            public Complex[] getAmplitudes()
             {
                 var count = this.Simulator.QubitManager.GetAllocatedQubitsCount();
                 _data = new Complex[1 << ((int)count)];
