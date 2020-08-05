@@ -706,8 +706,8 @@ namespace Tests.IQSharp
             path = GetExecutionPath("ApplyToEachDepth2Circ", 2);
             qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             operations = new Operation[]
             {
@@ -733,13 +733,17 @@ namespace Tests.IQSharp
                 },
                 new Operation()
                 {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
+                    Gate = "M",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
                 new Operation()
                 {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
+                    Gate = "M",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(1) },
+                    Targets = new List<Register>() { new ClassicalRegister(1, 0) },
                 },
             };
             expected = new ExecutionPath(qubits, operations);
