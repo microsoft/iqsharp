@@ -173,7 +173,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     encoding of its arguments.
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
-
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
