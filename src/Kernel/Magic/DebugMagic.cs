@@ -39,6 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         public class DebugStateDumper: QuantumSimulator.StateDumper
         {
+            private Complex[]? _data = null;
             public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
             {
 
@@ -50,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 _data[idx] = new Complex(real, img);
                 return true;
             }
-            private Complex[]? _data = null;
+            
             public Complex[] getAmplitudes()
             {
                 var count = this.Simulator.QubitManager.GetAllocatedQubitsCount();
@@ -109,7 +110,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var session = content?.Data?["debug_session"];
             if (session == null)
             {
-                // TODO: Communicate error back here!
+                this.logger.LogError("Missing debug_session field in iqsharp_debug_request message.");
             }
             else
             {
