@@ -6,7 +6,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.Tracer
 {
     /// <summary>
     /// Enum for the 2 types of registers: <c>Qubit</c> and <c>Classical</c>.

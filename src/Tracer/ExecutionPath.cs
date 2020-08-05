@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.Tracer
 {
     /// <summary>
     /// Represents the qubit resources and operations traced out in an execution path of a Q# operation.

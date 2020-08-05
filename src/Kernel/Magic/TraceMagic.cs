@@ -5,7 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
+using Microsoft.Quantum.IQSharp.Tracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;

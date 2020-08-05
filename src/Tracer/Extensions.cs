@@ -3,13 +3,10 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Quantum.Simulation.Core;
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.Tracer
 {
     /// <summary>
     /// Extension methods to be used with and by <see cref="ExecutionPathTracer">.
