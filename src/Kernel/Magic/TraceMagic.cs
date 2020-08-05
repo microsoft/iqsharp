@@ -5,7 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.IQSharp.Tracer;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
@@ -143,7 +143,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             );
             if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
 
-            var tracer = new ExecutionPathTracer(depth);
+            var tracer = new ExecutionPathTracer.ExecutionPathTracer(depth);
 
             // Simulate operation and attach `ExecutionPathTracer` to trace out operations performed
             // in its execution path

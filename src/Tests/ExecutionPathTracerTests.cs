@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Tracer;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

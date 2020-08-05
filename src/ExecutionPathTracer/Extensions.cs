@@ -6,7 +6,7 @@
 using System.Collections.Generic;
 using Microsoft.Quantum.Simulation.Common;
 
-namespace Microsoft.Quantum.IQSharp.Tracer
+namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
     /// <summary>
     /// Extension methods to be used with and by <see cref="ExecutionPathTracer"/>.

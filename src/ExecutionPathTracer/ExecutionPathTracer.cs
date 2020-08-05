@@ -8,7 +8,7 @@ using Microsoft.Quantum.Simulation.Core;
 
 #nullable enable
 
-namespace Microsoft.Quantum.IQSharp.Tracer
+namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
     /// <summary>
     /// Traces through the operations in a given execution path of a Q# program by hooking on
