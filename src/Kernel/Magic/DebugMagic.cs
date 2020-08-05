@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         public class DebugStateDumper: QuantumSimulator.StateDumper
         {
-            public DebugStateDumper (QuantumSimulator qsim) : base(qsim)
+            public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
             {
 
             }
