@@ -88,8 +88,7 @@ function Test-JavaScript {
             npm install
         } Catch {
             Write-Host $Error[0]
-            Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
-            $script:all_ok = $False
+            Write-Host "##vso[task.logissue type=warning;]Failed to install npm dependencies."
         }
     Pop-Location
 
@@ -103,8 +102,7 @@ function Test-JavaScript {
             }
         } Catch {
             Write-Host $Error[0]
-            Write-Host "##vso[task.logissue type=error;]Failed to test JS inside $packageFolder"
-            $script:all_ok = $False
+            Write-Host "##vso[task.logissue type=warning;]Failed to test JS inside $packageFolder"
         }
     Pop-Location
 
