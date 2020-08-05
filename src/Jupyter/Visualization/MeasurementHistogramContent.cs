@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
-    internal class MeasurementHistogramContent : MessageContent
+    public class MeasurementHistogramContent : MessageContent
     {
         [JsonProperty("state")]
         public DisplayableState State { get; set; }
