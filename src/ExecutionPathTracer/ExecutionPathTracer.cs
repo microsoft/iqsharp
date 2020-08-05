@@ -8,7 +8,7 @@ using Microsoft.Quantum.Simulation.Core;
 
 #nullable enable
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
     /// <summary>
     /// Traces through the operations in a given execution path of a Q# program by hooking on
@@ -171,7 +171,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         }
 
         /// <summary>
-        /// Parse <see cref="Operations"/>s traced out by the <c>compositeTracer</c>.
+        /// Parse <see cref="Operation"/>s traced out by the <c>compositeTracer</c>.
         /// </summary>
         private void AddCompositeOperations()
         {
