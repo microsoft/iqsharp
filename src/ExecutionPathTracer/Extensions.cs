@@ -3,11 +3,50 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Quantum.Simulation.Common;
+using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.Simulation.QuantumProcessor.Extensions;
 
 namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
+    /// <summary>
+    /// Custom ApplyIfElse used by Tracer to overrides the default behaviour and executes both branches
+    /// of the conditional statement.
+    /// </summary>
+    public class TracerApplyIfElse : ApplyIfElseR<Qubit, Qubit>
+    {
+        private SimulatorBase Simulator { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TracerApplyIfElse"/> class.
+        /// </summary>
+        public TracerApplyIfElse(SimulatorBase m) : base(m)
+        {
+            this.Simulator = m;
+        }
+
+        /// <inheritdoc />
+        public override Func<(Result, (ICallable, Qubit), (ICallable, Qubit)), QVoid> Body => (q) =>
+        {
+            (Result measurementResult, (ICallable onZero, Qubit one), (ICallable onOne, Qubit two)) = q;
+            onZero.Apply(one);
+            onOne.Apply(two);
+
+            return QVoid.Instance;
+        };
+
+        /// <inheritdoc />
+        public override RuntimeMetadata? GetRuntimeMetadata(IApplyData args)
+        {
+            var metadata = base.GetRuntimeMetadata(args);
+            if (metadata == null) throw new NullReferenceException($"Null RuntimeMetadata found for {this.ToString()}.");
+            metadata.IsComposite = true;
+            return metadata;
+        }
+    }
+
     /// <summary>
     /// Extension methods to be used with and by <see cref="ExecutionPathTracer"/>.
     /// </summary>
@@ -22,6 +61,10 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         {
             sim.OnOperationStart += tracer.OnOperationStartHandler;
             sim.OnOperationEnd += tracer.OnOperationEndHandler;
+            sim.Register(
+                typeof(ApplyIfElseR<Qubit, Qubit>),
+                typeof(TracerApplyIfElse)
+            );
             return sim;
         }
 

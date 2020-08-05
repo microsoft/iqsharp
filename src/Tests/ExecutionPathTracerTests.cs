@@ -614,6 +614,55 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             Assert.AreEqual(expected.ToJson(), path.ToJson());
         }
+
+        [TestMethod]
+        public void IfTest()
+        {
+            var path = GetExecutionPath("IfCirc");
+            var qubits = new QubitDeclaration[] { new QubitDeclaration(0, 1) };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "M",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                },
+                new Operation()
+                {
+                    Gate = "ApplyIfElseR",
+                    DisplayArgs = "(Zero, (X), (Z))",
+                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(0) },
+                    Children = new List<List<Operation>>()
+                    {
+                        new List<Operation>()
+                        {
+                            new Operation()
+                            {
+                                Gate = "X",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            },
+                        },
+                        new List<Operation>()
+                        {
+                            new Operation()
+                            {
+                                Gate = "Z",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            },
+                        },
+                    },
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
     }
 
     [TestClass]

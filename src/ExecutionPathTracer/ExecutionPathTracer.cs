@@ -69,6 +69,9 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 
             var metadata = operation.GetRuntimeMetadata(arguments);
 
+            // TODO: Remove once GetRuntimeMetadata has been implemented
+            if (operation.Name == "ApplyIfElseR" && metadata != null) metadata.IsComposite = true;
+
             // If metadata is a composite operation (i.e. want to trace its components instead),
             // we recursively create a tracer that traces its components instead
             if (metadata != null && metadata.IsComposite)
@@ -81,6 +84,12 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
                 this.currCompositeOp = operation;
                 // Set currentOperation to null so we don't render higher-depth operations unintentionally.
                 this.currentOperation = null;
+
+                // TODO: Change to IsConditional flag once implemented
+                if (operation.Name == "ApplyIfElseR")
+                {
+                    this.currentOperation = this.MetadataToOperation(metadata);
+                }
                 return;
             }
 
@@ -179,6 +188,17 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             if (this.compositeTracer == null)
                 throw new NullReferenceException("ERROR: compositeTracer not initialized.");
 
+            // TODO: Change to IsConditional flag once implemented
+            if (this.currCompositeOp != null && this.currCompositeOp.Name == "ApplyIfElseR")
+            {
+                if (this.currentOperation == null) throw new NullReferenceException("ERROR: currentOperation is null.");
+                var numChildren = this.compositeTracer.operations.Count();
+                if (numChildren != 2) throw new IndexOutOfRangeException($"ERROR: Found only {numChildren} children for conditional operation.");
+                this.currentOperation.Children = this.compositeTracer.operations
+                    .Select(op => new List<Operation>() { op });
+                this.operations.Add(this.currentOperation);
+                return;
+            }
             // The composite tracer has done its job and we retrieve the operations it traced
             this.operations.AddRange(this.compositeTracer.operations);
         }
