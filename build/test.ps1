@@ -87,16 +87,22 @@ function Test-JavaScript {
         Try {
             npm install
         } Catch {
-            Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
+            Write-Host $Error[0]
+            Write-Host "##vso[task.logissue type=warning;]Failed to install npm dependencies."
         }
     Pop-Location
 
     Write-Host "##[info]Testing JS inside $packageFolder"    
     Push-Location (Join-Path $PSScriptRoot $packageFolder)
-        if (!$options) {
-            npm test
-        } else {
-            npm test -- $options
+        Try {
+            if (!$options) {
+                npm test
+            } else {
+                npm test -- $options
+            }
+        } Catch {
+            Write-Host $Error[0]
+            Write-Host "##vso[task.logissue type=warning;]Failed to test JS inside $packageFolder"
         }
     Pop-Location
 
