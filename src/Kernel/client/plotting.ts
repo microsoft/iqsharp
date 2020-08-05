@@ -107,7 +107,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Meas. Probability'
+                labelString: 'Amplitude/Phase'
             },
             ticks: {
                 beginAtZero: true
@@ -211,7 +211,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Meas. Probability'
+                labelString: 'Real/Imag'
             },
             ticks: {
                 beginAtZero: true,

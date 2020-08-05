@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         public class DebugStateDumper: QuantumSimulator.StateDumper
         {
-            public DebugStateDumper (QuantumSimulator qsim) : base(qsim)
+            public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
             {
 
             }
@@ -51,7 +51,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 return true;
             }
             private Complex[]? _data = null;
-            public Complex[] getAmplitudes() {
+            public Complex[] GetAmplitudes()
+            {
                 var count = this.Simulator.QubitManager.GetAllocatedQubitsCount();
                 _data = new Complex[1 << ((int)count)];
                 var result = base.Dump();
@@ -173,7 +174,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     encoding of its arguments.
         /// </summary>
         public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
-
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
