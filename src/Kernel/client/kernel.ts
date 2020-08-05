@@ -133,7 +133,6 @@ class Kernel {
             message => {
                 console.log("my message received", message);
                 let state: DisplayableState = message.content.state;
-                //this.createHistogramFromStateData(state);
                 let state_div = state.div_id;
                 if (state_div != null) {
                     let div = document.getElementById(state_div);
@@ -142,8 +141,6 @@ class Kernel {
                         attachDumpMachineToolbar(graph, chart, state);
                     }
                 }
-                        //make buttons that show the 3 options
-                        //real + imag, amplitude + phase, original view
             });
     }
 

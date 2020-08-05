@@ -265,29 +265,29 @@ export function attachDumpMachineToolbar(element: HTMLCanvasElement, chart: Char
 
 
     //create buttons
-    let button = document.createElement("button");
-    button.innerHTML = "amplitude^2";
+    let buttonAmplitudeSquared = document.createElement("button");
+    buttonAmplitudeSquared.innerHTML = "amplitude^2";
 
-    let button2 = document.createElement("button");
-    button2.innerHTML = "amplitude/phase";
+    let buttonAmplitudePhase = document.createElement("button");
+    buttonAmplitudePhase.innerHTML = "amplitude/phase";
 
-    var button3 = document.createElement("button");
-    button3.innerHTML = "real/imag";
+    var buttonRealImag = document.createElement("button");
+    buttonRealImag.innerHTML = "real/imag";
 
     //append button to legend
     legendDiv.appendChild(legendTitle);
-    legendDiv.appendChild(button);
-    legendDiv.appendChild(button2);
-    legendDiv.appendChild(button3);
+    legendDiv.appendChild(buttonAmplitudeSquared);
+    legendDiv.appendChild(buttonAmplitudePhase);
+    legendDiv.appendChild(buttonRealImag);
 
     //create event listeners
-    button.addEventListener("click", function() {
+    buttonAmplitudeSquared.addEventListener("click", function() {
         updateWithAmplitudeSquaredData(chart, state);
     });
-    button2.addEventListener("click", function () {
+    buttonAmplitudePhase.addEventListener("click", function () {
         updateWithAmplitudePhaseData(chart, state);
     });
-    button3.addEventListener("click", function () {
+    buttonRealImag.addEventListener("click", function () {
         updateWithRealImagData(chart, state);
     });
 

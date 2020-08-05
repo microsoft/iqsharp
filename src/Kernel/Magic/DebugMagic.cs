@@ -218,7 +218,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             channel.Display(new RawHtmlPayload
             {
-                //needs to be changed?
                 Value = $@"
                     <div id=""{divId}""></div>
                 "
