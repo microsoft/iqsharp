@@ -65,6 +65,13 @@ namespace Microsoft.Quantum.IQSharp
         string Root { get; }
 
         /// <summary>
+        /// Gets the projects to be built for this Workspace. The order of the enumeration
+        /// indicates the order in which the projects should be built, i.e., the first
+        /// project in the enumeration should be built first.
+        /// </summary>
+        public IEnumerable<Project> Projects { get; set; }
+
+        /// <summary>
         /// Gets the source files to be built for this Workspace.
         /// </summary>
         public IEnumerable<string> SourceFiles { get; }

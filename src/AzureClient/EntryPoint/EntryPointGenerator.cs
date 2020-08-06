@@ -93,25 +93,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
 
                 var workspaceAssemblies = new List<AssemblyInfo>();
-                if (Workspace is Workspace workspace)
+                foreach (var project in Workspace.Projects.Where(p => p.SourceFiles.Any()))
                 {
-                    foreach (var project in workspace.Projects.Where(p => p.SourceFiles.Any()))
+                    try
                     {
-                        try
-                        {
-                            workspaceAssemblies.Add(Compiler.BuildFiles(
-                                project.SourceFiles.ToArray(),
-                                compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
-                                logger,
-                                Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"),
-                                executionTarget));
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogError(
-                                "IQS004",
-                                $"Error compiling project {project.ProjectFile} for execution target {executionTarget}: {e.Message}");
-                        }
+                        workspaceAssemblies.Add(Compiler.BuildFiles(
+                            project.SourceFiles.ToArray(),
+                            compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
+                            logger,
+                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"),
+                            executionTarget));
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError(
+                            "IQS004",
+                            $"Error compiling project {project.ProjectFile} for execution target {executionTarget}: {e.Message}");
                     }
                 }
 
