@@ -69,12 +69,9 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 
             var metadata = operation.GetRuntimeMetadata(arguments);
 
-            // TODO: Remove once GetRuntimeMetadata has been implemented
-            if (operation.Name == "ApplyIfElseR" && metadata != null) metadata.IsComposite = true;
-
-            // If metadata is a composite operation (i.e. want to trace its components instead),
+            // If metadata is a composite/conditional operation (i.e. want to trace its components instead),
             // we recursively create a tracer that traces its components instead
-            if (metadata != null && metadata.IsComposite)
+            if (metadata != null && (metadata.IsComposite || metadata.IsConditional))
             {
                 var remainingDepth = this.renderDepth - this.currentDepth;
                 this.compositeTracer = new ExecutionPathTracer(remainingDepth);
@@ -85,11 +82,7 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
                 // Set currentOperation to null so we don't render higher-depth operations unintentionally.
                 this.currentOperation = null;
 
-                // TODO: Change to IsConditional flag once implemented
-                if (operation.Name == "ApplyIfElseR")
-                {
-                    this.currentOperation = this.MetadataToOperation(metadata);
-                }
+                if (metadata.IsConditional) this.currentOperation = this.MetadataToOperation(metadata);
                 return;
             }
 
@@ -188,10 +181,8 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             if (this.compositeTracer == null)
                 throw new NullReferenceException("ERROR: compositeTracer not initialized.");
 
-            // TODO: Change to IsConditional flag once implemented
-            if (this.currCompositeOp != null && this.currCompositeOp.Name == "ApplyIfElseR")
+            if (this.currentOperation != null && this.currentOperation.IsConditional)
             {
-                if (this.currentOperation == null) throw new NullReferenceException("ERROR: currentOperation is null.");
                 var numChildren = this.compositeTracer.operations.Count();
                 if (numChildren != 2) throw new IndexOutOfRangeException($"ERROR: Found only {numChildren} children for conditional operation.");
                 this.currentOperation.Children = this.compositeTracer.operations
@@ -222,6 +213,7 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
                 Gate = metadata.Label,
                 DisplayArgs = displayArgs,
                 Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
+                IsConditional = metadata.IsConditional,
                 IsControlled = metadata.IsControlled,
                 IsAdjoint = metadata.IsAdjoint,
                 Controls = this.GetQubitRegisters(metadata.Controls),

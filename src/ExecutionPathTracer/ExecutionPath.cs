@@ -118,9 +118,6 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// <summary>
         /// Group of operations for each classical branch.
         /// </summary>
-        /// <remarks>
-        /// Currently not used as this is intended for classically-controlled operations.
-        /// </remarks>
         [JsonProperty("children")]
         public IEnumerable<IEnumerable<Operation>>? Children { get; set; }
 
@@ -129,6 +126,12 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// </summary>
         [JsonProperty("isMeasurement")]
         public bool IsMeasurement { get; set; }
+
+        /// <summary>
+        /// True if operation is a classically-controlled operations.
+        /// </summary>
+        [JsonProperty("isConditional")]
+        public bool IsConditional { get; set; }
 
         /// <summary>
         /// True if operation is a controlled operations.
