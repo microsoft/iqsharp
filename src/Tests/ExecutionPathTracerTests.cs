@@ -633,7 +633,8 @@ namespace Tests.IQSharp
                 {
                     Gate = "ApplyIfElseR",
                     DisplayArgs = "(Zero, (X), (Z))",
-                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(0) },
+                    Controls = new List<Register>() { new ClassicalRegister(0, 0) },
+                    Targets = new List<Register>() { new QubitRegister(0) },
                     Children = new List<List<Operation>>()
                     {
                         new List<Operation>()
