@@ -72,6 +72,15 @@ namespace Microsoft.Quantum.IQSharp
         public IEnumerable<Project> Projects { get; set; }
 
         /// <summary>
+        /// Attempt to add a Q# project reference to this workspace.
+        /// </summary>
+        /// <param name="projectFile">
+        /// The path to the project file.
+        /// Must be either absolute or relative to <see cref="Root"/>.
+        /// </param>
+        public void AddProject(string projectFile);
+
+        /// <summary>
         /// Gets the source files to be built for this Workspace.
         /// </summary>
         public IEnumerable<string> SourceFiles { get; }

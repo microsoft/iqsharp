@@ -100,6 +100,8 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private bool SkipAutoLoadProject { get; set; }
 
+        private List<Project> UserAddedProjects { get; } = new List<Project>();
+
         /// <inheritdoc/>
         public IEnumerable<Project> Projects { get; set; } = Enumerable.Empty<Project>();
 
@@ -178,10 +180,10 @@ namespace Microsoft.Quantum.IQSharp
 
         private void ResolveProjectReferences()
         {
-            var rootProject = Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject);
-            var projects = new List<Project>() { rootProject };
+            var projects = new List<Project>() { Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject) };
+            projects.AddRange(UserAddedProjects);
 
-            var projectsToResolve = projects.ToList();
+            var projectsToResolve = projects.Distinct(new ProjectFileComparer()).ToList();
             while (projectsToResolve.Any())
             {
                 try
@@ -194,7 +196,6 @@ namespace Microsoft.Quantum.IQSharp
                         .Where(project => projects.Contains(project, new ProjectFileComparer()));
                     if (alreadyReferencedProjects.Any())
                     {
-                        // TODO - this Except call isn't working.
                         projects = projects
                             .Except(alreadyReferencedProjects, new ProjectFileComparer())
                             .Concat(alreadyReferencedProjects)
@@ -211,11 +212,10 @@ namespace Microsoft.Quantum.IQSharp
                     }
 
                     // Skip projects that do not reference Microsoft.Quantum.Sdk.
-                    const string sdkPackageName = "Microsoft.Quantum.Sdk";
-                    var nonSdkProjects = projectsToResolve.Where(project => !project.Sdk.StartsWith($"{sdkPackageName}/"));
+                    var nonSdkProjects = projectsToResolve.Where(project => !project.UsesQuantumSdk);
                     if (nonSdkProjects.Any())
                     {
-                        Logger?.LogInformation($"Skipping project references that do not reference {sdkPackageName}: {nonSdkProjects.ToLogString()}");
+                        Logger?.LogInformation($"Skipping project references that do not reference Microsoft.Quantum.Sdk: {nonSdkProjects.ToLogString()}");
                         projectsToResolve = projectsToResolve.Except(nonSdkProjects, new ProjectFileComparer()).ToList();
                     }
 
@@ -364,6 +364,34 @@ namespace Microsoft.Quantum.IQSharp
                     Logger?.LogError(e, $"Failure loading packages for project {project.ProjectFile}: {e.Message}");
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public void AddProject(string projectFile)
+        {
+            var fullProjectPath = Path.GetFullPath(projectFile, Root);
+            if (!File.Exists(fullProjectPath))
+            {
+                throw new FileNotFoundException($"Project {fullProjectPath} not found. Please specify a path to a .csproj file.");
+            }
+
+            if (!fullProjectPath.EndsWith(".csproj"))
+            {
+                throw new InvalidOperationException("Please specify a path to a .csproj file.");
+            }
+
+            var project = Project.FromProjectFile(fullProjectPath, CacheFolder);
+            if (!project.UsesQuantumSdk)
+            {
+                throw new InvalidOperationException("Please specify a project that references Microsoft.Quantum.Sdk.");
+            }
+
+            if (Projects.Contains(project, new ProjectFileComparer()))
+            {
+                throw new InvalidOperationException($"Project {fullProjectPath} has already been loaded in this session.");
+            }
+
+            UserAddedProjects.Add(project);
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+import pytest
 import qsharp
 
 print ( qsharp.component_versions() )
@@ -81,4 +82,24 @@ def test_multi_compile():
 
     r = ops[1].simulate()
     assert r == qsharp.Result.One
+
+
+def test_packages():
+    """
+    Verifies default package command
+    """
+    pkg_count = len(qsharp.packages._client.get_packages())
+    assert pkg_count > 0
+    qsharp.packages.add('Microsoft.Extensions.Logging')
+    assert (pkg_count+1) == len(qsharp.packages._client.get_packages())
+
+
+def test_projects():
+    """
+    Verifies default project command
+    """
+    assert 0 == len(qsharp.projects._client.get_projects())
+    with pytest.raises(Exception):
+        qsharp.projects.add('../InvalidPath/InvalidProject.txt')
+    assert 0 == len(qsharp.projects._client.get_projects())
 

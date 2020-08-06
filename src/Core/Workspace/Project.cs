@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -24,19 +25,24 @@ namespace Microsoft.Quantum.IQSharp
 
     internal class ProjectFileComparer : EqualityComparer<Project>
     {
-        public override bool Equals(Project p1, Project p2) => p1.ProjectFile == p2.ProjectFile;
+        private readonly bool IgnoreCase =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
-        public override int GetHashCode(Project project) => project.ProjectFile.GetHashCode();
+        public override bool Equals(Project p1, Project p2) =>
+            string.Equals(p1.ProjectFile, p2.ProjectFile, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+        public override int GetHashCode(Project project) =>
+            IgnoreCase ? project.ProjectFile.ToLowerInvariant().GetHashCode() : project.ProjectFile.GetHashCode();
     }
 
     public class Project
     {
         public readonly string ProjectFile;
-        public readonly string RootFolder;
-        public readonly string CacheFolder;
-        public readonly IEnumerable<FileSystemWatcher> Watchers;
+        internal readonly string RootFolder;
+        internal readonly string CacheFolder;
+        internal readonly IEnumerable<FileSystemWatcher> Watchers;
 
-        public IEnumerable<Project> ProjectReferences =>
+        internal IEnumerable<Project> ProjectReferences =>
             string.IsNullOrEmpty(ProjectFile)
             ? Enumerable.Empty<Project>()
             : XDocument.Load(ProjectFile)
@@ -48,7 +54,7 @@ namespace Microsoft.Quantum.IQSharp
                     Path.GetDirectoryName(ProjectFile)))
                 .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
 
-        public IEnumerable<PackageReference> PackageReferences =>
+        internal IEnumerable<PackageReference> PackageReferences =>
             string.IsNullOrEmpty(ProjectFile)
             ? Enumerable.Empty<PackageReference>()
             : XDocument.Load(ProjectFile)
@@ -59,7 +65,7 @@ namespace Microsoft.Quantum.IQSharp
                         version: new NuGetVersion(element.Attribute("Version")?.Value)),
                     NuGetFramework.AnyFramework));
 
-        public string Sdk =>
+        internal string Sdk =>
             string.IsNullOrEmpty(ProjectFile)
             ? string.Empty
             : XDocument.Load(ProjectFile)
@@ -68,7 +74,10 @@ namespace Microsoft.Quantum.IQSharp
                 .FirstOrDefault()
             ?? string.Empty;
 
-        public bool IncludeSubdirectories =>
+        internal bool UsesQuantumSdk =>
+            Sdk.StartsWith("Microsoft.Quantum.Sdk");
+
+        internal bool IncludeSubdirectories =>
             !string.IsNullOrEmpty(ProjectFile);
 
         public IEnumerable<string> SourceFiles =>
@@ -77,13 +86,13 @@ namespace Microsoft.Quantum.IQSharp
 
         private AssemblyInfo? _assemblyInfo;
 
-        public AssemblyInfo? AssemblyInfo
+        internal AssemblyInfo? AssemblyInfo
         {
             get => File.Exists(_assemblyInfo?.Location) ? _assemblyInfo : null;
             set => _assemblyInfo = value;
         }
 
-        public string CacheDllPath =>
+        internal string CacheDllPath =>
             Path.Combine(CacheFolder, CacheDllName);
 
         public string CacheDllName =>
@@ -103,7 +112,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <param name="cacheFolder">The path to the assembly cache folder.</param>
         /// <param name="skipAutoLoadProject">Whether to skip auto-loading the project file.</param>
         /// <returns>The created <see cref="Project"/> object.</returns>
-        public static Project FromWorkspaceFolder(string rootFolder, string cacheFolder, bool skipAutoLoadProject)
+        internal static Project FromWorkspaceFolder(string rootFolder, string cacheFolder, bool skipAutoLoadProject)
         {
             var projectFiles = Directory.EnumerateFiles(rootFolder, "*.csproj", SearchOption.TopDirectoryOnly);
             return (skipAutoLoadProject || projectFiles.Count() != 1)
@@ -117,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <param name="projectFile">The path to the .csproj file for the project.</param>
         /// <param name="cacheFolder">The path to the assembly cache folder.</param>
         /// <returns>The created <see cref="Project"/> object.</returns>
-        public static Project FromProjectFile(string projectFile, string cacheFolder) =>
+        internal static Project FromProjectFile(string projectFile, string cacheFolder) =>
             new Project(projectFile, Path.GetDirectoryName(projectFile), cacheFolder);
 
         private Project(string projectFile, string rootFolder, string cacheFolder)

@@ -81,6 +81,40 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public void ManuallyAddProjects()
+        {
+            var ws = Startup.Create<Workspace>("Workspace");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+
+            ws.AddProject("../Workspace.ProjectReferences.ProjectA/ProjectA.csproj");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsFalse(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+
+            ws.AddProject("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+
+            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+
+            // Try to add a project that doesn't exist
+            Assert.ThrowsException<FileNotFoundException>(() =>
+                ws.AddProject("../InvalidProject/InvalidProject.csproj")
+            );
+
+            // Try to add a project that should have already been loaded
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                ws.AddProject("../Workspace.ProjectReferences.ProjectB/ProjectB.csproj")
+            );
+        }
+
+        [TestMethod]
         public void ChemistryWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.Chemistry");
