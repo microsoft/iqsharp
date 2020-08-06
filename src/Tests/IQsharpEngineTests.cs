@@ -10,7 +10,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
-using Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;

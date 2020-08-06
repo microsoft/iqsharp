@@ -8,7 +8,7 @@ using Microsoft.Quantum.Simulation.Core;
 
 #nullable enable
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
     /// <summary>
     /// Traces through the operations in a given execution path of a Q# program by hooking on
@@ -73,7 +73,8 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
             // we recursively create a tracer that traces its components instead
             if (metadata != null && metadata.IsComposite)
             {
-                this.compositeTracer = new ExecutionPathTracer(0);
+                var remainingDepth = this.renderDepth - this.currentDepth;
+                this.compositeTracer = new ExecutionPathTracer(remainingDepth);
                 // Attach our registers by reference to compositeTracer
                 this.compositeTracer.qubitRegisters = this.qubitRegisters;
                 this.compositeTracer.classicalRegisters = this.classicalRegisters;
@@ -171,7 +172,7 @@ namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
         }
 
         /// <summary>
-        /// Parse <see cref="Operations"/>s traced out by the <c>compositeTracer</c>.
+        /// Parse <see cref="Operation"/>s traced out by the <c>compositeTracer</c>.
         /// </summary>
         private void AddCompositeOperations()
         {

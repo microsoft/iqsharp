@@ -34,6 +34,7 @@
     <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
     <ProjectReference Include="..\Kernel\Kernel.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\ExecutionPathTracer\ExecutionPathTracer.csproj" />
     <ProjectReference Include="..\MockLibraries\Mock.Chemistry\Mock.Chemistry.csproj" />
     <ProjectReference Include="..\MockLibraries\Mock.Standard\Mock.Standard.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />

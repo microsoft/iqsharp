@@ -13,6 +13,18 @@ namespace Tests.ExecutionPathTracer {
         }
     }
 
+    operation ApplyDoubleX(q : Qubit) : Unit {
+        X(q);
+        X(q);
+    }
+
+    operation ApplyToEachDepth2Circ() : Unit {
+        using (qs = Qubit[2]) {
+            ApplyToEach(ApplyDoubleX, qs);
+            ResetAll(qs);
+        }
+    }
+
 }
 
 

@@ -3,22 +3,19 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Quantum.Simulation.Core;
 
-namespace Microsoft.Quantum.IQSharp.Core.ExecutionPathTracer
+namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
 {
     /// <summary>
-    /// Extension methods to be used with and by <see cref="ExecutionPathTracer">.
+    /// Extension methods to be used with and by <see cref="ExecutionPathTracer"/>.
     /// </summary>
     public static class Extensions
     {
         /// <summary>
-        /// Attaches <see cref="ExecutionPathTracer"> event listeners to the simulator to generate
-        /// the <see cref="ExecutionPath"> of the operation performed by the simulator.
+        /// Attaches <see cref="ExecutionPathTracer"/> event listeners to the simulator to generate
+        /// the <see cref="ExecutionPath"/> of the operation performed by the simulator.
         /// </summary>
         public static T WithExecutionPathTracer<T>(this T sim, ExecutionPathTracer tracer)
             where T : SimulatorBase
