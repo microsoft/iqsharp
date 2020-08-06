@@ -25,14 +25,16 @@ namespace Microsoft.Quantum.IQSharp
 
     internal class ProjectFileComparer : EqualityComparer<Project>
     {
-        private readonly bool IgnoreCase =
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        private readonly StringComparison StringComparison =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
         public override bool Equals(Project p1, Project p2) =>
-            string.Equals(p1.ProjectFile, p2.ProjectFile, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            string.Equals(p1.ProjectFile, p2.ProjectFile, StringComparison);
 
         public override int GetHashCode(Project project) =>
-            IgnoreCase ? project.ProjectFile.ToLowerInvariant().GetHashCode() : project.ProjectFile.GetHashCode();
+            project.ProjectFile.GetHashCode(StringComparison);
     }
 
     public class Project
