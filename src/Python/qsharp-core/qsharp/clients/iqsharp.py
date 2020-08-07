@@ -133,14 +133,14 @@ class IQSharpClient(object):
     def get_packages(self) -> List[str]:
         return self._execute("%package", raise_on_stderr=False)
 
-    def simulate(self, op, **params) -> Any:
-        return self._execute_callable_magic('simulate', op, quiet=False, params=params)
+    def simulate(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('simulate', op, **kwargs)
 
-    def toffoli_simulate(self, op, **params) -> Any:
-        return self._execute_callable_magic('toffoli', op, quiet=False, params=params)
+    def toffoli_simulate(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('toffoli', op, **kwargs)
 
-    def estimate(self, op, **params) -> Dict[str, int]:
-        raw_counts = self._execute_callable_magic('estimate', op, quiet=False, params=params)
+    def estimate(self, op, **kwargs) -> Dict[str, int]:
+        raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
         # Note that raw_counts will have the form:
         # [
         #     {"Metric": "<name>", "Sum": "<value>"},
@@ -165,23 +165,28 @@ class IQSharpClient(object):
                 data = unmap_tuples(json.loads(msg["content"]["data"]["application/json"]))
                 for component, version in data["rows"]:
                     versions[component] = LooseVersion(version)
-        self._execute("%version", output_hook=capture, params=kwargs)
+        self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
         return versions
 
     ## Internal-Use Methods ##
 
-    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, quiet : bool = True, params=None) -> Any:
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
         return self._execute(
-            f'%{magic} {json.dumps(map_tuples(params))}',
-            raise_on_stderr=raise_on_stderr, quiet=quiet, params=params
+            f'%{magic} {json.dumps(map_tuples(kwargs))}',
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_,
+            **kwargs
         )
 
     def _execute_callable_magic(self, magic : str, op,
-            raise_on_stderr : bool = False, quiet : bool = True, params=None
+            raise_on_stderr : bool = False,
+            _quiet_ : bool = False,
+            **kwargs
     ) -> Any:
         return self._execute_magic(
             f"{magic} {op._name}",
-            raise_on_stderr=raise_on_stderr, quiet=quiet, params=params
+            raise_on_stderr=raise_on_stderr,
+            _quiet_=_quiet_,
+            **kwargs
         )
 
     def _handle_message(self, msg, handlers=None, error_callback=None, fallback_hook=None):
@@ -198,9 +203,7 @@ class IQSharpClient(object):
             else:
                 fallback_hook(msg)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, quiet=True, params=None):
-        if params is None:
-            params = {}
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, _quiet_ : bool = False, **kwargs):
 
         logger.debug(f"sending:\n{input}")
 
@@ -220,7 +223,7 @@ class IQSharpClient(object):
         handlers = {
             'execute_result': (lambda msg: results.append(msg))
         }
-        if not quiet:
+        if not _quiet_:
             handlers['display_data'] = (
                 lambda msg: display_raw(msg['content']['data'])
             )
@@ -241,7 +244,7 @@ class IQSharpClient(object):
                 # propagate to a Jupyter protocol error.
                 raise AlreadyExecutingError("Cannot execute through the IQ# client while another execution is completing.")
             self._busy = True
-            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, **params)
+            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, **kwargs)
         finally:
             self._busy = False
 
