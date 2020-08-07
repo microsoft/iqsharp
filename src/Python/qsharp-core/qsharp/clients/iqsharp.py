@@ -173,8 +173,7 @@ class IQSharpClient(object):
     def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
         return self._execute(
             f'%{magic} {json.dumps(map_tuples(kwargs))}',
-            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_,
-            **kwargs
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_
         )
 
     def _execute_callable_magic(self, magic : str, op,
