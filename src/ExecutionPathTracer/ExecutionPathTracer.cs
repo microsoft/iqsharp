@@ -73,7 +73,8 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             // we recursively create a tracer that traces its components instead
             if (metadata != null && metadata.IsComposite)
             {
-                this.compositeTracer = new ExecutionPathTracer(0);
+                var remainingDepth = this.renderDepth - this.currentDepth;
+                this.compositeTracer = new ExecutionPathTracer(remainingDepth);
                 // Attach our registers by reference to compositeTracer
                 this.compositeTracer.qubitRegisters = this.qubitRegisters;
                 this.compositeTracer.classicalRegisters = this.classicalRegisters;
