@@ -100,7 +100,7 @@ const style = `
  * 
  * @returns HTML representation of circuit.
  */
-const _jsonToHtml = (json: ExecutionPath): string => {
+export const executionPathToHtml = (json: ExecutionPath): string => {
     const { qubits, operations } = json;
     const { qubitWires, registers, svgHeight } = formatInputs(qubits);
     const { metadataList, svgWidth } = processOperations(operations, registers);
@@ -117,19 +117,3 @@ const _jsonToHtml = (json: ExecutionPath): string => {
     </svg>
 </html>`;
 };
-
-/**
- * Renders the given `ExecutionPath` json into an HTML element and populates the div
- * with the given `id` with it.
- * 
- * @param json JSON received from simulator.
- * @param id ID of div to populate.
- */
-const renderExecutionPath = (json: ExecutionPath, id: string): void => {
-    const html: string = _jsonToHtml(json);
-    const container: HTMLElement = document.getElementById(id);
-    if (container == null) throw new Error(`Div with ID ${id} not found.`);
-    container.innerHTML = html;
-};
-
-export default renderExecutionPath;
