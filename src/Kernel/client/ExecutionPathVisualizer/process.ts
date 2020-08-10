@@ -24,6 +24,8 @@ import { getGateWidth } from "./utils";
 const processOperations = (operations: Operation[], registers: RegisterMap)
     : { metadataList: Metadata[], svgWidth: number } => {
 
+    if (operations.length === 0) return { metadataList: [], svgWidth: startX };
+
     // Group operations based on registers
     const groupedOps: number[][] = _groupOperations(operations, registers);
 
@@ -31,7 +33,7 @@ const processOperations = (operations: Operation[], registers: RegisterMap)
     const alignedOps: (number | null)[][] = _alignOps(groupedOps);
 
     // Maintain widths of each column to account for variable-sized gates
-    const numColumns: number = Math.max(...alignedOps.map(ops => ops.length));
+    const numColumns: number = Math.max(0, ...alignedOps.map(ops => ops.length));
     const columnsWidths: number[] = new Array(numColumns).fill(minGateWidth);
     // Keep track of which ops are already seen to avoid duplicate rendering
     const visited: { [opIdx: number]: boolean } = {};
@@ -85,13 +87,14 @@ const processOperations = (operations: Operation[], registers: RegisterMap)
 const _groupOperations = (operations: Operation[], registers: RegisterMap): number[][] => {
     // NOTE: We get the max ID instead of just number of keys because there can be a qubit ID that
     // isn't acted upon and thus does not show up as a key in registers.
-    const numRegs: number = Math.max(...Object.keys(registers).map(Number)) + 1;
+    const numRegs: number = Math.max(-1, ...Object.keys(registers).map(Number)) + 1;
     const groupedOps: number[][] = Array.from(Array(numRegs), () => new Array(0));
     operations.forEach(({ targets, controls }, instrIdx) => {
         const qRegs: Register[] = [...controls, ...targets].filter(({ type }) => type === RegisterType.Qubit);
         const qRegIdxList: number[] = qRegs.map(({ qId }) => qId);
         const clsControls: Register[] = controls.filter(({ type }) => type === RegisterType.Classical);
         const isClassicallyControlled: boolean = clsControls.length > 0;
+        if (!isClassicallyControlled && qRegs.length === 0) return;
         // If operation is classically-controlled, pad all qubit registers. Otherwise, only pad
         // the contiguous range of registers that it covers.
         const minRegIdx: number = (isClassicallyControlled) ? 0 : Math.min(...qRegIdxList);
@@ -117,7 +120,7 @@ const _groupOperations = (operations: Operation[], registers: RegisterMap): numb
  * @returns 2D array of aligned operations padded with `null`s.
  */
 const _alignOps = (ops: number[][]): (number | null)[][] => {
-    let maxNumOps: number = Math.max(...ops.map(regOps => regOps.length));
+    let maxNumOps: number = Math.max(0, ...ops.map(regOps => regOps.length));
     let col: number = 0;
     // Deep copy ops to be returned as paddedOps
     const paddedOps: (number | null)[][] = JSON.parse(JSON.stringify(ops));
@@ -131,7 +134,7 @@ const _alignOps = (ops: number[][]): (number | null)[][] => {
 
             // Get position of gate
             const targetsPos: number[] = paddedOps.map(regOps => regOps.indexOf(opIdx));
-            const gatePos: number = Math.max(...targetsPos);
+            const gatePos: number = Math.max(-1, ...targetsPos);
 
             // If current column is not desired gate position, pad with null
             if (col < gatePos) {
@@ -224,7 +227,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         // Set targets to first and last quantum registers so we can render the surrounding box
         // around all quantum registers.
         const qubitsY: number[] = Object.values(registers).map(({ y }) => y);
-        metadata.targetsY = [Math.min(...qubitsY), Math.max(...qubitsY)];
+        if (qubitsY.length > 0) metadata.targetsY = [Math.min(...qubitsY), Math.max(...qubitsY)];
     } else if (isMeasurement) {
         metadata.type = GateType.Measure;
     } else if (gate === 'SWAP') {

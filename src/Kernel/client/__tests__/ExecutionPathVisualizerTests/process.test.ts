@@ -192,6 +192,9 @@ describe("Testing _groupOperations", () => {
         ];
         expect(_groupOperations(operations, registers)).toEqual([[], [], [], []]);
     });
+    test("empty arguments", () => {
+        expect(_groupOperations([], {})).toEqual([]);
+    });
 });
 
 describe("Testing _alignOps", () => {
@@ -226,6 +229,9 @@ describe("Testing _alignOps", () => {
         expect(_alignOps(ops)).toEqual([[0], [], [1], []]);
         ops = [[0], [], [1, 2], [2]];
         expect(_alignOps(ops)).toEqual([[0], [], [1, 2], [null, 2]]);
+    });
+    test("no ops", () => {
+        expect(_alignOps([])).toEqual([]);
     });
 });
 
@@ -1186,6 +1192,12 @@ describe("Testing _fillMetadataX", () => {
         expect(opsMetadata).toEqual(expected);
         expect(endX).toEqual(expectedEndX);
     });
+    test("empty args", () => {
+        const opsMetadata: Metadata[][] = [];
+        const endX: number = _fillMetadataX(opsMetadata, []);
+        expect(opsMetadata).toEqual([]);
+        expect(endX).toEqual(startX);
+    });
 });
 
 describe("Testing processOperations", () => {
@@ -1532,5 +1544,12 @@ describe("Testing processOperations", () => {
         const { metadataList, svgWidth } = processOperations(operations, registers);
         expect(metadataList).toEqual(expectedOps);
         expect(svgWidth).toEqual(expectedWidth);
+    });
+    test("no operations", () => {
+        const operations: Operation[] = [];
+        const registers: RegisterMap = {};
+        const { metadataList, svgWidth } = processOperations(operations, registers);
+        expect(metadataList).toEqual([]);
+        expect(svgWidth).toEqual(startX);
     });
 });
