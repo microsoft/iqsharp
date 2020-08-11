@@ -41,15 +41,16 @@ export const line = (x1: number, y1: number, x2: number, y2: number, strokeWidth
 /**
  * Generate the SVG representation of a unitary box that represents an arbitrary unitary operation.
  * 
- * @param x      x coord of box.
- * @param y      y coord of box.
- * @param width  Width of box.
- * @param height Height of box.
+ * @param x         x coord of box.
+ * @param y         y coord of box.
+ * @param width     Width of box.
+ * @param height    Height of box.
+ * @param className Class name of element.
  * 
  * @returns SVG string for unitary box.
  */
-export const box = (x: number, y: number, width: number, height: number): string =>
-    `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" fill="white" stroke-width="1"></rect>`;
+export const box = (x: number, y: number, width: number, height: number, className: string = "box"): string =>
+    `<rect class="${className}" x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" stroke-width="1"></rect>`;
 
 /**
  * Generate the SVG text element from a given text string.
@@ -80,25 +81,31 @@ export const arc = (x: number, y: number, rx: number, ry: number): string =>
 /**
  * Generate a dashed SVG line.
  * 
- * @param x1 x coord of starting point of line.
- * @param y1 y coord of starting point of line.
- * @param x2 x coord of ending point of line.
- * @param y2 y coord fo ending point of line.
+ * @param x1        x coord of starting point of line.
+ * @param y1        y coord of starting point of line.
+ * @param x2        x coord of ending point of line.
+ * @param y2        y coord fo ending point of line.
+ * @param className Class name of element.
  * 
  * @returns SVG string for dashed line.
  */
-export const dashedLine = (x1: number, y1: number, x2: number, y2: number): string =>
-    `<line x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}" stroke="black" stroke-dasharray="8, 8" stroke-width="1"></line>`;
+export const dashedLine = (x1: number, y1: number, x2: number, y2: number, className?: string): string => {
+    const clsString: string = (className != null) ? ` class="${className}"` : "";
+    return `<line${clsString} x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}" stroke="black" stroke-dasharray="8, 8" stroke-width="1"></line>`;
+};
 
 /**
  * Generate the SVG representation of the dashed box used for enclosing groups of operations controlled on a classical register.
  * 
- * @param x      x coord of box.
- * @param y      y coord of box.
- * @param width  Width of box.
- * @param height Height of box.
+ * @param x         x coord of box.
+ * @param y         y coord of box.
+ * @param width     Width of box.
+ * @param height    Height of box.
+ * @param className Class name of element.
  * 
  * @returns SVG string for dashed box.
  */
-export const dashedBox = (x: number, y: number, width: number, height: number): string =>
-    `<rect x="${x}" y ="${y}" width="${width}" height="${height}" stroke="black" fill-opacity="0" stroke-dasharray="8, 8" stroke-width="1"></rect>`;
+export const dashedBox = (x: number, y: number, width: number, height: number, className?: string): string => {
+    const clsString: string = (className != null) ? ` class="${className}"` : "";
+    return `<rect${clsString} x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" fill-opacity="0" stroke-dasharray="8, 8" stroke-width="1"></rect>`;
+};

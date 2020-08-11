@@ -75,7 +75,7 @@ const _measure = (x: number, qy: number, cy: number): string => {
     x -= minGateWidth / 2;
     const width: number = minGateWidth, height = gateHeight;
     // Draw measurement box
-    const mBox: string = box(x, qy - height / 2, width, height);
+    const mBox: string = box(x, qy - height / 2, width, height, "gate-measure");
     const mArc: string = arc(x + 5, qy + 2, width / 2 - 5, height / 2 - 8);
     const meter: string = line(x + width / 2, qy + 8, x + width - 8, qy - height / 2 + 8);
     const svg: string = group(mBox, mArc, meter);
@@ -94,7 +94,8 @@ const _measure = (x: number, qy: number, cy: number): string => {
  * 
  * @returns SVG representation of unitary gate.
  */
-const _unitary = (label: string, x: number, y: number[], width: number, displayArgs?: string, renderDashedLine: boolean = true): string => {
+const _unitary = (label: string, x: number, y: number[], width: number, displayArgs?: string,
+    renderDashedLine: boolean = true): string => {
     if (y.length === 0) return "";
 
     // Sort y in ascending order
@@ -139,9 +140,10 @@ const _unitary = (label: string, x: number, y: number[], width: number, displayA
  * 
  * @returns SVG representation of unitary box.
  */
-const _unitaryBox = (label: string, x: number, y: number, width: number, height: number = gateHeight, displayArgs?: string): string => {
+const _unitaryBox = (label: string, x: number, y: number, width: number,
+    height: number = gateHeight, displayArgs?: string): string => {
     y -= gateHeight / 2;
-    const uBox: string = box(x - width / 2, y, width, height);
+    const uBox: string = box(x - width / 2, y, width, height, "gate-unitary");
     const labelY = y + height / 2 - ((displayArgs == null) ? 0 : 7);
     const labelText: string = text(label, x, labelY);
     const elems = [uBox, labelText];
@@ -262,9 +264,9 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const controlCircleX: number = x + controlBtnRadius;
     const controlCircle: string = _controlCircle(controlCircleX, controlY, htmlClass);
     const lineY1: number = controlY + controlBtnRadius, lineY2: number = controlY + classicalRegHeight / 2;
-    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2);
+    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2, "cls-line");
     x += controlBtnOffset;
-    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2);
+    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2, "cls-line");
 
     width = width - controlBtnOffset + (padding - classicalBoxPadding) * 2;
     x += classicalBoxPadding - padding;
@@ -272,7 +274,7 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const height: number = targetsY[1] - targetsY[0] + gateHeight + padding * 2;
 
     // Draw dashed box around children gates
-    const box: string = dashedBox(x, y, width, height);
+    const box: string = dashedBox(x, y, width, height, "cls-container");
 
     // Display controlled operation in initial "unknown" state
     const svg: string = group(`<g class="${htmlClass}-group cls-control-unknown">`, horLine, vertLine,
