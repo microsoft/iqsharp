@@ -90,7 +90,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public override bool Dump(IQArray<Qubit>? qubits = null)
         {
             _count = qubits == null
-                        ? this.Simulator.QubitManager.GetAllocatedQubitsCount()
+                        ? this.Simulator?.QubitManager?.GetAllocatedQubitsCount() ?? 0
                         : qubits.Length;
             _data = new Complex[1 << ((int)_count)];
             var result = base.Dump(qubits);
@@ -104,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 // We cast here as we don't support a large enough number
                 // of qubits to saturate an int.
-                QubitIds = qubits?.Select(q => q.Id) ?? Simulator.QubitIds.Select(q => (int)q),
+                QubitIds = qubits?.Select(q => q.Id) ?? Simulator?.QubitIds.Select(q => (int)q) ?? Enumerable.Empty<int>(),
                 NQubits = (int)_count,
                 Amplitudes = _data,
                 DivId = $"dump-machine-div-{id}" 

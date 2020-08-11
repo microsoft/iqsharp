@@ -7,15 +7,18 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
+
     /// <summary>
     /// Default implementation of IReferences.
     /// This service keeps track of references (assemblies) needed for compilation
@@ -25,10 +28,24 @@ namespace Microsoft.Quantum.IQSharp
     public class References : IReferences
     {
         /// <summary>
+        ///     Settings that control how references are discovered and loaded.
+        /// </summary>
+        public class Settings
+        {
+            /// <summary>
+            ///      A list of packages to be loaded when the kernel initially
+            ///      starts. Package names should be seperated by <c>,</c>, and
+            ///      may have optional version specifiers. To suppress all
+            ///      automatic package loading, the string <c>"$null"</c> can
+            ///      be provided.
+            /// </summary>
+            public string? AutoLoadPackages { get; set; }
+        }
+
+        /// <summary>
         /// The list of assemblies that are automatically included for compilation. Namely:
         ///   * Quantum.Core
         ///   * Quantum.Intrinsic
-        ///   * Quantum.Standard
         /// </summary>
         public static readonly AssemblyInfo[] QUANTUM_CORE_ASSEMBLIES =
         {
@@ -36,41 +53,69 @@ namespace Microsoft.Quantum.IQSharp
             new AssemblyInfo(typeof(Intrinsic.X).Assembly)
         };
 
-        public static readonly string[] BUILT_IN_PACKAGES =
-        {
-            "Microsoft.Quantum.Standard"
-        };
 
+        /// <summary>
+        /// The list of Packages that are automatically included for compilation. Namely:
+        ///   * Microsoft.Quantum.Standard
+        /// </summary>
+        public readonly ImmutableList<string> AutoLoadPackages =
+            ImmutableList.Create(
+                "Microsoft.Quantum.Standard"
+            );
 
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-            IOptions<NugetPackages.Settings> options, 
-            ILogger<References> logger,
-            IEventService eventService
-            )
+                INugetPackages packages,
+                IEventService eventService,
+                ILogger<References> logger,
+                IOptions<Settings> options
+                )
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
-            Nugets = new NugetPackages(options, logger);
+            Nugets = packages;
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
-            foreach (var pkg in BUILT_IN_PACKAGES)
+            var referencesOptions = options.Value;
+            if (referencesOptions?.AutoLoadPackages is string pkgs)
             {
-                AddPackage(pkg).Wait();
+                logger.LogInformation(
+                    "Auto-load packages overridden by startup options: \"{0}\"",
+                    referencesOptions.AutoLoadPackages
+                );
+                AutoLoadPackages =
+                    pkgs.Trim() == "$null"
+                    ? ImmutableList<string>.Empty
+                    : pkgs
+                      .Split(",")
+                      .Select(pkg => pkg.Trim())
+                      .ToImmutableList();
             }
 
-            AssemblyLoadContext.Default.Resolving += Resolve;
+            foreach (var pkg in AutoLoadPackages)
+            {
+                try
+                {
+                    this.AddPackage(pkg).Wait();
+                }
+                catch (AggregateException e)
+                {
+                    logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
+                }
+            }
 
-            Reset();
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+
+            AssemblyLoadContext.Default.Resolving += Resolve;
         }
 
         /// Manages nuget packages.
-        internal NugetPackages Nugets { get; }
+        internal INugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
 
-        public event EventHandler<PackageLoadedEventArgs> PackageLoaded;
+        public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 
         /// <summary>
         /// The plain list of Assemblies to be used as References. 
@@ -88,22 +133,29 @@ namespace Microsoft.Quantum.IQSharp
                 ?.Select(p => $"{p.Id}::{p.Version}");
 
         /// <summary>
+        /// Adds the given assemblies.
+        /// </summary>
+        public void AddAssemblies(params AssemblyInfo[] assemblies)
+        {
+            Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
+            Reset();
+        }
+
+        /// <summary>
         /// Adds the libraries from the given nuget package to the list of assemblies.
         /// If version is not provided. It automatically picks up the latest version.
         /// </summary>
         public async Task AddPackage(string name, Action<string>? statusCallback = null)
         {
-            var duration = Stopwatch.StartNew();
-
             if (Nugets == null)
             {
                 throw new InvalidOperationException("Packages can be only added to the global references collection");
             }
 
-            var pkg = await Nugets.Add(name, statusCallback);
+            var duration = Stopwatch.StartNew();
 
-            Assemblies = Assemblies.Union(Nugets.Assemblies).ToImmutableArray();
-            Reset();
+            var pkg = await Nugets.Add(name, statusCallback);
+            AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version.ToNormalizedString(), duration.Elapsed));

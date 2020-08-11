@@ -289,8 +289,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
 
-            channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
-            await References.AddPackage(ActiveTarget.PackageName);
+            if (!(ActiveWorkspace is MockAzureWorkspace))
+            {
+                channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
+                await References.AddPackage(ActiveTarget.PackageName);
+            }
 
             channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
 

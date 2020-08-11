@@ -97,6 +97,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             using var qsim = new QuantumSimulator()
                 .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
+            qsim.OnDisplayableDiagnostic += channel.Display;
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
             return value.ToExecutionResult();
         }
