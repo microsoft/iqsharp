@@ -6,7 +6,6 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -81,10 +80,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             if (!string.IsNullOrWhiteSpace(projectFile))
             {
-                channel.Stdout($"Loading project {projectFile} and dependencies...");
-
+                channel.Stdout($"Adding reference to project: {projectFile}");
                 Workspace.AddProject(projectFile);
-                Workspace.Reload();
+                WorkspaceMagic.Reload(Workspace, channel);
             }
 
             return Workspace

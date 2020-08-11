@@ -72,12 +72,18 @@ namespace Microsoft.Quantum.IQSharp
         public IEnumerable<Project> Projects { get; set; }
 
         /// <summary>
-        /// Attempt to add a Q# project reference to this workspace.
+        /// Attempt to add a Q# project reference to this workspace. This does not trigger
+        /// recompilation of the workspace. Call <see cref="Reload()"/> to recompile.
         /// </summary>
         /// <param name="projectFile">
         /// The path to the project file.
         /// Must be either absolute or relative to <see cref="Root"/>.
         /// </param>
+        /// <remarks>
+        /// This will also cause any Q# projects referenced by the specified project file
+        /// to be added implicitly to the list of project references in the workspace.
+        /// All such projects will be recompiled when the workspace is reloaded.
+        /// </remarks>
         public void AddProject(string projectFile);
 
         /// <summary>
@@ -120,6 +126,6 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
-        void Reload();
+        void Reload(Action<string> statusCallback = null);
     }
 }

@@ -1,3 +1,4 @@
+import os
 import pytest
 import qsharp
 
@@ -109,11 +110,11 @@ def test_projects():
         qsharp.projects.add('../InvalidPath/InvalidProject.txt')
     assert 0 == len(qsharp.projects._client.get_projects())
 
-    temp_project_path = './obj/temp.csproj'
-    fixed_sdk_version = '0.12.20072031'
+    temp_project_path = './obj/test/temp_iqsharp_pytest_project.csproj'
+    os.makedirs(os.path.dirname(temp_project_path), exist_ok=True)
     with open(temp_project_path, 'w') as f:
         f.write(f'''
-            <Project Sdk="Microsoft.Quantum.Sdk/{fixed_sdk_version}">
+            <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
                 <PropertyGroup>
                     <TargetFramework>netstandard2.1</TargetFramework>
                     <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>

@@ -339,7 +339,7 @@ namespace Microsoft.Quantum.IQSharp
             return true;
         }
 
-        private void LoadReferencedPackages()
+        private void LoadReferencedPackages(Action<string> statusCallback = null)
         {
             foreach (var project in Projects)
             {
@@ -351,7 +351,10 @@ namespace Microsoft.Quantum.IQSharp
                         try
                         {
                             Logger?.LogInformation($"Loading package {package} for project {project.ProjectFile}.");
-                            GlobalReferences.AddPackage(package);
+                            GlobalReferences.AddPackage(package, (newStatus) =>
+                            {
+                                statusCallback?.Invoke($"Adding package {package}: {newStatus}");
+                            });
                         }
                         catch (Exception e)
                         {
@@ -397,7 +400,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
-        public void Reload()
+        public void Reload(Action<string> statusCallback = null)
         {
             var duration = Stopwatch.StartNew();
             var fileCount = 0;
@@ -423,7 +426,7 @@ namespace Microsoft.Quantum.IQSharp
                 var logger = new QSharpLogger(Logger);
 
                 ResolveProjectReferences();
-                LoadReferencedPackages();
+                LoadReferencedPackages(statusCallback);
                 if (MonitorWorkspace)
                 {
                     StartFileWatching();
@@ -438,6 +441,10 @@ namespace Microsoft.Quantum.IQSharp
                     if (project.SourceFiles.Count() > 0)
                     {
                         Logger?.LogDebug($"{project.SourceFiles.Count()} found in project {project.ProjectFile}. Compiling.");
+                        statusCallback?.Invoke(
+                            string.IsNullOrWhiteSpace(project.ProjectFile)
+                            ? "Compiling workspace"
+                            : $"Compiling {project.ProjectFile}");
 
                         try
                         {
