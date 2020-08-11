@@ -90,6 +90,11 @@ def test_packages():
     """
     pkg_count = len(qsharp.packages._client.get_packages())
     assert pkg_count > 0
+
+    with pytest.raises(Exception):
+        qsharp.packages.add('Invalid.Package.!!!!!!')
+    assert pkg_count == len(qsharp.packages._client.get_packages())
+
     qsharp.packages.add('Microsoft.Extensions.Logging')
     assert (pkg_count+1) == len(qsharp.packages._client.get_packages())
 
@@ -99,7 +104,22 @@ def test_projects():
     Verifies default project command
     """
     assert 0 == len(qsharp.projects._client.get_projects())
+
     with pytest.raises(Exception):
         qsharp.projects.add('../InvalidPath/InvalidProject.txt')
     assert 0 == len(qsharp.projects._client.get_projects())
 
+    temp_project_path = './obj/temp.csproj'
+    fixed_sdk_version = '0.12.20072031'
+    with open(temp_project_path, 'w') as f:
+        f.write(f'''
+            <Project Sdk="Microsoft.Quantum.Sdk/{fixed_sdk_version}">
+                <PropertyGroup>
+                    <TargetFramework>netstandard2.1</TargetFramework>
+                    <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
+                </PropertyGroup>
+            </Project>
+        ''')
+
+    qsharp.projects.add(temp_project_path)
+    assert 1 == len(qsharp.projects._client.get_projects())
