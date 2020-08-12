@@ -18,6 +18,7 @@ import urllib.parse
 import os
 import jupyter_client
 
+from functools import partial
 from io import StringIO
 from collections import defaultdict
 from typing import List, Dict, Callable, Any
@@ -25,6 +26,13 @@ from pathlib import Path
 from distutils.version import LooseVersion
 
 from qsharp.serialization import map_tuples, unmap_tuples
+
+try:
+    from IPython.display import display
+    display_raw = partial(display, raw=True)
+except:
+    def display_raw(content):
+        pass
 
 ## VERSION REPORTING ##
 
@@ -131,14 +139,14 @@ class IQSharpClient(object):
     def get_projects(self) -> List[str]:
         return self._execute("%project", raise_on_stderr=False)
 
-    def simulate(self, op, **params) -> Any:
-        return self._execute_callable_magic('simulate', op, **params)
+    def simulate(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('simulate', op, **kwargs)
 
-    def toffoli_simulate(self, op, **params) -> Any:
-        return self._execute_callable_magic('toffoli', op, **params)
+    def toffoli_simulate(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('toffoli', op, **kwargs)
 
-    def estimate(self, op, **params) -> Dict[str, int]:
-        raw_counts = self._execute_callable_magic('estimate', op, **params)
+    def estimate(self, op, **kwargs) -> Dict[str, int]:
+        raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
         # Note that raw_counts will have the form:
         # [
         #     {"Metric": "<name>", "Sum": "<value>"},
@@ -163,18 +171,45 @@ class IQSharpClient(object):
                 data = unmap_tuples(json.loads(msg["content"]["data"]["application/json"]))
                 for component, version in data["rows"]:
                     versions[component] = LooseVersion(version)
-        self._execute("%version", output_hook=capture, **kwargs)
+        self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
         return versions
 
     ## Internal-Use Methods ##
 
-    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, **params) -> Any:
-        return self._execute(f'%{magic} {json.dumps(map_tuples(params))}', raise_on_stderr=raise_on_stderr)
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
+        return self._execute(
+            f'%{magic} {json.dumps(map_tuples(kwargs))}',
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_
+        )
 
-    def _execute_callable_magic(self, magic : str, op, raise_on_stderr : bool = False, **params) -> Any:
-        return self._execute_magic(f"{magic} {op._name}", raise_on_stderr=raise_on_stderr, **params)
+    def _execute_callable_magic(self, magic : str, op,
+            raise_on_stderr : bool = False,
+            _quiet_ : bool = False,
+            **kwargs
+    ) -> Any:
+        return self._execute_magic(
+            f"{magic} {op._name}",
+            raise_on_stderr=raise_on_stderr,
+            _quiet_=_quiet_,
+            **kwargs
+        )
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, **kwargs):
+    def _handle_message(self, msg, handlers=None, error_callback=None, fallback_hook=None):
+        if handlers is None:
+            handlers = {}
+        if fallback_hook is None:
+            fallback_hook = self.kernel_client._output_hook_default
+        msg_type = msg['msg_type']
+        if msg_type in handlers:
+            handlers[msg_type](msg)
+        else:
+            if error_callback is not None and msg['msg_type'] == 'stream' and msg['content']['name'] == 'stderr':
+                error_callback(msg['content']['text'])
+            else:
+                fallback_hook(msg)
+
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, _quiet_ : bool = False, **kwargs):
+
         logger.debug(f"sending:\n{input}")
 
         # make sure the server is still running:
@@ -185,16 +220,25 @@ class IQSharpClient(object):
 
         results = []
         errors = []
-        if output_hook is None:
-            output_hook = self.kernel_client._output_hook_default
-        def _output_hook(msg):
-            if msg['msg_type'] == 'execute_result':
-                results.append(msg)
-            else:
-                if raise_on_stderr and msg['msg_type'] == 'stream' and msg['content']['name'] == 'stderr':
-                    errors.append(msg['content']['text'])
-                else:
-                    output_hook(msg)
+
+        def log_error(msg):
+            if msg['msg_type'] == 'stream' and msg['content']['name'] == 'stderr':
+                errors.append(msg['content']['text'])
+
+        handlers = {
+            'execute_result': (lambda msg: results.append(msg))
+        }
+        if not _quiet_:
+            handlers['display_data'] = (
+                lambda msg: display_raw(msg['content']['data'])
+            )
+
+        _output_hook = partial(
+            self._handle_message,
+            error_callback=log_error if raise_on_stderr else None,
+            fallback_hook=output_hook,
+            handlers=handlers
+        )
 
         try:
             if self._busy:
