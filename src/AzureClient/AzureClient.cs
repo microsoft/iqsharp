@@ -94,13 +94,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
-            var providers = await ActiveWorkspace.GetProvidersAsync();
-            if (providers == null)
-            {
-                return AzureClientError.WorkspaceNotFound.ToExecutionResult();
-            }
-            
-            AvailableProviders = providers;
             ConnectionString = storageAccountConnectionString;
             ActiveTarget = null;
             MostRecentJobId = string.Empty;
@@ -139,7 +132,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.AuthenticationFailed.ToExecutionResult();
             }
 
+            var providers = await workspace.GetProvidersAsync();
+            if (providers == null)
+            {
+                return AzureClientError.WorkspaceNotFound.ToExecutionResult();
+            }
+
             ActiveWorkspace = workspace;
+            AvailableProviders = providers;
 
             return ExecuteStatus.Ok.ToExecutionResult();
         }
