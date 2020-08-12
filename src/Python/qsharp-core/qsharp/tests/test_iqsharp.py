@@ -100,7 +100,7 @@ def test_packages():
     assert (pkg_count+1) == len(qsharp.packages._client.get_packages())
 
 
-def test_projects():
+def test_projects(tmp_path):
     """
     Verifies default project command
     """
@@ -110,17 +110,15 @@ def test_projects():
         qsharp.projects.add('../InvalidPath/InvalidProject.txt')
     assert 0 == len(qsharp.projects._client.get_projects())
 
-    temp_project_path = './obj/test/temp_iqsharp_pytest_project.csproj'
-    os.makedirs(os.path.dirname(temp_project_path), exist_ok=True)
-    with open(temp_project_path, 'w') as f:
-        f.write(f'''
-            <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
-                <PropertyGroup>
-                    <TargetFramework>netstandard2.1</TargetFramework>
-                    <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
-                </PropertyGroup>
-            </Project>
-        ''')
+    temp_project_path = tmp_path / 'temp_iqsharp_pytest_project.csproj'
+    temp_project_path.write_text(f'''
+        <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
+            <PropertyGroup>
+                <TargetFramework>netstandard2.1</TargetFramework>
+                <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
+            </PropertyGroup>
+        </Project>
+    ''')
 
-    qsharp.projects.add(temp_project_path)
+    qsharp.projects.add(str(temp_project_path))
     assert 1 == len(qsharp.projects._client.get_projects())
