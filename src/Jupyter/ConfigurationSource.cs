@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -101,8 +99,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Allows for setting the default visualization style for visualizing Q# operations
         ///     using the <c>%trace</c> command.
         /// </summary>
-        public string TraceVisualizationStyle =>
-            GetOptionOrDefault("trace.style", "Default");
+        public TraceVisualizationStyle TraceVisualizationStyle =>
+            GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
     }
 
     /// <summary>

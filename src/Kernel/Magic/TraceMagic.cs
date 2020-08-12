@@ -24,11 +24,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     given <see cref="ExecutionPath"/> (as a <see cref="JToken"/>), HTML div ID,
         ///     and the visualization style of the output circuit.
         /// </summary>
-        public ExecutionPathVisualizerContent(JToken executionPath, string id, string style)
+        public ExecutionPathVisualizerContent(JToken executionPath, string id, TraceVisualizationStyle style)
         {
             this.ExecutionPath = executionPath;
             this.Id = id;
-            this.Style = style;
+            this.Style = style.ToString();
         }
 
         /// <summary>
