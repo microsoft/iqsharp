@@ -9,6 +9,7 @@ declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
 import { executionPathToHtml } from "./ExecutionPathVisualizer";
+import { StyleConfig, STYLES } from "./ExecutionPathVisualizer/styles";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -231,8 +232,9 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
             message => {
-                const { executionPath, id } = message.content;
-                const html: string = executionPathToHtml(executionPath);
+                const { executionPath, id, style } = message.content;
+                const userStyleConfig: StyleConfig = STYLES[style] || {};
+                const html: string = executionPathToHtml(executionPath, userStyleConfig);
                 const container: HTMLElement = document.getElementById(id);
                 if (container == null) throw new Error(`Div with ID ${id} not found.`);
                 container.innerHTML = html;
