@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
-
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -84,6 +86,44 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
         }
 
+        internal static void Reload(IWorkspace workspace, IChannel channel)
+        {
+            var status = new Jupyter.TaskStatus($"Reloading workspace");
+            var statusUpdater = channel.DisplayUpdatable(status);
+            void Update() => statusUpdater.Update(status);
+            var task = Task.Run(() =>
+            {
+                workspace.Reload((newStatus) =>
+                {
+                    status.Subtask = newStatus;
+                    Update();
+                });
+            });
+
+            try
+            {
+                using (Observable
+                    .Interval(TimeSpan.FromSeconds(1))
+                    .TakeUntil((idx) => task.IsCompleted)
+                    .Do(idx => Update())
+                    .Subscribe())
+                {
+                    task.Wait();
+                }
+
+                status.Subtask = "done";
+                status.IsCompleted = true;
+                Update();
+            }
+            catch (Exception)
+            {
+                status.Subtask = "error";
+                status.IsCompleted = true;
+                Update();
+                throw;
+            }
+        }
+
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
@@ -96,7 +136,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
             else if ("reload" == command)
             {
-                Workspace.Reload();
+                Reload(Workspace, channel);
             }
             else
             {

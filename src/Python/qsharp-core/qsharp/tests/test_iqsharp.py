@@ -1,3 +1,5 @@
+import os
+import pytest
 import qsharp
 
 print ( qsharp.component_versions() )
@@ -82,3 +84,41 @@ def test_multi_compile():
     r = ops[1].simulate()
     assert r == qsharp.Result.One
 
+
+def test_packages():
+    """
+    Verifies default package command
+    """
+    pkg_count = len(qsharp.packages._client.get_packages())
+    assert pkg_count > 0
+
+    with pytest.raises(Exception):
+        qsharp.packages.add('Invalid.Package.!!!!!!')
+    assert pkg_count == len(qsharp.packages._client.get_packages())
+
+    qsharp.packages.add('Microsoft.Extensions.Logging')
+    assert (pkg_count+1) == len(qsharp.packages._client.get_packages())
+
+
+def test_projects(tmp_path):
+    """
+    Verifies default project command
+    """
+    assert 0 == len(qsharp.projects._client.get_projects())
+
+    with pytest.raises(Exception):
+        qsharp.projects.add('../InvalidPath/InvalidProject.txt')
+    assert 0 == len(qsharp.projects._client.get_projects())
+
+    temp_project_path = tmp_path / 'temp_iqsharp_pytest_project.csproj'
+    temp_project_path.write_text(f'''
+        <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
+            <PropertyGroup>
+                <TargetFramework>netstandard2.1</TargetFramework>
+                <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
+            </PropertyGroup>
+        </Project>
+    ''')
+
+    qsharp.projects.add(str(temp_project_path))
+    assert 1 == len(qsharp.projects._client.get_projects())

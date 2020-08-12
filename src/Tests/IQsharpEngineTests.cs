@@ -366,6 +366,20 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task TestProjectMagic()
+        {
+            var engine = Init();
+            var snippets = engine.Snippets as Snippets;
+            var projectMagic = new ProjectMagic(snippets.Workspace);
+            var channel = new MockChannel();
+
+            var response = await projectMagic.Execute("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj", channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            var loadedProjectFiles = response.Output as string[];
+            Assert.AreEqual(3, loadedProjectFiles.Length);
+        }
+
+        [TestMethod]
         public async Task TestWho()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
