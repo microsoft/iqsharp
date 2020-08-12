@@ -61,13 +61,13 @@ const invertedStyle: StyleConfig = {
 /**
  * Set of default styles.
  */
-export const STYLES = {
+export const STYLES: { [name: string]: StyleConfig } = {
     /** Default style with coloured gates. */
-    DEFAULT: defaultStyle,
+    "Default": defaultStyle,
     /** Black and white style. */
-    BLACK_AND_WHITE: blackAndWhiteStyle,
+    "BlackAndWhite": blackAndWhiteStyle,
     /** Inverted black and white style (for black backgrounds). */
-    INVERTED: invertedStyle,
+    "Inverted": invertedStyle,
 };
 
 /**

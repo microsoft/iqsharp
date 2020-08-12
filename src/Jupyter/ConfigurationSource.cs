@@ -96,6 +96,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public int TraceVisualizationDefaultDepth =>
             GetOptionOrDefault("trace.defaultDepth", 1);
+
+        /// <summary>
+        ///     Allows for setting the default visualization style for visualizing Q# operations
+        ///     using the <c>%trace</c> command.
+        /// </summary>
+        public string TraceVisualizationStyle =>
+            GetOptionOrDefault("trace.style", "Default");
     }
 
     /// <summary>

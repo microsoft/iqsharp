@@ -15,19 +15,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     /// <summary>
     ///      Contains the JSON representation of the <see cref="ExecutionPath"/>
-    ///      and the ID of the HTML div that will contain the visualization of the
-    ///      execution path.
+    ///      and metadata used in the visualization of the execution path.
     /// </summary>
     public class ExecutionPathVisualizerContent : MessageContent
     {
         /// <summary>
         ///     Initializes <see cref="ExecutionPathVisualizerContent"/> with the
-        ///     given <see cref="ExecutionPath"/> (as a <see cref="JToken"/>) and HTML div ID.
+        ///     given <see cref="ExecutionPath"/> (as a <see cref="JToken"/>), HTML div ID,
+        ///     and the visualization style of the output circuit.
         /// </summary>
-        public ExecutionPathVisualizerContent(JToken executionPath, string id)
+        public ExecutionPathVisualizerContent(JToken executionPath, string id, string style)
         {
             this.ExecutionPath = executionPath;
             this.Id = id;
+            this.Style = style;
         }
 
         /// <summary>
@@ -41,6 +42,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         [JsonProperty("id")]
         public string Id { get; }
+
+        /// <summary>
+        ///     Style for visualization.
+        /// </summary>
+        [JsonProperty("style")]
+        public string Style { get; }
     }
 
     /// <summary>
@@ -162,7 +169,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             // Render empty div with unique ID as cell output
             var divId = $"execution-path-container-{Guid.NewGuid().ToString()}";
-            var content = new ExecutionPathVisualizerContent(executionPathJToken, divId);
+            var content = new ExecutionPathVisualizerContent(
+                executionPathJToken,
+                divId,
+                this.ConfigurationSource.TraceVisualizationStyle
+            );
             channel.DisplayUpdatable(new DisplayableHtmlElement($"<div id='{divId}' />"));
 
             // Send execution path to JavaScript via iopub for rendering
