@@ -2,8 +2,16 @@
  * Provides configuration for CSS styles of visualization.
  */
 export interface StyleConfig {
+    /** Line stroke style. */
+    lineStroke?: string;
+    /** Line width. */
+    lineWidth?: number;
+    /** Text colour. */
+    textColour?: string;
     /** Single qubit unitary fill colour. */
     unitary?: string;
+    /** Oplus circle fill colour. */
+    oplus?: string;
     /** Measurement gate fill colour. */
     measure?: string;
     /** Measurement unknown primary colour. */
@@ -14,33 +22,90 @@ export interface StyleConfig {
     classicalOne?: string;
 }
 
-const defaultStyleConfig: StyleConfig = {
+const defaultStyle: StyleConfig = {
+    lineStroke: "#000000",
+    lineWidth: 1,
+    textColour: "#000000",
     unitary: "#D9F1FA",
+    oplus: "#FFFFFF",
     measure: "#FFDE86",
     classicalUnknown: "#E5E5E5",
     classicalZero: "#C40000",
     classicalOne: "#4059BD",
 };
 
+const blackAndWhiteStyle: StyleConfig = {
+    lineStroke: "#000000",
+    lineWidth: 1,
+    textColour: "#000000",
+    unitary: "#FFFFFF",
+    oplus: "#FFFFFF",
+    measure: "#FFFFFF",
+    classicalUnknown: "#FFFFFF",
+    classicalZero: "#FFFFFF",
+    classicalOne: "#FFFFFF",
+};
+
+const invertedStyle: StyleConfig = {
+    lineStroke: "#FFFFFF",
+    lineWidth: 1,
+    textColour: "#FFFFFF",
+    unitary: "#000000",
+    oplus: "#000000",
+    measure: "#000000",
+    classicalUnknown: "#000000",
+    classicalZero: "#000000",
+    classicalOne: "#000000",
+};
+
+export const STYLES = {
+    DEFAULT: defaultStyle,
+    BLACK_AND_WHITE: blackAndWhiteStyle,
+    INVERTED: invertedStyle,
+};
+
 /**
  * CSS style script to be injected into visualization HTML string.
  * 
- * @param userConfig Custom style configuration.
+ * @param customStyle Custom style configuration.
  * 
  * @returns String containing CSS style script.
  */
-export const style = (userConfig: StyleConfig = {}) => {
-    const config = { ...defaultStyleConfig, ...userConfig };
+export const style = (customStyle: StyleConfig = {}) => {
+    const styleConfig = { ...defaultStyle, ...customStyle };
     return `
 <style>
-    .box {
-        fill: white;
+    line,
+    circle,
+    rect {
+        stroke: ${styleConfig.lineStroke};
+        stroke-width: ${styleConfig.lineWidth};
+    }
+    text {
+        color: ${styleConfig.textColour};
+        dominant-baseline: middle;
+        text-anchor: middle;
+        font-family: Arial;
+    }
+    .control-dot {
+        fill: ${styleConfig.lineStroke};
+    }
+    .oplus {
+        fill: ${styleConfig.oplus};
     }
     .gate-unitary {
-        fill: ${config.unitary};
+        fill: ${styleConfig.unitary};
     }
     .gate-measure {
-        fill: ${config.measure};
+        fill: ${styleConfig.measure};
+    }
+    .arc-measure {
+        stroke: ${styleConfig.lineStroke};
+        fill: none;
+        stroke-width: ${styleConfig.lineWidth};
+    }
+    .register-classical {
+        stroke-width: ${styleConfig.lineWidth / 2};
     }
     <!-- Classically controlled gates -->
     .hidden {
@@ -52,74 +117,37 @@ export const style = (userConfig: StyleConfig = {}) => {
     <!-- Gate outline -->
     .cls-control-one .cls-container,
     .cls-control-one .cls-line {
-        stroke: ${config.classicalOne};
-        stroke-width: 1.3;
+        stroke: ${styleConfig.classicalOne};
+        stroke-width: ${styleConfig.lineWidth + 0.3};
     }
     .cls-control-zero .cls-container,
     .cls-control-zero .cls-line {
-        stroke: ${config.classicalZero};
-        stroke-width: 1.3;
+        stroke: ${styleConfig.classicalZero};
+        stroke-width: ${styleConfig.lineWidth + 0.3};
     }
     <!-- Control button -->
     .cls-control-btn {
         cursor: pointer;
     }
     .cls-control-unknown .cls-control-btn {
-        fill: ${config.classicalUnknown};
+        fill: ${styleConfig.classicalUnknown};
     }
     .cls-control-one .cls-control-btn {
-        fill: ${config.classicalOne};
+        fill: ${styleConfig.classicalOne};
     }
     .cls-control-zero .cls-control-btn {
-        fill: ${config.classicalZero};
+        fill: ${styleConfig.classicalZero};
     }
     <!-- Control button text -->
     .cls-control-unknown .cls-control-text {
-        fill: black;
+        fill: ${styleConfig.textColour};
         stroke: none;
     }
     .cls-control-one .cls-control-text,
     .cls-control-zero .cls-control-text {
-        fill: white;
+        color: white;
         stroke: none;
     }
 </style>
 `
 };
-
-/**
- * Custom JavaScript code to be injected into visualization HTML string.
- * Handles interactive elements, such as classically-controlled operations.
- */
-export const script = `
-<script type="text/JavaScript">
-    function toggleClassicalBtn(cls) {
-        const textSvg = document.querySelector(\`.\${cls} text\`);
-        const group = document.querySelector(\`.\${cls}-group\`);
-        const currValue = textSvg.childNodes[0].nodeValue;
-        const zeroGates = document.querySelector(\`.\${cls}-zero\`);
-        const oneGates = document.querySelector(\`.\${cls}-one\`);
-        switch (currValue) {
-            case '?':
-                textSvg.childNodes[0].nodeValue = '1';
-                group.classList.remove('cls-control-unknown');
-                group.classList.add('cls-control-one');
-                break;
-            case '1':
-                textSvg.childNodes[0].nodeValue = '0';
-                group.classList.remove('cls-control-one');
-                group.classList.add('cls-control-zero');
-                oneGates.classList.toggle('hidden');
-                zeroGates.classList.toggle('hidden');
-                break;
-            case '0':
-                textSvg.childNodes[0].nodeValue = '?';
-                group.classList.remove('cls-control-zero');
-                group.classList.add('cls-control-unknown');
-                zeroGates.classList.toggle('hidden');
-                oneGates.classList.toggle('hidden');
-                break;
-        }
-    }
-</script>
-`;

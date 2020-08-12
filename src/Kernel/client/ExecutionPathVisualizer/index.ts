@@ -5,7 +5,44 @@ import { processOperations } from "./process";
 import { ExecutionPath } from "./executionPath";
 import { Metadata } from "./metadata";
 import { GateType } from "./constants";
-import { StyleConfig, script, style } from "./styles";
+import { StyleConfig, style } from "./styles";
+
+/**
+ * Custom JavaScript code to be injected into visualization HTML string.
+ * Handles interactive elements, such as classically-controlled operations.
+ */
+const script: string = `
+<script type="text/JavaScript">
+    function toggleClassicalBtn(cls) {
+        const textSvg = document.querySelector(\`.\${cls} text\`);
+        const group = document.querySelector(\`.\${cls}-group\`);
+        const currValue = textSvg.childNodes[0].nodeValue;
+        const zeroGates = document.querySelector(\`.\${cls}-zero\`);
+        const oneGates = document.querySelector(\`.\${cls}-one\`);
+        switch (currValue) {
+            case '?':
+                textSvg.childNodes[0].nodeValue = '1';
+                group.classList.remove('cls-control-unknown');
+                group.classList.add('cls-control-one');
+                break;
+            case '1':
+                textSvg.childNodes[0].nodeValue = '0';
+                group.classList.remove('cls-control-one');
+                group.classList.add('cls-control-zero');
+                oneGates.classList.toggle('hidden');
+                zeroGates.classList.toggle('hidden');
+                break;
+            case '0':
+                textSvg.childNodes[0].nodeValue = '?';
+                group.classList.remove('cls-control-zero');
+                group.classList.add('cls-control-unknown');
+                zeroGates.classList.toggle('hidden');
+                oneGates.classList.toggle('hidden');
+                break;
+        }
+    }
+</script>
+`;
 
 /**
  * Converts JSON representing an execution path of a Q# program given by the simulator and returns its HTML visualization.

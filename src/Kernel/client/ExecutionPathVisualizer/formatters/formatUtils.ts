@@ -22,21 +22,23 @@ export const group = (...svgElems: (string | string[])[]): string =>
  * @returns SVG string for control dot.
  */
 export const controlDot = (x: number, y: number, radius: number = 5): string =>
-    `<circle cx="${x}" cy="${y}" r="${radius}" stroke="black" fill="black" stroke-width="1"></circle>`;
+    `<circle class="control-dot" cx="${x}" cy="${y}" r="${radius}"></circle>`;
 
 /**
  * Generate an SVG line.
  * 
- * @param x1          x coord of starting point of line.
- * @param y1          y coord of starting point of line.
- * @param x2          x coord of ending point of line.
- * @param y2          y coord fo ending point of line.
- * @param strokeWidth Stroke width of line.
+ * @param x1        x coord of starting point of line.
+ * @param y1        y coord of starting point of line.
+ * @param x2        x coord of ending point of line.
+ * @param y2        y coord fo ending point of line.
+ * @param className Class name of element.
  * 
  * @returns SVG string for line.
  */
-export const line = (x1: number, y1: number, x2: number, y2: number, strokeWidth: number = 1): string =>
-    `<line x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}" stroke="black" stroke-width="${strokeWidth}"></line>`;
+export const line = (x1: number, y1: number, x2: number, y2: number, className?: string): string => {
+    const clsString: string = (className != null) ? ` class="${className}"` : "";
+    return `<line${clsString} x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}"></line>`;
+};
 
 /**
  * Generate the SVG representation of a unitary box that represents an arbitrary unitary operation.
@@ -49,8 +51,8 @@ export const line = (x1: number, y1: number, x2: number, y2: number, strokeWidth
  * 
  * @returns SVG string for unitary box.
  */
-export const box = (x: number, y: number, width: number, height: number, className: string = "box"): string =>
-    `<rect class="${className}" x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" stroke-width="1"></rect>`;
+export const box = (x: number, y: number, width: number, height: number, className: string = "gate-unitary"): string =>
+    `<rect class="${className}" x="${x}" y="${y}" width="${width}" height="${height}"></rect>`;
 
 /**
  * Generate the SVG text element from a given text string.
@@ -63,7 +65,7 @@ export const box = (x: number, y: number, width: number, height: number, classNa
  * @returns SVG string for text.
  */
 export const text = (text: string, x: number, y: number, fs: number = labelFontSize): string =>
-    `<text font-size="${fs}" font-family="Arial" x="${x}" y="${y}" dominant-baseline="middle" text-anchor="middle" fill="black">${text}</text>`;
+    `<text font-size="${fs}" x="${x}" y="${y}">${text}</text>`;
 
 /**
  * Generate the SVG representation of the arc used in the measurement box.
@@ -76,7 +78,7 @@ export const text = (text: string, x: number, y: number, fs: number = labelFontS
  * @returns SVG string for arc.
  */
 export const arc = (x: number, y: number, rx: number, ry: number): string =>
-    `<path d="M ${x + 2 * rx} ${y} A ${rx} ${ry} 0 0 0 ${x} ${y}" stroke="black" fill="none" stroke-width="1"></path>`;
+    `<path class="arc-measure" d="M ${x + 2 * rx} ${y} A ${rx} ${ry} 0 0 0 ${x} ${y}"></path>`;
 
 /**
  * Generate a dashed SVG line.
@@ -91,7 +93,7 @@ export const arc = (x: number, y: number, rx: number, ry: number): string =>
  */
 export const dashedLine = (x1: number, y1: number, x2: number, y2: number, className?: string): string => {
     const clsString: string = (className != null) ? ` class="${className}"` : "";
-    return `<line${clsString} x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}" stroke="black" stroke-dasharray="8, 8" stroke-width="1"></line>`;
+    return `<line${clsString} x1="${x1}" x2="${x2}" y1="${y1}" y2="${y2}" stroke-dasharray="8, 8"></line>`;
 };
 
 /**
@@ -107,5 +109,5 @@ export const dashedLine = (x1: number, y1: number, x2: number, y2: number, class
  */
 export const dashedBox = (x: number, y: number, width: number, height: number, className?: string): string => {
     const clsString: string = (className != null) ? ` class="${className}"` : "";
-    return `<rect${clsString} x="${x}" y="${y}" width="${width}" height="${height}" stroke="black" fill-opacity="0" stroke-dasharray="8, 8" stroke-width="1"></rect>`;
+    return `<rect${clsString} x="${x}" y="${y}" width="${width}" height="${height}" fill-opacity="0" stroke-dasharray="8, 8"></rect>`;
 };

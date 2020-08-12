@@ -143,7 +143,7 @@ const _unitary = (label: string, x: number, y: number[], width: number, displayA
 const _unitaryBox = (label: string, x: number, y: number, width: number,
     height: number = gateHeight, displayArgs?: string): string => {
     y -= gateHeight / 2;
-    const uBox: string = box(x - width / 2, y, width, height, "gate-unitary");
+    const uBox: string = box(x - width / 2, y, width, height);
     const labelY = y + height / 2 - ((displayArgs == null) ? 0 : 7);
     const labelText: string = text(label, x, labelY);
     const elems = [uBox, labelText];
@@ -231,7 +231,7 @@ const _controlledGate = (metadata: Metadata): string => {
  * @returns SVG representation of $\oplus$ symbol.
  */
 const _oplus = (x: number, y: number, r: number = 15): string => {
-    const circle: string = `<circle cx="${x}" cy="${y}" r="${r}" stroke="black" fill="white" stroke-width="1"></circle>`;
+    const circle: string = `<circle class="oplus" cx="${x}" cy="${y}" r="${r}"></circle>`;
     const vertLine: string = line(x, y - r, x, y + r);
     const horLine: string = line(x - r, y, x + r, y);
     const svg: string = group(circle, vertLine, horLine);
