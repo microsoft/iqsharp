@@ -30,6 +30,14 @@ function Pack-Exe() {
         /property:PackAsTool=false `
         /property:CopyOutputSymbolsToPublishDirectory=false
 
+    # Fix the output when using project references:
+    # If a project includes native libraries under the "runtimes/$runtime/native" path
+    # dotnet publish doesn't copy them automatically to the output folder
+    # and therefore they are not recognized at runtime:
+    $nativeFolder = (Join-Path $OutputPath "runtimes/$Runtime/native")
+    if (Test-Path $nativeFolder) {
+        Copy-Item -Path (Join-Path $nativeFolder "*") -Destination $OutputPath -Recurse
+    }
 }
 
 & (Join-Path $PSScriptRoot ".." "bootstrap.ps1")

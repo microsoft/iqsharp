@@ -64,6 +64,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new RawHtmlEncoder());
+            RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
             RegisterJsonEncoder(
                 JsonConverters.AllConverters
@@ -102,7 +103,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 // Except assemblies known at compile-time as well.
                 .Add(typeof(StateVectorToHtmlResultEncoder).Assembly.GetName())
                 .Add(typeof(AzureClientErrorToHtmlEncoder).Assembly.GetName());
-            foreach (var knownAssembly in knownAssemblies) System.Console.WriteLine($"{knownAssembly.FullName}");
+            foreach (var knownAssembly in knownAssemblies) logger.LogDebug("Loaded known assembly {Name}", knownAssembly.FullName);
 
             // Register new display encoders when packages load.
             references.PackageLoaded += (sender, args) =>
@@ -115,13 +116,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 {
                     // Look for display encoders in the new assembly.
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
-                    var relevantTypes = assembly
-                        .GetTypes()
-                        .Where(type =>
-                            !type.IsAbstract &&
-                            !type.IsInterface &&
-                            typeof(IResultEncoder).IsAssignableFrom(type)
+
+                    // If types from an assembly cannot be loaded, log a warning and continue.
+                    var relevantTypes = Enumerable.Empty<Type>();
+                    try
+                    {
+                        relevantTypes = assembly
+                            .GetTypes()
+                            .Where(type =>
+                                !type.IsAbstract &&
+                                !type.IsInterface &&
+                                typeof(IResultEncoder).IsAssignableFrom(type)
+                            );
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Encountered exception loading types from {AssemblyName}.",
+                            assembly.FullName
                         );
+                        continue;
+                    }
 
                     foreach (var type in relevantTypes)
                     {

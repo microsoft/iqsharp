@@ -4,17 +4,18 @@
 ///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
-declare var IPython : IPython;
+declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
 import type * as ChartJs from "chart.js";
 import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
+import { executionPathToHtml } from "./ExecutionPathVisualizer";
 
 class Kernel {
-    hostingEnvironment : string | undefined;
-    iqsharpVersion : string | undefined;
-    telemetryOptOut? : boolean | null;
+    hostingEnvironment: string | undefined;
+    iqsharpVersion: string | undefined;
+    telemetryOptOut?: boolean | null;
 
     constructor() {
         IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
@@ -22,6 +23,7 @@ class Kernel {
             this.requestClientInfo();
             this.setupMeasurementHistogramDataListener();
             this.setupDebugSessionHandlers();
+            this.initExecutionPathVisualizer();
         });
     }
 
@@ -164,7 +166,7 @@ class Kernel {
         // are replies to other messages.
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_echo_request",
-            {value: value},
+            { value: value },
             {
                 shell: {
                     reply: (message) => {
@@ -241,6 +243,19 @@ class Kernel {
         });
         Telemetry.initAsync();
     }
+
+    initExecutionPathVisualizer() {
+        IPython.notebook.kernel.register_iopub_handler(
+            "render_execution_path",
+            message => {
+                const { executionPath, id } = message.content;
+                const html: string = executionPathToHtml(executionPath);
+                const container: HTMLElement = document.getElementById(id);
+                if (container == null) throw new Error(`Div with ID ${id} not found.`);
+                container.innerHTML = html;
+            }
+        );
+    }
 }
 
 export function onload() {
@@ -248,4 +263,3 @@ export function onload() {
     let kernel = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }
-

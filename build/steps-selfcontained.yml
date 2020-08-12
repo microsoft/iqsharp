@@ -33,8 +33,8 @@ steps:
 # Publish tests results and build artifacts.
 ##
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: iqsharp-selfcontained'
+  displayName: 'Publish Artifact: iqsharp'
   condition: succeededOrFailed()
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: iqsharp-selfcontained
+    artifactName: iqsharp

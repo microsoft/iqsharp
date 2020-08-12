@@ -84,23 +84,23 @@ namespace Microsoft.Quantum.IQSharp
         ///  The Workspace these Snippets depend on. Snippets may call operations
         ///  defined in this Workspace.
         /// </summary>
-        internal IWorkspace Workspace { get; }
+        public IWorkspace Workspace { get; }
 
         /// <summary>
         /// The assembly references that should be provided to the compiler when
         /// building all snippets.
         /// </summary>
-        internal IReferences GlobalReferences { get; }
+        public IReferences GlobalReferences { get; }
 
         /// <summary>
         /// The service that takes care of compiling code.
         /// </summary>
-        internal ICompilerService Compiler { get; }
+        public ICompilerService Compiler { get; }
 
         /// <summary>
         /// Logger instance used for .net core logging.
         /// </summary>
-        internal ILogger Logger { get; }
+        public ILogger Logger { get; }
 
         /// <summary>
         /// The list of currently available snippets.
@@ -145,7 +145,10 @@ namespace Microsoft.Quantum.IQSharp
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
-            var logger = new QSharpLogger(Logger);
+
+            // We add exactly one line of boilerplate code at the beginning of each snippet,
+            // so tell the logger to subtract one from all displayed line numbers.
+            var logger = new QSharpLogger(Logger, lineNrOffset: -1);
 
             try
             {
@@ -155,6 +158,11 @@ namespace Microsoft.Quantum.IQSharp
                 if (logger.HasErrors)
                 {
                     throw new CompilationErrorsException(logger.Errors.ToArray());
+                }
+
+                foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
+                {
+                    Compiler.AutoOpenNamespaces[entry.Key] = entry.Value;
                 }
 
                 // populate the original snippet with the results of the compilation:

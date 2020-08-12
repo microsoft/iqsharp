@@ -24,7 +24,8 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.ErrorCode>();
 
-        public QSharpLogger(ILogger logger)
+        public QSharpLogger(ILogger logger, int lineNrOffset = 0) :
+            base(lineNrOffset : lineNrOffset)
         {
             this.Logger = logger;
             this.Logs = new List<LSP.Diagnostic>();

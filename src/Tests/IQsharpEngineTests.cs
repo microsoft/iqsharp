@@ -10,12 +10,11 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
-using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
 using System.Data;
-using Microsoft.Quantum.IQSharp.AzureClient;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -86,6 +85,44 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
+        private async Task AssertTrace(string name, ExecutionPath expectedPath)
+        {
+            var engine = Init("Workspace.ExecutionPathTracer");
+            var snippets = engine.Snippets as Snippets;
+            var configSource = new ConfigurationSource(skipLoading: true);
+
+            var wsMagic = new WorkspaceMagic(snippets.Workspace);
+            var pkgMagic = new PackageMagic(snippets.GlobalReferences);
+            var traceMagic = new TraceMagic(engine.SymbolsResolver, configSource);
+
+            var channel = new MockChannel();
+
+            // Add dependencies:
+            var response = await pkgMagic.Execute("mock.standard", channel);
+            PrintResult(response, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            // Reload workspace:
+            response = await wsMagic.Execute("reload", channel);
+            PrintResult(response, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            response = await traceMagic.Execute(name, channel);
+            PrintResult(response, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+
+            var message = channel.iopubMessages.ElementAtOrDefault(0);
+            Assert.IsNotNull(message);
+            Assert.AreEqual("render_execution_path", message.Header.MessageType);
+
+            var content = message.Content as ExecutionPathVisualizerContent;
+            Assert.IsNotNull(content);
+
+            var path = content.ExecutionPath.ToObject<ExecutionPath>();
+            Assert.IsNotNull(path);
+            Assert.AreEqual(expectedPath.ToJson(), path.ToJson());
+        }
+
         [TestMethod]
         public async Task CompileOne()
         {
@@ -130,6 +167,32 @@ namespace Tests.IQSharp
             Assert.AreEqual("[4,3,2]", results);
         }
 
+        [TestMethod]
+        public async Task OpenNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces1);
+            await AssertCompile(engine, SNIPPETS.OpenNamespaces2);
+            await AssertCompile(engine, SNIPPETS.DependsOnNamespace, "DependsOnNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnNamespace", "Hello from DependsOnNamespace", "Hello from quantum world!");
+        }
+
+        [TestMethod]
+        public async Task OpenAliasedNamespaces()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.OpenAliasedNamespace);
+            await AssertCompile(engine, SNIPPETS.DependsOnAliasedNamespace, "DependsOnAliasedNamespace");
+
+            // Run:
+            await AssertSimulate(engine, "DependsOnAliasedNamespace", "Hello from DependsOnAliasedNamespace");
+        }
 
         [TestMethod]
         public async Task Estimate()
@@ -256,6 +319,7 @@ namespace Tests.IQSharp
         {
             var engine = Init();
             var snippets = engine.Snippets as Snippets;
+
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
@@ -263,16 +327,16 @@ namespace Tests.IQSharp
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
-            Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result[0]);
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
-            response = await engine.ExecuteMundane(SNIPPETS.TrotterEstimateEnergy, channel);
+            response = await engine.ExecuteMundane(SNIPPETS.UseJordanWignerEncodingData, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
 
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("mock.chemistry", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
@@ -281,8 +345,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(2, result.Length);
 
             // Now it should compile:
-            await AssertCompile(engine, SNIPPETS.TrotterEstimateEnergy, "TrotterEstimateEnergy");
-
+            await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");
         }
 
         [TestMethod]
@@ -293,15 +356,14 @@ namespace Tests.IQSharp
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var channel = new MockChannel();
 
-            var response = await pkgMagic.Execute("microsoft.quantum", channel);
+            var response = await pkgMagic.Execute("microsoft.invalid.quantum", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(1, channel.errors.Count);
-            Assert.IsTrue(channel.errors[0].StartsWith("Unable to find package 'microsoft.quantum'"));
+            Assert.IsTrue(channel.errors[0].StartsWith("Unable to find package 'microsoft.invalid.quantum'"));
             Assert.IsNull(result);
         }
-
 
         [TestMethod]
         public async Task TestWho()
@@ -350,10 +412,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(0, channel.msgs.Count);
 
             // Add dependencies:
-            response = await pkgMagic.Execute("microsoft.quantum.chemistry", channel);
+            response = await pkgMagic.Execute("mock.chemistry", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            response = await pkgMagic.Execute("microsoft.quantum.research", channel);
+            response = await pkgMagic.Execute("mock.research", channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
 
@@ -366,9 +428,9 @@ namespace Tests.IQSharp
             result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            Assert.AreEqual(3, result.Length);
+            Assert.AreEqual(2, result.Length);
 
-            // Now compilation must work:
+            // Compilation must work:
             await AssertCompile(engine, SNIPPETS.DependsOnChemistryWorkspace, "DependsOnChemistryWorkspace");
 
             // Check an invalid command
@@ -409,11 +471,6 @@ namespace Tests.IQSharp
             symbol = resolver.Resolve("CCNOTDriver");
             Assert.IsNotNull(symbol);
             Assert.AreEqual("Tests.qss.CCNOTDriver", symbol.Name);
-
-            /// From Canon:
-            symbol = resolver.Resolve("ApplyToEach");
-            Assert.IsNotNull(symbol);
-            Assert.AreEqual("Microsoft.Quantum.Canon.ApplyToEach", symbol.Name);
 
             // Snippets:
             symbol = resolver.Resolve("HelloQ");
@@ -457,6 +514,68 @@ namespace Tests.IQSharp
             Assert.IsNotNull(resolver.Resolve("%azure.status"));
             Assert.IsNotNull(resolver.Resolve("%azure.output"));
             Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
+        }
+
+        [TestMethod]
+        public async Task TestTraceMagic()
+        {
+            await AssertTrace("HCirc", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "Reset",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should only see depth-1 operations
+            await AssertTrace("Depth2Circ", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "FooBar",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
+
+            // Should see depth-2 operations
+            await AssertTrace("Depth2Circ --depth=2", new ExecutionPath(
+                new QubitDeclaration[] { new QubitDeclaration(0) },
+                new Operation[]
+                {
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "X",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                    new Operation()
+                    {
+                        Gate = "H",
+                        Targets = new List<Register>() { new QubitRegister(0) },
+                    },
+                }
+            ));
         }
     }
 }

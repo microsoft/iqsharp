@@ -8,11 +8,13 @@
     "baseUrl": ".",
     "outDir": "res",
     "outFile": "res/bundle.js",
-    "lib": [ "DOM", "ES2017" ],
+    "lib": [ "DOM", "ES2019" ],
     "module": "AMD",
+    "moduleResolution": "node",
     "paths": {
       "chart.js": ["/kernelspecs/iqsharp/chart.js"]
     }
   },
+  "exclude": ["node_modules", "wwwroot", "client/__tests__"],
   "include": ["client/**/*"]
 }
