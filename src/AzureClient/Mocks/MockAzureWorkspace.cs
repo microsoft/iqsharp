@@ -44,6 +44,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
 
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId) => MockAzureExecutionTarget.Create(targetId);
+
         public void AddMockJobs(params string[] jobIds)
         {
             foreach (var jobId in jobIds)
