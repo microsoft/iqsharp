@@ -96,6 +96,19 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task FromProjectReferencesWorkspace()
+        {
+            var entryPointGenerator = Init("Workspace.ProjectReferences");
+            var entryPoint = entryPointGenerator.Generate("Tests.ProjectReferences.MeasureSingleQubit", null);
+            Assert.IsNotNull(entryPoint);
+
+            var job = await entryPoint.SubmitAsync(
+                new MockQuantumMachine(),
+                new AzureSubmissionContext());
+            Assert.IsNotNull(job);
+        }
+
+        [TestMethod]
         public async Task FromBrokenWorkspace()
         {
             var entryPointGenerator = Init("Workspace.Broken");

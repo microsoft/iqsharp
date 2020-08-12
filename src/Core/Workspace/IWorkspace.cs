@@ -65,6 +65,13 @@ namespace Microsoft.Quantum.IQSharp
         string Root { get; }
 
         /// <summary>
+        /// Gets the projects to be built for this Workspace. The order of the enumeration
+        /// indicates the order in which the projects should be built, i.e., the first
+        /// project in the enumeration should be built first.
+        /// </summary>
+        public IEnumerable<Project> Projects { get; set; }
+
+        /// <summary>
         /// Gets the source files to be built for this Workspace.
         /// </summary>
         public IEnumerable<string> SourceFiles { get; }
@@ -77,7 +84,19 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Information of the assembly built from this Workspace.
         /// </summary>
+        /// <remarks>
+        /// This does NOT include assemblies built from any project references,
+        /// and it will be <c>null</c> in the case that the assemblies are
+        /// built from .csproj files.
+        /// To get all assembly information, use the <see cref="Assemblies"/>
+        /// property.
+        /// </remarks>
         AssemblyInfo AssemblyInfo { get; }
+
+        /// <summary>
+        /// Information of all assemblies built from this Workspace.
+        /// </summary>
+        public IEnumerable<AssemblyInfo> Assemblies { get; }
 
         /// <summary>
         /// The compilation errors, if any.

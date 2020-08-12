@@ -16,6 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Workspace.ProjectReferences\Workspace.ProjectReferences.csproj" />
+    <None Include="Workspace.ProjectReferences.ProjectA\ProjectA.csproj" />
+    <None Include="Workspace.ProjectReferences.ProjectB\ProjectB.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
@@ -43,6 +49,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Workspace.Chemistry\Operation.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences\Operation.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences\Workspace.ProjectReferences.csproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences.ProjectA\ProjectA.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences.ProjectA\ProjectA.csproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences.ProjectB\ProjectB.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.ProjectReferences.ProjectB\ProjectB.csproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Workspace\BasicOps.qs">
