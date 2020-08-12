@@ -37,6 +37,16 @@ namespace Microsoft.Quantum.IQSharp
             project.ProjectFile.GetHashCode(StringComparison);
     }
 
+    /// <summary>
+    /// Represents a Q# project referenced by a <see cref="Workspace"/>.
+    /// 
+    /// May be associated with a .csproj file on disk, in which case it will be associated
+    /// with all .qs source files in the corresponding folder or subfolders.
+    /// 
+    /// If not associated with a .csproj file, it is assumed to be the default
+    /// project for the workspace, which will be associated with the .qs files in the
+    /// root folder of the workspace (but not subfolders).
+    /// </summary>
     public class Project
     {
         public readonly string ProjectFile;
@@ -44,6 +54,10 @@ namespace Microsoft.Quantum.IQSharp
         internal readonly string CacheFolder;
         internal readonly IEnumerable<FileSystemWatcher> Watchers;
 
+        /// <summary>
+        /// Creates and returns <see cref="Project"/> objects corresponding to each
+        /// <c>ProjectReference</c> element in the .csproj referenced by <see cref="ProjectFile"/>.
+        /// </summary>
         internal IEnumerable<Project> ProjectReferences =>
             string.IsNullOrEmpty(ProjectFile)
             ? Enumerable.Empty<Project>()
@@ -56,6 +70,10 @@ namespace Microsoft.Quantum.IQSharp
                     Path.GetDirectoryName(ProjectFile)))
                 .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
 
+        /// <summary>
+        /// Creates and returns <see cref="PackageReference"/> objects corresponding to each
+        /// <c>PackageReference</c> element in the .csproj referenced by <see cref="ProjectFile"/>.
+        /// </summary>
         internal IEnumerable<PackageReference> PackageReferences =>
             string.IsNullOrEmpty(ProjectFile)
             ? Enumerable.Empty<PackageReference>()
@@ -82,6 +100,10 @@ namespace Microsoft.Quantum.IQSharp
         internal bool IncludeSubdirectories =>
             !string.IsNullOrEmpty(ProjectFile);
 
+        /// <summary>
+        /// Returns the list of .qs source file paths associated with the project.
+        /// These are the files that should be compiled when building the project. 
+        /// </summary>
         public IEnumerable<string> SourceFiles =>
             Directory.EnumerateFiles(RootFolder, "*.qs",
                 IncludeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
@@ -97,6 +119,9 @@ namespace Microsoft.Quantum.IQSharp
         internal string CacheDllPath =>
             Path.Combine(CacheFolder, CacheDllName);
 
+        /// <summary>
+        /// Returns the file name of the .dll to be built for this project.
+        /// </summary>
         public string CacheDllName =>
             string.IsNullOrEmpty(ProjectFile)
                 ? "__ws__.dll"
