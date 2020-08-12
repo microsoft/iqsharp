@@ -37,7 +37,7 @@ describe("Testing _classicalControlled", () => {
                 }],
                 []
             ],
-            htmlClass: 'cls-control-1'
+            htmlClass: 'classically-controlled-1'
         };
         expect(_classicalControlled(metadata)).toMatchSnapshot();
     });
@@ -60,7 +60,7 @@ describe("Testing _classicalControlled", () => {
                     width: minGateWidth
                 }]
             ],
-            htmlClass: 'cls-control-1'
+            htmlClass: 'classically-controlled-1'
         };
         expect(_classicalControlled(metadata)).toMatchSnapshot();
     });
@@ -72,7 +72,7 @@ describe("Testing _classicalControlled", () => {
             targetsY: [startY, startY + registerHeight],
             width: minGateWidth * 2 + gatePadding * 4,
             label: 'if',
-            htmlClass: 'cls-control-1',
+            htmlClass: 'classically-controlled-1',
             children: [
                 [{
                     type: GateType.Unitary,
@@ -112,7 +112,7 @@ describe("Testing _classicalControlled", () => {
             targetsY: [startY, startY + registerHeight],
             width: minGateWidth * 2 + gatePadding * 6,
             label: 'if',
-            htmlClass: 'cls-control-1',
+            htmlClass: 'classically-controlled-1',
             children: [
                 [],
                 [
@@ -131,7 +131,7 @@ describe("Testing _classicalControlled", () => {
                         targetsY: [startY, startY + registerHeight],
                         width: minGateWidth + gatePadding * 2,
                         label: 'if',
-                        htmlClass: 'cls-control-1',
+                        htmlClass: 'classically-controlled-1',
                         children: [
                             [],
                             [{
@@ -190,7 +190,7 @@ describe("Testing _classicalControlled", () => {
                     width: minGateWidth
                 }]
             ],
-            htmlClass: 'cls-control-1'
+            htmlClass: 'classically-controlled-1'
         };
         expect(_classicalControlled(metadata, 20)).toMatchSnapshot();
     });
