@@ -58,9 +58,15 @@ const invertedStyle: StyleConfig = {
     classicalOne: "#000000",
 };
 
+/**
+ * Set of default styles.
+ */
 export const STYLES = {
+    /** Default style with coloured gates. */
     DEFAULT: defaultStyle,
+    /** Black and white style. */
     BLACK_AND_WHITE: blackAndWhiteStyle,
+    /** Inverted black and white style (for black backgrounds). */
     INVERTED: invertedStyle,
 };
 
@@ -111,40 +117,40 @@ export const style = (customStyle: StyleConfig = {}) => {
     .hidden {
         display: none;
     }
-    .cls-control-unknown {
+    .classically-controlled-unknown {
         opacity: 0.25;
     }
     <!-- Gate outline -->
-    .cls-control-one .cls-container,
-    .cls-control-one .cls-line {
+    .classically-controlled-one .classical-container,
+    .classically-controlled-one .classical-line {
         stroke: ${styleConfig.classicalOne};
         stroke-width: ${styleConfig.lineWidth + 0.3};
     }
-    .cls-control-zero .cls-container,
-    .cls-control-zero .cls-line {
+    .classically-controlled-zero .classical-container,
+    .classically-controlled-zero .classical-line {
         stroke: ${styleConfig.classicalZero};
         stroke-width: ${styleConfig.lineWidth + 0.3};
     }
     <!-- Control button -->
-    .cls-control-btn {
+    .classically-controlled-btn {
         cursor: pointer;
     }
-    .cls-control-unknown .cls-control-btn {
+    .classically-controlled-unknown .classically-controlled-btn {
         fill: ${styleConfig.classicalUnknown};
     }
-    .cls-control-one .cls-control-btn {
+    .classically-controlled-one .classically-controlled-btn {
         fill: ${styleConfig.classicalOne};
     }
-    .cls-control-zero .cls-control-btn {
+    .classically-controlled-zero .classically-controlled-btn {
         fill: ${styleConfig.classicalZero};
     }
     <!-- Control button text -->
-    .cls-control-unknown .cls-control-text {
+    .classically-controlled-unknown .classically-controlled-text {
         fill: ${styleConfig.textColour};
         stroke: none;
     }
-    .cls-control-one .cls-control-text,
-    .cls-control-zero .cls-control-text {
+    .classically-controlled-one .classically-controlled-text,
+    .classically-controlled-zero .classically-controlled-text {
         color: white;
         stroke: none;
     }

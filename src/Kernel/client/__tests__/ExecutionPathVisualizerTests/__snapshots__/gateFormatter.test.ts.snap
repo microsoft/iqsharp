@@ -2,61 +2,61 @@
 
 exports[`Testing _classicalControlled No htmlClass 1`] = `
 "<g>
-<g class=\\"cls-control-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control\\" onClick=\\"toggleClassicalBtn('cls-control')\\">
-<circle class=\\"cls-control\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled\\" onClick=\\"toggleClassicalBtn('classically-controlled')\\">
+<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-zero hidden\\">
+<g class=\\"classically-controlled-zero hidden\\">
 </g>
-<g class=\\"cls-control-one\\">
+<g class=\\"classically-controlled-one\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"80\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"80\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
 
 exports[`Testing _classicalControlled change padding 1`] = `
 "<g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 </g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"115\\" y=\\"0\\" width=\\"90\\" height=\\"140\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"115\\" y=\\"0\\" width=\\"90\\" height=\\"140\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
 
 exports[`Testing _classicalControlled multiple 'zero'/'one' children 1`] = `
 "<g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g></g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
@@ -70,38 +70,38 @@ exports[`Testing _classicalControlled multiple 'zero'/'one' children 1`] = `
 <line x1=\\"155\\" x2=\\"185\\" y1=\\"40\\" y2=\\"40\\"></line>
 </g>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"80\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"80\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
 
 exports[`Testing _classicalControlled nested children 1`] = `
 "<g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 </g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g>
 <g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"165\\" x2=\\"190\\" y1=\\"240\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"165\\" x2=\\"165\\" y1=\\"235\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"165\\" cy=\\"220\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"165\\" y=\\"220\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"165\\" x2=\\"190\\" y1=\\"240\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"165\\" x2=\\"165\\" y1=\\"235\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"165\\" cy=\\"220\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"165\\" y=\\"220\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 </g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 <g>
 <line x1=\\"180\\" x2=\\"180\\" y1=\\"40\\" y2=\\"100\\"></line>
 <circle class=\\"control-dot\\" cx=\\"180\\" cy=\\"100\\" r=\\"5\\"></circle>
@@ -111,52 +111,52 @@ exports[`Testing _classicalControlled nested children 1`] = `
 <line x1=\\"165\\" x2=\\"195\\" y1=\\"40\\" y2=\\"40\\"></line>
 </g>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"190\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"190\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"100\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"100\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
 
 exports[`Testing _classicalControlled one 'one' child 1`] = `
 "<g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 </g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g></g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
 
 exports[`Testing _classicalControlled one 'zero' child 1`] = `
 "<g>
-<g class=\\"cls-control-1-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control-1\\" onClick=\\"toggleClassicalBtn('cls-control-1')\\">
-<circle class=\\"cls-control-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control-1 cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-1-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-1-zero hidden\\">
+<g class=\\"classically-controlled-1-zero hidden\\">
 <g>
 <rect class=\\"gate-unitary\\" x=\\"90\\" y=\\"20\\" width=\\"40\\" height=\\"40\\"></rect>
 <text font-size=\\"14\\" x=\\"110\\" y=\\"40\\">X</text>
 </g></g>
-<g class=\\"cls-control-1-one\\">
+<g class=\\"classically-controlled-1-one\\">
 </g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"20\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;
@@ -383,18 +383,18 @@ exports[`Testing _formatGate CNOT gate 1`] = `
 
 exports[`Testing _formatGate classically controlled gate 1`] = `
 "<g>
-<g class=\\"cls-control-group cls-control-unknown\\">
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<line class=\\"cls-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
-<g class=\\"cls-control-btn cls-control\\" onClick=\\"toggleClassicalBtn('cls-control')\\">
-<circle class=\\"cls-control\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"cls-control cls-control-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<g class=\\"classically-controlled-group classically-controlled-unknown\\">
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
+<g class=\\"classically-controlled-btn classically-controlled\\" onClick=\\"toggleClassicalBtn('classically-controlled')\\">
+<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
+<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
 </g>
-<g class=\\"cls-control-zero hidden\\">
+<g class=\\"classically-controlled-zero hidden\\">
 </g>
-<g class=\\"cls-control-one\\">
+<g class=\\"classically-controlled-one\\">
 </g>
-<rect class=\\"cls-container\\" x=\\"120\\" y=\\"5\\" width=\\"0\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
+<rect class=\\"classical-container\\" x=\\"120\\" y=\\"5\\" width=\\"0\\" height=\\"130\\" fill-opacity=\\"0\\" stroke-dasharray=\\"8, 8\\"></rect>
 </g>
 </g>"
 `;

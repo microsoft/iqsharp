@@ -250,7 +250,7 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     let { x, controlsY, targetsY, width, children, htmlClass } = metadata;
 
     const controlY = controlsY[0];
-    if (htmlClass == null) htmlClass = 'cls-control';
+    if (htmlClass == null) htmlClass = 'classically-controlled';
 
     // Get SVG for gates controlled on 0 and make them hidden initially
     let childrenZero: string = (children != null) ? formatGates(children[0]) : '';
@@ -264,9 +264,9 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const controlCircleX: number = x + controlBtnRadius;
     const controlCircle: string = _controlCircle(controlCircleX, controlY, htmlClass);
     const lineY1: number = controlY + controlBtnRadius, lineY2: number = controlY + classicalRegHeight / 2;
-    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2, "cls-line");
+    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2, "classical-line");
     x += controlBtnOffset;
-    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2, "cls-line");
+    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2, "classical-line");
 
     width = width - controlBtnOffset + (padding - classicalBoxPadding) * 2;
     x += classicalBoxPadding - padding;
@@ -274,10 +274,10 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const height: number = targetsY[1] - targetsY[0] + gateHeight + padding * 2;
 
     // Draw dashed box around children gates
-    const box: string = dashedBox(x, y, width, height, "cls-container");
+    const box: string = dashedBox(x, y, width, height, "classical-container");
 
     // Display controlled operation in initial "unknown" state
-    const svg: string = group(`<g class="${htmlClass}-group cls-control-unknown">`, horLine, vertLine,
+    const svg: string = group(`<g class="${htmlClass}-group classically-controlled-unknown">`, horLine, vertLine,
         controlCircle, childrenZero, childrenOne, box, '</g>');
 
     return svg;
@@ -295,9 +295,9 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
  * @returns SVG representation of control circle.
  */
 const _controlCircle = (x: number, y: number, cls: string, r: number = controlBtnRadius): string =>
-    `<g class="cls-control-btn ${cls}" onClick="toggleClassicalBtn('${cls}')">
+    `<g class="classically-controlled-btn ${cls}" onClick="toggleClassicalBtn('${cls}')">
 <circle class="${cls}" cx="${x}" cy="${y}" r="${r}" stroke="black" stroke-width="1"></circle>
-<text class="${cls} cls-control-text" font-size="${labelFontSize}" font-family="Arial" x="${x}" y="${y}" dominant-baseline="middle" text-anchor="middle" fill="black">?</text>
+<text class="${cls} classically-controlled-text" font-size="${labelFontSize}" font-family="Arial" x="${x}" y="${y}" dominant-baseline="middle" text-anchor="middle" fill="black">?</text>
 </g>`;
 
 export {

@@ -54,7 +54,7 @@ const processOperations = (operations: Operation[], registers: RegisterMap)
 
             // Add HTML class attribute if classically controlled
             if (metadata.type === GateType.ClassicalControlled) {
-                _addClass(metadata, `cls-control-${cls++}`);
+                _addClass(metadata, `classically-controlled-${cls++}`);
             }
 
             // Expand column size, if needed

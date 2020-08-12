@@ -22,20 +22,20 @@ const script: string = `
         switch (currValue) {
             case '?':
                 textSvg.childNodes[0].nodeValue = '1';
-                group.classList.remove('cls-control-unknown');
-                group.classList.add('cls-control-one');
+                group.classList.remove('classically-controlled-unknown');
+                group.classList.add('classically-controlled-one');
                 break;
             case '1':
                 textSvg.childNodes[0].nodeValue = '0';
-                group.classList.remove('cls-control-one');
-                group.classList.add('cls-control-zero');
+                group.classList.remove('classically-controlled-one');
+                group.classList.add('classically-controlled-zero');
                 oneGates.classList.toggle('hidden');
                 zeroGates.classList.toggle('hidden');
                 break;
             case '0':
                 textSvg.childNodes[0].nodeValue = '?';
-                group.classList.remove('cls-control-zero');
-                group.classList.add('cls-control-unknown');
+                group.classList.remove('classically-controlled-zero');
+                group.classList.add('classically-controlled-unknown');
                 zeroGates.classList.toggle('hidden');
                 oneGates.classList.toggle('hidden');
                 break;
