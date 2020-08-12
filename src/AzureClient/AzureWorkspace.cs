@@ -17,6 +17,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal class AzureWorkspace : IAzureWorkspace
     {
         public string? Name => AzureQuantumClient?.WorkspaceName;
+        public string? SubscriptionId => AzureQuantumClient?.SubscriptionId;
+        public string? ResourceGroup => AzureQuantumClient?.ResourceGroupName;
 
         private Azure.Quantum.IWorkspace AzureQuantumWorkspace { get; set; }
         private QuantumClient AzureQuantumClient { get; set; }
