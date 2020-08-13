@@ -31,4 +31,8 @@
     <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20073008-beta" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\build\assets\qdk-nuget-icon.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+
 </Project>
