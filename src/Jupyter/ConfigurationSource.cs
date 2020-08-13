@@ -68,7 +68,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     option to show None. 
         /// </summary>
         public PhaseDisplayStyle PhaseDisplayStyle =>
-            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
+            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowAndNumber);
 
         /// <summary>
         ///     Allows for options to view measurement as horizontal histograms for each
@@ -76,7 +76,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     a decimal, progress bar, both, or None. 
         /// </summary>
         public MeasurementDisplayStyle MeasurementDisplayStyle =>
-            GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarOnly);
+            GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarAndNumber);
 
         /// <summary>
         ///     Allows for options to change measurement probability precision when viewing

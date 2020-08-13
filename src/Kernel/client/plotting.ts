@@ -65,15 +65,17 @@ export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: Display
 
 function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
+
     chart.data = {
-        labels: Array.from(Array(newCount).keys()).map(idx => {
-            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Magnitude);
                 }),
                 backgroundColor: "#4c4cff",
@@ -81,7 +83,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
                 label: "Amplitude"
             },
             {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Phase);
                 }),
                 backgroundColor: "#4c4cff",
@@ -120,15 +122,17 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
 
 function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
+
     chart.data = {
-        labels: Array.from(Array(newCount).keys()).map(idx => {
-            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -168,16 +172,17 @@ function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState)
 
 function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
     chart.data = {
-        labels: Array.from(Array(newCount).keys()).map(idx => {
-            let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Real);
                 }),
                 backgroundColor: "#5390d9",
@@ -185,7 +190,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
                 label: "Real"
             },
             {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Imag);
                 }),
                 backgroundColor: "#48bfe3",
@@ -228,10 +233,12 @@ export function createNewCanvas(
     parentNode: HTMLElement, initalState?: DisplayableState | null
 ): { canvas: HTMLCanvasElement, chart: ChartJs } {
     let canvas = document.createElement("canvas");
+    canvas.style.width = "100%"
+    //set dimensions of canvas here add style property => 100% 
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
-            responsive: false
+            responsive: true
         }
     });
 
@@ -295,18 +302,20 @@ export function attachDumpMachineToolbar(element: HTMLCanvasElement, chart: Char
 
 export function createBarChart(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
+    
 
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(newCount).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
         datasets: [
                 {
-                data: Array.from(Array(newCount).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates).keys()).map(idx => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -315,7 +324,7 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
             ],
         },
     options: {
-            responsive: false,
+            responsive: true,
         legend: {
             display: false,
         },
@@ -349,18 +358,19 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
 
 export function createBarChartRealImagOption(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(newCount).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(newCount).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
                         return (amps[idx].Real);
                     }),
                     backgroundColor: "#5390d9",
@@ -368,7 +378,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     label: "Real"
                 },
                 {
-                    data: Array.from(Array(newCount).keys()).map(idx => { 
+                    data: Array.from(Array(nBasisStates).keys()).map(idx => { 
                         return (amps[idx].Imag);
                     }),
                     backgroundColor: "#48bfe3",
@@ -378,7 +388,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
             ],
         },
         options: {
-            responsive: false,
+            responsive: true,
             legend: {
                 display: true,
             },
@@ -411,18 +421,19 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
 
 export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, state: DisplayableState) {
     let amps = state.amplitudes;
-    let newCount = amps.length;
+    let nBasisStates = amps.length;
+    let nBitLength = Math.ceil(Math.log2(nBasisStates));
 
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(newCount).keys()).map(idx => {
-                let bitstring = (idx >>> 0).toString(2).padStart(newCount, "0");
+            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+                let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(newCount).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
                         return (amps[idx].Magnitude);
                     }),
                     backgroundColor: "#4c4cff",
@@ -430,7 +441,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                     label: "Amplitude"
                 },
                 {
-                    data: Array.from(Array(newCount).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
                         return (amps[idx].Phase);
                     }),
                     backgroundColor: "#4c4cff",
@@ -440,7 +451,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
             ],
         },
         options: {
-            responsive: false,
+            responsive: true,
             legend: {
                 display: false,
             },

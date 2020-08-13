@@ -66,6 +66,30 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     Configures the phase visualization style in output from callables such as
                     `DumpMachine` or `DumpRegister`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
+
+                    **`dump.measurementDisplayStyle`**
+
+                    **Value:** '""NumberOnly""' , `""BarOnly""`, `""BarAndNumber""`, or `""None""`
+
+                    Configures the measurement probability visualization style in output as callable such as 
+                    `DumpMachine` or `DumpRegister`. Supports displaying measurement probability as progress bars, numbers, both,
+                    or neither. 
+
+                    **'dump.measurementDisplayPrecision'**
+
+                    **Value:** integer number such as '1' or '2' (default '4')
+
+                    Sets the precision of the measurement probability represented as a percentage when set to 'NumberOnly' or
+                    'BarAndNumber'.
+
+                    **`dump.measurementDisplayHistogram`**
+
+                    **Value:** `true` (default) or `false'
+
+                    If `dump.measurementDisplayHistogram` is set to `true`, displays the
+                    histogram representation of the state of the simulator underneath the original chart output.
+
+
                 ".Dedent(),
                 Examples = new []
                 {
