@@ -97,9 +97,9 @@ function Pack-Image() {
 }
 
 Pack-Nuget '../src/Core/Core.csproj'
+Pack-Nuget '../src/ExecutionPathTracer/ExecutionPathTracer.csproj'
 Pack-Nuget '../src/Jupyter/Jupyter.csproj'
 Pack-Nuget '../src/Tool/Tool.csproj'
-Pack-Nuget '../src/ExecutionPathTracer/ExecutionPathTracer.csproj'
 
 if ($Env:ENABLE_PYTHON -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Creating Python packages. Env:ENABLE_PYTHON was set to 'false'."
