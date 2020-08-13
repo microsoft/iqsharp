@@ -123,11 +123,17 @@ class Kernel {
     telemetryOptOut?: boolean | null;
 
     constructor() {
-        IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
-            this.requestEcho();
-            this.requestClientInfo();
-            this.initExecutionPathVisualizer();
-        });
+        if (IPython.notebook.kernel.is_connected()) {
+            this.onStart();
+        } else {
+            IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => this.onStart());
+        }
+    }
+
+    onStart() {
+        this.requestEcho();
+        this.requestClientInfo();
+        this.initExecutionPathVisualizer();
     }
 
     requestEcho() {
