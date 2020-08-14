@@ -274,14 +274,12 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestRuntimeCapabilities()
         {
-            var services = Startup.CreateServiceProvider("Workspace");
+            var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
-            var snippets = services.GetService<ISnippets>();
-            snippets.Compile(SNIPPETS.CompareMeasurementResult);
-            var submissionContext = new AzureSubmissionContext() { OperationName = "CompareMeasurementResult" };
+            var submissionContext = new AzureSubmissionContext() { OperationName = "Tests.qss.CompareMeasurementResult" };
             ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
 
             // Set up workspace with mock providers
