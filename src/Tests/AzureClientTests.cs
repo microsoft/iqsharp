@@ -269,5 +269,32 @@ namespace Tests.IQSharp
             var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             Assert.IsNotNull(histogram);
         }
+
+        [TestMethod]
+        public void TestRuntimeCapabilities()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+
+            // Choose an operation with measurement result comparison, which should
+            // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
+            var submissionContext = new AzureSubmissionContext() { OperationName = "Tests.qss.CompareMeasurementResult" };
+            ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+
+            // Set up workspace with mock providers
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            azureWorkspace?.AddMockTargets("ionq.mock");
+            azureWorkspace?.AddMockTargets("honeywell.mock");
+
+            // Verify that IonQ job fails to compile (QPRGen0)
+            ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));
+            ExpectError(AzureClientError.InvalidEntryPoint, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+
+            // Verify that Honeywell job can be successfully submitted (QPRGen1)
+            ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "honeywell.mock"));
+            var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Assert.IsNotNull(job);
+        }
     }
 }

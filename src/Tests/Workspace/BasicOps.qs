@@ -42,6 +42,16 @@ namespace Tests.qss {
             CCNOT(qubits[0], qubits[1], qubits[2]);
         } 
     }
+
+    operation CompareMeasurementResult() : Unit {
+        using (qubits = Qubit[2]) {
+            let r = M(qubits[0]);
+            if (r == One) {
+                H(qubits[1]);
+                Reset(qubits[1]);
+            }
+        }
+    }
 }
 
 
