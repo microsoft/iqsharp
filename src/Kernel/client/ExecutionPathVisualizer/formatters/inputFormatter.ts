@@ -1,22 +1,17 @@
-import { Qubit } from "../executionPath";
-import { RegisterType, RegisterMap, RegisterMetadata } from "../register";
-import {
-    leftPadding,
-    startY,
-    registerHeight,
-    classicalRegHeight,
-} from "../constants";
+import { Qubit } from '../executionPath';
+import { RegisterType, RegisterMap, RegisterMetadata } from '../register';
+import { leftPadding, startY, registerHeight, classicalRegHeight } from '../constants';
 
 /**
  * `formatInputs` takes in an array of Qubits and outputs the SVG string of formatted
  * qubit wires and a mapping from register IDs to register metadata (for rendering).
- * 
+ *
  * @param qubits List of declared qubits.
- * 
+ *
  * @returns returns the SVG string of formatted qubit wires, a mapping from registers
  *          to y coord and total SVG height.
  */
-const formatInputs = (qubits: Qubit[]): { qubitWires: string, registers: RegisterMap, svgHeight: number } => {
+const formatInputs = (qubits: Qubit[]): { qubitWires: string; registers: RegisterMap; svgHeight: number } => {
     const qubitWires: string[] = [];
     const registers: RegisterMap = {};
 
@@ -38,7 +33,7 @@ const formatInputs = (qubits: Qubit[]): { qubitWires: string, registers: Registe
         currY += classicalRegHeight;
 
         // Add classical wires
-        registers[id].children = Array.from(Array(numChildren), _ => {
+        registers[id].children = Array.from(Array(numChildren), () => {
             const clsReg: RegisterMetadata = { type: RegisterType.Classical, y: currY };
             currY += classicalRegHeight;
             return clsReg;
@@ -48,21 +43,18 @@ const formatInputs = (qubits: Qubit[]): { qubitWires: string, registers: Registe
     return {
         qubitWires: qubitWires.join('\n'),
         registers,
-        svgHeight: currY
+        svgHeight: currY,
     };
 };
 
 /**
  * Generate the SVG text component for the input qubit register.
- * 
+ *
  * @param y y coord of input wire to render in SVG.
- * 
+ *
  * @returns SVG text component for the input register.
  */
 const _qubitInput = (y: number): string =>
     `<text x="${leftPadding}" y="${y}" dominant-baseline="middle" text-anchor="start">|0⟩</text>`;
 
-export {
-    formatInputs,
-    _qubitInput,
-};
+export { formatInputs, _qubitInput };

@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
-import { executionPathToHtml } from "./ExecutionPathVisualizer";
+import { executionPathToHtml, ExecutionPath } from "./ExecutionPathVisualizer";
 import { StyleConfig, STYLES } from "./ExecutionPathVisualizer/styles";
 
 function defineQSharpMode() {
@@ -238,7 +238,7 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
             message => {
-                const { executionPath, id, style } = message.content;
+                const { executionPath, id, style }: { executionPath: ExecutionPath, id: string, style: string } = message.content;
                 const userStyleConfig: StyleConfig = STYLES[style] || {};
                 const html: string = executionPathToHtml(executionPath, userStyleConfig);
                 const container: HTMLElement = document.getElementById(id);
