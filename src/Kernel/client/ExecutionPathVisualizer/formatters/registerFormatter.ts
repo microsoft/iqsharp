@@ -43,11 +43,11 @@ const formatRegisters = (registers: RegisterMap, measureGates: Metadata[], endX:
 const _classicalRegister = (startX: number, gateY: number, endX: number, wireY: number): string => {
     const wirePadding: number = 1;
     // Draw vertical lines
-    const vLine1: string = line(startX + wirePadding, gateY, startX + wirePadding, wireY - wirePadding, 0.5);
-    const vLine2: string = line(startX - wirePadding, gateY, startX - wirePadding, wireY + wirePadding, 0.5);
+    const vLine1: string = line(startX + wirePadding, gateY, startX + wirePadding, wireY - wirePadding, "register-classical");
+    const vLine2: string = line(startX - wirePadding, gateY, startX - wirePadding, wireY + wirePadding, "register-classical");
     // Draw horizontal lines
-    const hLine1: string = line(startX + wirePadding, wireY - wirePadding, endX, wireY - wirePadding, 0.5);
-    const hLine2: string = line(startX - wirePadding, wireY + wirePadding, endX, wireY + wirePadding, 0.5);
+    const hLine1: string = line(startX + wirePadding, wireY - wirePadding, endX, wireY - wirePadding, "register-classical");
+    const hLine2: string = line(startX - wirePadding, wireY + wirePadding, endX, wireY + wirePadding, "register-classical");
     const svg: string = [vLine1, vLine2, hLine1, hLine2].join('\n');
     return svg;
 };

@@ -70,6 +70,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     **Value:** positive integer (default `1`)
 
                     Configures the default depth used in the `%trace` command for visualizing Q# operations.
+
+                    **`trace.style`**
+
+                    **Value:** `""Default""` (default), `""BlackAndWhite""`, or `""Inverted""`
+
+                    Configures the default style used in generating the visualization of Q# operations with the `%trace` command.
                 ".Dedent(),
                 Examples = new []
                 {
