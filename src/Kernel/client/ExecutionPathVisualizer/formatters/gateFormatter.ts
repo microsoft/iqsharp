@@ -1,4 +1,4 @@
-import { Metadata } from "../metadata";
+import { Metadata } from '../metadata';
 import {
     GateType,
     minGateWidth,
@@ -10,23 +10,14 @@ import {
     controlBtnOffset,
     classicalBoxPadding,
     classicalRegHeight,
-} from "../constants";
-import {
-    group,
-    controlDot,
-    line,
-    box,
-    text,
-    arc,
-    dashedLine,
-    dashedBox
-} from "./formatUtils";
+} from '../constants';
+import { group, controlDot, line, box, text, arc, dashedLine, dashedBox } from './formatUtils';
 
 /**
  * Given an array of operations (in metadata format), return the SVG representation.
- * 
+ *
  * @param opsMetadata Array of Metadata representation of operations.
- * 
+ *
  * @returns SVG representation of operations.
  */
 const formatGates = (opsMetadata: Metadata[]): string => {
@@ -35,22 +26,31 @@ const formatGates = (opsMetadata: Metadata[]): string => {
 };
 
 /**
+ * Groups SVG elements into a gate SVG group.
+ *
+ * @param svgElems Array of SVG elements.
+ * @param id       Custom element ID of SVG group.
+ *
+ * @returns SVG representation of a gate.
+ */
+const _createGate = (svgElems: string[], id?: string): string => group(svgElems, 'gate', id);
+
+/**
  * Takes in an operation's metadata and formats it into SVG.
- * 
+ *
  * @param metadata Metadata object representation of gate.
- * 
+ *
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, label, displayArgs, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, id, width } = metadata;
     switch (type) {
         case GateType.Measure:
-            return _measure(x, controlsY[0], targetsY[0]);
+            return _createGate([_measure(x, controlsY[0])], id);
         case GateType.Unitary:
-            return _unitary(label, x, targetsY, width, displayArgs);
+            return _createGate([_unitary(label, x, targetsY, width, displayArgs)], id);
         case GateType.Swap:
-            if (controlsY.length > 0) return _controlledGate(metadata);
-            else return _swap(x, targetsY);
+            return controlsY.length > 0 ? _controlledGate(metadata) : _createGate([_swap(x, targetsY)], id);
         case GateType.Cnot:
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
@@ -62,40 +62,45 @@ const _formatGate = (metadata: Metadata): string => {
 };
 
 /**
- * Creates a measurement gate at the x position, where qy and cy are
- * the y coords of the qubit register and classical register, respectively.
- * 
+ * Creates a measurement gate at position (x, y).
+ *
  * @param x  x coord of measurement gate.
- * @param qy y coord of qubit register.
- * @param cy y coord of classical register.
- * 
+ * @param y  y coord of measurement gate.
+ *
  * @returns SVG representation of measurement gate.
  */
-const _measure = (x: number, qy: number, cy: number): string => {
+const _measure = (x: number, y: number): string => {
     x -= minGateWidth / 2;
-    const width: number = minGateWidth, height = gateHeight;
+    const width: number = minGateWidth,
+        height = gateHeight;
     // Draw measurement box
-    const mBox: string = box(x, qy - height / 2, width, height);
-    const mArc: string = arc(x + 5, qy + 2, width / 2 - 5, height / 2 - 8);
-    const meter: string = line(x + width / 2, qy + 8, x + width - 8, qy - height / 2 + 8);
-    const svg: string = group(mBox, mArc, meter);
-    return svg;
+    const mBox: string = box(x, y - height / 2, width, height, 'gate-measure');
+    const mArc: string = arc(x + 5, y + 2, width / 2 - 5, height / 2 - 8);
+    const meter: string = line(x + width / 2, y + 8, x + width - 8, y - height / 2 + 8);
+    return [mBox, mArc, meter].join('\n');
 };
 
 /**
  * Creates the SVG for a unitary gate on an arbitrary number of qubits.
- * 
+ *
  * @param label            Gate label.
  * @param x                x coord of gate.
  * @param y                Array of y coords of registers acted upon by gate.
  * @param width            Width of gate.
  * @param displayArgs           Arguments passed in to gate.
  * @param renderDashedLine If true, draw dashed lines between non-adjacent unitaries.
- * 
+ *
  * @returns SVG representation of unitary gate.
  */
-const _unitary = (label: string, x: number, y: number[], width: number, displayArgs?: string, renderDashedLine: boolean = true): string => {
-    if (y.length === 0) return "";
+const _unitary = (
+    label: string,
+    x: number,
+    y: number[],
+    width: number,
+    displayArgs?: string,
+    renderDashedLine = true,
+): string => {
+    if (y.length === 0) return '';
 
     // Sort y in ascending order
     y.sort((y1, y2) => y1 - y2);
@@ -114,14 +119,16 @@ const _unitary = (label: string, x: number, y: number[], width: number, displayA
 
     // Render each group as a separate unitary boxes
     const unitaryBoxes: string[] = regGroups.map((group: number[]) => {
-        const maxY: number = group[group.length - 1], minY: number = group[0];
+        const maxY: number = group[group.length - 1],
+            minY: number = group[0];
         const height: number = maxY - minY + gateHeight;
         return _unitaryBox(label, x, minY, width, height, displayArgs);
     });
 
     // Draw dashed line between disconnected unitaries
     if (renderDashedLine && unitaryBoxes.length > 1) {
-        const maxY: number = y[y.length - 1], minY: number = y[0];
+        const maxY: number = y[y.length - 1],
+            minY: number = y[0];
         const vertLine: string = dashedLine(x, minY, x, maxY);
         return [vertLine, ...unitaryBoxes].join('\n');
     } else return unitaryBoxes.join('\n');
@@ -129,20 +136,27 @@ const _unitary = (label: string, x: number, y: number[], width: number, displayA
 
 /**
  * Generates SVG representation of the boxed unitary gate symbol.
- * 
+ *
  * @param label  Label for unitary operation.
  * @param x      x coord of gate.
  * @param y      y coord of gate.
  * @param width  Width of gate.
  * @param height Height of gate.
  * @param displayArgs Arguments passed in to gate.
- * 
+ *
  * @returns SVG representation of unitary box.
  */
-const _unitaryBox = (label: string, x: number, y: number, width: number, height: number = gateHeight, displayArgs?: string): string => {
+const _unitaryBox = (
+    label: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number = gateHeight,
+    displayArgs?: string,
+): string => {
     y -= gateHeight / 2;
     const uBox: string = box(x - width / 2, y, width, height);
-    const labelY = y + height / 2 - ((displayArgs == null) ? 0 : 7);
+    const labelY = y + height / 2 - (displayArgs == null ? 0 : 7);
     const labelText: string = text(label, x, labelY);
     const elems = [uBox, labelText];
     if (displayArgs != null) {
@@ -150,36 +164,34 @@ const _unitaryBox = (label: string, x: number, y: number, width: number, height:
         const argText: string = text(displayArgs, x, argStrY, argsFontSize);
         elems.push(argText);
     }
-    const svg: string = group(elems);
-    return svg;
+    return elems.join('\n');
 };
 
 /**
  * Creates the SVG for a SWAP gate on y coords given by targetsY.
- * 
+ *
  * @param x          Centre x coord of SWAP gate.
  * @param targetsY   y coords of target registers.
- * 
+ *
  * @returns SVG representation of SWAP gate.
  */
 const _swap = (x: number, targetsY: number[]): string => {
     // Get SVGs of crosses
-    const crosses: string[] = targetsY.map(y => _cross(x, y));
+    const crosses: string[] = targetsY.map((y) => _cross(x, y));
     const vertLine: string = line(x, targetsY[0], x, targetsY[1]);
-    const svg: string = group(crosses, vertLine);
-    return svg;
+    return [crosses, vertLine].join('\n');
 };
 
 /**
  * Generates cross for display in SWAP gate.
- * 
+ *
  * @param x x coord of gate.
  * @param y y coord of gate.
- * 
+ *
  * @returns SVG representation for cross.
  */
 const _cross = (x: number, y: number): string => {
-    const radius: number = 8;
+    const radius = 8;
     const line1: string = line(x - radius, y - radius, x + radius, y + radius);
     const line2: string = line(x - radius, y + radius, x + radius, y - radius);
     return [line1, line2].join('\n');
@@ -187,21 +199,21 @@ const _cross = (x: number, y: number): string => {
 
 /**
  * Produces the SVG representation of a controlled gate on multiple qubits.
- * 
+ *
  * @param metadata Metadata of controlled gate.
- * 
+ *
  * @returns SVG representation of controlled gate.
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, targetsY, label, displayArgs, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, id, width } = metadata;
     // Get SVG for target gates
     switch (type) {
         case GateType.Cnot:
-            targetsY.forEach(y => targetGateSvgs.push(_oplus(x, y)));
+            targetsY.forEach((y) => targetGateSvgs.push(_oplus(x, y)));
             break;
         case GateType.Swap:
-            targetsY.forEach(y => targetGateSvgs.push(_cross(x, y)));
+            targetsY.forEach((y) => targetGateSvgs.push(_cross(x, y)));
             break;
         case GateType.ControlledUnitary:
             targetGateSvgs.push(_unitary(label, x, targetsY, width, displayArgs, false));
@@ -210,61 +222,62 @@ const _controlledGate = (metadata: Metadata): string => {
             throw new Error(`ERROR: Unrecognized gate: ${label} of type ${type}`);
     }
     // Get SVGs for control dots
-    const controlledDotsSvg: string[] = controlsY.map(y => controlDot(x, y));
+    const controlledDotsSvg: string[] = controlsY.map((y) => controlDot(x, y));
     // Create control lines
     const maxY: number = Math.max(...controlsY, ...targetsY);
     const minY: number = Math.min(...controlsY, ...targetsY);
     const vertLine: string = line(x, minY, x, maxY);
-    const svg: string = group(vertLine, controlledDotsSvg, targetGateSvgs);
+    const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], id);
     return svg;
 };
 
 /**
  * Generates $\oplus$ symbol for display in CNOT gate.
- * 
+ *
  * @param x x coordinate of gate.
  * @param y y coordinate of gate.
  * @param r radius of circle.
- * 
+ *
  * @returns SVG representation of $\oplus$ symbol.
  */
-const _oplus = (x: number, y: number, r: number = 15): string => {
-    const circle: string = `<circle cx="${x}" cy="${y}" r="${r}" stroke="black" fill="white" stroke-width="1"></circle>`;
+const _oplus = (x: number, y: number, r = 15): string => {
+    const circle = `<circle class="oplus" cx="${x}" cy="${y}" r="${r}"></circle>`;
     const vertLine: string = line(x, y - r, x, y + r);
     const horLine: string = line(x - r, y, x + r, y);
-    const svg: string = group(circle, vertLine, horLine);
-    return svg;
-}
+    return [circle, vertLine, horLine].join('\n');
+};
 
 /**
- * Generates the SVG for a classically controlled group of oeprations.
- * 
+ * Generates the SVG for a classically controlled group of operations.
+ *
  * @param metadata Metadata representation of gate.
  * @param padding  Padding within dashed box.
- * 
+ *
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    let { x, controlsY, targetsY, width, children, htmlClass } = metadata;
+    let { x, width, htmlClass } = metadata;
+    const { controlsY, targetsY, children, id } = metadata;
 
     const controlY = controlsY[0];
-    if (htmlClass == null) htmlClass = 'cls-control';
+    if (htmlClass == null) htmlClass = 'classically-controlled';
 
     // Get SVG for gates controlled on 0 and make them hidden initially
-    let childrenZero: string = (children != null) ? formatGates(children[0]) : '';
+    let childrenZero: string = children != null ? formatGates(children[0]) : '';
     childrenZero = `<g class="${htmlClass}-zero hidden">\r\n${childrenZero}</g>`;
 
     // Get SVG for gates controlled on 1
-    let childrenOne: string = (children != null) ? formatGates(children[1]) : '';
+    let childrenOne: string = children != null ? formatGates(children[1]) : '';
     childrenOne = `<g class="${htmlClass}-one">\r\n${childrenOne}</g>`;
 
     // Draw control button and attached dashed line to dashed box
     const controlCircleX: number = x + controlBtnRadius;
     const controlCircle: string = _controlCircle(controlCircleX, controlY, htmlClass);
-    const lineY1: number = controlY + controlBtnRadius, lineY2: number = controlY + classicalRegHeight / 2;
-    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2);
+    const lineY1: number = controlY + controlBtnRadius,
+        lineY2: number = controlY + classicalRegHeight / 2;
+    const vertLine: string = dashedLine(controlCircleX, lineY1, controlCircleX, lineY2, 'classical-line');
     x += controlBtnOffset;
-    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2);
+    const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2, 'classical-line');
 
     width = width - controlBtnOffset + (padding - classicalBoxPadding) * 2;
     x += classicalBoxPadding - padding;
@@ -272,11 +285,14 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const height: number = targetsY[1] - targetsY[0] + gateHeight + padding * 2;
 
     // Draw dashed box around children gates
-    const box: string = dashedBox(x, y, width, height);
+    const box: string = dashedBox(x, y, width, height, 'classical-container');
 
     // Display controlled operation in initial "unknown" state
-    const svg: string = group(`<g class="${htmlClass}-group cls-control-unknown">`, horLine, vertLine,
-        controlCircle, childrenZero, childrenOne, box, '</g>');
+    const svg: string = group(
+        [horLine, vertLine, controlCircle, childrenZero, childrenOne, box],
+        `${htmlClass}-group classically-controlled-unknown`,
+        id,
+    );
 
     return svg;
 };
@@ -284,26 +300,18 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
 /**
  * Generates the SVG representation of the control circle on a classical register with interactivity support
  * for toggling between bit values (unknown, 1, and 0).
- * 
+ *
  * @param x   x coord.
  * @param y   y coord.
  * @param cls Class name.
  * @param r   Radius of circle.
- * 
+ *
  * @returns SVG representation of control circle.
  */
 const _controlCircle = (x: number, y: number, cls: string, r: number = controlBtnRadius): string =>
-    `<g class="cls-control-btn ${cls}" onClick="toggleClassicalBtn('${cls}')">
-<circle class="${cls}" cx="${x}" cy="${y}" r="${r}" stroke="black" stroke-width="1"></circle>
-<text class="${cls} cls-control-text" font-size="${labelFontSize}" font-family="Arial" x="${x}" y="${y}" dominant-baseline="middle" text-anchor="middle" fill="black">?</text>
+    `<g class="classically-controlled-btn ${cls}" onClick="toggleClassicalBtn('${cls}')">
+<circle class="${cls}" cx="${x}" cy="${y}" r="${r}"></circle>
+<text class="${cls} classically-controlled-text" font-size="${labelFontSize}" x="${x}" y="${y}">?</text>
 </g>`;
 
-export {
-    formatGates,
-    _formatGate,
-    _measure,
-    _unitary,
-    _swap,
-    _controlledGate,
-    _classicalControlled,
-};
+export { formatGates, _formatGate, _measure, _unitary, _swap, _controlledGate, _classicalControlled };

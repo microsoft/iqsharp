@@ -12,9 +12,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal class AzureExecutionTarget
     {
-        public string TargetId { get; private set; } = string.Empty;
-
-        public string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
+        public string TargetId { get; protected set; } = string.Empty;
+        
+        public virtual string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
 
         public AssemblyConstants.RuntimeCapabilities RuntimeCapabilities => GetProvider(TargetId) switch
         {
@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "honeywell.qpu".
         /// </remarks>
-        private static AzureProvider? GetProvider(string targetId)
+        protected static AzureProvider? GetProvider(string targetId)
         {
             var parts = targetId.Split('.', 2);
             if (Enum.TryParse(parts[0], true, out AzureProvider provider))

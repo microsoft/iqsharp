@@ -30,6 +30,7 @@ export interface Events {
 export interface Kernel {
     events: Events;
 
+    is_connected: () => Boolean;
     execute(code: string, callbacks: ShellCallbacks | undefined, options: {silent?: boolean, user_expressions?: object, allow_stdin?: boolean} | undefined): string;
     register_iopub_handler(msg_type: string, callback: (message: Message) => void);
     send_shell_message(msg_type: string, content: object, callbacks?: ShellCallbacks, metadata?: object, buffers?: Array<any>) : string;
