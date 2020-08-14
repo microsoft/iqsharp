@@ -8,7 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
-import { executionPathToHtml } from "./ExecutionPathVisualizer";
+import { executionPathToHtml, ExecutionPath, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -122,11 +122,17 @@ class Kernel {
     telemetryOptOut?: boolean | null;
 
     constructor() {
-        IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
-            this.requestEcho();
-            this.requestClientInfo();
-            this.initExecutionPathVisualizer();
-        });
+        if (IPython.notebook.kernel.is_connected()) {
+            this.onStart();
+        } else {
+            IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => this.onStart());
+        }
+    }
+
+    onStart() {
+        this.requestEcho();
+        this.requestClientInfo();
+        this.initExecutionPathVisualizer();
     }
 
     requestEcho() {
@@ -231,8 +237,9 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
             message => {
-                const { executionPath, id } = message.content;
-                const html: string = executionPathToHtml(executionPath);
+                const { executionPath, id, style }: { executionPath: ExecutionPath, id: string, style: string } = message.content;
+                const userStyleConfig: StyleConfig = STYLES[style] || {};
+                const html: string = executionPathToHtml(executionPath, userStyleConfig);
                 const container: HTMLElement = document.getElementById(id);
                 if (container == null) throw new Error(`Div with ID ${id} not found.`);
                 container.innerHTML = html;

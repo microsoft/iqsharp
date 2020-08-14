@@ -1,4 +1,4 @@
-import { GateType } from "./constants";
+import { GateType } from './constants';
 
 /**
  * Metadata used to store information pertaining to a given
@@ -16,14 +16,16 @@ export interface Metadata {
     /** Gate label. */
     label: string;
     /** Gate arguments as string. */
-    displayArgs?: string,
+    displayArgs?: string;
+    /** HTML element ID. */
+    id?: string;
     /** Gate width. */
     width: number;
     /** Classically-controlled gates.
      *  - children[0]: gates when classical control bit is 0.
      *  - children[1]: gates when classical control bit is 1.
-    */
+     */
     children?: Metadata[][];
     /** HTML element class for interactivity. */
     htmlClass?: string;
-};
+}
