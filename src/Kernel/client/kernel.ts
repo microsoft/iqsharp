@@ -8,8 +8,7 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
-import { executionPathToHtml, ExecutionPath } from "./ExecutionPathVisualizer";
-import { StyleConfig, STYLES } from "./ExecutionPathVisualizer/styles";
+import { executionPathToHtml, ExecutionPath, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");

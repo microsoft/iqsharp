@@ -20,6 +20,10 @@ export interface StyleConfig {
     classicalZero?: string;
     /** Measurement one primary colour. */
     classicalOne?: string;
+    /** Measurement zero text colour */
+    classicalZeroText?: string;
+    /** Measurement one text colour */
+    classicalOneText?: string;
 }
 
 const defaultStyle: StyleConfig = {
@@ -32,6 +36,8 @@ const defaultStyle: StyleConfig = {
     classicalUnknown: '#E5E5E5',
     classicalZero: '#C40000',
     classicalOne: '#4059BD',
+    classicalZeroText: '#FFFFFF',
+    classicalOneText: '#FFFFFF',
 };
 
 const blackAndWhiteStyle: StyleConfig = {
@@ -42,8 +48,10 @@ const blackAndWhiteStyle: StyleConfig = {
     oplus: '#FFFFFF',
     measure: '#FFFFFF',
     classicalUnknown: '#FFFFFF',
-    classicalZero: '#FFFFFF',
-    classicalOne: '#FFFFFF',
+    classicalZero: '#000000',
+    classicalOne: '#000000',
+    classicalZeroText: '#FFFFFF',
+    classicalOneText: '#FFFFFF',
 };
 
 const invertedStyle: StyleConfig = {
@@ -54,8 +62,10 @@ const invertedStyle: StyleConfig = {
     oplus: '#000000',
     measure: '#000000',
     classicalUnknown: '#000000',
-    classicalZero: '#000000',
-    classicalOne: '#000000',
+    classicalZero: '#FFFFFF',
+    classicalOne: '#FFFFFF',
+    classicalZeroText: '#000000',
+    classicalOneText: '#000000',
 };
 
 /**
@@ -88,7 +98,7 @@ export const style = (customStyle: StyleConfig = {}): string => {
         stroke-width: ${styleConfig.lineWidth};
     }
     text {
-        color: ${styleConfig.textColour};
+        fill: ${styleConfig.textColour};
         dominant-baseline: middle;
         text-anchor: middle;
         font-family: Arial;
@@ -145,14 +155,20 @@ export const style = (customStyle: StyleConfig = {}): string => {
         fill: ${styleConfig.classicalZero};
     }
     <!-- Control button text -->
+    .classically-controlled-text {
+        dominant-baseline: middle;
+        text-anchor: middle;
+        stroke: none;
+        font-family: Arial;
+    }
     .classically-controlled-unknown .classically-controlled-text {
         fill: ${styleConfig.textColour};
-        stroke: none;
     }
-    .classically-controlled-one .classically-controlled-text,
+    .classically-controlled-one .classically-controlled-text {
+        fill: ${styleConfig.classicalOneText};
+    }
     .classically-controlled-zero .classically-controlled-text {
-        color: white;
-        stroke: none;
+        fill: ${styleConfig.classicalZeroText};
     }
 </style>
 `;

@@ -5,8 +5,8 @@ exports[`Testing _classicalControlled No htmlClass 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled\\" onClick=\\"toggleClassicalBtn('classically-controlled')\\">
-<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-zero hidden\\">
 </g>
@@ -24,8 +24,8 @@ exports[`Testing _classicalControlled change padding 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 </g>
@@ -43,8 +43,8 @@ exports[`Testing _classicalControlled multiple 'zero'/'one' children 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 <g class=\\"gate\\">
@@ -72,8 +72,8 @@ exports[`Testing _classicalControlled nested children 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 </g>
@@ -86,8 +86,8 @@ exports[`Testing _classicalControlled nested children 1`] = `
 <line class=\\"classical-line\\" x1=\\"165\\" x2=\\"190\\" y1=\\"240\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"165\\" x2=\\"165\\" y1=\\"235\\" y2=\\"240\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"165\\" cy=\\"220\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"165\\" y=\\"220\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"165\\" cy=\\"220\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"165\\" y=\\"220\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 </g>
@@ -110,8 +110,8 @@ exports[`Testing _classicalControlled one 'one' child 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 </g>
@@ -129,8 +129,8 @@ exports[`Testing _classicalControlled one 'zero' child 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled-1\\" onClick=\\"toggleClassicalBtn('classically-controlled-1')\\">
-<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled-1\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled-1 classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-1-zero hidden\\">
 <g class=\\"gate\\">
@@ -332,8 +332,8 @@ exports[`Testing _formatGate classically controlled gate 1`] = `
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"120\\" y1=\\"180\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <line class=\\"classical-line\\" x1=\\"95\\" x2=\\"95\\" y1=\\"175\\" y2=\\"180\\" stroke-dasharray=\\"8, 8\\"></line>
 <g class=\\"classically-controlled-btn classically-controlled\\" onClick=\\"toggleClassicalBtn('classically-controlled')\\">
-<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\" stroke=\\"black\\" stroke-width=\\"1\\"></circle>
-<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" font-family=\\"Arial\\" x=\\"95\\" y=\\"160\\" dominant-baseline=\\"middle\\" text-anchor=\\"middle\\" fill=\\"black\\">?</text>
+<circle class=\\"classically-controlled\\" cx=\\"95\\" cy=\\"160\\" r=\\"15\\"></circle>
+<text class=\\"classically-controlled classically-controlled-text\\" font-size=\\"14\\" x=\\"95\\" y=\\"160\\">?</text>
 </g>
 <g class=\\"classically-controlled-zero hidden\\">
 </g>

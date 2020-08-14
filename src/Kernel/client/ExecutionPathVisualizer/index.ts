@@ -83,3 +83,4 @@ export const executionPathToHtml = (json: ExecutionPath, userStyleConfig?: Style
 
 // Export types
 export type { ExecutionPath, StyleConfig };
+export { STYLES } from './styles';

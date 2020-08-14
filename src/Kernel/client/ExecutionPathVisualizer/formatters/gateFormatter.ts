@@ -310,8 +310,8 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
  */
 const _controlCircle = (x: number, y: number, cls: string, r: number = controlBtnRadius): string =>
     `<g class="classically-controlled-btn ${cls}" onClick="toggleClassicalBtn('${cls}')">
-<circle class="${cls}" cx="${x}" cy="${y}" r="${r}" stroke="black" stroke-width="1"></circle>
-<text class="${cls} classically-controlled-text" font-size="${labelFontSize}" font-family="Arial" x="${x}" y="${y}" dominant-baseline="middle" text-anchor="middle" fill="black">?</text>
+<circle class="${cls}" cx="${x}" cy="${y}" r="${r}"></circle>
+<text class="${cls} classically-controlled-text" font-size="${labelFontSize}" x="${x}" y="${y}">?</text>
 </g>`;
 
 export { formatGates, _formatGate, _measure, _unitary, _swap, _controlledGate, _classicalControlled };
