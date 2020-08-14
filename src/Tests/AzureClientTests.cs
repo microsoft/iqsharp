@@ -12,6 +12,7 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Client.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -278,7 +279,9 @@ namespace Tests.IQSharp
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
-            var submissionContext = new AzureSubmissionContext() { OperationName = "Tests.qss.CompareMeasurementResult" };
+            var snippets = services.GetService<ISnippets>();
+            snippets.Compile(SNIPPETS.CompareMeasurementResult);
+            var submissionContext = new AzureSubmissionContext() { OperationName = "CompareMeasurementResult" };
             ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
 
             // Set up workspace with mock providers
