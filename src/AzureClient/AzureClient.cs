@@ -163,7 +163,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEntryPoint? entryPoint = null;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId);
+                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapabilities);
             }
             catch (UnsupportedOperationException e)
             {

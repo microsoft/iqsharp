@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 
@@ -58,7 +59,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             _ => null
         };
 
-        public IEntryPoint Generate(string operationName, string? executionTarget)
+        public IEntryPoint Generate(string operationName, string? executionTarget,
+            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
         {
             Logger?.LogDebug($"Generating entry point: operationName={operationName}, executionTarget={executionTarget}");
 
@@ -76,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
                 WorkspaceAssemblyInfo = Compiler.BuildFiles(
-                    workspaceFiles, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__workspace__.dll"), executionTarget);
+                    workspaceFiles, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__workspace__.dll"), executionTarget, runtimeCapabilities);
                 if (WorkspaceAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling workspace.");
@@ -92,7 +94,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = Compiler.BuildSnippets(
-                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"), executionTarget);
+                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"), executionTarget, runtimeCapabilities);
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
@@ -111,7 +113,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
-                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget);
+                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, runtimeCapabilities);
             if (EntryPointAssemblyInfo == null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
