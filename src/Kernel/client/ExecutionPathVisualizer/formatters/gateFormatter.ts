@@ -28,12 +28,16 @@ const formatGates = (opsMetadata: Metadata[]): string => {
 /**
  * Groups SVG elements into a gate SVG group.
  *
- * @param svgElems Array of SVG elements.
- * @param id       Custom element ID of SVG group.
+ * @param svgElems       Array of SVG elements.
+ * @param customMetadata Custom gate metadata to be attached to SVG group.
  *
  * @returns SVG representation of a gate.
  */
-const _createGate = (svgElems: string[], id?: string): string => group(svgElems, 'gate', id);
+const _createGate = (svgElems: string[], customMetadata?: Record<string, unknown>): string =>
+    group(svgElems, {
+        class: 'gate',
+        'data-metadata': JSON.stringify(customMetadata),
+    });
 
 /**
  * Takes in an operation's metadata and formats it into SVG.
@@ -43,14 +47,14 @@ const _createGate = (svgElems: string[], id?: string): string => group(svgElems,
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, label, displayArgs, id, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
     switch (type) {
         case GateType.Measure:
-            return _createGate([_measure(x, controlsY[0])], id);
+            return _createGate([_measure(x, controlsY[0])], customMetadata);
         case GateType.Unitary:
-            return _createGate([_unitary(label, x, targetsY, width, displayArgs)], id);
+            return _createGate([_unitary(label, x, targetsY, width, displayArgs)], customMetadata);
         case GateType.Swap:
-            return controlsY.length > 0 ? _controlledGate(metadata) : _createGate([_swap(x, targetsY)], id);
+            return controlsY.length > 0 ? _controlledGate(metadata) : _createGate([_swap(x, targetsY)], customMetadata);
         case GateType.Cnot:
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
@@ -206,7 +210,7 @@ const _cross = (x: number, y: number): string => {
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, targetsY, label, displayArgs, id, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
     // Get SVG for target gates
     switch (type) {
         case GateType.Cnot:
@@ -227,7 +231,7 @@ const _controlledGate = (metadata: Metadata): string => {
     const maxY: number = Math.max(...controlsY, ...targetsY);
     const minY: number = Math.min(...controlsY, ...targetsY);
     const vertLine: string = line(x, minY, x, maxY);
-    const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], id);
+    const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], customMetadata);
     return svg;
 };
 
@@ -257,7 +261,7 @@ const _oplus = (x: number, y: number, r = 15): string => {
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
     let { x, width, htmlClass } = metadata;
-    const { controlsY, targetsY, children, id } = metadata;
+    const { controlsY, targetsY, children, customMetadata } = metadata;
 
     const controlY = controlsY[0];
     if (htmlClass == null) htmlClass = 'classically-controlled';
@@ -288,11 +292,10 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const box: string = dashedBox(x, y, width, height, 'classical-container');
 
     // Display controlled operation in initial "unknown" state
-    const svg: string = group(
-        [horLine, vertLine, controlCircle, childrenZero, childrenOne, box],
-        `${htmlClass}-group classically-controlled-unknown`,
-        id,
-    );
+    const svg: string = group([horLine, vertLine, controlCircle, childrenZero, childrenOne, box], {
+        class: `${htmlClass}-group classically-controlled-unknown`,
+        'data-metadata': JSON.stringify(customMetadata),
+    });
 
     return svg;
 };
@@ -314,4 +317,4 @@ const _controlCircle = (x: number, y: number, cls: string, r: number = controlBt
 <text class="${cls} classically-controlled-text" font-size="${labelFontSize}" x="${x}" y="${y}">?</text>
 </g>`;
 
-export { formatGates, _formatGate, _measure, _unitary, _swap, _controlledGate, _classicalControlled };
+export { formatGates, _formatGate, _createGate, _measure, _unitary, _swap, _controlledGate, _classicalControlled };
