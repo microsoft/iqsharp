@@ -1,4 +1,4 @@
-import { Qubit } from '../../ExecutionPathVisualizer/executionPath';
+import { Qubit } from '../../ExecutionPathVisualizer/circuit';
 import { RegisterMap, RegisterType } from '../../ExecutionPathVisualizer/register';
 import { formatInputs, _qubitInput } from '../../ExecutionPathVisualizer/formatters/inputFormatter';
 import { startY, registerHeight, classicalRegHeight } from '../../ExecutionPathVisualizer/constants';

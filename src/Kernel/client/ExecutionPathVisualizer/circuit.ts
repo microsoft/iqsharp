@@ -1,9 +1,9 @@
 import { Register } from './register';
 
 /**
- * Structure of JSON representation of the execution path of a Q# operation.
+ * Circuit to be visualized.
  */
-export interface ExecutionPath {
+export interface Circuit {
     /** Array of qubit resources. */
     qubits: Qubit[];
     operations: Operation[];
@@ -25,8 +25,6 @@ export interface Qubit {
 export interface Operation {
     /** Gate label. */
     gate: string;
-    /** HTML element ID. */
-    id?: string;
     /** Formatted gate arguments to be displayed. */
     displayArgs?: string;
     /** Classically-controlled gates.
@@ -44,4 +42,6 @@ export interface Operation {
     controls: Register[];
     /** Target registers the gate acts on. */
     targets: Register[];
+    /** Custom user metadata. */
+    customMetadata?: Record<string, unknown>;
 }

@@ -2,6 +2,18 @@ import { Metadata } from './metadata';
 import { GateType, minGateWidth, labelPadding, labelFontSize, argsFontSize } from './constants';
 
 /**
+ * Generate a UUID using `Math.random`.
+ *
+ * @returns UUID string.
+ */
+const createUUID = (): string =>
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = (Math.random() * 16) | 0,
+            v = c == 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+
+/**
  * Calculate the width of a gate, given its metadata.
  *
  * @param metadata Metadata of a given gate.
@@ -43,4 +55,4 @@ const _getStringWidth = (text: string, fontSize: number = labelFontSize): number
     return metrics.width;
 };
 
-export { getGateWidth, _getStringWidth };
+export { createUUID, getGateWidth, _getStringWidth };

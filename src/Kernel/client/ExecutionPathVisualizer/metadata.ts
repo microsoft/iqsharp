@@ -17,8 +17,6 @@ export interface Metadata {
     label: string;
     /** Gate arguments as string. */
     displayArgs?: string;
-    /** HTML element ID. */
-    id?: string;
     /** Gate width. */
     width: number;
     /** Classically-controlled gates.
@@ -28,4 +26,6 @@ export interface Metadata {
     children?: Metadata[][];
     /** HTML element class for interactivity. */
     htmlClass?: string;
+    /** Custom user metadata. */
+    customMetadata?: Record<string, unknown>;
 }

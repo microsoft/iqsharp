@@ -1,5 +1,5 @@
 import { minGateWidth, startX, gatePadding, GateType, controlBtnOffset, classicalBoxPadding } from './constants';
-import { Operation } from './executionPath';
+import { Operation } from './circuit';
 import { Metadata } from './metadata';
 import { Register, RegisterMap, RegisterType } from './register';
 import { getGateWidth } from './utils';
@@ -182,7 +182,17 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
 
     if (op == null) return metadata;
 
-    const { gate, id, displayArgs, isMeasurement, isControlled, isAdjoint, controls, targets, children } = op;
+    const {
+        gate,
+        customMetadata,
+        displayArgs,
+        isMeasurement,
+        isControlled,
+        isAdjoint,
+        controls,
+        targets,
+        children,
+    } = op;
 
     // Set y coords
     metadata.controlsY = controls.map((reg) => _getRegY(reg, registers));
@@ -235,8 +245,8 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     // Set gate width
     metadata.width = getGateWidth(metadata);
 
-    // Set custom gate ID
-    metadata.id = id;
+    // Set custom user-provided gate metadata
+    metadata.customMetadata = customMetadata;
 
     return metadata;
 };
