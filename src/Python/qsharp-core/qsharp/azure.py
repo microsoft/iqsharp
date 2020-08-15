@@ -64,6 +64,7 @@ class AzureJob(object):
         self.id = data["id"]
         self.name = data["name"]
         self.status = data["status"]
+        self.uri = data["uri"]
         self.provider = data["provider"]
         self.target = data["target"]
         self.creation_time = data["creation_time"]
