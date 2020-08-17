@@ -19,6 +19,15 @@ export interface Qubit {
     numChildren?: number;
 }
 
+export enum ConditionalRender {
+    /** Always rendered. */
+    None,
+    /** Render classically-controlled operation when measurement is a zero. */
+    OnZero,
+    /** Render classically-controlled operation when measurement is a one. */
+    OnOne,
+}
+
 /**
  * Represents an operation and the registers it acts on.
  */
@@ -27,13 +36,12 @@ export interface Operation {
     gate: string;
     /** Formatted gate arguments to be displayed. */
     displayArgs?: string;
-    /** Classically-controlled gates.
-     *  - children[0]: gates when classical control bit is 0.
-     *  - children[1]: gates when classical control bit is 1.
-     */
-    children?: Operation[][];
+    /** Nested operations within this operation */
+    children?: Operation[];
     /** Whether gate is a measurement operation. */
     isMeasurement: boolean;
+    /** Whether gate is a conditional operation. */
+    isConditional: boolean;
     /** Whether gate is a controlled operation. */
     isControlled: boolean;
     /** Whether gate is an adjoint operation. */
@@ -42,6 +50,8 @@ export interface Operation {
     controls: Register[];
     /** Target registers the gate acts on. */
     targets: Register[];
+    /** Specify conditions on when to render operation. */
+    conditionalRender?: ConditionalRender;
     /** Custom user metadata. */
     customMetadata?: Record<string, unknown>;
 }

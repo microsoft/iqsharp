@@ -1,5 +1,5 @@
 import { minGateWidth, startX, gatePadding, GateType, controlBtnOffset, classicalBoxPadding } from './constants';
-import { Operation } from './circuit';
+import { Operation, ConditionalRender } from './circuit';
 import { Metadata } from './metadata';
 import { Register, RegisterMap, RegisterType } from './register';
 import { getGateWidth } from './utils';
@@ -211,6 +211,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         customMetadata,
         displayArgs,
         isMeasurement,
+        isConditional,
         isControlled,
         isAdjoint,
         controls,
@@ -222,16 +223,20 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     metadata.controlsY = controls.map((reg) => _getRegY(reg, registers));
     metadata.targetsY = targets.map((reg) => _getRegY(reg, registers));
 
-    if (children != null && children.length > 0) {
+    if (isConditional) {
         // Classically-controlled operations
+        if (children == null || children.length == 0)
+            throw new Error('No children operations found for classically-controlled operation.');
 
         // Gates to display when classical bit is 0.
-        let childrenInstrs = processOperations(children[0], registers);
+        const onZeroOps: Operation[] = children.filter((op) => op.conditionalRender !== ConditionalRender.OnOne);
+        let childrenInstrs = processOperations(onZeroOps, registers);
         const zeroGates: Metadata[] = childrenInstrs.metadataList;
         const zeroChildWidth: number = childrenInstrs.svgWidth;
 
         // Gates to display when classical bit is 1.
-        childrenInstrs = processOperations(children[1], registers);
+        const onOneOps: Operation[] = children.filter((op) => op.conditionalRender !== ConditionalRender.OnZero);
+        childrenInstrs = processOperations(onOneOps, registers);
         const oneGates: Metadata[] = childrenInstrs.metadataList;
         const oneChildWidth: number = childrenInstrs.svgWidth;
 
@@ -239,7 +244,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         const width: number = Math.max(zeroChildWidth, oneChildWidth) - startX - gatePadding * 2;
 
         metadata.type = GateType.ClassicalControlled;
-        metadata.children = [zeroGates, oneGates];
+        metadata.conditionalChildren = [zeroGates, oneGates];
         // Add additional width from control button and inner box padding for dashed box
         metadata.width = width + controlBtnOffset + classicalBoxPadding * 2;
 
@@ -312,9 +317,9 @@ const _getRegY = (reg: Register, registers: RegisterMap): number => {
  */
 const _addClass = (metadata: Metadata, cls: string): void => {
     metadata.htmlClass = cls;
-    if (metadata.children != null) {
-        metadata.children[0].forEach((child) => _addClass(child, cls));
-        metadata.children[1].forEach((child) => _addClass(child, cls));
+    if (metadata.conditionalChildren != null) {
+        metadata.conditionalChildren[0].forEach((child) => _addClass(child, cls));
+        metadata.conditionalChildren[1].forEach((child) => _addClass(child, cls));
     }
 };
 
@@ -398,7 +403,7 @@ const _fillMetadataX = (opsMetadata: Metadata[][], columnWidths: number[]): numb
                 const offset: number = x - startX + controlBtnOffset + classicalBoxPadding;
 
                 // Offset each x coord in children gates
-                _offsetChildrenX(metadata.children, offset);
+                _offsetChildrenX(metadata.conditionalChildren, offset);
 
                 // We don't use the centre x coord because we only care about the rightmost x for
                 // rendering the box around the group of nested gates
@@ -423,7 +428,7 @@ const _offsetChildrenX = (children: Metadata[][] | undefined, offset: number): v
     if (children == null) return;
     children.flat().forEach((child) => {
         child.x += offset;
-        _offsetChildrenX(child.children, offset);
+        _offsetChildrenX(child.conditionalChildren, offset);
     });
 };
 
