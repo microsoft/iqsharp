@@ -46,7 +46,7 @@ const script = `
 /**
  * Contains all metadata required to generate final output.
  */
-class ComposedSqore {
+class ComposedCircuit {
     width: number;
     height: number;
     script: string;
@@ -54,7 +54,7 @@ class ComposedSqore {
     elements: string[];
 
     /**
-     * Initializes `ComposedSqore` with metadata required for visualization.
+     * Initializes `ComposedCircuit` with metadata required for visualization.
      *
      * @param width Width of SVG element.
      * @param height Height of SVG element.
@@ -120,11 +120,11 @@ class ComposedSqore {
 /**
  * Entrypoint class for rendering circuit visualizations.
  */
-class Sqore {
+class ExecutionPathVisualizer {
     style: StyleConfig;
 
     /**
-     * Initializes Sqore object with custom styles.
+     * Initializes ExecutionPathVisualizer object with custom styles.
      *
      * @param style Custom styles for visualization.
      */
@@ -137,7 +137,7 @@ class Sqore {
      *
      * @param style Custom `StyleConfig` for visualization.
      */
-    stylize(style: StyleConfig | string = {}): Sqore {
+    stylize(style: StyleConfig | string = {}): ExecutionPathVisualizer {
         if (typeof style === 'string' || style instanceof String) {
             const styleName: string = style as string;
             if (!STYLES.hasOwnProperty(styleName)) {
@@ -155,9 +155,9 @@ class Sqore {
      *
      * @param circuit Circuit to be visualized.
      *
-     * @returns `ComposedSqore` object containing metadata for visualization.
+     * @returns `ComposedCircuit` object containing metadata for visualization.
      */
-    compose(circuit: Circuit): ComposedSqore {
+    compose(circuit: Circuit): ComposedCircuit {
         const { qubits, operations } = circuit;
         const { qubitWires, registers, svgHeight } = formatInputs(qubits);
         const { metadataList, svgWidth } = processOperations(operations, registers);
@@ -165,7 +165,7 @@ class Sqore {
         const measureGates: Metadata[] = metadataList.filter(({ type }) => type === GateType.Measure);
         const formattedRegs: string = formatRegisters(registers, measureGates, svgWidth);
 
-        const composition: ComposedSqore = new ComposedSqore(svgWidth, svgHeight, script, this.style, [
+        const composition: ComposedCircuit = new ComposedCircuit(svgWidth, svgHeight, script, this.style, [
             qubitWires,
             formattedRegs,
             formattedGates,
@@ -174,10 +174,10 @@ class Sqore {
     }
 }
 
-/** Exported function for creating a new Sqore class. */
-export const createSqore = (): Sqore => new Sqore();
+/** Exported function for creating a new ExecutionPathVisualizer class. */
+export const createExecutionPathVisualizer = (): ExecutionPathVisualizer => new ExecutionPathVisualizer();
 export { STYLES } from './styles';
 
 // Export types
-export type { Circuit, StyleConfig, Sqore, ComposedSqore };
+export type { Circuit, StyleConfig, ExecutionPathVisualizer, ComposedCircuit };
 export type { Qubit, Operation } from './circuit';
