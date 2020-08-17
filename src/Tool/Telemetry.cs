@@ -64,7 +64,10 @@ namespace Microsoft.Quantum.IQSharp
             eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
                 snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IWorkspace>().On += (workspace) =>
+            {
                 workspace.Reloaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                workspace.ProjectLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+            };
             eventService.OnServiceInitialized<IReferences>().On += (references) =>
                 references.PackageLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
@@ -166,6 +169,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Workspace".WithTelemetryNamespace(), Path.GetFileName(info.Workspace), PiiKind.GenericData);
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Status);
             evt.SetProperty("FileCount".WithTelemetryNamespace(), info.FileCount);
+            evt.SetProperty("ProjectCount".WithTelemetryNamespace(), info.ProjectCount);
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
@@ -178,6 +182,7 @@ namespace Microsoft.Quantum.IQSharp
 
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Status);
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
+            evt.SetProperty("Namespaces".WithTelemetryNamespace(), string.Join(",", info.Namespaces?.OrderBy(n => n) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
             return evt;
@@ -189,6 +194,19 @@ namespace Microsoft.Quantum.IQSharp
 
             evt.SetProperty("PackageId".WithTelemetryNamespace(), info.PackageId);
             evt.SetProperty("PackageVersion".WithTelemetryNamespace(), info.PackageVersion);
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+
+            return evt;
+        }
+
+        public static EventProperties AsTelemetryEvent(this ProjectLoadedEventArgs info)
+        {
+            var evt = new EventProperties() { Name = "ProjectLoad".WithTelemetryNamespace() };
+
+            evt.SetProperty("ProjectUri".WithTelemetryNamespace(), info.ProjectUri?.ToString(), PiiKind.Uri);
+            evt.SetProperty("SourceFileCount".WithTelemetryNamespace(), info.SourceFileCount);
+            evt.SetProperty("ProjectReferenceCount".WithTelemetryNamespace(), info.ProjectReferenceCount);
+            evt.SetProperty("PackageReferenceCount".WithTelemetryNamespace(), info.PackageReferenceCount);
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
             return evt;

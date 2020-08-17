@@ -64,9 +64,14 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// This event is triggered when ever the workspace is reloaded.
+        /// This event is triggered whenever the workspace is reloaded.
         /// </summary>
         public event EventHandler<ReloadedEventArgs> Reloaded;
+
+        /// <summary>
+        /// This event is triggered whenever a project is loaded into the workspace.
+        /// </summary>
+        public event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
 
         /// <summary>
         /// Logger instance used for .net core logging.
@@ -436,6 +441,8 @@ namespace Microsoft.Quantum.IQSharp
 
                 foreach (var project in Projects)
                 {
+                    var projectLoadDuration = Stopwatch.StartNew();
+
                     if (File.Exists(project.CacheDllPath)) { File.Delete(project.CacheDllPath); }
 
                     if (project.SourceFiles.Count() > 0)
@@ -471,6 +478,13 @@ namespace Microsoft.Quantum.IQSharp
                         Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
                         project.AssemblyInfo = new AssemblyInfo(null, null, null);
                     }
+
+                    ProjectLoaded?.Invoke(this, new ProjectLoadedEventArgs(
+                        new Uri(project.ProjectFile),
+                        project.SourceFiles.Count(),
+                        project.ProjectReferences.Count(),
+                        project.PackageReferences.Count(),
+                        projectLoadDuration.Elapsed));
                 }
 
             }
@@ -480,7 +494,7 @@ namespace Microsoft.Quantum.IQSharp
                 var status = this.HasErrors ? "error" : "ok";
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
-                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, errorIds.ToArray(), duration.Elapsed));
+                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, Projects.Count(), errorIds.ToArray(), duration.Elapsed));
             }
         }
     }

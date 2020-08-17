@@ -38,6 +38,46 @@ namespace Microsoft.Quantum.IQSharp
     }
 
     /// <summary>
+    /// List of arguments that are part of the project loaded event.
+    /// </summary>
+    public class ProjectLoadedEventArgs : EventArgs
+    {
+        public ProjectLoadedEventArgs(Uri? projectUri, int sourceFileCount, int projectReferenceCount, int packageReferenceCount, TimeSpan duration)
+        {
+            this.ProjectUri = projectUri;
+            this.SourceFileCount = sourceFileCount;
+            this.ProjectReferenceCount = projectReferenceCount;
+            this.PackageReferenceCount = packageReferenceCount;
+            this.Duration = duration;
+        }
+
+        /// <summary>
+        /// The location of the project file.
+        /// </summary>
+        public Uri? ProjectUri { get; }
+
+        /// <summary>
+        /// The number of source files to be compiled for this project.
+        /// </summary>
+        public int SourceFileCount { get; }
+
+        /// <summary>
+        /// The number of project references identified for this project.
+        /// </summary>
+        public int ProjectReferenceCount { get; }
+
+        /// <summary>
+        /// The number of package references identified for this project.
+        /// </summary>
+        public int PackageReferenceCount { get; }
+
+        /// <summary>
+        /// The total time the project load operation took.
+        /// </summary>
+        public TimeSpan Duration { get; }
+    }
+
+    /// <summary>
     /// Represents a Q# project referenced by a <see cref="Workspace"/>.
     /// 
     /// May be associated with a .csproj file on disk, in which case it will be associated

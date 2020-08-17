@@ -13,11 +13,12 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class ReloadedEventArgs : EventArgs
     {
-        public ReloadedEventArgs(string workspace, string status, int filecount, string[] errors, TimeSpan duration)
+        public ReloadedEventArgs(string workspace, string status, int fileCount, int projectCount, string[] errors, TimeSpan duration)
         {
             this.Workspace = workspace;
             this.Status = status;
-            this.FileCount = filecount;
+            this.FileCount = fileCount;
+            this.ProjectCount = projectCount;
             this.Errors = errors;
             this.Duration = duration;
         }
@@ -38,6 +39,11 @@ namespace Microsoft.Quantum.IQSharp
         public int FileCount { get; }
 
         /// <summary>
+        /// The number of projects used for compilation.
+        /// </summary>
+        public int ProjectCount { get; }
+
+        /// <summary>
         /// The list of error ids reported by the Q# parser (if any).
         /// </summary>
         public string[] Errors { get; }
@@ -55,9 +61,14 @@ namespace Microsoft.Quantum.IQSharp
     public interface IWorkspace
     {
         /// <summary>
-        /// This event is triggered when ever the workspace is reloaded.
+        /// This event is triggered whenever the workspace is reloaded.
         /// </summary>
         event EventHandler<ReloadedEventArgs> Reloaded;
+
+        /// <summary>
+        /// This event is triggered whenever a project is loaded into the workspace.
+        /// </summary>
+        event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
 
         /// <summary>
         /// The root folder.
