@@ -90,7 +90,7 @@ def test_packages():
     Verifies default package command
     """
     pkg_count = len(qsharp.packages._client.get_packages())
-    assert pkg_count > 0
+    assert pkg_count == 0 or pkg_count == 1
 
     with pytest.raises(Exception):
         qsharp.packages.add('Invalid.Package.!!!!!!')
