@@ -25,10 +25,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
             new Dictionary<string, object?>()
             {
-                // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
                 ["id"] = cloudJob.Id,
                 ["name"] = cloudJob.Details.Name,
                 ["status"] = cloudJob.Status,
+                ["uri"] = cloudJob.Uri.ToString(),
                 ["provider"] = cloudJob.Details.ProviderId,
                 ["target"] = cloudJob.Details.Target,
                 ["creation_time"] = cloudJob.Details.CreationTime.ToDateTime()?.ToUniversalTime(),
@@ -41,9 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<CloudJob, string>)>
                 {
-                    // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
                     ("Job Name", cloudJob => cloudJob.Details.Name),
-                    ("Job ID", cloudJob => cloudJob.Id),
+                    ("Job ID", cloudJob => $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{cloudJob.Id}</a>"),
                     ("Job Status", cloudJob => cloudJob.Status),
                     ("Target", cloudJob => cloudJob.Details.Target),
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),

@@ -1,4 +1,4 @@
-import { GateType } from "./constants";
+import { GateType } from './constants';
 
 /**
  * Metadata used to store information pertaining to a given
@@ -11,19 +11,24 @@ export interface Metadata {
     x: number;
     /** Array of y coords of control registers. */
     controlsY: number[];
-    /** Array of y coords of target registers. */
-    targetsY: number[];
+    /** Array of y coords of target registers.
+     *  For `GateType.Unitary` or `GateType.ControlledUnitary`, this is an array of groups of
+     *  y coords, where each group represents a unitary box to be rendered separately.
+    */
+    targetsY: (number | number[])[];
     /** Gate label. */
     label: string;
     /** Gate arguments as string. */
-    displayArgs?: string,
+    displayArgs?: string;
     /** Gate width. */
     width: number;
     /** Classically-controlled gates.
      *  - children[0]: gates when classical control bit is 0.
      *  - children[1]: gates when classical control bit is 1.
-    */
+     */
     children?: Metadata[][];
     /** HTML element class for interactivity. */
     htmlClass?: string;
-};
+    /** Custom user metadata. */
+    customMetadata?: Record<string, unknown>;
+}

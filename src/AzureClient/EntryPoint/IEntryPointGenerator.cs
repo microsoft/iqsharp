@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -41,7 +42,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         /// <param name="operationName">The name of the operation to wrap in an entry point.</param>
         /// <param name="executionTarget">The intended execution target for the compiled entry point.</param>
+        /// <param name="runtimeCapabilities">The runtime capabilities of the intended execution target.</param>
         /// <returns>The generated entry point.</returns>
-        public IEntryPoint Generate(string operationName, string? executionTarget);
+        public IEntryPoint Generate(string operationName, string? executionTarget,
+            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown);
     }
 }

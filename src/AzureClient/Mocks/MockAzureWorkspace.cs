@@ -49,5 +49,23 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => Jobs;
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
+
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId) => MockAzureExecutionTarget.CreateMock(targetId);
+
+        public void AddMockJobs(params string[] jobIds)
+        {
+            foreach (var jobId in jobIds)
+            {
+                var mockJob = new MockCloudJob();
+                mockJob.Details.Id = jobId;
+                Jobs.Add(mockJob);
+            }
+        }
+
+        public void AddMockTargets(params string[] targetIds)
+        {
+            var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
+            Providers.Add(new ProviderStatus(null, null, targets));
+        }
     }
 }

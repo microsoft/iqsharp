@@ -3,8 +3,8 @@
  */
 export enum RegisterType {
     Qubit,
-    Classical
-};
+    Classical,
+}
 
 /**
  * Represents a register resource.
@@ -16,8 +16,11 @@ export interface Register {
     qId: number;
     /** Classical register ID (if classical register). */
     cId?: number;
-};
+}
 
+/**
+ * Metadata for qubit register.
+ */
 export interface RegisterMetadata {
     /** Type of register. */
     type: RegisterType;
@@ -25,8 +28,11 @@ export interface RegisterMetadata {
     y: number;
     /** Nested classical registers attached to quantum register. */
     children?: RegisterMetadata[];
-};
+}
 
+/**
+ * Mapping from qubit IDs to their register metadata.
+ */
 export interface RegisterMap {
-    [id: number]: RegisterMetadata
-};
+    [id: number]: RegisterMetadata;
+}

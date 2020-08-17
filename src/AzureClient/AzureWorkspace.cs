@@ -72,9 +72,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
-        public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString)
-        {
-            return QuantumMachineFactory.CreateMachine(AzureQuantumWorkspace, targetId, storageAccountConnectionString);
-        }
+        public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) =>
+            QuantumMachineFactory.CreateMachine(AzureQuantumWorkspace, targetId, storageAccountConnectionString);
+
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId) =>
+            AzureExecutionTarget.Create(targetId);
     }
 }
