@@ -479,12 +479,15 @@ namespace Microsoft.Quantum.IQSharp
                         project.AssemblyInfo = new AssemblyInfo(null, null, null);
                     }
 
-                    ProjectLoaded?.Invoke(this, new ProjectLoadedEventArgs(
-                        new Uri(project.ProjectFile),
-                        project.SourceFiles.Count(),
-                        project.ProjectReferences.Count(),
-                        project.PackageReferences.Count(),
-                        projectLoadDuration.Elapsed));
+                    if (!string.IsNullOrWhiteSpace(project.ProjectFile))
+                    {
+                        ProjectLoaded?.Invoke(this, new ProjectLoadedEventArgs(
+                            new Uri(project.ProjectFile),
+                            project.SourceFiles.Count(),
+                            project.ProjectReferences.Count(),
+                            project.PackageReferences.Count(),
+                            projectLoadDuration.Elapsed));
+                    }
                 }
 
             }
