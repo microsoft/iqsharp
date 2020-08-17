@@ -182,7 +182,8 @@ namespace Microsoft.Quantum.IQSharp
 
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Status);
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
-            evt.SetProperty("Namespaces".WithTelemetryNamespace(), string.Join(",", info.Namespaces?.OrderBy(n => n) ?? Enumerable.Empty<string>()));
+            evt.SetProperty("Namespaces".WithTelemetryNamespace(),
+                string.Join(",", info.Namespaces?.Where(n => n.StartsWith("Microsoft.Quantum.")).OrderBy(n => n) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
             return evt;
@@ -192,7 +193,8 @@ namespace Microsoft.Quantum.IQSharp
         {
             var evt = new EventProperties() { Name = "PackageLoad".WithTelemetryNamespace() };
 
-            evt.SetProperty("PackageId".WithTelemetryNamespace(), info.PackageId);
+            evt.SetProperty("PackageId".WithTelemetryNamespace(),
+                info.PackageId.StartsWith("Microsoft.Quantum.") ? info.PackageId : "other package");
             evt.SetProperty("PackageVersion".WithTelemetryNamespace(), info.PackageVersion);
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
@@ -207,6 +209,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("SourceFileCount".WithTelemetryNamespace(), info.SourceFileCount);
             evt.SetProperty("ProjectReferenceCount".WithTelemetryNamespace(), info.ProjectReferenceCount);
             evt.SetProperty("PackageReferenceCount".WithTelemetryNamespace(), info.PackageReferenceCount);
+            evt.SetProperty("UserAdded".WithTelemetryNamespace(), info.UserAdded);
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
             return evt;

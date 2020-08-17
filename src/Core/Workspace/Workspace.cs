@@ -486,6 +486,7 @@ namespace Microsoft.Quantum.IQSharp
                             project.SourceFiles.Count(),
                             project.ProjectReferences.Count(),
                             project.PackageReferences.Count(),
+                            UserAddedProjects.Contains(project, new ProjectFileComparer()),
                             projectLoadDuration.Elapsed));
                     }
                 }

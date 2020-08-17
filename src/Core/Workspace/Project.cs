@@ -42,12 +42,13 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class ProjectLoadedEventArgs : EventArgs
     {
-        public ProjectLoadedEventArgs(Uri? projectUri, int sourceFileCount, int projectReferenceCount, int packageReferenceCount, TimeSpan duration)
+        public ProjectLoadedEventArgs(Uri? projectUri, int sourceFileCount, int projectReferenceCount, int packageReferenceCount, bool userAdded, TimeSpan duration)
         {
             this.ProjectUri = projectUri;
             this.SourceFileCount = sourceFileCount;
             this.ProjectReferenceCount = projectReferenceCount;
             this.PackageReferenceCount = packageReferenceCount;
+            this.UserAdded = userAdded;
             this.Duration = duration;
         }
 
@@ -70,6 +71,11 @@ namespace Microsoft.Quantum.IQSharp
         /// The number of package references identified for this project.
         /// </summary>
         public int PackageReferenceCount { get; }
+
+        /// <summary>
+        /// Whether this project was explicitly added by a user vs. loaded implicitly.
+        /// </summary>
+        public bool UserAdded { get; }
 
         /// <summary>
         /// The total time the project load operation took.
