@@ -1,4 +1,4 @@
-import { Operation } from '../../ExecutionPathVisualizer/executionPath';
+import { Operation } from '../../ExecutionPathVisualizer/circuit';
 import { RegisterMap, RegisterType, Register } from '../../ExecutionPathVisualizer/register';
 import { Metadata } from '../../ExecutionPathVisualizer/metadata';
 import {

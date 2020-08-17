@@ -1,6 +1,7 @@
 import {
     formatGates,
     _formatGate,
+    _createGate,
     _measure,
     _unitary,
     _swap,
@@ -422,6 +423,22 @@ describe('Testing _measure', () => {
     });
 });
 
+describe('Testing _createGate', () => {
+    test('No metadata', () => {
+        expect(_createGate(['<line />'])).toEqual("<g class='gate'>\n<line />\n</g>");
+    });
+    test('With metadata', () => {
+        expect(_createGate(['<line />'], { a: 1, b: 2 })).toEqual(
+            `<g class='gate' data-metadata='{"a":1,"b":2}'>\n<line />\n</g>`,
+        );
+    });
+    test('With metadata containing string', () => {
+        expect(_createGate(['<line />'], { foo: 'bar' })).toEqual(
+            `<g class='gate' data-metadata='{"foo":"bar"}'>\n<line />\n</g>`,
+        );
+    });
+});
+
 describe('Testing _formatGate', () => {
     test('measure gate', () => {
         const metadata: Metadata = {
@@ -468,7 +485,6 @@ describe('Testing _formatGate', () => {
         };
         expect(_formatGate(metadata)).toMatchSnapshot();
     });
-
     test('multi-qubit unitary gate with arguments', () => {
         const metadata: Metadata = {
             type: GateType.ControlledUnitary,
@@ -548,7 +564,19 @@ describe('Testing _formatGate', () => {
         };
         expect(_formatGate(metadata)).toMatchSnapshot();
     });
-    test('Invalid gate', () => {
+    test('gate with metadata', () => {
+        const metadata: Metadata = {
+            type: GateType.Unitary,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY],
+            label: 'H',
+            width: minGateWidth,
+            customMetadata: { a: 1, b: 2 },
+        };
+        expect(_formatGate(metadata)).toMatchSnapshot();
+    });
+    test('invalid gate', () => {
         const metadata: Metadata = {
             type: GateType.Invalid,
             x: startX,
