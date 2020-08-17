@@ -287,8 +287,7 @@ namespace Tests.IQSharp
             // Set up workspace with mock providers
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockTargets("ionq.mock");
-            azureWorkspace?.AddMockTargets("honeywell.mock");
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.mock", "honeywell.mock" };
 
             // Verify that IonQ job fails to compile (QPRGen0)
             ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));
