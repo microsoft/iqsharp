@@ -11,7 +11,10 @@ export interface Metadata {
     x: number;
     /** Array of y coords of control registers. */
     controlsY: number[];
-    /** Array of y coords (or groups of y coords) of target registers. */
+    /** Array of y coords of target registers.
+     *  For `GateType.Unitary` or `GateType.ControlledUnitary`, this is an array of groups of
+     *  y coords, where each group represents a unitary box to be rendered separately.
+    */
     targetsY: (number | number[])[];
     /** Gate label. */
     label: string;
