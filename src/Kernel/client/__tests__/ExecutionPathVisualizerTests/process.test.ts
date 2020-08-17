@@ -5,10 +5,11 @@ import {
     processOperations,
     _groupOperations,
     _alignOps,
-    _getColumnsX,
+    _getClassicalRegStart,
     _opToMetadata,
     _getRegY,
     _addClass,
+    _splitTargetsY,
     _fillMetadataX,
     _offsetChildrenX,
 } from '../../ExecutionPathVisualizer/process';
@@ -744,27 +745,93 @@ describe('Testing _alignOps', () => {
     });
 });
 
-describe('Testing _getColumnsX', () => {
-    test('0 columns', () => expect(_getColumnsX([])).toEqual({ columnsX: [], svgWidth: startX }));
-    test('1 column', () => {
-        expect(_getColumnsX([minGateWidth])).toEqual({
-            columnsX: [startX + minGateWidth / 2],
-            svgWidth: startX + minGateWidth + gatePadding * 2,
-        });
-        expect(_getColumnsX([100])).toEqual({
-            columnsX: [startX + 100 / 2],
-            svgWidth: startX + 100 + gatePadding * 2,
-        });
+describe('Testing _getClassicalRegStart', () => {
+    test('no measurement gates', () => {
+        const ops: Operation[] = [
+            {
+                gate: 'X',
+                isMeasurement: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [{ type: RegisterType.Qubit, qId: 0 }],
+            },
+            {
+                gate: 'Y',
+                isMeasurement: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [{ type: RegisterType.Qubit, qId: 0 }],
+            },
+        ];
+        const idxList: number[][] = [[0, 1]];
+        expect(_getClassicalRegStart(ops, idxList)).toEqual([]);
     });
-    test('2 columns', () => {
-        expect(_getColumnsX([10, 10])).toEqual({
-            columnsX: [startX + 5, startX + 15 + gatePadding * 2],
-            svgWidth: startX + 20 + gatePadding * 4,
-        });
-        expect(_getColumnsX([20, 10])).toEqual({
-            columnsX: [startX + 10, startX + 25 + gatePadding * 2],
-            svgWidth: startX + 30 + gatePadding * 4,
-        });
+    test('one measurement gate', () => {
+        const ops: Operation[] = [
+            {
+                gate: 'X',
+                isMeasurement: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [{ type: RegisterType.Qubit, qId: 0 }],
+            },
+            {
+                gate: 'M',
+                isMeasurement: true,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [{ type: RegisterType.Qubit, qId: 0 }],
+                targets: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
+            },
+        ];
+        const idxList: number[][] = [[0, 1]];
+        expect(_getClassicalRegStart(ops, idxList)).toEqual([[1, { type: RegisterType.Classical, qId: 0, cId: 0 }]]);
+    });
+    test('multiple measurement gates', () => {
+        const ops: Operation[] = [
+            {
+                gate: 'X',
+                isMeasurement: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [{ type: RegisterType.Qubit, qId: 0 }],
+            },
+            {
+                gate: 'M',
+                isMeasurement: true,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [{ type: RegisterType.Qubit, qId: 1 }],
+                targets: [{ type: RegisterType.Classical, qId: 1, cId: 0 }],
+            },
+            {
+                gate: 'M',
+                isMeasurement: true,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [{ type: RegisterType.Qubit, qId: 0 }],
+                targets: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
+            },
+            {
+                gate: 'M',
+                isMeasurement: true,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [{ type: RegisterType.Qubit, qId: 0 }],
+                targets: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
+            },
+        ];
+        const idxList: number[][] = [[0, 2, 3], [1]];
+        const clsRegs: [number, Register][] = [
+            [1, { type: RegisterType.Classical, qId: 0, cId: 0 }],
+            [2, { type: RegisterType.Classical, qId: 0, cId: 0 }],
+            [0, { type: RegisterType.Classical, qId: 1, cId: 0 }],
+        ];
+        expect(_getClassicalRegStart(ops, idxList)).toEqual(clsRegs);
     });
 });
 
@@ -1231,6 +1298,7 @@ describe('Testing _opToMetadata', () => {
                         x: startX + minGateWidth / 2,
                         controlsY: [],
                         targetsY: [startY],
+                        groupedTargetsY: [[startY]],
                         label: 'X',
                         width: minGateWidth,
                     },
@@ -1241,6 +1309,7 @@ describe('Testing _opToMetadata', () => {
                         x: startX + minGateWidth / 2,
                         controlsY: [],
                         targetsY: [startY + classicalRegHeight * 2],
+                        groupedTargetsY: [[startY + classicalRegHeight * 2]],
                         label: 'H',
                         width: minGateWidth,
                     },
@@ -1584,6 +1653,168 @@ describe('Testing _addClass', () => {
     });
 });
 
+describe('Testing _splitTargetsY', () => {
+    const registers: RegisterMap = {
+        0: {
+            type: RegisterType.Qubit,
+            y: startY,
+        },
+        1: {
+            type: RegisterType.Qubit,
+            y: startY + registerHeight,
+            children: [{ type: RegisterType.Classical, y: startY + registerHeight + classicalRegHeight }],
+        },
+        2: {
+            type: RegisterType.Qubit,
+            y: startY + registerHeight * 2 + classicalRegHeight,
+            children: [
+                { type: RegisterType.Classical, y: startY + registerHeight * 2 + classicalRegHeight * 2 },
+                { type: RegisterType.Classical, y: startY + registerHeight * 2 + classicalRegHeight * 3 },
+                { type: RegisterType.Classical, y: startY + registerHeight * 2 + classicalRegHeight * 4 },
+            ],
+        },
+    };
+    test('adjacent qubit regs', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Qubit, qId: 0 },
+            { type: RegisterType.Qubit, qId: 2 },
+            { type: RegisterType.Qubit, qId: 1 },
+        ];
+        const targetsY: number[] = [startY, startY + registerHeight, startY + registerHeight * 2 + classicalRegHeight];
+        expect(_splitTargetsY(targets, [], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [0], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [startY + registerHeight * 3], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [0, startY + registerHeight * 3], registers)).toEqual([targetsY]);
+    });
+    test('adjacent classical regs', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Classical, qId: 2, cId: 0 },
+            { type: RegisterType.Classical, qId: 2, cId: 2 },
+            { type: RegisterType.Classical, qId: 2, cId: 1 },
+        ];
+        const targetsY: number[] = [
+            startY + registerHeight * 2 + classicalRegHeight * 2,
+            startY + registerHeight * 2 + classicalRegHeight * 3,
+            startY + registerHeight * 2 + classicalRegHeight * 4,
+        ];
+        expect(_splitTargetsY(targets, [], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [0], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [startY + registerHeight * 3 + classicalRegHeight * 4], registers)).toEqual([
+            targetsY,
+        ]);
+        expect(_splitTargetsY(targets, [0, startY + registerHeight * 3 + classicalRegHeight * 4], registers)).toEqual([
+            targetsY,
+        ]);
+    });
+    test('adjacent qubit/classical regs', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Qubit, qId: 2 },
+            { type: RegisterType.Classical, qId: 1, cId: 0 },
+            { type: RegisterType.Classical, qId: 2, cId: 0 },
+        ];
+        const targetsY: number[] = [
+            startY + registerHeight + classicalRegHeight,
+            startY + registerHeight * 2 + classicalRegHeight,
+            startY + registerHeight * 2 + classicalRegHeight * 2,
+        ];
+        expect(_splitTargetsY(targets, [], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [0], registers)).toEqual([targetsY]);
+        expect(_splitTargetsY(targets, [startY + registerHeight * 3 + classicalRegHeight * 4], registers)).toEqual([
+            targetsY,
+        ]);
+        expect(_splitTargetsY(targets, [0, startY + registerHeight * 3 + classicalRegHeight * 4], registers)).toEqual([
+            targetsY,
+        ]);
+    });
+    test('single target', () => {
+        const targets: Register[] = [{ type: RegisterType.Qubit, qId: 0 }];
+        expect(_splitTargetsY(targets, [], registers)).toEqual([[startY]]);
+        expect(_splitTargetsY(targets, [0], registers)).toEqual([[startY]]);
+        expect(_splitTargetsY(targets, [startY + registerHeight], registers)).toEqual([[startY]]);
+        expect(_splitTargetsY(targets, [0, startY + registerHeight], registers)).toEqual([[startY]]);
+    });
+    test('split non-adjacent qubit regs', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Qubit, qId: 0 },
+            { type: RegisterType.Qubit, qId: 2 },
+        ];
+        const targetsY: number[][] = [[startY], [startY + registerHeight * 2 + classicalRegHeight]];
+        expect(_splitTargetsY(targets, [], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [0], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [startY + registerHeight * 3], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [0, startY + registerHeight * 3], registers)).toEqual(targetsY);
+    });
+    test('split two qubit regs with classical register', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Qubit, qId: 0 },
+            { type: RegisterType.Qubit, qId: 1 },
+        ];
+        const targetsY: number[][] = [[startY], [startY + registerHeight]];
+        expect(_splitTargetsY(targets, [startY + classicalRegHeight], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [0, startY + classicalRegHeight], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [startY + registerHeight * 2, startY + classicalRegHeight], registers)).toEqual(
+            targetsY,
+        );
+        expect(
+            _splitTargetsY(targets, [startY + registerHeight * 2, 0, startY + classicalRegHeight], registers),
+        ).toEqual(targetsY);
+    });
+    test('split two classical regs with classical reg', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Classical, qId: 2, cId: 0 },
+            { type: RegisterType.Classical, qId: 2, cId: 2 },
+        ];
+        const targetsY: number[][] = [
+            [startY + registerHeight * 2 + classicalRegHeight * 2],
+            [startY + registerHeight * 2 + classicalRegHeight * 4],
+        ];
+        expect(_splitTargetsY(targets, [startY + registerHeight * 2 + classicalRegHeight * 3], registers)).toEqual(
+            targetsY,
+        );
+        expect(_splitTargetsY(targets, [0, startY + registerHeight * 2 + classicalRegHeight * 3], registers)).toEqual(
+            targetsY,
+        );
+        expect(
+            _splitTargetsY(
+                targets,
+                [
+                    startY + registerHeight * 3 + classicalRegHeight * 2,
+                    startY + registerHeight * 2 + classicalRegHeight * 3,
+                ],
+                registers,
+            ),
+        ).toEqual(targetsY);
+        expect(
+            _splitTargetsY(
+                targets,
+                [
+                    startY + registerHeight * 3 + classicalRegHeight * 2,
+                    0,
+                    startY + registerHeight * 2 + classicalRegHeight * 3,
+                ],
+                registers,
+            ),
+        ).toEqual(targetsY);
+    });
+    test('split multiple targets with classical register', () => {
+        const targets: Register[] = [
+            { type: RegisterType.Qubit, qId: 0 },
+            { type: RegisterType.Qubit, qId: 2 },
+            { type: RegisterType.Qubit, qId: 1 },
+        ];
+        let targetsY: number[][] = [
+            [startY],
+            [startY + registerHeight, startY + registerHeight * 2 + classicalRegHeight],
+        ];
+        expect(_splitTargetsY(targets, [startY + classicalRegHeight], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [10, startY + classicalRegHeight], registers)).toEqual(targetsY);
+        expect(_splitTargetsY(targets, [60, startY + classicalRegHeight], registers)).toEqual(targetsY);
+
+        targetsY = [[startY, startY + registerHeight], [startY + registerHeight * 2 + classicalRegHeight]];
+        expect(_splitTargetsY(targets, [startY + registerHeight + classicalRegHeight], registers)).toEqual(targetsY);
+    });
+});
+
 describe('Testing _offsetChildrenX', () => {
     const offset = 50;
     test('no grandchildren', () => {
@@ -1868,6 +2099,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -1876,6 +2108,7 @@ describe('Testing processOperations', () => {
                 x: startX + (minGateWidth + gatePadding * 2) + rxWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -1884,6 +2117,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY + registerHeight],
+                groupedTargetsY: [[startY + registerHeight]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -1892,6 +2126,7 @@ describe('Testing processOperations', () => {
                 x: startX + (minGateWidth + gatePadding * 2) + rxWidth / 2,
                 controlsY: [],
                 targetsY: [startY + registerHeight],
+                groupedTargetsY: [[startY + registerHeight]],
                 label: 'RX',
                 displayArgs: '(0.25)',
                 width: rxWidth,
@@ -1940,6 +2175,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -1948,6 +2184,7 @@ describe('Testing processOperations', () => {
                 x: startX + (minGateWidth + gatePadding * 2) + expectedCustomWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'FooBar',
                 width: expectedCustomWidth,
             },
@@ -1956,6 +2193,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY + registerHeight],
+                groupedTargetsY: [[startY + registerHeight]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2002,6 +2240,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2018,6 +2257,7 @@ describe('Testing processOperations', () => {
                 x: startX + (minGateWidth + gatePadding * 2) * 2 + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY + registerHeight],
+                groupedTargetsY: [[startY + registerHeight]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2079,6 +2319,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2103,6 +2344,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY + classicalRegHeight * 3],
+                groupedTargetsY: [[startY + classicalRegHeight * 3]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2148,6 +2390,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY],
+                groupedTargetsY: [[startY]],
                 label: 'H',
                 width: minGateWidth,
             },
@@ -2156,6 +2399,7 @@ describe('Testing processOperations', () => {
                 x: startX + minGateWidth / 2,
                 controlsY: [],
                 targetsY: [startY + classicalRegHeight * 3],
+                groupedTargetsY: [[startY + classicalRegHeight * 3]],
                 label: 'H',
                 width: minGateWidth,
             },

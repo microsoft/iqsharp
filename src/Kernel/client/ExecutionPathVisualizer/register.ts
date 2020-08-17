@@ -18,6 +18,9 @@ export interface Register {
     cId?: number;
 }
 
+/**
+ * Metadata for qubit register.
+ */
 export interface RegisterMetadata {
     /** Type of register. */
     type: RegisterType;
@@ -27,6 +30,9 @@ export interface RegisterMetadata {
     children?: RegisterMetadata[];
 }
 
+/**
+ * Mapping from qubit IDs to their register metadata.
+ */
 export interface RegisterMap {
     [id: number]: RegisterMetadata;
 }

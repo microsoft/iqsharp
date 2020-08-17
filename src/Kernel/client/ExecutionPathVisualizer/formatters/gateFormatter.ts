@@ -3,7 +3,6 @@ import {
     GateType,
     minGateWidth,
     gateHeight,
-    registerHeight,
     labelFontSize,
     argsFontSize,
     controlBtnRadius,
@@ -47,12 +46,13 @@ const _createGate = (svgElems: string[], customMetadata?: Record<string, unknown
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, targetsY, groupedTargetsY, label, displayArgs, customMetadata, width } = metadata;
     switch (type) {
         case GateType.Measure:
             return _createGate([_measure(x, controlsY[0])], customMetadata);
         case GateType.Unitary:
-            return _createGate([_unitary(label, x, targetsY, width, displayArgs)], customMetadata);
+            if (groupedTargetsY == null) throw new Error('No groupedTargetsY found.');
+            return _createGate([_unitary(label, x, groupedTargetsY, width, displayArgs)], customMetadata);
         case GateType.Swap:
             return controlsY.length > 0 ? _controlledGate(metadata) : _createGate([_swap(x, targetsY)], customMetadata);
         case GateType.Cnot:
@@ -99,30 +99,15 @@ const _measure = (x: number, y: number): string => {
 const _unitary = (
     label: string,
     x: number,
-    y: number[],
+    y: number[][],
     width: number,
     displayArgs?: string,
     renderDashedLine = true,
 ): string => {
     if (y.length === 0) return '';
 
-    // Sort y in ascending order
-    y.sort((y1, y2) => y1 - y2);
-
-    // Group adjacent registers
-    let prevY: number = y[0];
-    const regGroups: number[][] = y.reduce((groups: number[][], currY: number) => {
-        // Registers are defined to be adjacent if they differ by registerHeight in their y coord
-        // NOTE: This method of group registers by height difference might break if we want to add
-        // registers with variable heights.
-        if (groups.length === 0 || currY - prevY > registerHeight) groups.push([currY]);
-        else groups[groups.length - 1].push(currY);
-        prevY = currY;
-        return groups;
-    }, []);
-
     // Render each group as a separate unitary boxes
-    const unitaryBoxes: string[] = regGroups.map((group: number[]) => {
+    const unitaryBoxes: string[] = y.map((group: number[]) => {
         const maxY: number = group[group.length - 1],
             minY: number = group[0];
         const height: number = maxY - minY + gateHeight;
@@ -131,8 +116,10 @@ const _unitary = (
 
     // Draw dashed line between disconnected unitaries
     if (renderDashedLine && unitaryBoxes.length > 1) {
-        const maxY: number = y[y.length - 1],
-            minY: number = y[0];
+        const lastBox: number[] = y[y.length - 1];
+        const firstBox: number[] = y[0];
+        const maxY: number = lastBox[lastBox.length - 1],
+            minY: number = firstBox[0];
         const vertLine: string = dashedLine(x, minY, x, maxY);
         return [vertLine, ...unitaryBoxes].join('\n');
     } else return unitaryBoxes.join('\n');
@@ -210,7 +197,8 @@ const _cross = (x: number, y: number): string => {
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, targetsY, groupedTargetsY, label, displayArgs, customMetadata, width } = metadata;
+
     // Get SVG for target gates
     switch (type) {
         case GateType.Cnot:
@@ -220,7 +208,8 @@ const _controlledGate = (metadata: Metadata): string => {
             targetsY.forEach((y) => targetGateSvgs.push(_cross(x, y)));
             break;
         case GateType.ControlledUnitary:
-            targetGateSvgs.push(_unitary(label, x, targetsY, width, displayArgs, false));
+            if (groupedTargetsY == null) throw new Error('No groupedTargetsY found.');
+            targetGateSvgs.push(_unitary(label, x, groupedTargetsY, width, displayArgs, false));
             break;
         default:
             throw new Error(`ERROR: Unrecognized gate: ${label} of type ${type}`);
@@ -260,8 +249,8 @@ const _oplus = (x: number, y: number, r = 15): string => {
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    let { x, width, htmlClass } = metadata;
     const { controlsY, targetsY, children, customMetadata } = metadata;
+    let { x, width, htmlClass } = metadata;
 
     const controlY = controlsY[0];
     if (htmlClass == null) htmlClass = 'classically-controlled';
