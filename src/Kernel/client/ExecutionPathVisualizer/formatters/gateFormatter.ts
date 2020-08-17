@@ -46,15 +46,16 @@ const _createGate = (svgElems: string[], customMetadata?: Record<string, unknown
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, groupedTargetsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
     switch (type) {
         case GateType.Measure:
             return _createGate([_measure(x, controlsY[0])], customMetadata);
         case GateType.Unitary:
-            if (groupedTargetsY == null) throw new Error('No groupedTargetsY found.');
-            return _createGate([_unitary(label, x, groupedTargetsY, width, displayArgs)], customMetadata);
+            return _createGate([_unitary(label, x, targetsY as number[][], width, displayArgs)], customMetadata);
         case GateType.Swap:
-            return controlsY.length > 0 ? _controlledGate(metadata) : _createGate([_swap(x, targetsY)], customMetadata);
+            return controlsY.length > 0
+                ? _controlledGate(metadata)
+                : _createGate([_swap(x, targetsY as number[])], customMetadata);
         case GateType.Cnot:
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
@@ -197,19 +198,21 @@ const _cross = (x: number, y: number): string => {
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, targetsY, groupedTargetsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, label, displayArgs, customMetadata, width } = metadata;
+    let { targetsY } = metadata;
 
     // Get SVG for target gates
     switch (type) {
         case GateType.Cnot:
-            targetsY.forEach((y) => targetGateSvgs.push(_oplus(x, y)));
+            (targetsY as number[]).forEach((y) => targetGateSvgs.push(_oplus(x, y)));
             break;
         case GateType.Swap:
-            targetsY.forEach((y) => targetGateSvgs.push(_cross(x, y)));
+            (targetsY as number[]).forEach((y) => targetGateSvgs.push(_cross(x, y)));
             break;
         case GateType.ControlledUnitary:
-            if (groupedTargetsY == null) throw new Error('No groupedTargetsY found.');
+            const groupedTargetsY: number[][] = targetsY as number[][];
             targetGateSvgs.push(_unitary(label, x, groupedTargetsY, width, displayArgs, false));
+            targetsY = targetsY.flat();
             break;
         default:
             throw new Error(`ERROR: Unrecognized gate: ${label} of type ${type}`);
@@ -217,8 +220,8 @@ const _controlledGate = (metadata: Metadata): string => {
     // Get SVGs for control dots
     const controlledDotsSvg: string[] = controlsY.map((y) => controlDot(x, y));
     // Create control lines
-    const maxY: number = Math.max(...controlsY, ...targetsY);
-    const minY: number = Math.min(...controlsY, ...targetsY);
+    const maxY: number = Math.max(...controlsY, ...(targetsY as number[]));
+    const minY: number = Math.min(...controlsY, ...(targetsY as number[]));
     const vertLine: string = line(x, minY, x, maxY);
     const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], customMetadata);
     return svg;
@@ -249,7 +252,8 @@ const _oplus = (x: number, y: number, r = 15): string => {
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    const { controlsY, targetsY, children, customMetadata } = metadata;
+    const { controlsY, children, customMetadata } = metadata;
+    const targetsY: number[] = metadata.targetsY as number[];
     let { x, width, htmlClass } = metadata;
 
     const controlY = controlsY[0];

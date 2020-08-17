@@ -11,11 +11,8 @@ export interface Metadata {
     x: number;
     /** Array of y coords of control registers. */
     controlsY: number[];
-    /** Array of y coords of target registers. */
-    targetsY: number[];
-    /** y coords of target registers separated by classical registers.
-     *  This is used for rendering multi-qubit unitary gates. */
-    groupedTargetsY?: number[][];
+    /** Array of y coords (or groups of y coords) of target registers. */
+    targetsY: (number | number[])[];
     /** Gate label. */
     label: string;
     /** Gate arguments as string. */

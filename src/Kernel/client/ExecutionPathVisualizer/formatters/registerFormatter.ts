@@ -23,7 +23,7 @@ const formatRegisters = (registers: RegisterMap, measureGates: Metadata[], endX:
     measureGates.forEach(({ type, x, targetsY, controlsY }) => {
         if (type !== GateType.Measure) return;
         const gateY: number = controlsY[0];
-        targetsY.forEach((y) => {
+        (targetsY as number[]).forEach((y) => {
             formattedRegs.push(_classicalRegister(x, gateY, endX, y));
         });
     });

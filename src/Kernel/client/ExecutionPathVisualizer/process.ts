@@ -68,7 +68,7 @@ const processOperations = (
                         return children[reg.cId].y;
                     });
 
-                metadata.groupedTargetsY = _splitTargetsY(op.targets, classicalRegY, registers);
+                metadata.targetsY = _splitTargetsY(op.targets, classicalRegY, registers);
             }
 
             // Expand column size, if needed
