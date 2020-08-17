@@ -252,7 +252,7 @@ const _oplus = (x: number, y: number, r = 15): string => {
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    const { controlsY, children, customMetadata } = metadata;
+    const { controlsY, conditionalChildren, customMetadata } = metadata;
     const targetsY: number[] = metadata.targetsY as number[];
     let { x, width, htmlClass } = metadata;
 
@@ -260,11 +260,11 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     if (htmlClass == null) htmlClass = 'classically-controlled';
 
     // Get SVG for gates controlled on 0 and make them hidden initially
-    let childrenZero: string = children != null ? formatGates(children[0]) : '';
+    let childrenZero: string = conditionalChildren != null ? formatGates(conditionalChildren[0]) : '';
     childrenZero = `<g class="${htmlClass}-zero hidden">\r\n${childrenZero}</g>`;
 
     // Get SVG for gates controlled on 1
-    let childrenOne: string = children != null ? formatGates(children[1]) : '';
+    let childrenOne: string = conditionalChildren != null ? formatGates(conditionalChildren[1]) : '';
     childrenOne = `<g class="${htmlClass}-one">\r\n${childrenOne}</g>`;
 
     // Draw control button and attached dashed line to dashed box

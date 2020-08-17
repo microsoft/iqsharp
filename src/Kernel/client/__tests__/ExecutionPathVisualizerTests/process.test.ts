@@ -1,4 +1,4 @@
-import { Operation } from '../../ExecutionPathVisualizer/circuit';
+import { Operation, ConditionalRender } from '../../ExecutionPathVisualizer/circuit';
 import { RegisterMap, RegisterType, Register } from '../../ExecutionPathVisualizer/register';
 import { Metadata } from '../../ExecutionPathVisualizer/metadata';
 import {
@@ -37,6 +37,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -45,6 +46,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -53,6 +55,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -66,6 +69,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -74,6 +78,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -82,6 +87,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -90,6 +96,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -98,6 +105,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'T',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -111,6 +119,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -119,6 +128,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -127,6 +137,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -138,6 +149,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -146,6 +158,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -154,6 +167,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -165,6 +179,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -173,6 +188,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -181,6 +197,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -192,6 +209,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -200,6 +218,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -208,6 +227,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -219,6 +239,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -227,6 +248,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -235,6 +257,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -248,6 +271,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -256,6 +280,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -264,6 +289,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -272,6 +298,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -280,6 +307,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'T',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -288,6 +316,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -306,6 +335,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -314,6 +344,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -322,6 +353,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -330,6 +362,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -338,6 +371,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -346,6 +380,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -354,6 +389,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'T',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -362,6 +398,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -370,6 +407,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -387,6 +425,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -395,6 +434,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -403,6 +443,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -411,6 +452,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -419,6 +461,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'T',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 2 }],
@@ -427,6 +470,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -435,6 +479,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -443,6 +488,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -451,6 +497,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -459,6 +506,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -467,6 +515,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -485,6 +534,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -493,6 +543,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -504,6 +555,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [
@@ -515,6 +567,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -534,6 +587,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Foo',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -546,6 +600,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Bar',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -577,6 +632,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }],
@@ -585,6 +641,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -596,6 +653,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Classical, qId: 2, cId: 0 }],
@@ -604,6 +662,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -615,6 +674,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -623,6 +683,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Classical, qId: 1, cId: 0 }],
@@ -636,6 +697,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -644,6 +706,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -655,6 +718,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -663,6 +727,7 @@ describe('Testing _groupOperations', () => {
             {
                 gate: 'Z',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -673,8 +738,24 @@ describe('Testing _groupOperations', () => {
     });
     test('no qubits', () => {
         const operations: Operation[] = [
-            { gate: 'NoOp1', isMeasurement: false, isControlled: false, isAdjoint: false, controls: [], targets: [] },
-            { gate: 'NoOp2', isMeasurement: false, isControlled: false, isAdjoint: false, controls: [], targets: [] },
+            {
+                gate: 'NoOp1',
+                isMeasurement: false,
+                isConditional: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [],
+            },
+            {
+                gate: 'NoOp2',
+                isMeasurement: false,
+                isConditional: false,
+                isControlled: false,
+                isAdjoint: false,
+                controls: [],
+                targets: [],
+            },
         ];
         expect(_groupOperations(operations, registers)).toEqual([[], [], [], []]);
     });
@@ -751,6 +832,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -759,6 +841,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'Y',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -773,6 +856,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -781,6 +865,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -795,6 +880,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -803,6 +889,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -811,6 +898,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -819,6 +907,7 @@ describe('Testing _getClassicalRegStart', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -840,6 +929,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -863,6 +953,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'Foo',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: true,
             controls: [],
@@ -886,6 +977,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'M',
             isMeasurement: true,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -912,6 +1004,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'SWAP',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -938,6 +1031,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'SWAP',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -965,6 +1059,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -992,6 +1087,7 @@ describe('Testing _opToMetadata', () => {
         let op: Operation = {
             gate: 'ZZ',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1012,6 +1108,7 @@ describe('Testing _opToMetadata', () => {
         op = {
             gate: 'XX',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1040,6 +1137,7 @@ describe('Testing _opToMetadata', () => {
         let op: Operation = {
             gate: 'ZZ',
             isMeasurement: false,
+            isConditional: false,
             isControlled: true,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -1057,6 +1155,7 @@ describe('Testing _opToMetadata', () => {
         op = {
             gate: 'XX',
             isMeasurement: false,
+            isConditional: false,
             isControlled: true,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -1077,6 +1176,7 @@ describe('Testing _opToMetadata', () => {
         op = {
             gate: 'Foo',
             isMeasurement: false,
+            isConditional: false,
             isControlled: true,
             isAdjoint: false,
             controls: [
@@ -1107,6 +1207,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'RX',
             displayArgs: '(0.25)',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1128,6 +1229,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'RX',
             displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1149,6 +1251,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'RX',
             displayArgs: '(0.25)',
             isMeasurement: false,
+            isConditional: false,
             isControlled: true,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -1175,6 +1278,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'U',
             displayArgs: "('foo', 'bar')",
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1199,6 +1303,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'U',
             displayArgs: "(0.25, 1.0, 'foobar', (3.14, 6.67))",
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1223,6 +1328,7 @@ describe('Testing _opToMetadata', () => {
             gate: 'U',
             displayArgs: "('foo', 'bar')",
             isMeasurement: false,
+            isConditional: false,
             isControlled: true,
             isAdjoint: false,
             controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -1242,10 +1348,11 @@ describe('Testing _opToMetadata', () => {
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
     });
-    test('classically isControlled gates', () => {
+    test('classically-controlled gates', () => {
         const op: Operation = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: true,
             isControlled: true,
             isAdjoint: false,
             controls: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
@@ -1254,26 +1361,26 @@ describe('Testing _opToMetadata', () => {
                 { type: RegisterType.Qubit, qId: 1 },
             ],
             children: [
-                [
-                    {
-                        gate: 'X',
-                        isMeasurement: false,
-                        isControlled: false,
-                        isAdjoint: false,
-                        controls: [],
-                        targets: [{ type: RegisterType.Qubit, qId: 0 }],
-                    },
-                ],
-                [
-                    {
-                        gate: 'H',
-                        isMeasurement: false,
-                        isControlled: false,
-                        isAdjoint: false,
-                        controls: [],
-                        targets: [{ type: RegisterType.Qubit, qId: 1 }],
-                    },
-                ],
+                {
+                    gate: 'X',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                    conditionalRender: ConditionalRender.OnZero,
+                },
+                {
+                    gate: 'H',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 1 }],
+                    conditionalRender: ConditionalRender.OnOne,
+                },
             ],
         };
         const registers: RegisterMap = {
@@ -1291,7 +1398,7 @@ describe('Testing _opToMetadata', () => {
             targetsY: [startY, startY + classicalRegHeight * 2],
             label: '',
             width: minGateWidth + controlBtnOffset + classicalBoxPadding * 2,
-            children: [
+            conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1331,6 +1438,7 @@ describe('Testing _opToMetadata', () => {
         let op: Operation = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1344,6 +1452,7 @@ describe('Testing _opToMetadata', () => {
         op = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [{ type: RegisterType.Classical, qId: 0, cId: 2 }],
@@ -1355,6 +1464,7 @@ describe('Testing _opToMetadata', () => {
         const op: Operation = {
             gate: 'X',
             isMeasurement: false,
+            isConditional: false,
             isControlled: false,
             isAdjoint: false,
             controls: [],
@@ -1425,7 +1535,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [[], []],
+            conditionalChildren: [[], []],
             label: 'X',
             width: minGateWidth,
         };
@@ -1434,7 +1544,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [[], []],
+            conditionalChildren: [[], []],
             label: 'X',
             width: minGateWidth,
             htmlClass: 'classname',
@@ -1472,7 +1582,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [
+            conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1502,7 +1612,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [
+            conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1541,14 +1651,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [
+            conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        children: [
+                        conditionalChildren: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -1593,14 +1703,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            children: [
+            conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        children: [
+                        conditionalChildren: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -1853,7 +1963,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    children: [
+                    conditionalChildren: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -1878,7 +1988,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    children: [
+                    conditionalChildren: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -1975,7 +2085,7 @@ describe('Testing _fillMetadataX', () => {
                     x: 0,
                     controlsY: [],
                     targetsY: [],
-                    children: [
+                    conditionalChildren: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2009,7 +2119,7 @@ describe('Testing _fillMetadataX', () => {
                     x: startX,
                     controlsY: [],
                     targetsY: [],
-                    children: [
+                    conditionalChildren: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2056,6 +2166,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2064,6 +2175,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2072,6 +2184,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2081,6 +2194,7 @@ describe('Testing processOperations', () => {
                 gate: 'RX',
                 displayArgs: '(0.25)',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2137,6 +2251,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2145,6 +2260,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'FooBar',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2153,6 +2269,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2199,6 +2316,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2207,6 +2325,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'X',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: true,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 1 }],
@@ -2215,6 +2334,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2261,6 +2381,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2269,6 +2390,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -2277,6 +2399,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2285,6 +2408,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'M',
                 isMeasurement: true,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [{ type: RegisterType.Qubit, qId: 0 }],
@@ -2346,6 +2470,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
@@ -2354,6 +2479,7 @@ describe('Testing processOperations', () => {
             {
                 gate: 'H',
                 isMeasurement: false,
+                isConditional: false,
                 isControlled: false,
                 isAdjoint: false,
                 controls: [],
