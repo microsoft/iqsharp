@@ -23,10 +23,10 @@ export interface Metadata {
     /** Gate width. */
     width: number;
     /** Classically-controlled gates.
-     *  - children[0]: gates when classical control bit is 0.
-     *  - children[1]: gates when classical control bit is 1.
+     *  - conditionalChildren[0]: metadata of gates rendered when classical control bit is 0.
+     *  - conditionalChildren[1]: metadata of gates rendered when classical control bit is 1.
      */
-    children?: Metadata[][];
+    conditionalChildren?: [Metadata[], Metadata[]];
     /** HTML element class for interactivity. */
     htmlClass?: string;
     /** Custom user metadata. */

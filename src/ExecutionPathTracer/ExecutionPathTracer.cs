@@ -201,7 +201,6 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             {
                 Gate = metadata.Label,
                 DisplayArgs = displayArgs,
-                Children = metadata.Children?.Select(child => child.Select(this.MetadataToOperation).WhereNotNull()),
                 IsControlled = metadata.IsControlled,
                 IsAdjoint = metadata.IsAdjoint,
                 Controls = this.GetQubitRegisters(metadata.Controls),
