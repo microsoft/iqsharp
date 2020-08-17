@@ -77,6 +77,8 @@ namespace Tests.IQSharp
             Assert.AreEqual("Workspace", logger.Events[0].Properties["Quantum.IQSharp.Workspace"]);
             Assert.AreEqual("ok", logger.Events[0].Properties["Quantum.IQSharp.Status"]);
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
+            Assert.AreEqual(2L, logger.Events[0].Properties["Quantum.IQSharp.FileCount"]);
+            Assert.AreEqual(0L, logger.Events[0].Properties["Quantum.IQSharp.ProjectCount"]);
         }
 
         [TestMethod]
@@ -98,6 +100,8 @@ namespace Tests.IQSharp
             Assert.AreEqual("Workspace.Broken", logger.Events[0].Properties["Quantum.IQSharp.Workspace"]);
             Assert.AreEqual("error", logger.Events[0].Properties["Quantum.IQSharp.Status"]);
             Assert.IsTrue(logger.Events[0].Properties["Quantum.IQSharp.Errors"].ToString().StartsWith("QS"));
+            Assert.AreEqual(2L, logger.Events[0].Properties["Quantum.IQSharp.FileCount"]);
+            Assert.AreEqual(0L, logger.Events[0].Properties["Quantum.IQSharp.ProjectCount"]);
         }
 
         [TestMethod]
@@ -146,6 +150,19 @@ namespace Tests.IQSharp
             Assert.AreEqual("Quantum.IQSharp.Compile", logger.Events[count].Name);
             Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
+
+            Assert.AreEqual(
+                "Microsoft.Quantum.Canon,Microsoft.Quantum.Intrinsic",
+                logger.Events[count].Properties["Quantum.IQSharp.Namespaces"]);
+
+            count++;
+            snippets.Compile(SNIPPETS.OpenNamespaces2);
+
+            Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
+            Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
+            Assert.AreEqual(
+                "Microsoft.Quantum.Canon,Microsoft.Quantum.Diagnostics,Microsoft.Quantum.Intrinsic,Tests.qss",
+                logger.Events[count].Properties["Quantum.IQSharp.Namespaces"]);
         }
 
         [TestMethod]
@@ -171,6 +188,55 @@ namespace Tests.IQSharp
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
             Assert.AreEqual("Microsoft.Quantum.Standard", logger.Events[0].Properties["Quantum.IQSharp.PackageId"]);
             Assert.IsTrue(!string.IsNullOrWhiteSpace(logger.Events[0].Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));
+        }
+
+        [TestMethod]
+        public void LoadProjects()
+        {
+            var workspace = "Workspace.ProjectReferences";
+            var services = Startup.CreateServiceProvider(workspace);
+            var logger = GetAppLogger(services);
+
+            var ws = services.GetService<IWorkspace>();
+
+            logger.Events.Clear();
+            Assert.AreEqual(0, logger.Events.Count);
+
+            ws.Reload();
+            Assert.AreEqual(5, logger.Events.Count);
+
+            Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
+            Assert.IsTrue(logger.Events[0].Properties["Quantum.IQSharp.PackageId"].ToString().StartsWith("Microsoft.Quantum.Xunit"));
+            Assert.IsTrue(!string.IsNullOrWhiteSpace(logger.Events[0].Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));
+
+            Assert.AreEqual("Quantum.IQSharp.ProjectLoad", logger.Events[1].Name);
+            Assert.AreEqual(PiiKind.Uri, logger.Events[1].PiiProperties["Quantum.IQSharp.ProjectUri"]);
+            Assert.IsTrue(logger.Events[1].Properties["Quantum.IQSharp.ProjectUri"].ToString().Contains("ProjectB.csproj"));
+            Assert.AreEqual(1L, logger.Events[1].Properties["Quantum.IQSharp.SourceFileCount"]);
+            Assert.AreEqual(0L, logger.Events[1].Properties["Quantum.IQSharp.ProjectReferenceCount"]);
+            Assert.AreEqual(0L, logger.Events[1].Properties["Quantum.IQSharp.PackageReferenceCount"]);
+
+            Assert.AreEqual("Quantum.IQSharp.ProjectLoad", logger.Events[2].Name);
+            Assert.AreEqual(PiiKind.Uri, logger.Events[2].PiiProperties["Quantum.IQSharp.ProjectUri"]);
+            Assert.IsTrue(logger.Events[2].Properties["Quantum.IQSharp.ProjectUri"].ToString().Contains("ProjectA.csproj"));
+            Assert.AreEqual(1L, logger.Events[2].Properties["Quantum.IQSharp.SourceFileCount"]);
+            Assert.AreEqual(1L, logger.Events[2].Properties["Quantum.IQSharp.ProjectReferenceCount"]);
+            Assert.AreEqual(0L, logger.Events[2].Properties["Quantum.IQSharp.PackageReferenceCount"]);
+
+            Assert.AreEqual("Quantum.IQSharp.ProjectLoad", logger.Events[3].Name);
+            Assert.AreEqual(PiiKind.Uri, logger.Events[3].PiiProperties["Quantum.IQSharp.ProjectUri"]);
+            Assert.IsTrue(logger.Events[3].Properties["Quantum.IQSharp.ProjectUri"].ToString().Contains("Workspace.ProjectReferences.csproj"));
+            Assert.AreEqual(1L, logger.Events[3].Properties["Quantum.IQSharp.SourceFileCount"]);
+            Assert.AreEqual(3L, logger.Events[3].Properties["Quantum.IQSharp.ProjectReferenceCount"]);
+            Assert.AreEqual(1L, logger.Events[3].Properties["Quantum.IQSharp.PackageReferenceCount"]);
+
+            Assert.AreEqual("Quantum.IQSharp.WorkspaceReload", logger.Events[4].Name);
+            Assert.AreEqual(PiiKind.GenericData, logger.Events[4].PiiProperties["Quantum.IQSharp.Workspace"]);
+            Assert.AreEqual("Workspace.ProjectReferences", logger.Events[4].Properties["Quantum.IQSharp.Workspace"]);
+            Assert.AreEqual("ok", logger.Events[4].Properties["Quantum.IQSharp.Status"]);
+            Assert.AreEqual("", logger.Events[4].Properties["Quantum.IQSharp.Errors"]);
+            Assert.AreEqual(3L, logger.Events[4].Properties["Quantum.IQSharp.FileCount"]);
+            Assert.AreEqual(3L, logger.Events[4].Properties["Quantum.IQSharp.ProjectCount"]);
         }
 
         [TestMethod]

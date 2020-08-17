@@ -495,9 +495,10 @@ namespace Microsoft.Quantum.IQSharp
             {
                 duration.Stop();
                 var status = this.HasErrors ? "error" : "ok";
+                var projectCount = Projects.Count(project => !string.IsNullOrWhiteSpace(project.ProjectFile));
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
-                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, Projects.Count(), errorIds.ToArray(), duration.Elapsed));
+                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, projectCount, errorIds.ToArray(), duration.Elapsed));
             }
         }
     }
