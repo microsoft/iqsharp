@@ -27,7 +27,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                 ],
@@ -53,7 +53,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                 ],
@@ -78,7 +78,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                 ],
@@ -88,7 +88,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                     {
@@ -121,7 +121,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                     {
@@ -167,7 +167,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                 ],
@@ -191,7 +191,7 @@ describe('Testing _classicalControlled', () => {
                         x: startX + minGateWidth / 2 + gatePadding,
                         label: 'X',
                         controlsY: [],
-                        targetsY: [startY],
+                        targetsY: [[startY]],
                         width: minGateWidth,
                     },
                 ],
@@ -252,7 +252,7 @@ describe('Testing _controlledGate', () => {
             label: 'Foo',
             x: startX,
             controlsY: [startY],
-            targetsY: [startY + registerHeight],
+            targetsY: [[startY + registerHeight]],
             width: 45,
         };
         let svg: string = _controlledGate(metadata);
@@ -260,7 +260,7 @@ describe('Testing _controlledGate', () => {
 
         // Flip target and control
         metadata.controlsY = [startY + registerHeight];
-        metadata.targetsY = [startY];
+        metadata.targetsY = [[startY]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
     });
@@ -270,7 +270,7 @@ describe('Testing _controlledGate', () => {
             label: 'Foo',
             x: startX,
             controlsY: [startY, startY + registerHeight],
-            targetsY: [startY + registerHeight * 2],
+            targetsY: [[startY + registerHeight * 2]],
             width: 45,
         };
         // Target on bottom
@@ -279,13 +279,13 @@ describe('Testing _controlledGate', () => {
 
         // Target on top
         metadata.controlsY = [startY + registerHeight, startY + registerHeight * 2];
-        metadata.targetsY = [startY];
+        metadata.targetsY = [[startY]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
 
         // Target in middle
         metadata.controlsY = [startY, startY + registerHeight * 2];
-        metadata.targetsY = [startY + registerHeight];
+        metadata.targetsY = [[startY + registerHeight]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
     });
@@ -295,7 +295,7 @@ describe('Testing _controlledGate', () => {
             label: 'Foo',
             x: startX,
             controlsY: [startY + registerHeight * 2],
-            targetsY: [startY, startY + registerHeight],
+            targetsY: [[startY, startY + registerHeight]],
             width: 45,
         };
         // Control on bottom
@@ -304,13 +304,13 @@ describe('Testing _controlledGate', () => {
 
         // Control on top
         metadata.controlsY = [startY];
-        metadata.targetsY = [startY + registerHeight, startY + registerHeight * 2];
+        metadata.targetsY = [[startY + registerHeight, startY + registerHeight * 2]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
 
         // Control in middle
         metadata.controlsY = [startY + registerHeight];
-        metadata.targetsY = [startY, startY + registerHeight * 2];
+        metadata.targetsY = [[startY], [startY + registerHeight * 2]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
     });
@@ -320,7 +320,7 @@ describe('Testing _controlledGate', () => {
             label: 'Foo',
             x: startX,
             controlsY: [startY + registerHeight * 2, startY + registerHeight * 3],
-            targetsY: [startY, startY + registerHeight],
+            targetsY: [[startY, startY + registerHeight]],
             width: 45,
         };
         // Controls on bottom
@@ -329,19 +329,19 @@ describe('Testing _controlledGate', () => {
 
         // Controls on top
         metadata.controlsY = [startY, startY + registerHeight];
-        metadata.targetsY = [startY + registerHeight * 2, startY + registerHeight * 3];
+        metadata.targetsY = [[startY + registerHeight * 2, startY + registerHeight * 3]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
 
         // Controls in middle
         metadata.controlsY = [startY + registerHeight, startY + registerHeight * 2];
-        metadata.targetsY = [startY, startY + registerHeight * 3];
+        metadata.targetsY = [[startY], [startY + registerHeight * 3]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
 
         // Interleaved controls/targets
         metadata.controlsY = [startY + registerHeight, startY + registerHeight * 3];
-        metadata.targetsY = [startY, startY + registerHeight * 2];
+        metadata.targetsY = [[startY], [startY + registerHeight * 2]];
         svg = _controlledGate(metadata);
         expect(svg).toMatchSnapshot();
     });
@@ -377,27 +377,32 @@ describe('Testing _swap', () => {
 
 describe('Testing _unitary', () => {
     test('Single qubit unitary', () => {
-        expect(_unitary('H', startX, [startY], minGateWidth)).toMatchSnapshot();
+        expect(_unitary('H', startX, [[startY]], minGateWidth)).toMatchSnapshot();
     });
     test('Multiqubit unitary on consecutive registers', () => {
-        let svg: string = _unitary('ZZ', startX, [startY, startY + registerHeight], minGateWidth);
+        let svg: string = _unitary('ZZ', startX, [[startY, startY + registerHeight]], minGateWidth);
         expect(svg).toMatchSnapshot();
-        svg = _unitary('ZZZ', startX, [startY, startY + registerHeight, startY + registerHeight * 2], minGateWidth);
+        svg = _unitary('ZZZ', startX, [[startY, startY + registerHeight, startY + registerHeight * 2]], minGateWidth);
         expect(svg).toMatchSnapshot();
     });
     test('Multiqubit unitary on non-consecutive registers', () => {
         // Dashed line between unitaries
-        let svg: string = _unitary('ZZ', startX, [startY, startY + registerHeight * 2], minGateWidth);
-        expect(svg).toMatchSnapshot();
-        svg = _unitary('ZZZ', startX, [startY, startY + registerHeight * 2, startY + registerHeight * 3], minGateWidth);
-        expect(svg).toMatchSnapshot();
-        // Solid line
-        svg = _unitary('ZZ', startX, [startY, startY + registerHeight * 2], minGateWidth, undefined, false);
+        let svg: string = _unitary('ZZ', startX, [[startY], [startY + registerHeight * 2]], minGateWidth);
         expect(svg).toMatchSnapshot();
         svg = _unitary(
             'ZZZ',
             startX,
-            [startY, startY + registerHeight * 2, startY + registerHeight * 3],
+            [[startY], [startY + registerHeight * 2, startY + registerHeight * 3]],
+            minGateWidth,
+        );
+        expect(svg).toMatchSnapshot();
+        // Solid line
+        svg = _unitary('ZZ', startX, [[startY], [startY + registerHeight * 2]], minGateWidth, undefined, false);
+        expect(svg).toMatchSnapshot();
+        svg = _unitary(
+            'ZZZ',
+            startX,
+            [[startY], [startY + registerHeight * 2, startY + registerHeight * 3]],
             minGateWidth,
             undefined,
             false,
@@ -456,7 +461,7 @@ describe('Testing _formatGate', () => {
             type: GateType.Unitary,
             x: startX,
             controlsY: [],
-            targetsY: [startY],
+            targetsY: [[startY]],
             label: 'H',
             width: minGateWidth,
         };
@@ -467,7 +472,7 @@ describe('Testing _formatGate', () => {
             type: GateType.Unitary,
             x: startX,
             controlsY: [],
-            targetsY: [startY],
+            targetsY: [[startY]],
             label: 'Ry',
             displayArgs: '(0.25)',
             width: 52,
@@ -479,7 +484,7 @@ describe('Testing _formatGate', () => {
             type: GateType.Unitary,
             x: startX,
             controlsY: [],
-            targetsY: [startY, startY + registerHeight],
+            targetsY: [[startY, startY + registerHeight]],
             label: 'U',
             width: minGateWidth,
         };
@@ -490,7 +495,7 @@ describe('Testing _formatGate', () => {
             type: GateType.ControlledUnitary,
             x: startX,
             controlsY: [],
-            targetsY: [startY, startY + registerHeight],
+            targetsY: [[startY, startY + registerHeight]],
             label: 'U',
             displayArgs: "('foo', 'bar')",
             width: 77,
@@ -535,7 +540,7 @@ describe('Testing _formatGate', () => {
             type: GateType.ControlledUnitary,
             x: startX,
             controlsY: [startY],
-            targetsY: [startY + registerHeight],
+            targetsY: [[startY + registerHeight]],
             label: 'U',
             width: minGateWidth,
         };
@@ -546,7 +551,7 @@ describe('Testing _formatGate', () => {
             type: GateType.ControlledUnitary,
             x: startX,
             controlsY: [startY],
-            targetsY: [startY + registerHeight],
+            targetsY: [[startY + registerHeight]],
             label: 'U',
             displayArgs: "('foo', 'bar')",
             width: 77,
@@ -569,7 +574,7 @@ describe('Testing _formatGate', () => {
             type: GateType.Unitary,
             x: startX,
             controlsY: [],
-            targetsY: [startY],
+            targetsY: [[startY]],
             label: 'H',
             width: minGateWidth,
             customMetadata: { a: 1, b: 2 },
@@ -630,7 +635,7 @@ describe('Testing formatGates', () => {
                 type: GateType.ControlledUnitary,
                 x: startX,
                 controlsY: [startY + registerHeight],
-                targetsY: [startY + registerHeight * 2],
+                targetsY: [[startY + registerHeight * 2]],
                 label: 'X',
                 width: minGateWidth,
             },
@@ -638,7 +643,7 @@ describe('Testing formatGates', () => {
                 type: GateType.Unitary,
                 x: startX,
                 controlsY: [],
-                targetsY: [startY + registerHeight * 2],
+                targetsY: [[startY + registerHeight * 2]],
                 label: 'X',
                 width: minGateWidth,
             },
@@ -659,7 +664,7 @@ describe('Testing formatGates', () => {
                 type: GateType.Unitary,
                 x: startX,
                 controlsY: [],
-                targetsY: [startY + registerHeight * 2],
+                targetsY: [[startY + registerHeight * 2]],
                 label: 'X',
                 width: minGateWidth,
             },
