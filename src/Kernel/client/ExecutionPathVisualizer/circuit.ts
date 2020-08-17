@@ -21,7 +21,7 @@ export interface Qubit {
 
 export enum ConditionalRender {
     /** Always rendered. */
-    None,
+    Always,
     /** Render classically-controlled operation when measurement is a zero. */
     OnZero,
     /** Render classically-controlled operation when measurement is a one. */
