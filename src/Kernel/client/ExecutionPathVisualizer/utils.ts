@@ -3,6 +3,8 @@ import { GateType, minGateWidth, labelPadding, labelFontSize, argsFontSize } fro
 
 /**
  * Generate a UUID using `Math.random`.
+ * Note: this implementation came from https://stackoverflow.com/questions/105034/how-to-create-guid-uuid
+ * and is not cryptographically secure but works for our use case.
  *
  * @returns UUID string.
  */
