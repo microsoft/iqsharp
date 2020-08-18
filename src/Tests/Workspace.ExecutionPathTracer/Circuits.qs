@@ -7,8 +7,7 @@ namespace Tests.ExecutionPathTracer {
 
     // Custom operation
     operation Foo(theta : Double, (qubit : Qubit, bar : String)) : Unit
-    is Adj + Ctl {
-    }
+    is Adj + Ctl { }
 
     operation FooCirc() : Unit {
         using (q = Qubit()) {
@@ -35,15 +34,19 @@ namespace Tests.ExecutionPathTracer {
         }
     }
 
-    operation NoQubitCirc(n : Int) : Unit {
-    }
+    operation NoQubitCirc(n : Int) : Unit { }
 
     operation NoQubitArgsCirc() : Unit {
         NoQubitCirc(2);
     }
 
-    operation OperationCirc(op : (Qubit => Unit), n : Int) : Unit {
+    operation WithQArrayArgs(bits: Bool[]): Unit { }
+
+    operation WithQArrayArgsCirc(): Unit {
+        WithQArrayArgs([false, true]);
     }
+
+    operation OperationCirc(op : (Qubit => Unit), n : Int) : Unit { }
 
     operation OperationArgsCirc() : Unit {
         OperationCirc(H, 5);
@@ -78,8 +81,7 @@ namespace Tests.ExecutionPathTracer {
     }
 
     operation Bar((alpha : Double, beta : Double), (q : Qubit, name : String)) : Unit
-    is Adj + Ctl {
-    }
+    is Adj + Ctl { }
 
     operation BigCirc() : Unit {
         using (qs = Qubit[3]) {
@@ -94,5 +96,5 @@ namespace Tests.ExecutionPathTracer {
             ResetAll(qs);
         }
     }
-    
+
 }
