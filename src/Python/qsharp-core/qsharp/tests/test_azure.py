@@ -140,12 +140,16 @@ def _test_workspace_job_execution():
     assert isinstance(retrieved_histogram, dict)
     assert histogram == retrieved_histogram
 
-    # Check that both submitted jobs exist in the workspace
+    # Check that the submitted job exists in the workspace
     jobs = qsharp.azure.jobs()
     assert isinstance(jobs, list)
-    assert len(jobs) == 2
+    assert len(jobs) == 1
 
     # Check that job filtering works
     jobs = qsharp.azure.jobs(jobs[0].id)
     assert isinstance(jobs, list)
     assert len(jobs) == 1
+
+    jobs = qsharp.azure.jobs("invalid")
+    assert isinstance(jobs, list)
+    assert len(jobs) == 0
