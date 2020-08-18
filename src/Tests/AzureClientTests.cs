@@ -54,6 +54,8 @@ namespace Tests.IQSharp
 
         private Task<ExecutionResult> ConnectToWorkspaceAsync(IAzureClient azureClient, string workspaceName = "TEST_WORKSPACE_NAME")
         {
+            MockAzureWorkspace.MockJobIds = new string[] { };
+            MockAzureWorkspace.MockTargetIds = new string[] { };
             return azureClient.ConnectAsync(
                 new MockChannel(),
                 "TEST_SUBSCRIPTION_ID",
@@ -124,7 +126,7 @@ namespace Tests.IQSharp
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockJobs("JOB_ID_1", "JOB_ID_2");
+            MockAzureWorkspace.MockJobIds = new string[] { "JOB_ID_1", "JOB_ID_2" };
 
             // valid job ID
             var job = ExpectSuccess<CloudJob>(azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_1"));
@@ -161,7 +163,7 @@ namespace Tests.IQSharp
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockTargets("ionq.simulator", "honeywell.qpu", "unrecognized.target");
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator", "honeywell.qpu", "unrecognized.target" };
 
             // get connection status to verify list of targets
             targets = ExpectSuccess<IEnumerable<TargetStatus>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
@@ -220,7 +222,7 @@ namespace Tests.IQSharp
             // add a target
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockTargets("ionq.simulator");
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator" };
 
             // set the active target
             var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
@@ -253,7 +255,7 @@ namespace Tests.IQSharp
             // add a target
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockTargets("ionq.simulator");
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator" };
 
             // set the active target
             var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
@@ -285,8 +287,7 @@ namespace Tests.IQSharp
             // Set up workspace with mock providers
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddMockTargets("ionq.mock");
-            azureWorkspace?.AddMockTargets("honeywell.mock");
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.mock", "honeywell.mock" };
 
             // Verify that IonQ job fails to compile (QPRGen0)
             ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));

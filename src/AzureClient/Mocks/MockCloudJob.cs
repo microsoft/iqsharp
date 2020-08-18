@@ -12,7 +12,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockCloudJob : CloudJob
     {
-        public MockCloudJob()
+        public MockCloudJob(string? id = null)
             : base(
                 new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName"),
                 new JobDetails(
@@ -20,7 +20,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     inputDataFormat: null,
                     providerId: null,
                     target: null,
-                    id: Guid.NewGuid().ToString(),
+                    id: id ?? Guid.NewGuid().ToString(),
                     status: "Succeeded",
                     outputDataUri: CreateMockOutputFileUri()
                 ))
