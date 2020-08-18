@@ -36,6 +36,7 @@ Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
         $ErrorActionPreference = 'Continue'
         npm install 2>&1 | ForEach-Object { "$_" }
     } Catch {
+        Write-Host $Error[0]
         Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
         $script:all_ok = $False
     } Finally {

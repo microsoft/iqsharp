@@ -82,36 +82,29 @@ function Test-Python {
 function Test-JavaScript {
     Param([string] $packageFolder, [string] $options)
 
-    Write-Host "##[info]Installing JS packages from $packageFolder"
     Push-Location (Join-Path $PSScriptRoot $packageFolder)
-        Try {
-            npm install
-        } Catch {
-            Write-Host $Error[0]
-            Write-Host "##vso[task.logissue type=warning;]Failed to install npm dependencies."
-        }
-    Pop-Location
+    Try {
+        # npm test writes some output to stderr, which causes PowerShell to throw
+        # unless $ErrorActionPreference is set to 'Continue'.
+        # We also redirect stderr output to stdout to prevent an exception being incorrectly thrown.
+        $OldPreference = $ErrorActionPreference;
+        $ErrorActionPreference = 'Continue'
+        Write-Host "##[info]Installing JS packages from $packageFolder"
+        npm install 2>&1 | ForEach-Object { "$_" }
 
-    Write-Host "##[info]Testing JS inside $packageFolder"    
-    Push-Location (Join-Path $PSScriptRoot $packageFolder)
-        Try {
-            # npm test writes some output to stderr, which causes PowerShell to throw
-            # unless $ErrorActionPreference is set to 'Continue'.
-            # We also redirect stderr output to stdout to prevent an exception being incorrectly thrown.
-            $OldPreference = $ErrorActionPreference;
-            $ErrorActionPreference = 'Continue'
-            if (!$options) {
-                npm test 2>&1 | ForEach-Object { "$_" }
-            } else {
-                npm test -- $options 2>&1 | ForEach-Object { "$_" }
-            }
-        } Catch {
-            Write-Host $Error[0]
-            Write-Host "##vso[task.logissue type=error;]Failed to test JS inside $packageFolder"
-            $script:all_ok = $False
-        } Finally {
-            $ErrorActionPreference = $OldPreference
+        Write-Host "##[info]Testing JS inside $packageFolder"
+        if (!$options) {
+            npm test 2>&1 | ForEach-Object { "$_" }
+        } else {
+            npm test -- $options 2>&1 | ForEach-Object { "$_" }
         }
+    } Catch {
+        Write-Host $Error[0]
+        Write-Host "##vso[task.logissue type=error;]Failed to test JS inside $packageFolder"
+        $script:all_ok = $False
+    } Finally {
+        $ErrorActionPreference = $OldPreference
+    }
     Pop-Location
 
     if ($LastExitCode -ne 0) {
