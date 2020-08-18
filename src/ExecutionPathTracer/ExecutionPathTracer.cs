@@ -46,7 +46,15 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// </summary>
         public void OnOperationStartHandler(ICallable operation, IApplyData arguments)
         {
-            var metadata = operation.GetRuntimeMetadata(arguments);
+            RuntimeMetadata? metadata = null;
+
+            var parentOp = (this.operations.Count > 0) ? this.operations.Peek() : null;
+            // We don't want to process operations whose parent is a measurement gate (will mess up gate visualization)
+            if (parentOp == null || !parentOp.IsMeasurement)
+            {
+                metadata = operation.GetRuntimeMetadata(arguments);
+            }
+
             this.operations.Push(this.MetadataToOperation(metadata));
         }
 
@@ -65,12 +73,13 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             Operation? parentOp = this.operations.Peek();
             if (parentOp == null) return;
 
+            // CNOTs are Controlled X under the hood, so we don't need to render the nested CNOT
+            if ((currentOperation.Gate == "X" && currentOperation.IsControlled) &&
+                (parentOp.Gate == "X" && parentOp.IsControlled)) return;
+
             // Add operation to parent operation's children
             if (parentOp.Children == null) parentOp.Children = new List<Operation>() { currentOperation };
             else parentOp.Children = parentOp.Children.Append(currentOperation);
-
-            // We don't want to add targets if the parent op is a measurement gate (will mess up gate visualization)
-            if (parentOp.IsMeasurement) return;
 
             // Add target qubits to parent
             var parentTargets = parentOp.Targets.ToList();

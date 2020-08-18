@@ -150,5 +150,11 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// </summary>
         [JsonProperty("targets")]
         public IEnumerable<Register> Targets { get; set; } = new List<Register>();
+
+        /// <summary>
+        /// Dictionary of data attributes to add to rendered gate element.
+        /// </summary>
+        [JsonProperty("dataAttributes")]
+        public IDictionary<string, string> DataAttributes = new Dictionary<string, string>();
     }
 }
