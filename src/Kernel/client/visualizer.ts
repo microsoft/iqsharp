@@ -34,8 +34,8 @@ export class Visualizer {
     // The operation is assigned the id `id` and its `i`th child is recursively given
     // the id `${id}-${i}`.
     fillGateRegistry(operation: Operation, id: string) {
-        if (operation.customMetadata == null) operation.customMetadata = {};
-        operation.customMetadata["id"] = id;
+        if (operation.dataAttributes == null) operation.dataAttributes = {};
+        operation.dataAttributes["id"] = id;
         this.gateRegistry[id] = operation;
         operation.children?.forEach((childOp, i) => this.fillGateRegistry(childOp, `${id}-${i}`));
     }
@@ -82,8 +82,8 @@ export class Visualizer {
     private expandOperation(circuit: Circuit, id: string): void {
         let operations: Operation[] = circuit.operations;
         operations = operations.map(op => {
-            if (op.customMetadata == null) return op;
-            const opId: string = op.customMetadata["id"] as string;
+            if (op.dataAttributes == null) return op;
+            const opId: string = op.dataAttributes["id"];
             if (opId === id && op.children != null) return op.children;
             return op;
         }).flat();
@@ -98,8 +98,8 @@ export class Visualizer {
         const parentId: string = id.match(/(.*)-\d/)[1];
         circuit.operations = circuit.operations
             .map(op => {
-                if (op.customMetadata == null) return op;
-                const opId: string = op.customMetadata["id"] as string;
+                if (op.dataAttributes == null) return op;
+                const opId: string = op.dataAttributes["id"];
                 // Replace with parent operation
                 if (opId === id) return this.gateRegistry[parentId];
                 // If operation is a descendant, don't render
