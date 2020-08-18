@@ -109,6 +109,9 @@ export const style = (customStyle: StyleConfig = {}): string => {
     .oplus {
         fill: ${styleConfig.oplus};
     }
+    .gate {
+        cursor: zoom-in;
+    }
     .gate-unitary {
         fill: ${styleConfig.unitary};
     }

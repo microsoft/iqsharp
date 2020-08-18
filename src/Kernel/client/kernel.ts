@@ -8,8 +8,8 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry.js";
-import { renderExecutionPath } from "./visualizer";
-import { Circuit } from "./ExecutionPathVisualizer";
+import { Visualizer } from "./visualizer";
+import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
 function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
@@ -244,7 +244,13 @@ class Kernel {
                     renderDepth,
                     style,
                 }: { executionPath: Circuit; id: string; renderDepth: number; style: string } = message.content;
-                renderExecutionPath(executionPath, id, renderDepth, style);
+                
+                // Get styles
+                const userStyleConfig: StyleConfig = STYLES[style] || {};
+    
+                // Visualize execution path
+                const visualizer = new Visualizer(id, userStyleConfig);
+                visualizer.visualize(executionPath, renderDepth);
             }
         );
     }
