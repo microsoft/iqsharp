@@ -10,6 +10,25 @@ type GateRegistry = {
 // Flag to ensure that we only inject custom JS into browser once
 let isScriptInjected = false;
 
+// Event handler to visually signal to user that the gate can be zoomed out on ctrl-click
+window.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Control') return;
+    document.querySelectorAll('[data-zoom-out="true"]').forEach((el: HTMLElement) => {
+        el.style.cursor = 'zoom-out';
+    });
+});
+
+// Event handler to visually signal to user that the gate can be zoomed in on click
+window.addEventListener('keyup', (ev) => {
+    if (ev.key !== 'Control') return;
+    document.querySelectorAll('[data-zoom-out="true"]').forEach((el: HTMLElement) => {
+        el.style.cursor = 'default';
+    });
+    document.querySelectorAll('[data-zoom-in="true"]').forEach((el: HTMLElement) => {
+        el.style.cursor = 'zoom-in';
+    });
+});
+
 export class Visualizer {
     userStyleConfig: StyleConfig = {};
     displayedCircuit: Circuit = null;
@@ -36,8 +55,13 @@ export class Visualizer {
     fillGateRegistry(operation: Operation, id: string) {
         if (operation.dataAttributes == null) operation.dataAttributes = {};
         operation.dataAttributes["id"] = id;
+        operation.dataAttributes['zoom-out'] = 'false';
         this.gateRegistry[id] = operation;
-        operation.children?.forEach((childOp, i) => this.fillGateRegistry(childOp, `${id}-${i}`));
+        operation.children?.forEach((childOp, i) => {
+            this.fillGateRegistry(childOp, `${id}-${i}`);
+            childOp.dataAttributes['zoom-out'] = 'true';
+        });
+        operation.dataAttributes['zoom-in'] = (operation.children != null).toString();
     }
 
     private selectOpsAtDepth(operations: Operation[], renderDepth: number): Operation[] {
@@ -69,12 +93,14 @@ export class Visualizer {
     }
 
     private addGateClickHandlers(): void {
-        document.querySelectorAll('.gate').forEach((gate) => {
+        document.querySelectorAll(`#${this.id} .gate`).forEach((gate) => {
             // Zoom in on clicked gate
             gate.addEventListener('click', (ev: MouseEvent) => {
-                const { id }: { id: string } = JSON.parse(gate.getAttribute('data-metadata'));
-                if (ev.ctrlKey) this.collapseOperation(this.displayedCircuit, id);
-                else this.expandOperation(this.displayedCircuit, id);
+                const id: string = gate.getAttribute('data-id');
+                const canZoomIn = (gate.getAttribute('data-zoom-in') === 'true');
+                const canZoomOut = (gate.getAttribute('data-zoom-out') === 'true');
+                if (ev.ctrlKey && canZoomOut) this.collapseOperation(this.displayedCircuit, id);
+                else if (canZoomIn) this.expandOperation(this.displayedCircuit, id);
             });
         });
     }

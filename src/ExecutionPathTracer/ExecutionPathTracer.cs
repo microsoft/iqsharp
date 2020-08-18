@@ -69,6 +69,9 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             if (parentOp.Children == null) parentOp.Children = new List<Operation>() { currentOperation };
             else parentOp.Children = parentOp.Children.Append(currentOperation);
 
+            // We don't want to add targets if the parent op is a measurement gate (will mess up gate visualization)
+            if (parentOp.IsMeasurement) return;
+
             // Add target qubits to parent
             var parentTargets = parentOp.Targets.ToList();
             parentTargets.AddRange(currentOperation.Targets.Where(reg => reg is QubitRegister));
