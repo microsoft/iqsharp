@@ -163,7 +163,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEntryPoint? entryPoint = null;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId);
+                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapabilities);
             }
             catch (UnsupportedOperationException e)
             {
@@ -263,7 +263,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
         {
-            if (AvailableProviders == null)
+            if (ActiveWorkspace == null || AvailableProviders == null)
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("connect")} before setting an execution target.");
                 return AzureClientError.NotConnected.ToExecutionResult();
@@ -278,7 +278,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that we know which package to load for this target.
-            var executionTarget = AzureExecutionTarget.Create(targetId);
+            var executionTarget = ActiveWorkspace.CreateExecutionTarget(targetId);
             if (executionTarget == null)
             {
                 channel.Stderr($"Target {targetId} does not support executing Q# jobs.");
@@ -289,11 +289,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
 
-            if (!(ActiveWorkspace is MockAzureWorkspace))
-            {
-                channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
-                await References.AddPackage(ActiveTarget.PackageName);
-            }
+            channel.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
+            await References.AddPackage(ActiveTarget.PackageName);
 
             channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
 

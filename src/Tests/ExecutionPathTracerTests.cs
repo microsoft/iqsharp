@@ -489,6 +489,23 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public void WithQArrayArgsTest()
+        {
+            var path = GetExecutionPath("WithQArrayArgsCirc");
+            var qubits = new QubitDeclaration[] { };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "WithQArrayArgs",
+                    DisplayArgs = "([False, True])",
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
         public void OperationArgsTest()
         {
             var path = GetExecutionPath("OperationArgsCirc");
