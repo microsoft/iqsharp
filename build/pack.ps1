@@ -87,8 +87,8 @@ function Pack-Image() {
         --build-arg EXTRA_NUGET_PACKAGES="" `
         <# Next, we tell Docker what version of IQ# to install. #> `
         --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
-        <# Finally, we tag the image with the current build number. #> `
-        -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:BUILD_BUILDNUMBER}"
+        <# Finally, we tag the image with the current semantic version number. #> `
+        -t "${Env:DOCKER_PREFIX}${RepoName}:${Env:SEMVER_VERSION}"
 
     if  ($LastExitCode -ne 0) {
         Write-Host "##vso[task.logissue type=error;]Failed to create docker image for $Dockerfile."
