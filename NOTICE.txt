@@ -222,9 +222,9 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
----------------------------------------------------------
+-------------------------------------------------------------------
 
----------------------------------------------------------
+-------------------------------------------------------------------
 
 NetMQ 4.0.0.1 - OTHER
 http://www.zeromq.org/
@@ -411,9 +411,9 @@ derived from or based on this library. If you modify this library, you must
 extend this exception to your version of the library.
 
 
----------------------------------------------------------
+-------------------------------------------------------------------
 
----------------------------------------------------------
+-------------------------------------------------------------------
 
 Newtonsoft.Json 12.0.1 - MIT
 (c) 2008 VeriSign, Inc.
