@@ -29,9 +29,23 @@ function Build-One {
 # Fetch TypeScript definitions
 Push-Location (Join-Path $PSScriptRoot ../src/Kernel)
     Try {
-        npm install
+        # npm install writes some output to stderr, which causes PowerShell to throw
+        # unless $ErrorActionPreference is set to 'Continue'.
+        # We also redirect stderr output to stdout to prevent an exception being incorrectly thrown.
+        $OldPreference = $ErrorActionPreference;
+        $ErrorActionPreference = 'Continue'
+        npm install 2>&1 | ForEach-Object { "$_" }
     } Catch {
+        Write-Host $Error[0]
         Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
+        $script:all_ok = $False
+    } Finally {
+        $ErrorActionPreference = $OldPreference
+    }
+
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to install npm dependencies."
+        $script:all_ok = $False
     }
 Pop-Location
 

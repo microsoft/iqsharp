@@ -51,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, IQuantumMachineSubmissionContext? submissionContext, IQuantumMachine.ConfigureJob? configureJobCallback)
         {
             var job = new MockCloudJob();
-            Workspace?.AddMockJobs(job.Id);
+            MockAzureWorkspace.MockJobIds = new string[] { job.Id };
             return Task.FromResult(job as IQuantumMachineJob);
         }
 
