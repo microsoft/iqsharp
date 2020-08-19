@@ -116,13 +116,10 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         public string? DisplayArgs { get; set; }
 
         /// <summary>
-        /// Group of operations for each classical branch.
+        /// Nested operations within this operation.
         /// </summary>
-        /// <remarks>
-        /// Currently not used as this is intended for classically-controlled operations.
-        /// </remarks>
         [JsonProperty("children")]
-        public IEnumerable<IEnumerable<Operation>>? Children { get; set; }
+        public IEnumerable<Operation>? Children { get; set; }
 
         /// <summary>
         /// True if operation is a measurement operations.

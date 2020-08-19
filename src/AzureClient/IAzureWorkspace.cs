@@ -14,10 +14,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal interface IAzureWorkspace
     {
         public string? Name { get; }
+        public string? SubscriptionId { get; }
+        public string? ResourceGroup { get; }
 
         public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
         public Task<CloudJob?> GetJobAsync(string jobId);
         public Task<IEnumerable<CloudJob>?> ListJobsAsync();
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString);
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId);
     }
 }

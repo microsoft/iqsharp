@@ -17,6 +17,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal class AzureWorkspace : IAzureWorkspace
     {
         public string? Name => AzureQuantumClient?.WorkspaceName;
+        public string? SubscriptionId => AzureQuantumClient?.SubscriptionId;
+        public string? ResourceGroup => AzureQuantumClient?.ResourceGroupName;
 
         private Azure.Quantum.IWorkspace AzureQuantumWorkspace { get; set; }
         private QuantumClient AzureQuantumClient { get; set; }
@@ -70,9 +72,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
-        public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString)
-        {
-            return QuantumMachineFactory.CreateMachine(AzureQuantumWorkspace, targetId, storageAccountConnectionString);
-        }
+        public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) =>
+            QuantumMachineFactory.CreateMachine(AzureQuantumWorkspace, targetId, storageAccountConnectionString);
+
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId) =>
+            AzureExecutionTarget.Create(targetId);
     }
 }

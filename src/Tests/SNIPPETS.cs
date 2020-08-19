@@ -253,7 +253,7 @@ namespace Tests.IQSharp
     /// # Summary
     ///     This script returns the same array in reverse order.
     ///     Used to make sure we can pass arguments to snippets simulation.
-        operation Reverse(name : String, array: Int[]) : Int[] {
+    operation Reverse(name : String, array: Int[]) : Int[] {
          Message($""Hello {name}"");
          
         let n = Length(array);
@@ -267,6 +267,19 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string CompareMeasurementResult =
+@"
+    operation CompareMeasurementResult() : Result {
+        using (qubits = Qubit[2]) {
+            let r = M(qubits[0]);
+            if (r == One) {
+                H(qubits[1]);
+                Reset(qubits[1]);
+            }
+            return r;
+        }
+    }
+";
 
     }
 }

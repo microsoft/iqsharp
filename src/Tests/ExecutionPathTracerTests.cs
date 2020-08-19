@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,6 +15,7 @@ namespace Tests.IQSharp
 {
     public class ExecutionPathTracerTests
     {
+        IEnumerable<OperationInfo>? operations = null;
         public Workspace InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
@@ -24,8 +27,13 @@ namespace Tests.IQSharp
 
         public ExecutionPath GetExecutionPath(string name, int depth = 1)
         {
-            var ws = InitWorkspace();
-            var op = ws.AssemblyInfo.Operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
+            if (this.operations == null)
+            {
+                var ws = InitWorkspace();
+                this.operations = ws.AssemblyInfo.Operations;
+            }
+
+            var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
             Assert.IsNotNull(op);
 
             var tracer = new ExecutionPathTracer(depth);
@@ -482,6 +490,23 @@ namespace Tests.IQSharp
                 {
                     Gate = "NoQubitCirc",
                     DisplayArgs = "(2)",
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            Assert.AreEqual(expected.ToJson(), path.ToJson());
+        }
+
+        [TestMethod]
+        public void WithQArrayArgsTest()
+        {
+            var path = GetExecutionPath("WithQArrayArgsCirc");
+            var qubits = new QubitDeclaration[] { };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "WithQArrayArgs",
+                    DisplayArgs = "([False, True])",
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
