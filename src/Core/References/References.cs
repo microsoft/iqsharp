@@ -60,7 +60,8 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public readonly ImmutableList<string> AutoLoadPackages =
             ImmutableList.Create(
-                "Microsoft.Quantum.Standard"
+                "Microsoft.Quantum.Standard",
+                "Microsoft.Quantum.Standard.Visualization"
             );
 
         /// <summary>
