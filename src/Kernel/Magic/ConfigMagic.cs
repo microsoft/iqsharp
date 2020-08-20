@@ -69,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     **`dump.measurementDisplayStyle`**
 
-                    **Value:** '""NumberOnly""' , `""BarOnly""`, `""BarAndNumber""`, or `""None""`
+                    **Value:** '""NumberOnly""' , `""BarOnly""`, `""BarAndNumber""` (default), or `""None""`
 
                     Configures the measurement probability visualization style in output of callables such as 
                     `DumpMachine` or `DumpRegister`. Supports displaying measurement probability as progress bars, numbers, both,
