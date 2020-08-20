@@ -75,7 +75,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) => {
                     return (amps[idx].Magnitude);
                 }),
                 backgroundColor: "#4c4cff",
@@ -83,7 +83,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
                 label: "Amplitude"
             },
             {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) =>{
                     return (amps[idx].Phase);
                 }),
                 backgroundColor: "#4c4cff",
@@ -126,13 +126,13 @@ function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState)
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
 
     chart.data = {
-        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+        labels: Array.from(Array(nBasisStates), (_, idx) => {
             let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -176,13 +176,13 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
     chart.data = {
-        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+        labels: Array.from(Array(nBasisStates), (_, idx) => {
             let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
         datasets: [
             {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) => {
                     return (amps[idx].Real);
                 }),
                 backgroundColor: "#5390d9",
@@ -190,7 +190,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
                 label: "Real"
             },
             {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) => {
                     return (amps[idx].Imag);
                 }),
                 backgroundColor: "#48bfe3",
@@ -309,13 +309,13 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            labels: Array.from(Array(nBasisStates), (_, idx) => {
                 let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
         datasets: [
                 {
-                data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                data: Array.from(Array(nBasisStates), (_, idx) => {
                     return (amps[idx].Magnitude ** 2);
                 }),
                 backgroundColor: "#5390d9",
@@ -364,13 +364,13 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            labels: Array.from(Array(nBasisStates), (_, idx) => {
                 let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates), (_, idx) => {
                         return (amps[idx].Real);
                     }),
                     backgroundColor: "#5390d9",
@@ -378,7 +378,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     label: "Real"
                 },
                 {
-                    data: Array.from(Array(nBasisStates).keys()).map(idx => { 
+                    data: Array.from(Array(nBasisStates), (_, idx) => { 
                         return (amps[idx].Imag);
                     }),
                     backgroundColor: "#48bfe3",
@@ -427,13 +427,13 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
     const measurementHistogram = new Chart(element, {
         type: 'bar',
         data: {
-            labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+            labels: Array.from(Array(nBasisStates), (_, idx) => {
                 let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
                 return `|${bitstring}⟩`;
             }), //basis state labels
             datasets: [
                 {
-                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates), (_, idx) => {
                         return (amps[idx].Magnitude);
                     }),
                     backgroundColor: "#4c4cff",
@@ -441,7 +441,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                     label: "Amplitude"
                 },
                 {
-                    data: Array.from(Array(nBasisStates).keys()).map(idx => {
+                    data: Array.from(Array(nBasisStates), (_, idx) => {
                         return (amps[idx].Phase);
                     }),
                     backgroundColor: "#4c4cff",
