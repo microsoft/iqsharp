@@ -28,11 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20081729-beta" />
+    <None Include="..\..\build\assets\qdk-nuget-icon.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\build\assets\qdk-nuget-icon.png" Pack="true" Visible="false" PackagePath="" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20081940-beta" />
   </ItemGroup>
 
 </Project>
