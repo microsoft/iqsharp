@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Quantum.Simulation.Core;
 
@@ -46,15 +47,13 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// </summary>
         public void OnOperationStartHandler(ICallable operation, IApplyData arguments)
         {
-            RuntimeMetadata? metadata = null;
-
-            var parentOp = (this.operations.Count > 0) ? this.operations.Peek() : null;
             // We don't want to process operations whose parent is a measurement gate (will mess up gate visualization)
-            if (parentOp == null || !parentOp.IsMeasurement)
-            {
-                metadata = operation.GetRuntimeMetadata(arguments);
-            }
+            var metadata = (this.operations.Count == 0) || (!this.operations.Peek()?.IsMeasurement ?? true)
+                ? operation.GetRuntimeMetadata(arguments)
+                : null;
 
+            // We also push on `null` operations to the stack instead of ignoring them so that we pop off the
+            // correct element in `OnOperationEndHandler`.
             this.operations.Push(this.MetadataToOperation(metadata));
         }
 
@@ -66,25 +65,20 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         public void OnOperationEndHandler(ICallable operation, IApplyData result)
         {
             if (this.operations.Count <= 1) return;
-
-            var currentOperation = this.operations.Pop();
-            if (currentOperation == null) return;
-
-            Operation? parentOp = this.operations.Peek();
-            if (parentOp == null) return;
+            if (!this.operations.TryPop(out var currentOperation) || currentOperation == null) return;
+            if (!this.operations.TryPeek(out var parentOp) || parentOp == null) return;
 
             // CNOTs are Controlled X under the hood, so we don't need to render the nested CNOT
             if ((currentOperation.Gate == "X" && currentOperation.IsControlled) &&
                 (parentOp.Gate == "X" && parentOp.IsControlled)) return;
 
             // Add operation to parent operation's children
-            if (parentOp.Children == null) parentOp.Children = new List<Operation>() { currentOperation };
-            else parentOp.Children = parentOp.Children.Append(currentOperation);
+            parentOp.Children = (parentOp.Children ?? ImmutableList<Operation>.Empty).Add(currentOperation);
 
             // Add target qubits to parent
-            var parentTargets = parentOp.Targets.ToList();
-            parentTargets.AddRange(currentOperation.Targets.Where(reg => reg is QubitRegister));
-            parentOp.Targets = parentTargets.Distinct();
+            parentOp.Targets = parentOp.Targets
+                .Concat(currentOperation.Targets.Where(reg => reg is QubitRegister))
+                .Distinct();
         }
 
         /// <summary>

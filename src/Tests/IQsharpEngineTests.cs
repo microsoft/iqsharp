@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -131,7 +132,6 @@ namespace Tests.IQSharp
             var engine = Init();
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
-
 
         [TestMethod]
         public async Task CompileAndSimulate()
@@ -446,7 +446,6 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
         }
 
-
         [TestMethod]
         public void TestResolver()
         {
@@ -525,19 +524,19 @@ namespace Tests.IQSharp
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
                         Gate = "FooCirc",
-                        Targets = new List<QubitRegister>() { new QubitRegister(0) },
-                        Children = new List<Operation>()
-                        {
-                            new Operation()
-                            {
-                                Gate = "Foo",
-                                DisplayArgs = "(2.1, (\"bar\"))",
-                                Targets = new List<Register>() { new QubitRegister(0) },
-                            },
-                        }
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
                     }
                 }
             ), 1);
@@ -547,19 +546,19 @@ namespace Tests.IQSharp
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
                         Gate = "FooCirc",
-                        Targets = new List<QubitRegister>() { new QubitRegister(0) },
-                        Children = new List<Operation>()
-                        {
-                            new Operation()
-                            {
-                                Gate = "Foo",
-                                DisplayArgs = "(2.1, (\"bar\"))",
-                                Targets = new List<Register>() { new QubitRegister(0) },
-                            },
-                        }
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
                     }
                 }
             ), 2);

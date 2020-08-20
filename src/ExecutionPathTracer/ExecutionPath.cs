@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Microsoft.Quantum.Simulation.Core;
@@ -119,7 +120,7 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// Nested operations within this operation.
         /// </summary>
         [JsonProperty("children")]
-        public IEnumerable<Operation>? Children { get; set; }
+        public ImmutableList<Operation>? Children { get; set; }
 
         /// <summary>
         /// True if operation is a measurement operations.

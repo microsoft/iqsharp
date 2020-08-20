@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using Microsoft.Quantum.IQSharp;
@@ -46,7 +47,7 @@ namespace Tests.IQSharp
         public void AssertExecutionPathsEqual(ExecutionPath expected, ExecutionPath actual)
         {
             // Step in one depth lower
-            actual = new ExecutionPath(actual.Qubits, actual.Operations.First().Children ?? new List<Operation>());
+            actual = new ExecutionPath(actual.Qubits, actual.Operations.First().Children?.ToList() ?? new List<Operation>());
             // Prune non-deterministic gates as it's difficult to test
             PruneNonDeterministicGates(actual.Operations);
             Assert.AreEqual(expected.ToJson(), actual.ToJson());
@@ -86,7 +87,7 @@ namespace Tests.IQSharp
             {
                 Gate = "ResetAll",
                 Targets = qIds.Select(id => new QubitRegister(id)),
-                Children = qIds.Select(id => Reset(id)),
+                Children = ImmutableList<Operation>.Empty.AddRange(qIds.Select(id => Reset(id))),
             };
     }
 
@@ -188,12 +189,13 @@ namespace Tests.IQSharp
                 {
                     Gate = "SWAP",
                     Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
-                    Children = new List<Operation>()
-                    {
-                        ControlledX(new int[] { 0 }, 1),
-                        ControlledX(new int[] { 1 }, 0),
-                        ControlledX(new int[] { 0 }, 1),
-                    }
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            ControlledX(new int[] { 0 }, 1),
+                            ControlledX(new int[] { 1 }, 0),
+                            ControlledX(new int[] { 0 }, 1),
+                        }
+                    )
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
@@ -215,15 +217,16 @@ namespace Tests.IQSharp
                     Gate = "Rx",
                     DisplayArgs = "(2)",
                     Targets = new List<Register>() { new QubitRegister(0) },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "R",
-                            DisplayArgs = "(PauliX, 2)",
-                            Targets = new List<Register>() { new QubitRegister(0) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliX, 2)",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            }
                         }
-                    }
+                    )
                 },
                 Reset(0),
             };
@@ -392,15 +395,16 @@ namespace Tests.IQSharp
                     Gate = "Ry",
                     DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(0) },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "R",
-                            DisplayArgs = "(PauliY, 2.5)",
-                            Targets = new List<Register>() { new QubitRegister(0) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliY, 2.5)",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            }
                         }
-                    }
+                    )
                 },
                 ResetAll(new int[] { 0, 1, 2 }),
             };
@@ -488,15 +492,16 @@ namespace Tests.IQSharp
                 {
                     Gate = "HCirc",
                     Targets = new List<Register>() { new QubitRegister(1) },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "H",
-                            Targets = new List<Register>() { new QubitRegister(1) },
-                        },
-                        Reset(1),
-                    }
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                            Reset(1),
+                        }
+                    )
                 },
                 Reset(0),
             };
@@ -526,15 +531,16 @@ namespace Tests.IQSharp
                     Gate = "Ry",
                     DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(1) },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "R",
-                            DisplayArgs = "(PauliY, 2.5)",
-                            Targets = new List<Register>() { new QubitRegister(1) },
-                        },
-                    }
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliY, 2.5)",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                        }
+                    )
                 },
                 new Operation()
                 {
@@ -597,24 +603,25 @@ namespace Tests.IQSharp
                         new QubitRegister(1),
                         new QubitRegister(2),
                     },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "H",
-                            Targets = new List<Register>() { new QubitRegister(0) },
-                        },
-                        new Operation()
-                        {
-                            Gate = "H",
-                            Targets = new List<Register>() { new QubitRegister(1) },
-                        },
-                        new Operation()
-                        {
-                            Gate = "H",
-                            Targets = new List<Register>() { new QubitRegister(2) },
-                        },
-                    }
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(2) },
+                            },
+                        }
+                    )
                 },
                 ResetAll(new int[] { 0, 1, 2 }),
             };
@@ -642,43 +649,47 @@ namespace Tests.IQSharp
                         new QubitRegister(0),
                         new QubitRegister(1),
                     },
-                    Children = new List<Operation>()
-                    {
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
                         new Operation()
                         {
                             Gate = "ApplyDoubleX",
                             Targets = new List<Register>() { new QubitRegister(0) },
-                            Children = new List<Operation>() {
-                                new Operation()
-                                {
-                                    Gate = "X",
-                                    Targets = new List<Register>() { new QubitRegister(0) },
-                                },
-                                new Operation()
-                                {
-                                    Gate = "X",
-                                    Targets = new List<Register>() { new QubitRegister(0) },
-                                },
-                            }
+                            Children = ImmutableList<Operation>.Empty.AddRange(
+                                new [] {
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(0) },
+                                    },
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(0 ) },
+                                    },
+                                }
+                            )
                         },
                         new Operation()
                         {
                             Gate = "ApplyDoubleX",
                             Targets = new List<Register>() { new QubitRegister(1) },
-                            Children = new List<Operation>() {
-                                new Operation()
-                                {
-                                    Gate = "X",
-                                    Targets = new List<Register>() { new QubitRegister(1) },
-                                },
-                                new Operation()
-                                {
-                                    Gate = "X",
-                                    Targets = new List<Register>() { new QubitRegister(1) },
-                                },
-                            }
+                            Children = ImmutableList<Operation>.Empty.AddRange(
+                                new [] {
+                                        new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() {    new QubitRegister(1) },
+                                    },
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(1) },
+                                    },
+                                }
+                            )
                         },
-                    }
+                    })
                 },
                 ResetAll(new int[] { 0, 1 }),
             };
@@ -772,23 +783,24 @@ namespace Tests.IQSharp
                     Gate = "ForEach",
                     DisplayArgs = "(MResetZ)",
                     Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
-                    Children = new List<Operation>()
-                    {
-                        new Operation()
-                        {
-                            Gate = "MResetZ",
-                            IsMeasurement = true,
-                            Controls = new List<Register>() { new QubitRegister(0) },
-                            Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                        },
-                        new Operation()
-                        {
-                            Gate = "MResetZ",
-                            IsMeasurement = true,
-                            Controls = new List<Register>() { new QubitRegister(1) },
-                            Targets = new List<Register>() { new ClassicalRegister(1, 0) },
-                        },
-                    },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "MResetZ",
+                                IsMeasurement = true,
+                                Controls = new List<Register>() { new QubitRegister(0) },
+                                Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "MResetZ",
+                                IsMeasurement = true,
+                                Controls = new List<Register>() { new QubitRegister(1) },
+                                Targets = new List<Register>() { new ClassicalRegister(1, 0) },
+                            },
+                        }
+                    ),
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
