@@ -15,7 +15,7 @@
     <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Microsoft/IQSharp</PackageProjectUrl>
-    <PackageIconUrl>https://secure.gravatar.com/avatar/bd1f02955b2853ba0a3b1cdc2434e8ec.png</PackageIconUrl>
+    <PackageIcon>qdk-nuget-icon.png</PackageIcon>
     <PackageTags>Quantum Q# Qsharp</PackageTags>
     <PackageId>Microsoft.Quantum.IQSharp.Core</PackageId>
     <ContentTargetFolders>\</ContentTargetFolders>
@@ -31,12 +31,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\build\assets\qdk-nuget-icon.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.12.20063023-beta" />
-    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.12.20063023-beta" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20063023-beta" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.12.20073008-beta" />
+    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.12.20073008-beta" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20073008-beta" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>

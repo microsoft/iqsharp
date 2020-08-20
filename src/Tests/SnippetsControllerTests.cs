@@ -176,7 +176,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public void IdentifyOperations()
         {
-            var compiler = new CompilerService();
+            var compiler = new CompilerService(null, null);
 
             var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).ToArray();
 

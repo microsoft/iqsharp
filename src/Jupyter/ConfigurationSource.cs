@@ -32,7 +32,27 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         void Persist();
 
-        private T GetOptionOrDefault<T>(string optionName, T defaultValue) =>
+        /// <summary>
+        ///     Given the name for a configuration and a default value,
+        ///     returns the given option if it exists, or the default if the
+        ///     user has not specified that option.
+        /// </summary>
+        /// <param name="optionName">
+        ///     Name of the option to be retrieved.
+        /// </param>
+        /// <param name="defaultValue">
+        ///     Value to be returned when the option specified by
+        ///     <paramref name="optionName" /> has not been set.
+        /// </param>
+        /// <typeparam name="T">
+        ///     The expected type of the given option.
+        /// </typeparam>
+        /// <returns>
+        ///     The value of the option specified by
+        ///     <paramref name="optionName" /> if it exists, otherwise
+        ///     the value of <paramref name="defaultValue" />.
+        /// </returns>
+        public T GetOptionOrDefault<T>(string optionName, T defaultValue) =>
             Configuration.TryGetValue(optionName, out var token)
             ? token.ToObject<T>() ?? defaultValue
             : defaultValue;
@@ -80,7 +100,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         /// <summary>
         ///     Allows for options to change measurement probability precision when viewing
-        ///     measurement <span class="x x-first x-last">probabilities </span>in a decimal format. 
+        ///     measurement <span class="x x-first x-last">probabilities</span> in a decimal format. 
         /// </summary>
         public int MeasurementDisplayPrecision =>
             GetOptionOrDefault("dump.measurementDisplayPrecision", 4);
@@ -91,6 +111,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public bool MeasurementDisplayHistogram =>
             GetOptionOrDefault("dump.measurementDisplayHistogram", true);
+
+        /// <summary>
+        ///     Allows for setting the default depth for visualizing Q# operations using the
+        ///     <c>%trace</c> command.
+        /// </summary>
+        public int TraceVisualizationDefaultDepth =>
+            GetOptionOrDefault("trace.defaultDepth", 1);
     }
 
 

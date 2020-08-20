@@ -112,6 +112,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new ResourcesEstimator().WithStackTraceDisplay(channel);
+            qsim.OnDisplayableDiagnostic += channel.Display;
             qsim.DisableLogToConsole();
 
             await symbol.Operation.RunAsync(qsim, inputParameters);

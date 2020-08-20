@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -89,7 +87,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     If `dump.measurementDisplayHistogram` is set to `true`, displays the
                     histogram representation of the state of the simulator underneath the original chart output.
 
+                    **`trace.defaultDepth`**
 
+                    **Value:** positive integer (default `1`)
+
+                    Configures the default depth used in the `%trace` command for visualizing Q# operations.
                 ".Dedent(),
                 Examples = new []
                 {

@@ -97,7 +97,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // Next, we attach the display channel's standard output handling
             // to the log event.
             simulator.OnLog += channel.Stdout;
-            simulator.OnDisplayableDiagnostic += channel.Display;
 
             // Next, we register the generic version of the DumpMachine callable
             // as an ICallable with the simulator. Below, we'll provide our
