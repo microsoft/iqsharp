@@ -60,18 +60,6 @@ namespace Tests.ExecutionPathTracer {
         }
     }
 
-    operation FooBar(q : Qubit) : Unit {
-        H(q);
-        X(q);
-    }
-
-    operation Depth2Circ() : Unit {
-        using (q = Qubit()) {
-            FooBar(q);
-            H(q);
-        }
-    }
-
     operation PartialOpCirc() : Unit {
         using (qs = Qubit[3]) {
             (Controlled H(qs[0..1], _))(qs[2]);

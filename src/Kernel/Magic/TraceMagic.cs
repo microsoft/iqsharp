@@ -21,14 +21,26 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     {
         /// <summary>
         ///     Initializes <see cref="ExecutionPathVisualizerContent"/> with the
-        ///     given <see cref="ExecutionPath"/> (as a <see cref="JToken"/>), HTML div ID,
-        ///     and the visualization style of the output circuit.
+        ///     given <see cref="ExecutionPath"/>.
         /// </summary>
-        public ExecutionPathVisualizerContent(JToken executionPath, string id, TraceVisualizationStyle style)
+        /// <param name="executionPath">
+        ///     <see cref="ExecutionPath"/> (as a <see cref="JToken"/>) to be visualized.
+        /// </param>
+        /// <param name="id">
+        ///     HTML div ID to inject visualization into.
+        /// </param>
+        /// <param name="renderDepth">
+        ///     The initial renderDepth at which to visualize the execution path.
+        /// </param>
+        /// <param name="style">
+        ///     The  <see cref="TraceVisualizationStyle"/> for visualizing the execution path.
+        /// </param>
+        public ExecutionPathVisualizerContent(JToken executionPath, string id, int renderDepth, TraceVisualizationStyle style)
         {
             this.ExecutionPath = executionPath;
             this.Id = id;
             this.Style = style.ToString();
+            this.RenderDepth = renderDepth;
         }
 
         /// <summary>
@@ -48,6 +60,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         [JsonProperty("style")]
         public string Style { get; }
+
+        /// <summary>
+        ///     Initial depth at which to render operations used in the execution path.
+        /// </summary>
+        [JsonProperty("renderDepth")]
+        public int RenderDepth { get; }
     }
 
     /// <summary>
@@ -150,7 +168,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             );
             if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
 
-            var tracer = new ExecutionPathTracer.ExecutionPathTracer(depth);
+            var tracer = new ExecutionPathTracer.ExecutionPathTracer();
 
             // Simulate operation and attach `ExecutionPathTracer` to trace out operations performed
             // in its execution path
@@ -172,6 +190,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var content = new ExecutionPathVisualizerContent(
                 executionPathJToken,
                 divId,
+                depth,
                 this.ConfigurationSource.TraceVisualizationStyle
             );
             channel.DisplayUpdatable(new DisplayableHtmlElement($"<div id='{divId}' />"));
