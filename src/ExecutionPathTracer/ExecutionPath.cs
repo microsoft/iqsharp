@@ -142,6 +142,12 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         public bool IsMeasurement { get; set; }
 
         /// <summary>
+        /// True if operation is a classically-controlled operations.
+        /// </summary>
+        [JsonProperty("isConditional")]
+        public bool IsConditional { get; set; }
+
+        /// <summary>
         /// True if operation is a controlled operations.
         /// </summary>
         [JsonProperty("isControlled")]
