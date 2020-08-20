@@ -69,7 +69,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
 
     chart.data = {
-        labels: Array.from(Array(nBasisStates).keys()).map(idx => {
+        labels: Array.from(Array(nBasisStates), (_, idx) => {
             let bitstring = (idx >>> 0).toString(2).padStart(nBitLength, "0");
             return `|${bitstring}⟩`;
         }), //basis state labels
