@@ -327,7 +327,7 @@ namespace Tests.IQSharp
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
-            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual(2, result.Length);
             Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result[0]);
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
