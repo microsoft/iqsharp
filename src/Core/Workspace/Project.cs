@@ -208,7 +208,7 @@ namespace Microsoft.Quantum.IQSharp
             var defaultProject = new Project(string.Empty, rootFolder, cacheFolder);
             if (skipAutoLoadProject)
             {
-                logger?.LogInformation("Not looking for .csproj to load automatically, because skipAutoLoadProject was specified " +
+                logger?.LogDebug("Not looking for .csproj to load automatically, because skipAutoLoadProject was specified " +
                     "via --skipAutoLoadProject command line switch or via IQSHARP_SKIP_AUTO_LOAD_PROJECT environment variable.");
                 return defaultProject;
             }
@@ -216,7 +216,7 @@ namespace Microsoft.Quantum.IQSharp
             var projectFiles = Directory.EnumerateFiles(rootFolder, "*.csproj", SearchOption.TopDirectoryOnly);
             if (!projectFiles.Any())
             {
-                logger?.LogInformation($"No .csproj file found in workspace root {rootFolder}. Will compile only .qs files in this folder.");
+                logger?.LogDebug($"No .csproj file found in workspace root {rootFolder}. Will compile only .qs files in this folder.");
                 return defaultProject;
             }
 
@@ -225,20 +225,23 @@ namespace Microsoft.Quantum.IQSharp
                 .Where(project => project.UsesQuantumSdk);
             if (!projects.Any())
             {
-                logger?.LogInformation($"No .csproj file referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder}. " +
+                logger?.LogDebug($"No .csproj file referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder}. " +
                     "Will compile only .qs files in this folder.");
                 return defaultProject;
             }
 
-            if (projects.Count() != 1)
+            var defaultShouldAutoLoad = false; // REL0920: Change this default value in the future and update messaging below.
+            var autoLoadProjects = projects.Where(project => project.ShouldAutoLoad.GetValueOrDefault(defaultShouldAutoLoad));
+            if (autoLoadProjects.Count() != 1)
             {
-                logger?.LogWarning($"Multiple .csproj files referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder}. " +
-                    "Project auto-load is only supported when a single Microsoft.Quantum.Sdk project is present. " +
-                    "Will compile only .qs files in this folder.");
+                logger?.LogWarning($"Multiple .csproj files referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder} " +
+                    $"and are set to automatically load via the property {AutoLoadPropertyName}." +
+                    "Project auto-load is currently supported for only a single project. " +
+                    "Skipping project auto-load and will compile only .qs files in this folder.");
                 return defaultProject;
             }
 
-            var project = projects.Single();
+            var project = autoLoadProjects.Single();
             if (!project.ShouldAutoLoad.HasValue)
             {
                 logger?.LogWarning($"Future deprecation warning: Found .csproj referencing Microsoft.Quantum.Sdk at {project.ProjectFile}, " +
@@ -251,10 +254,9 @@ namespace Microsoft.Quantum.IQSharp
                 return defaultProject;
             }
 
-            var defaultShouldAutoLoad = false;
             if (!project.ShouldAutoLoad.GetValueOrDefault(defaultShouldAutoLoad))
             {
-                logger?.LogInformation($"Found .csproj file {project.ProjectFile}, but {AutoLoadPropertyName} is disabled. " +
+                logger?.LogDebug($"Found .csproj file {project.ProjectFile}, but {AutoLoadPropertyName} is disabled. " +
                     "Skipping load of this project. Will compile only .qs files in this folder.");
                 return defaultProject;
             }

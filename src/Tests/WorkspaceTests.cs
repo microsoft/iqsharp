@@ -71,6 +71,8 @@ namespace Tests.IQSharp
         [TestMethod]
         public void ProjectReferencesWorkspace()
         {
+            // Loading this workspace should succeed and automatically pull in the referenced projects
+            // Workspace.ProjectReferences.ProjectA and Workspace.ProjectReferences.ProjectB.
             var ws = Startup.Create<Workspace>("Workspace.ProjectReferences");
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
@@ -78,6 +80,7 @@ namespace Tests.IQSharp
             var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
         }
 
         [TestMethod]
@@ -90,7 +93,7 @@ namespace Tests.IQSharp
             Assert.IsTrue(ws.HasErrors);
 
             // Loading this workspace should succeed, and its Q# operations should be available, but the .csproj
-            // reference should not be loaded because the .csproj does not specify <IQSharpLoadAutomatically>.
+            // reference should not be loaded because the .csproj specifies <IQSharpLoadAutomatically> as false.
             ws = Startup.Create<Workspace>("Workspace.ProjectReferences.ProjectB");
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
