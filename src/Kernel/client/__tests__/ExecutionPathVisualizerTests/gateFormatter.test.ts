@@ -433,13 +433,8 @@ describe('Testing _createGate', () => {
         expect(_createGate(['<line />'])).toEqual("<g class='gate'>\n<line />\n</g>");
     });
     test('With metadata', () => {
-        expect(_createGate(['<line />'], { a: 1, b: 2 })).toEqual(
-            `<g class='gate' data-metadata='{"a":1,"b":2}'>\n<line />\n</g>`,
-        );
-    });
-    test('With metadata containing string', () => {
-        expect(_createGate(['<line />'], { foo: 'bar' })).toEqual(
-            `<g class='gate' data-metadata='{"foo":"bar"}'>\n<line />\n</g>`,
+        expect(_createGate(['<line />'], { a: '1', b: '2' })).toEqual(
+            `<g class='gate' data-a='1' data-b='2'>\n<line />\n</g>`,
         );
     });
 });
@@ -577,7 +572,7 @@ describe('Testing _formatGate', () => {
             targetsY: [[startY]],
             label: 'H',
             width: minGateWidth,
-            customMetadata: { a: 1, b: 2 },
+            dataAttributes: { a: '1', b: '2' },
         };
         expect(_formatGate(metadata)).toMatchSnapshot();
     });

@@ -29,6 +29,13 @@ export enum ConditionalRender {
 }
 
 /**
+ * Custom data attributes (e.g. data-{attr}="{val}")
+ */
+export interface DataAttributes {
+    [attr: string]: string;
+}
+
+/**
  * Represents an operation and the registers it acts on.
  */
 export interface Operation {
@@ -52,6 +59,6 @@ export interface Operation {
     targets: Register[];
     /** Specify conditions on when to render operation. */
     conditionalRender?: ConditionalRender;
-    /** Custom user metadata. */
-    customMetadata?: Record<string, unknown>;
+    /** Custom data attributes to attach to gate element. */
+    dataAttributes?: DataAttributes;
 }

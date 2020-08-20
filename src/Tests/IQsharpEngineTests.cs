@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -85,7 +86,7 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        private async Task AssertTrace(string name, ExecutionPath expectedPath)
+        private async Task AssertTrace(string name, ExecutionPath expectedPath, int expectedDepth)
         {
             var engine = Init("Workspace.ExecutionPathTracer");
             var snippets = engine.Snippets as Snippets;
@@ -118,6 +119,8 @@ namespace Tests.IQSharp
             var content = message.Content as ExecutionPathVisualizerContent;
             Assert.IsNotNull(content);
 
+            Assert.AreEqual(expectedDepth, content.RenderDepth);
+
             var path = content.ExecutionPath.ToObject<ExecutionPath>();
             Assert.IsNotNull(path);
             Assert.AreEqual(expectedPath.ToJson(), path.ToJson());
@@ -129,7 +132,6 @@ namespace Tests.IQSharp
             var engine = Init();
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
-
 
         [TestMethod]
         public async Task CompileAndSimulate()
@@ -458,7 +460,6 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
         }
 
-
         [TestMethod]
         public void TestResolver()
         {
@@ -533,63 +534,48 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestTraceMagic()
         {
-            await AssertTrace("HCirc", new ExecutionPath(
+            await AssertTrace("FooCirc", new ExecutionPath(
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "Reset",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
+                        Gate = "FooCirc",
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
+                    }
                 }
-            ));
+            ), 1);
 
-            // Should only see depth-1 operations
-            await AssertTrace("Depth2Circ", new ExecutionPath(
+            // Depth 2
+            await AssertTrace("FooCirc --depth=2", new ExecutionPath(
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
-                        Gate = "FooBar",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
+                        Gate = "FooCirc",
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
+                    }
                 }
-            ));
-
-            // Should see depth-2 operations
-            await AssertTrace("Depth2Circ --depth=2", new ExecutionPath(
-                new QubitDeclaration[] { new QubitDeclaration(0) },
-                new Operation[]
-                {
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "X",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                }
-            ));
+            ), 2);
         }
     }
 }
