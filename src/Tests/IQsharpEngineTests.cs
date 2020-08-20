@@ -342,7 +342,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(3, result.Length);
 
             // Now it should compile:
             await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");
