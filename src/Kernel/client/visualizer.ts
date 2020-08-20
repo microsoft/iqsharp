@@ -86,6 +86,7 @@ export class Visualizer {
         const container: HTMLElement | null = document.getElementById(this.id);
         if (container == null) throw new Error(`Div with ID ${this.id} not found.`);
         container.innerHTML = html;
+        container.querySelector('svg').style.maxWidth = 'none';
         this.displayedCircuit = circuit;
 
         // Handle click events
