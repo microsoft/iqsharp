@@ -30,7 +30,7 @@ if ("$Env:BUILD_RELEASETYPE" -eq "release") {
 # easily inject the right base image into the FROM line. In doing so,
 # the build context should include the build_docs.py script that we need.
 $dockerfile = @"
-FROM ${Env:DOCKER_PREFIX}iqsharp-base:${Env:BUILD_BUILDNUMBER}
+FROM ${Env:DOCKER_PREFIX}iqsharp-base:${Env:SEMVER_VERSION}
 
 USER root
 RUN pip install click ruamel.yaml
