@@ -230,7 +230,7 @@ namespace Microsoft.Quantum.IQSharp
                 return defaultProject;
             }
 
-            var defaultShouldAutoLoad = false; // REL0920: Change this default value in the future and update messaging below.
+            var defaultShouldAutoLoad = false; // REL1220: Change this default value in the future and update messaging below.
             var autoLoadProjects = projects.Where(project => project.ShouldAutoLoad.GetValueOrDefault(defaultShouldAutoLoad));
             if (autoLoadProjects.Count() != 1)
             {
