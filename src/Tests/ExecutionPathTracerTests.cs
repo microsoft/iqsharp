@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using Microsoft.Quantum.IQSharp;
@@ -25,7 +26,7 @@ namespace Tests.IQSharp
             return ws;
         }
 
-        public ExecutionPath GetExecutionPath(string name, int depth = 1)
+        public ExecutionPath GetExecutionPath(string name)
         {
             if (this.operations == null)
             {
@@ -36,12 +37,58 @@ namespace Tests.IQSharp
             var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
             Assert.IsNotNull(op);
 
-            var tracer = new ExecutionPathTracer(depth);
+            var tracer = new ExecutionPathTracer();
             using var qsim = new QuantumSimulator().WithExecutionPathTracer(tracer);
             op.RunAsync(qsim, new Dictionary<string, string>()).Wait();
 
             return tracer.GetExecutionPath();
         }
+
+        public void AssertExecutionPathsEqual(ExecutionPath expected, ExecutionPath actual)
+        {
+            // Step in one depth lower
+            actual = new ExecutionPath(actual.Qubits, actual.Operations.First().Children?.ToList() ?? new List<Operation>());
+            // Prune non-deterministic gates as it's difficult to test
+            PruneNonDeterministicGates(actual.Operations);
+            Assert.AreEqual(expected.ToJson(), actual.ToJson());
+        }
+
+        private void PruneNonDeterministicGates(IEnumerable<Operation>? operations)
+        {
+            if (operations == null) return;
+            foreach (var op in operations)
+            {
+                // Remove all measurements within Reset gates and composite
+                // measurements (non-deterministic)
+                if (op.Gate == "Reset" || op.IsMeasurement) op.Children = null;
+                else PruneNonDeterministicGates(op.Children);
+            }
+        }
+
+        // Helper functions for tests
+        public Operation ControlledX(int[] controlId, int targetId) =>
+            new Operation()
+            {
+                Gate = "X",
+                IsControlled = true,
+                Controls = controlId.Select(id => new QubitRegister(id)),
+                Targets = new List<Register>() { new QubitRegister(targetId) },
+            };
+
+        public Operation Reset(int qId) =>
+            new Operation()
+            {
+                Gate = "Reset",
+                Targets = new List<Register>() { new QubitRegister(qId) },
+            };
+
+        public Operation ResetAll(int[] qIds) =>
+            new Operation()
+            {
+                Gate = "ResetAll",
+                Targets = qIds.Select(id => new QubitRegister(id)),
+                Children = ImmutableList<Operation>.Empty.AddRange(qIds.Select(id => Reset(id))),
+            };
     }
 
     [TestClass]
@@ -53,7 +100,7 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("HCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
@@ -62,14 +109,10 @@ namespace Tests.IQSharp
                     Gate = "H",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
+                Reset(0),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -91,7 +134,7 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -100,31 +143,16 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("CnotCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             var operations = new Operation[]
             {
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(0) },
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
+                ControlledX(new int[] { 0 }, 1),
+                ResetAll(new int[]{ 0, 1 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -133,37 +161,17 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("CcnotCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
-                new QubitDeclaration(2),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
+                new QubitDeclaration(2, 1),
             };
             var operations = new Operation[]
             {
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(2) },
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ControlledX(new int[] { 0, 2 }, 1),
+                ResetAll(new int[]{ 0, 1, 2 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -181,10 +189,17 @@ namespace Tests.IQSharp
                 {
                     Gate = "SWAP",
                     Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            ControlledX(new int[] { 0 }, 1),
+                            ControlledX(new int[] { 1 }, 0),
+                            ControlledX(new int[] { 0 }, 1),
+                        }
+                    )
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -193,7 +208,7 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("RxCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
@@ -202,15 +217,21 @@ namespace Tests.IQSharp
                     Gate = "Rx",
                     DisplayArgs = "(2)",
                     Targets = new List<Register>() { new QubitRegister(0) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliX, 2)",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            }
+                        }
+                    )
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
+                Reset(0),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -219,7 +240,7 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("AdjointHCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
@@ -229,14 +250,10 @@ namespace Tests.IQSharp
                     IsAdjoint = true,
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
+                Reset(0),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -245,35 +262,20 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("ControlledXCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             var operations = new Operation[]
             {
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(0) },
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
+                ControlledX(new int[] { 0 }, 1),
+                ResetAll(new int[]{ 0, 1 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
 
             // JSON should be the same as CNOT's
             var path2 = GetExecutionPath("CnotCirc");
-            Assert.AreEqual(path.ToJson(), path2.ToJson());
+            AssertExecutionPathsEqual(expected, path2);
         }
 
         [TestMethod]
@@ -282,8 +284,8 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("ControlledAdjointSCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             var operations = new Operation[]
             {
@@ -295,19 +297,10 @@ namespace Tests.IQSharp
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new QubitRegister(1) },
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
+                ResetAll(new int[]{ 0, 1 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
     }
 
@@ -332,7 +325,7 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -356,7 +349,7 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -365,58 +358,17 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("UnusedQubitCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(2),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(2, 1),
             };
             var operations = new Operation[]
             {
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(2) },
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ControlledX(new int[] { 2 }, 0),
+                Reset(0),
+                Reset(2),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
-        }
-
-        [TestMethod]
-        public void Depth2Test()
-        {
-            var path = GetExecutionPath("Depth2Circ", 2);
-            var qubits = new QubitDeclaration[] { new QubitDeclaration(0) };
-            var operations = new Operation[]
-            {
-                new Operation()
-                {
-                    Gate = "H",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "X",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "H",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-            };
-            var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -425,9 +377,9 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("PartialOpCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
-                new QubitDeclaration(2),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
+                new QubitDeclaration(2, 1),
             };
             var operations = new Operation[]
             {
@@ -443,25 +395,21 @@ namespace Tests.IQSharp
                     Gate = "Ry",
                     DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(0) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliY, 2.5)",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            }
+                        }
+                    )
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ResetAll(new int[] { 0, 1, 2 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -469,14 +417,9 @@ namespace Tests.IQSharp
         {
             var path = GetExecutionPath("EmptyCirc");
             var qubits = new QubitDeclaration[] { };
-            var operations = new Operation[] {
-                new Operation()
-                {
-                    Gate = "EmptyCirc",
-                },
-            };
+            var operations = new Operation[] { };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -493,7 +436,7 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -510,7 +453,7 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -527,14 +470,17 @@ namespace Tests.IQSharp
                 },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
         public void NestedTest()
         {
             var path = GetExecutionPath("NestedCirc");
-            var qubits = new QubitDeclaration[] { new QubitDeclaration(0) };
+            var qubits = new QubitDeclaration[] {
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
+            };
             var operations = new Operation[]
             {
                 new Operation()
@@ -545,15 +491,22 @@ namespace Tests.IQSharp
                 new Operation()
                 {
                     Gate = "HCirc",
+                    Targets = new List<Register>() { new QubitRegister(1) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                            Reset(1),
+                        }
+                    )
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
+                Reset(0),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -562,9 +515,9 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("BigCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0, 1),
-                new QubitDeclaration(1),
-                new QubitDeclaration(2),
+                new QubitDeclaration(0, 2),
+                new QubitDeclaration(1, 1),
+                new QubitDeclaration(2, 1),
             };
             var operations = new Operation[]
             {
@@ -578,6 +531,16 @@ namespace Tests.IQSharp
                     Gate = "Ry",
                     DisplayArgs = "(2.5)",
                     Targets = new List<Register>() { new QubitRegister(1) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "R",
+                                DisplayArgs = "(PauliY, 2.5)",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                        }
+                    )
                 },
                 new Operation()
                 {
@@ -590,20 +553,8 @@ namespace Tests.IQSharp
                     Gate = "X",
                     Targets = new List<Register>() { new QubitRegister(0) },
                 },
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
-                new Operation()
-                {
-                    Gate = "X",
-                    IsControlled = true,
-                    Controls = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ControlledX(new int[] { 0, 1 }, 2),
+                ControlledX(new int[] { 0, 1 }, 2),
                 new Operation()
                 {
                     Gate = "Bar",
@@ -620,24 +571,10 @@ namespace Tests.IQSharp
                     Controls = new List<Register>() { new QubitRegister(0) },
                     Targets = new List<Register>() { new ClassicalRegister(0, 0) },
                 },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ResetAll(new int[] { 0, 1, 2 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
     }
 
@@ -650,45 +587,46 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("ApplyToEachCirc");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
-                new QubitDeclaration(2),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
+                new QubitDeclaration(2, 1),
             };
             var operations = new Operation[]
             {
                 new Operation()
                 {
-                    Gate = "H",
-                    Targets = new List<Register>() { new QubitRegister(0) },
+                    Gate = "ApplyToEach",
+                    DisplayArgs = "(H)",
+                    Targets = new List<Register>()
+                    {
+                        new QubitRegister(0),
+                        new QubitRegister(1),
+                        new QubitRegister(2),
+                    },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(1) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "H",
+                                Targets = new List<Register>() { new QubitRegister(2) },
+                            },
+                        }
+                    )
                 },
-                new Operation()
-                {
-                    Gate = "H",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "H",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(2) },
-                },
+                ResetAll(new int[] { 0, 1, 2 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -698,81 +636,65 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("ApplyToEachDepth2Circ");
             var qubits = new QubitDeclaration[]
             {
-                new QubitDeclaration(0),
-                new QubitDeclaration(1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             var operations = new Operation[]
             {
                 new Operation()
                 {
-                    Gate = "ApplyDoubleX",
-                    Targets = new List<Register>() { new QubitRegister(0) },
+                    Gate = "ApplyToEach",
+                    DisplayArgs = "(ApplyDoubleX)",
+                    Targets = new List<Register>() {
+                        new QubitRegister(0),
+                        new QubitRegister(1),
+                    },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                        new Operation()
+                        {
+                            Gate = "ApplyDoubleX",
+                            Targets = new List<Register>() { new QubitRegister(0) },
+                            Children = ImmutableList<Operation>.Empty.AddRange(
+                                new [] {
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(0) },
+                                    },
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(0 ) },
+                                    },
+                                }
+                            )
+                        },
+                        new Operation()
+                        {
+                            Gate = "ApplyDoubleX",
+                            Targets = new List<Register>() { new QubitRegister(1) },
+                            Children = ImmutableList<Operation>.Empty.AddRange(
+                                new [] {
+                                        new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() {    new QubitRegister(1) },
+                                    },
+                                    new Operation()
+                                    {
+                                        Gate = "X",
+                                        Targets = new List<Register>() { new QubitRegister(1) },
+                                    },
+                                }
+                            )
+                        },
+                    })
                 },
-                new Operation()
-                {
-                    Gate = "ApplyDoubleX",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "Reset",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
+                ResetAll(new int[] { 0, 1 }),
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
-
-            // Test depth 2
-            path = GetExecutionPath("ApplyToEachDepth2Circ", 2);
-            qubits = new QubitDeclaration[]
-            {
-                new QubitDeclaration(0, 1),
-                new QubitDeclaration(1, 1),
-            };
-            operations = new Operation[]
-            {
-                new Operation()
-                {
-                    Gate = "X",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "X",
-                    Targets = new List<Register>() { new QubitRegister(0) },
-                },
-                new Operation()
-                {
-                    Gate = "X",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "X",
-                    Targets = new List<Register>() { new QubitRegister(1) },
-                },
-                new Operation()
-                {
-                    Gate = "M",
-                    IsMeasurement = true,
-                    Controls = new List<Register>() { new QubitRegister(0) },
-                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                },
-                new Operation()
-                {
-                    Gate = "M",
-                    IsMeasurement = true,
-                    Controls = new List<Register>() { new QubitRegister(1) },
-                    Targets = new List<Register>() { new ClassicalRegister(1, 0) },
-                },
-            };
-            expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
     }
 
@@ -785,20 +707,20 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("MResetXCirc");
             var qubits = new QubitDeclaration[]
             {
-                    new QubitDeclaration(0, 1),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
-                    new Operation()
-                    {
-                        Gate = "MResetX",
-                        IsMeasurement = true,
-                        Controls = new List<Register>() { new QubitRegister(0) },
-                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                    },
+                new Operation()
+                {
+                    Gate = "MResetX",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -807,20 +729,20 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("MResetYCirc");
             var qubits = new QubitDeclaration[]
             {
-                    new QubitDeclaration(0, 1),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
-                    new Operation()
-                    {
-                        Gate = "MResetY",
-                        IsMeasurement = true,
-                        Controls = new List<Register>() { new QubitRegister(0) },
-                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                    },
+                new Operation()
+                {
+                    Gate = "MResetY",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -829,20 +751,20 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("MResetZCirc");
             var qubits = new QubitDeclaration[]
             {
-                    new QubitDeclaration(0, 1),
+                new QubitDeclaration(0, 1),
             };
             var operations = new Operation[]
             {
-                    new Operation()
-                    {
-                        Gate = "MResetZ",
-                        IsMeasurement = true,
-                        Controls = new List<Register>() { new QubitRegister(0) },
-                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                    },
+                new Operation()
+                {
+                    Gate = "MResetZ",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
 
         [TestMethod]
@@ -851,28 +773,38 @@ namespace Tests.IQSharp
             var path = GetExecutionPath("ForEachMeasureCirc");
             var qubits = new QubitDeclaration[]
             {
-                    new QubitDeclaration(0, 1),
-                    new QubitDeclaration(1, 1),
+                new QubitDeclaration(0, 1),
+                new QubitDeclaration(1, 1),
             };
             var operations = new Operation[]
             {
-                    new Operation()
-                    {
-                        Gate = "MResetZ",
-                        IsMeasurement = true,
-                        Controls = new List<Register>() { new QubitRegister(0) },
-                        Targets = new List<Register>() { new ClassicalRegister(0, 0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "MResetZ",
-                        IsMeasurement = true,
-                        Controls = new List<Register>() { new QubitRegister(1) },
-                        Targets = new List<Register>() { new ClassicalRegister(1, 0) },
-                    },
+                new Operation()
+                {
+                    Gate = "ForEach",
+                    DisplayArgs = "(MResetZ)",
+                    Targets = new List<Register>() { new QubitRegister(0), new QubitRegister(1) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "MResetZ",
+                                IsMeasurement = true,
+                                Controls = new List<Register>() { new QubitRegister(0) },
+                                Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                            },
+                            new Operation()
+                            {
+                                Gate = "MResetZ",
+                                IsMeasurement = true,
+                                Controls = new List<Register>() { new QubitRegister(1) },
+                                Targets = new List<Register>() { new ClassicalRegister(1, 0) },
+                            },
+                        }
+                    ),
+                },
             };
             var expected = new ExecutionPath(qubits, operations);
-            Assert.AreEqual(expected.ToJson(), path.ToJson());
+            AssertExecutionPathsEqual(expected, path);
         }
     }
 }

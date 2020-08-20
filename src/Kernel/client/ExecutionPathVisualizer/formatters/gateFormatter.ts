@@ -11,6 +11,7 @@ import {
     classicalRegHeight,
 } from '../constants';
 import { group, controlDot, line, box, text, arc, dashedLine, dashedBox } from './formatUtils';
+import { DataAttributes } from '../circuit';
 
 /**
  * Given an array of operations (in metadata format), return the SVG representation.
@@ -28,15 +29,15 @@ const formatGates = (opsMetadata: Metadata[]): string => {
  * Groups SVG elements into a gate SVG group.
  *
  * @param svgElems       Array of SVG elements.
- * @param customMetadata Custom gate metadata to be attached to SVG group.
+ * @param dataAttributes Custom data attributes to be attached to SVG group.
  *
  * @returns SVG representation of a gate.
  */
-const _createGate = (svgElems: string[], customMetadata?: Record<string, unknown>): string =>
-    group(svgElems, {
-        class: 'gate',
-        'data-metadata': JSON.stringify(customMetadata),
-    });
+const _createGate = (svgElems: string[], dataAttributes: DataAttributes = {}): string => {
+    const attributes: { [attr: string]: string } = { class: 'gate' };
+    Object.entries(dataAttributes).forEach(([attr, val]) => (attributes[`data-${attr}`] = val));
+    return group(svgElems, attributes);
+};
 
 /**
  * Takes in an operation's metadata and formats it into SVG.
@@ -46,16 +47,16 @@ const _createGate = (svgElems: string[], customMetadata?: Record<string, unknown
  * @returns SVG representation of gate.
  */
 const _formatGate = (metadata: Metadata): string => {
-    const { type, x, controlsY, targetsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, targetsY, label, displayArgs, dataAttributes, width } = metadata;
     switch (type) {
         case GateType.Measure:
-            return _createGate([_measure(x, controlsY[0])], customMetadata);
+            return _createGate([_measure(x, controlsY[0])], dataAttributes);
         case GateType.Unitary:
-            return _createGate([_unitary(label, x, targetsY as number[][], width, displayArgs)], customMetadata);
+            return _createGate([_unitary(label, x, targetsY as number[][], width, displayArgs)], dataAttributes);
         case GateType.Swap:
             return controlsY.length > 0
                 ? _controlledGate(metadata)
-                : _createGate([_swap(x, targetsY as number[])], customMetadata);
+                : _createGate([_swap(x, targetsY as number[])], dataAttributes);
         case GateType.Cnot:
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
@@ -198,7 +199,7 @@ const _cross = (x: number, y: number): string => {
  */
 const _controlledGate = (metadata: Metadata): string => {
     const targetGateSvgs: string[] = [];
-    const { type, x, controlsY, label, displayArgs, customMetadata, width } = metadata;
+    const { type, x, controlsY, label, displayArgs, dataAttributes, width } = metadata;
     let { targetsY } = metadata;
 
     // Get SVG for target gates
@@ -223,7 +224,7 @@ const _controlledGate = (metadata: Metadata): string => {
     const maxY: number = Math.max(...controlsY, ...(targetsY as number[]));
     const minY: number = Math.min(...controlsY, ...(targetsY as number[]));
     const vertLine: string = line(x, minY, x, maxY);
-    const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], customMetadata);
+    const svg: string = _createGate([vertLine, ...controlledDotsSvg, ...targetGateSvgs], dataAttributes);
     return svg;
 };
 
@@ -252,7 +253,7 @@ const _oplus = (x: number, y: number, r = 15): string => {
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    const { controlsY, conditionalChildren, customMetadata } = metadata;
+    const { controlsY, conditionalChildren, dataAttributes } = metadata;
     const targetsY: number[] = metadata.targetsY as number[];
     let { x, width, htmlClass } = metadata;
 
@@ -285,12 +286,11 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     const box: string = dashedBox(x, y, width, height, 'classical-container');
 
     // Display controlled operation in initial "unknown" state
-    const svg: string = group([horLine, vertLine, controlCircle, childrenZero, childrenOne, box], {
-        class: `${htmlClass}-group classically-controlled-unknown`,
-        'data-metadata': JSON.stringify(customMetadata),
-    });
+    const attributes: { [attr: string]: string } = { class: `${htmlClass}-group classically-controlled-unknown` };
+    if (dataAttributes != null)
+        Object.entries(dataAttributes).forEach(([attr, val]) => (attributes[`data-${attr}`] = val));
 
-    return svg;
+    return group([horLine, vertLine, controlCircle, childrenZero, childrenOne, box], attributes);
 };
 
 /**
