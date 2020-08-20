@@ -185,7 +185,7 @@ namespace Microsoft.Quantum.IQSharp
 
         private void ResolveProjectReferences()
         {
-            var projects = new List<Project>() { Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject) };
+            var projects = new List<Project>() { Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject, Logger) };
             projects.AddRange(UserAddedProjects);
 
             var projectsToResolve = projects.Distinct(new ProjectFileComparer()).ToList();

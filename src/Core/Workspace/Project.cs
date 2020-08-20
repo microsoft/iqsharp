@@ -3,10 +3,6 @@
 
 #nullable enable
 
-using NuGet.Frameworks;
-using NuGet.Packaging;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +10,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Microsoft.Extensions.Logging;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -143,6 +144,22 @@ namespace Microsoft.Quantum.IQSharp
         internal bool UsesQuantumSdk =>
             Sdk.StartsWith("Microsoft.Quantum.Sdk");
 
+        private const string AutoLoadPropertyName = "IQSharpLoadAutomatically";
+        private bool? ShouldAutoLoad
+        {
+            get 
+            {
+                if (string.IsNullOrEmpty(ProjectFile)) return false;
+                var elementValue = XDocument.Load(ProjectFile)
+                    .XPathSelectElements($"//{AutoLoadPropertyName}")
+                    .Select(element => element.Value)
+                    .FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(elementValue)) return null;
+                if (Boolean.TryParse(elementValue, out var shouldAutoLoad)) return shouldAutoLoad;
+                return null;
+            }
+        }
+
         internal bool IncludeSubdirectories =>
             !string.IsNullOrEmpty(ProjectFile);
 
@@ -184,13 +201,68 @@ namespace Microsoft.Quantum.IQSharp
         /// <param name="rootFolder">The path to the workspace folder.</param>
         /// <param name="cacheFolder">The path to the assembly cache folder.</param>
         /// <param name="skipAutoLoadProject">Whether to skip auto-loading the project file.</param>
+        /// <param name="logger">Used for reporting log messages.</param>
         /// <returns>The created <see cref="Project"/> object.</returns>
-        internal static Project FromWorkspaceFolder(string rootFolder, string cacheFolder, bool skipAutoLoadProject)
+        internal static Project FromWorkspaceFolder(string rootFolder, string cacheFolder, bool skipAutoLoadProject, ILogger? logger = null)
         {
+            var defaultProject = new Project(string.Empty, rootFolder, cacheFolder);
+            if (skipAutoLoadProject)
+            {
+                logger?.LogDebug("Not looking for .csproj to load automatically, because skipAutoLoadProject was specified " +
+                    "via --skipAutoLoadProject command line switch or via IQSHARP_SKIP_AUTO_LOAD_PROJECT environment variable.");
+                return defaultProject;
+            }
+
             var projectFiles = Directory.EnumerateFiles(rootFolder, "*.csproj", SearchOption.TopDirectoryOnly);
-            return (skipAutoLoadProject || projectFiles.Count() != 1)
-                ? new Project(string.Empty, rootFolder, cacheFolder)
-                : Project.FromProjectFile(projectFiles.Single(), cacheFolder);
+            if (!projectFiles.Any())
+            {
+                logger?.LogDebug($"No .csproj file found in workspace root {rootFolder}. Will compile only .qs files in this folder.");
+                return defaultProject;
+            }
+
+            var projects = projectFiles
+                .Select(projectFile => Project.FromProjectFile(projectFile, cacheFolder))
+                .Where(project => project.UsesQuantumSdk);
+            if (!projects.Any())
+            {
+                logger?.LogDebug($"No .csproj file referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder}. " +
+                    "Will compile only .qs files in this folder.");
+                return defaultProject;
+            }
+
+            var defaultShouldAutoLoad = false; // REL1220: Change this default value in the future and update messaging below.
+            var autoLoadProjects = projects.Where(project => project.ShouldAutoLoad.GetValueOrDefault(defaultShouldAutoLoad));
+            if (autoLoadProjects.Count() != 1)
+            {
+                logger?.LogWarning($"Multiple .csproj files referencing Microsoft.Quantum.Sdk found in workspace root {rootFolder} " +
+                    $"and are set to automatically load via the property {AutoLoadPropertyName}." +
+                    "Project auto-load is currently supported for only a single project. " +
+                    "Skipping project auto-load and will compile only .qs files in this folder.");
+                return defaultProject;
+            }
+
+            var project = autoLoadProjects.Single();
+            if (!project.ShouldAutoLoad.HasValue)
+            {
+                logger?.LogWarning($"Future deprecation warning: Found .csproj referencing Microsoft.Quantum.Sdk at {project.ProjectFile}, " +
+                    $"but the property {AutoLoadPropertyName} was not set. A default value of false is assumed. " +
+                    $"To load this project automatically, add <{AutoLoadPropertyName}>true</{AutoLoadPropertyName}> to the <PropertyGroup> " +
+                    $"of {project.ProjectFile}. To suppress this warning without loading the project automatically, " +
+                    $"add <{AutoLoadPropertyName}>false</{AutoLoadPropertyName}> to the <PropertyGroup> instead. " +
+                    "This behavior may change in a future version of IQ#, and projects without the " +
+                    $"{AutoLoadPropertyName} property may be loaded automatically by default.");
+                return defaultProject;
+            }
+
+            if (!project.ShouldAutoLoad.GetValueOrDefault(defaultShouldAutoLoad))
+            {
+                logger?.LogDebug($"Found .csproj file {project.ProjectFile}, but {AutoLoadPropertyName} is disabled. " +
+                    "Skipping load of this project. Will compile only .qs files in this folder.");
+                return defaultProject;
+            }
+
+            logger?.LogInformation($"Loading .csproj file {project.ProjectFile}.");
+            return project;
         }
 
         /// <summary>
