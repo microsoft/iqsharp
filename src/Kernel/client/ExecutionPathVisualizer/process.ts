@@ -208,7 +208,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
 
     const {
         gate,
-        customMetadata,
+        dataAttributes,
         displayArgs,
         isMeasurement,
         isConditional,
@@ -275,7 +275,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
     metadata.width = getGateWidth(metadata);
 
     // Set custom user-provided gate metadata
-    if (customMetadata != null) metadata.customMetadata = customMetadata;
+    if (dataAttributes != null) metadata.dataAttributes = dataAttributes;
 
     return metadata;
 };
