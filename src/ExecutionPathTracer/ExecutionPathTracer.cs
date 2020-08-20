@@ -75,6 +75,17 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
             // Add operation to parent operation's children
             parentOp.Children = (parentOp.Children ?? ImmutableList<Operation>.Empty).Add(currentOperation);
 
+            // If parent op is a conditional statement, the first child is rendered onZero and the second onOne
+            if (parentOp.Gate.StartsWith("ApplyIfElse"))
+            {
+                if (parentOp.Children.Count() == 1) currentOperation.ConditionalRender = ConditionalRender.OnZero;
+                else currentOperation.ConditionalRender = ConditionalRender.OnOne;
+            } else if (parentOp.ConditionalRender != null)
+            {
+                // Inherit parent's render condition
+                currentOperation.ConditionalRender = parentOp.ConditionalRender;
+            }
+
             // Add target qubits to parent
             parentOp.Targets = parentOp.Targets
                 .Concat(currentOperation.Targets.Where(reg => reg is QubitRegister))

@@ -99,6 +99,19 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
     }
 
     /// <summary>
+    /// Conditions on when to render the given operation.
+    /// </summary>
+    public enum ConditionalRender
+    {
+        /** Always rendered. */
+        Always,
+        /** Render classically-controlled operation when measurement is a zero. */
+        OnZero,
+        /** Render classically-controlled operation when measurement is a one. */
+        OnOne,
+    }
+
+    /// <summary>
     /// Represents an operation used in an execution path.
     /// </summary>
     public class Operation
@@ -151,6 +164,12 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// </summary>
         [JsonProperty("targets")]
         public IEnumerable<Register> Targets { get; set; } = new List<Register>();
+
+        /// <summary>
+        /// Specify conditions on when to render operation.
+        /// </summary>
+        [JsonProperty("conditionalRender")]
+        public ConditionalRender? ConditionalRender;
 
         /// <summary>
         /// Dictionary of data attributes to add to rendered gate element.
