@@ -130,5 +130,5 @@ if (-not $runDocker -or ($Env:ENABLE_PYTHON -eq "false")) {
     Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
 } else {
     Write-Host "##[info]Packing IQ# reference docs..."
-    & (Join-Path $PSScriptRoot "pack-docs.ps1");
+    & (Join-Path $PSScriptRoot "pack-docs.ps1") -Version ${Env:BUILD_BUILDNUMBER};
 }
