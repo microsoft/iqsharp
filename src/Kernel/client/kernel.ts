@@ -246,6 +246,7 @@ class Kernel {
                 const container: HTMLElement = document.getElementById(id);
                 if (container == null) throw new Error(`Div with ID ${id} not found.`);
                 container.innerHTML = html;
+                container.querySelector('svg').style.maxWidth = 'none';
             }
         );
     }
