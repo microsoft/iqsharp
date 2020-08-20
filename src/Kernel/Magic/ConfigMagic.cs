@@ -77,7 +77,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     **'dump.measurementDisplayPrecision'**
 
-                    **Value:** integer number such as '1' or '2' (default '4')
+                    **Value:** non-negative integer such as '1' or '2' (default '4')
 
                     Sets the precision of the measurement probability represented as a percentage when set to 'NumberOnly' or
                     'BarAndNumber'.
