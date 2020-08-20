@@ -28,7 +28,7 @@ __all__ = [
     'execute',
     'status',
     'output',
-    'jobs'
+    'jobs',
     'AzureTarget',
     'AzureJob',
     'AzureError'
