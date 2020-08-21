@@ -1,6 +1,6 @@
-import { minGateWidth, startX, gatePadding, GateType, controlBtnOffset, classicalBoxPadding } from './constants';
+import { minGateWidth, startX, gatePadding, controlBtnOffset, groupBoxPadding } from './constants';
 import { Operation, ConditionalRender } from './circuit';
-import { Metadata } from './metadata';
+import { Metadata, GateType } from './metadata';
 import { Register, RegisterMap, RegisterType } from './register';
 import { getGateWidth } from './utils';
 
@@ -201,7 +201,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         controlsY: [],
         targetsY: [],
         label: '',
-        width: minGateWidth,
+        width: -1,
     };
 
     if (op == null) return metadata;
@@ -217,6 +217,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         controls,
         targets,
         children,
+        conditionalRender,
     } = op;
 
     // Set y coords
@@ -246,12 +247,18 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         metadata.type = GateType.ClassicalControlled;
         metadata.conditionalChildren = [zeroGates, oneGates];
         // Add additional width from control button and inner box padding for dashed box
-        metadata.width = width + controlBtnOffset + classicalBoxPadding * 2;
+        metadata.width = width + controlBtnOffset + groupBoxPadding * 2;
 
         // Set targets to first and last quantum registers so we can render the surrounding box
         // around all quantum registers.
         const qubitsY: number[] = Object.values(registers).map(({ y }) => y);
         if (qubitsY.length > 0) metadata.targetsY = [Math.min(...qubitsY), Math.max(...qubitsY)];
+    } else if (conditionalRender == ConditionalRender.AsGroup && (children?.length || 0) > 0) {
+        const childrenInstrs = processOperations(children as Operation[], registers);
+        metadata.type = GateType.Group;
+        metadata.children = childrenInstrs.metadataList;
+        // Subtract startX (left-side) and add inner box padding (minus nested gate padding) for dashed box
+        metadata.width = childrenInstrs.svgWidth - startX + (groupBoxPadding - gatePadding) * 2;
     } else if (isMeasurement) {
         metadata.type = GateType.Measure;
     } else if (gate === 'SWAP') {
@@ -398,19 +405,28 @@ const _fillMetadataX = (opsMetadata: Metadata[][], columnWidths: number[]): numb
     opsMetadata.forEach((regOps) =>
         regOps.forEach((metadata, col) => {
             const x = colStartX[col];
-            if (metadata.type === GateType.ClassicalControlled) {
-                // Subtract startX offset from nested gates and add offset and padding
-                const offset: number = x - startX + controlBtnOffset + classicalBoxPadding;
+            switch (metadata.type) {
+                case GateType.ClassicalControlled:
+                case GateType.Group:
+                    // Subtract startX offset from nested gates and add offset and padding
+                    let offset: number = x - startX + groupBoxPadding;
+                    if (metadata.type === GateType.ClassicalControlled) offset += controlBtnOffset;
 
-                // Offset each x coord in children gates
-                _offsetChildrenX(metadata.conditionalChildren, offset);
+                    // Offset each x coord in children gates
+                    const children =
+                        metadata.type === GateType.ClassicalControlled
+                            ? metadata.conditionalChildren
+                            : metadata.children;
+                    _offsetChildrenX(children, offset);
 
-                // We don't use the centre x coord because we only care about the rightmost x for
-                // rendering the box around the group of nested gates
-                metadata.x = x;
-            } else {
-                // Get x coord of middle of each column (used for centering gates in a column)
-                metadata.x = x + columnWidths[col] / 2;
+                    // We don't use the centre x coord because we only care about the rightmost x for
+                    // rendering the box around the group of nested gates
+                    metadata.x = x;
+                    break;
+
+                default:
+                    metadata.x = x + columnWidths[col] / 2;
+                    break;
             }
         }),
     );
@@ -424,7 +440,7 @@ const _fillMetadataX = (opsMetadata: Metadata[][], columnWidths: number[]): numb
  * @param children 2D array of children metadata.
  * @param offset   x coord offset.
  */
-const _offsetChildrenX = (children: Metadata[][] | undefined, offset: number): void => {
+const _offsetChildrenX = (children: (Metadata | Metadata[])[] | undefined, offset: number): void => {
     if (children == null) return;
     children.flat().forEach((child) => {
         child.x += offset;

@@ -1,5 +1,26 @@
-import { GateType } from './constants';
 import { DataAttributes } from './circuit';
+
+/**
+ * Enum for the various gate operations handled.
+ */
+export enum GateType {
+    /** Measurement gate. */
+    Measure,
+    /** CNOT gate. */
+    Cnot,
+    /** SWAP gate. */
+    Swap,
+    /** Single/multi qubit unitary gate. */
+    Unitary,
+    /** Single/multi controlled unitary gate. */
+    ControlledUnitary,
+    /** Nested group of classically-controlled gates. */
+    ClassicalControlled,
+    /** Group of nested gates */
+    Group,
+    /** Invalid gate. */
+    Invalid,
+}
 
 /**
  * Metadata used to store information pertaining to a given
@@ -23,6 +44,8 @@ export interface Metadata {
     displayArgs?: string;
     /** Gate width. */
     width: number;
+    /** Children operations as part of group. */
+    children?: Metadata[];
     /** Classically-controlled gates.
      *  - conditionalChildren[0]: metadata of gates rendered when classical control bit is 0.
      *  - conditionalChildren[1]: metadata of gates rendered when classical control bit is 1.

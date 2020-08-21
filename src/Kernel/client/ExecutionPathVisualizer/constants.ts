@@ -1,23 +1,3 @@
-/**
- * Enum for the various gate operations handled.
- */
-export enum GateType {
-    /** Measurement gate. */
-    Measure,
-    /** CNOT gate. */
-    Cnot,
-    /** SWAP gate. */
-    Swap,
-    /** Single/multi qubit unitary gate. */
-    Unitary,
-    /** Single/multi controlled unitary gate. */
-    ControlledUnitary,
-    /** Nested group of classically-controlled gates. */
-    ClassicalControlled,
-    /** Invalid gate. */
-    Invalid,
-}
-
 // Display attributes
 /** Left padding of SVG. */
 export const leftPadding = 20;
@@ -37,8 +17,8 @@ export const labelPadding = 10;
 export const registerHeight: number = gateHeight + gatePadding * 2;
 /** Height between classical registers. */
 export const classicalRegHeight: number = gateHeight;
-/** Classical box inner padding. */
-export const classicalBoxPadding = 15;
+/** Group box inner padding. */
+export const groupBoxPadding = gatePadding;
 /** Additional offset for control button. */
 export const controlBtnOffset = 40;
 /** Control button radius. */

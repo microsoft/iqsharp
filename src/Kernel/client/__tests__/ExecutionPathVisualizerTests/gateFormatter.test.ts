@@ -6,29 +6,40 @@ import {
     _unitary,
     _swap,
     _controlledGate,
+    _groupedOperations,
     _classicalControlled,
 } from '../../ExecutionPathVisualizer/formatters/gateFormatter';
-import { Metadata } from '../../ExecutionPathVisualizer/metadata';
-import { GateType, startX, startY, registerHeight, minGateWidth, gatePadding } from '../../ExecutionPathVisualizer/constants';
+import { Metadata, GateType } from '../../ExecutionPathVisualizer/metadata';
+import {
+    startX,
+    startY,
+    registerHeight,
+    minGateWidth,
+    gatePadding,
+    classicalRegHeight,
+    controlBtnOffset,
+    groupBoxPadding,
+} from '../../ExecutionPathVisualizer/constants';
 
 describe('Testing _classicalControlled', () => {
     test("one 'zero' child", () => {
         const metadata: Metadata = {
             type: GateType.ClassicalControlled,
             x: startX,
-            controlsY: [startY + registerHeight * 2],
-            targetsY: [startY, startY + registerHeight],
-            width: minGateWidth + gatePadding * 2,
-            label: 'if',
+            controlsY: [startY + classicalRegHeight],
+            targetsY: [startY],
+            width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
+            label: '',
             conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
-                        x: startX + minGateWidth / 2 + gatePadding,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
                         label: 'X',
                         controlsY: [],
                         targetsY: [[startY]],
                         width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
                     },
                 ],
                 [],
@@ -41,20 +52,21 @@ describe('Testing _classicalControlled', () => {
         const metadata: Metadata = {
             type: GateType.ClassicalControlled,
             x: startX,
-            controlsY: [startY + registerHeight * 2],
-            targetsY: [startY, startY + registerHeight],
-            width: minGateWidth + gatePadding * 2,
-            label: 'if',
+            controlsY: [startY + classicalRegHeight],
+            targetsY: [startY],
+            width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
+            label: '',
             conditionalChildren: [
                 [],
                 [
                     {
                         type: GateType.Unitary,
-                        x: startX + minGateWidth / 2 + gatePadding,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
                         label: 'X',
                         controlsY: [],
                         targetsY: [[startY]],
                         width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
                     },
                 ],
             ],
@@ -62,42 +74,87 @@ describe('Testing _classicalControlled', () => {
         };
         expect(_classicalControlled(metadata)).toMatchSnapshot();
     });
-    test("multiple 'zero'/'one' children", () => {
+    test("one 'zero'/'one' child", () => {
         const metadata: Metadata = {
             type: GateType.ClassicalControlled,
             x: startX,
-            controlsY: [startY + registerHeight * 2],
-            targetsY: [startY, startY + registerHeight],
-            width: minGateWidth * 2 + gatePadding * 4,
-            label: 'if',
+            controlsY: [startY + classicalRegHeight],
+            targetsY: [startY, startY + classicalRegHeight * 2],
+            label: '',
+            width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
             htmlClass: 'classically-controlled-1',
             conditionalChildren: [
                 [
                     {
                         type: GateType.Unitary,
-                        x: startX + minGateWidth / 2 + gatePadding,
-                        label: 'X',
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
                         controlsY: [],
                         targetsY: [[startY]],
+                        label: 'X',
                         width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
                     },
                 ],
                 [
                     {
                         type: GateType.Unitary,
-                        x: startX + minGateWidth / 2 + gatePadding,
-                        label: 'X',
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY + classicalRegHeight * 2]],
+                        label: 'H',
+                        width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
+                    },
+                ],
+            ],
+        };
+        expect(_classicalControlled(metadata)).toMatchSnapshot();
+    });
+    test("multiple 'zero'/'one' children", () => {
+        const metadata: Metadata = {
+            type: GateType.ClassicalControlled,
+            x: startX,
+            controlsY: [startY + classicalRegHeight],
+            targetsY: [startY, startY + classicalRegHeight * 2],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + controlBtnOffset + groupBoxPadding * 2,
+            htmlClass: 'classically-controlled-1',
+            conditionalChildren: [
+                [
+                    {
+                        type: GateType.Unitary,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
                         controlsY: [],
                         targetsY: [[startY]],
+                        label: 'X',
                         width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
                     },
                     {
-                        type: GateType.Cnot,
-                        x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 3,
-                        label: 'X',
-                        controlsY: [startY + registerHeight],
-                        targetsY: [startY],
+                        type: GateType.Unitary,
+                        x:
+                            startX +
+                            minGateWidth +
+                            minGateWidth / 2 +
+                            gatePadding * 2 +
+                            controlBtnOffset +
+                            groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY]],
+                        label: 'Z',
                         width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
+                    },
+                ],
+                [
+                    {
+                        type: GateType.Unitary,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY + classicalRegHeight * 2]],
+                        label: 'H',
+                        width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
                     },
                 ],
             ],
@@ -199,6 +256,154 @@ describe('Testing _classicalControlled', () => {
             htmlClass: 'classically-controlled-1',
         };
         expect(_classicalControlled(metadata, 20)).toMatchSnapshot();
+    });
+});
+
+describe('Testing _groupedOperations', () => {
+    test('one child', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY],
+            label: '',
+            width: minGateWidth + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
+    });
+    test('children on consecutive registers', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
+    });
+    test('children on non-consecutive registers', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight * 2],
+            label: '',
+            width: minGateWidth + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight * 2]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
+    });
+    test('children on same register', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'Z',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
+    });
+    test('multiple children', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'Z',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
     });
 });
 

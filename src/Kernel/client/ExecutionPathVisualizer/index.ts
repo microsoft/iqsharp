@@ -3,8 +3,7 @@ import { formatGates } from './formatters/gateFormatter';
 import { formatRegisters } from './formatters/registerFormatter';
 import { processOperations } from './process';
 import { Circuit } from './circuit';
-import { Metadata } from './metadata';
-import { GateType } from './constants';
+import { Metadata, GateType } from './metadata';
 import { StyleConfig, style, STYLES } from './styles';
 import { createUUID } from './utils';
 
