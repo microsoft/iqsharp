@@ -19,6 +19,8 @@ export const registerHeight: number = gateHeight + gatePadding * 2;
 export const classicalRegHeight: number = gateHeight;
 /** Group box inner padding. */
 export const groupBoxPadding = gatePadding;
+/** Padding between nested groups. */
+export const nestedGroupPadding = 2;
 /** Additional offset for control button. */
 export const controlBtnOffset = 40;
 /** Control button radius. */

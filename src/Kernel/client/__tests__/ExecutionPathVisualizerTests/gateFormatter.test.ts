@@ -405,6 +405,53 @@ describe('Testing _groupedOperations', () => {
         };
         expect(_groupedOperations(metadata)).toMatchSnapshot();
     });
+    test('nested children', () => {
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 4,
+            children: [
+                {
+                    type: GateType.Group,
+                    x: startX + gatePadding,
+                    controlsY: [],
+                    targetsY: [startY],
+                    label: '',
+                    width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 2,
+                    children: [
+                        {
+                            type: GateType.Unitary,
+                            x: startX + minGateWidth / 2 + groupBoxPadding * 2,
+                            controlsY: [],
+                            targetsY: [[startY]],
+                            label: 'X',
+                            width: minGateWidth,
+                        },
+                        {
+                            type: GateType.Unitary,
+                            x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 2 + groupBoxPadding * 2,
+                            controlsY: [],
+                            targetsY: [[startY]],
+                            label: 'Z',
+                            width: minGateWidth,
+                        },
+                    ],
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth + gatePadding + groupBoxPadding * 2,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_groupedOperations(metadata)).toMatchSnapshot();
+    });
 });
 
 describe('Testing _controlledGate', () => {

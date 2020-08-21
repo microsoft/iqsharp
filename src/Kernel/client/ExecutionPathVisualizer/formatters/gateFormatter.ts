@@ -8,6 +8,7 @@ import {
     controlBtnOffset,
     groupBoxPadding,
     classicalRegHeight,
+    nestedGroupPadding,
 } from '../constants';
 import { group, controlDot, line, box, text, arc, dashedLine, dashedBox } from './formatUtils';
 import { DataAttributes } from '../circuit';
@@ -16,11 +17,12 @@ import { DataAttributes } from '../circuit';
  * Given an array of operations (in metadata format), return the SVG representation.
  *
  * @param opsMetadata Array of Metadata representation of operations.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
  *
  * @returns SVG representation of operations.
  */
-const formatGates = (opsMetadata: Metadata[]): string => {
-    const formattedGates: string[] = opsMetadata.map(_formatGate);
+const formatGates = (opsMetadata: Metadata[], nestedDepth = 0): string => {
+    const formattedGates: string[] = opsMetadata.map((metadata) => _formatGate(metadata, nestedDepth));
     return formattedGates.flat().join('\n');
 };
 
@@ -42,10 +44,11 @@ const _createGate = (svgElems: string[], dataAttributes: DataAttributes = {}): s
  * Takes in an operation's metadata and formats it into SVG.
  *
  * @param metadata Metadata object representation of gate.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
  *
  * @returns SVG representation of gate.
  */
-const _formatGate = (metadata: Metadata): string => {
+const _formatGate = (metadata: Metadata, nestedDepth = 0): string => {
     const { type, x, controlsY, targetsY, label, displayArgs, dataAttributes, width } = metadata;
     switch (type) {
         case GateType.Measure:
@@ -60,7 +63,7 @@ const _formatGate = (metadata: Metadata): string => {
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
         case GateType.Group:
-            return _groupedOperations(metadata);
+            return _groupedOperations(metadata, nestedDepth);
         case GateType.ClassicalControlled:
             return _classicalControlled(metadata);
         default:
@@ -249,15 +252,16 @@ const _oplus = (x: number, y: number, r = 15): string => {
  * Generates the SVG for a group of nested operations.
  *
  * @param metadata Metadata representation of gate.
- * @param padding Padding within dashed box.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
  *
  * @returns SVG representation of gate.
  */
-const _groupedOperations = (metadata: Metadata, padding: number = groupBoxPadding): string => {
+const _groupedOperations = (metadata: Metadata, nestedDepth = 0): string => {
     const { x, children, width, dataAttributes } = metadata;
+    const padding = groupBoxPadding - nestedDepth * nestedGroupPadding;
     if ((children?.length || 0) === 0) throw new Error('No children found for grouped operation.');
     const targetsY: number[] = metadata.targetsY as number[];
-    const childrenGates: string = children != null ? formatGates(children as Metadata[]) : '';
+    const childrenGates: string = children != null ? formatGates(children as Metadata[], nestedDepth + 1) : '';
     const maxY: number = Math.max(...(targetsY as number[])) + gateHeight / 2 + padding;
     const minY: number = Math.min(...(targetsY as number[])) - gateHeight / 2 - padding;
     const height: number = maxY - minY;
