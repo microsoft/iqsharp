@@ -1397,7 +1397,7 @@ describe('Testing _opToMetadata', () => {
             targetsY: [startY, startY + classicalRegHeight * 2],
             label: '',
             width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1602,7 +1602,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [[], []],
+            children: [[], []],
             label: 'X',
             width: minGateWidth,
         };
@@ -1611,7 +1611,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [[], []],
+            children: [[], []],
             label: 'X',
             width: minGateWidth,
             htmlClass: 'classname',
@@ -1649,7 +1649,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1679,7 +1679,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1718,14 +1718,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        conditionalChildren: [
+                        children: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -1770,14 +1770,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        conditionalChildren: [
+                        children: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -2030,7 +2030,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2055,7 +2055,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2152,7 +2152,7 @@ describe('Testing _fillMetadataX', () => {
                     x: 0,
                     controlsY: [],
                     targetsY: [],
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2186,7 +2186,7 @@ describe('Testing _fillMetadataX', () => {
                     x: startX,
                     controlsY: [],
                     targetsY: [],
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2504,7 +2504,7 @@ describe('Testing processOperations', () => {
             label: '',
             width: minGateWidth * 2 + gatePadding * 2 + controlBtnOffset + groupBoxPadding * 2,
             htmlClass: 'classically-controlled-1',
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,

@@ -30,7 +30,7 @@ describe('Testing _classicalControlled', () => {
             targetsY: [startY],
             width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
             label: '',
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -56,7 +56,7 @@ describe('Testing _classicalControlled', () => {
             targetsY: [startY],
             width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
             label: '',
-            conditionalChildren: [
+            children: [
                 [],
                 [
                     {
@@ -83,7 +83,7 @@ describe('Testing _classicalControlled', () => {
             label: '',
             width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
             htmlClass: 'classically-controlled-1',
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -119,7 +119,7 @@ describe('Testing _classicalControlled', () => {
             label: '',
             width: minGateWidth * 2 + gatePadding * 2 + controlBtnOffset + groupBoxPadding * 2,
             htmlClass: 'classically-controlled-1',
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -170,7 +170,7 @@ describe('Testing _classicalControlled', () => {
             width: minGateWidth * 2 + gatePadding * 6,
             label: 'if',
             htmlClass: 'classically-controlled-1',
-            conditionalChildren: [
+            children: [
                 [],
                 [
                     {
@@ -189,7 +189,7 @@ describe('Testing _classicalControlled', () => {
                         width: minGateWidth + gatePadding * 2,
                         label: 'if',
                         htmlClass: 'classically-controlled-1',
-                        conditionalChildren: [
+                        children: [
                             [],
                             [
                                 {
@@ -216,7 +216,7 @@ describe('Testing _classicalControlled', () => {
             targetsY: [startY, startY + registerHeight],
             width: minGateWidth * 2 + gatePadding * 4,
             label: 'if',
-            conditionalChildren: [
+            children: [
                 [],
                 [
                     {
@@ -240,7 +240,7 @@ describe('Testing _classicalControlled', () => {
             targetsY: [startY, startY + registerHeight],
             width: minGateWidth * 2 + gatePadding * 4,
             label: 'if',
-            conditionalChildren: [
+            children: [
                 [],
                 [
                     {

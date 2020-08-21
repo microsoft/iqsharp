@@ -45,12 +45,7 @@ export interface Metadata {
     /** Gate width. */
     width: number;
     /** Children operations as part of group. */
-    children?: Metadata[];
-    /** Classically-controlled gates.
-     *  - conditionalChildren[0]: metadata of gates rendered when classical control bit is 0.
-     *  - conditionalChildren[1]: metadata of gates rendered when classical control bit is 1.
-     */
-    conditionalChildren?: [Metadata[], Metadata[]];
+    children?: (Metadata | Metadata[])[];
     /** HTML element class for interactivity. */
     htmlClass?: string;
     /** Custom data attributes to attach to gate element. */

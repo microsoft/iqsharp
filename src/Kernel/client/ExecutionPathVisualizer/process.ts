@@ -245,7 +245,7 @@ const _opToMetadata = (op: Operation | null, registers: RegisterMap): Metadata =
         const width: number = Math.max(zeroChildWidth, oneChildWidth) - startX - gatePadding * 2;
 
         metadata.type = GateType.ClassicalControlled;
-        metadata.conditionalChildren = [zeroGates, oneGates];
+        metadata.children = [zeroGates, oneGates];
         // Add additional width from control button and inner box padding for dashed box
         metadata.width = width + controlBtnOffset + groupBoxPadding * 2;
 
@@ -324,10 +324,8 @@ const _getRegY = (reg: Register, registers: RegisterMap): number => {
  */
 const _addClass = (metadata: Metadata, cls: string): void => {
     metadata.htmlClass = cls;
-    if (metadata.conditionalChildren != null) {
-        metadata.conditionalChildren[0].forEach((child) => _addClass(child, cls));
-        metadata.conditionalChildren[1].forEach((child) => _addClass(child, cls));
-    }
+    if (metadata.children == null) return;
+    metadata.children.flat().forEach((child) => _addClass(child, cls));
 };
 
 /**
@@ -413,11 +411,7 @@ const _fillMetadataX = (opsMetadata: Metadata[][], columnWidths: number[]): numb
                     if (metadata.type === GateType.ClassicalControlled) offset += controlBtnOffset;
 
                     // Offset each x coord in children gates
-                    const children =
-                        metadata.type === GateType.ClassicalControlled
-                            ? metadata.conditionalChildren
-                            : metadata.children;
-                    _offsetChildrenX(children, offset);
+                    _offsetChildrenX(metadata.children, offset);
 
                     // We don't use the centre x coord because we only care about the rightmost x for
                     // rendering the box around the group of nested gates
@@ -444,7 +438,7 @@ const _offsetChildrenX = (children: (Metadata | Metadata[])[] | undefined, offse
     if (children == null) return;
     children.flat().forEach((child) => {
         child.x += offset;
-        _offsetChildrenX(child.conditionalChildren, offset);
+        _offsetChildrenX(child.children, offset);
     });
 };
 

@@ -247,17 +247,17 @@ const _oplus = (x: number, y: number, r = 15): string => {
 
 /**
  * Generates the SVG for a group of nested operations.
- * 
+ *
  * @param metadata Metadata representation of gate.
  * @param padding Padding within dashed box.
- * 
+ *
  * @returns SVG representation of gate.
  */
 const _groupedOperations = (metadata: Metadata, padding: number = groupBoxPadding): string => {
     const { x, children, width, dataAttributes } = metadata;
     if ((children?.length || 0) === 0) throw new Error('No children found for grouped operation.');
     const targetsY: number[] = metadata.targetsY as number[];
-    const childrenGates: string = children != null ? formatGates(children) : '';
+    const childrenGates: string = children != null ? formatGates(children as Metadata[]) : '';
     const maxY: number = Math.max(...(targetsY as number[])) + gateHeight / 2 + padding;
     const minY: number = Math.min(...(targetsY as number[])) - gateHeight / 2 - padding;
     const height: number = maxY - minY;
@@ -276,19 +276,20 @@ const _groupedOperations = (metadata: Metadata, padding: number = groupBoxPaddin
  * @returns SVG representation of gate.
  */
 const _classicalControlled = (metadata: Metadata, padding: number = groupBoxPadding): string => {
-    const { controlsY, conditionalChildren, dataAttributes } = metadata;
+    const { controlsY, dataAttributes } = metadata;
     const targetsY: number[] = metadata.targetsY as number[];
+    const children: Metadata[][] = metadata.children as Metadata[][];
     let { x, width, htmlClass } = metadata;
 
     const controlY = controlsY[0];
     if (htmlClass == null) htmlClass = 'classically-controlled';
 
     // Get SVG for gates controlled on 0 and make them hidden initially
-    let childrenZero: string = conditionalChildren != null ? formatGates(conditionalChildren[0]) : '';
+    let childrenZero: string = children != null ? formatGates(children[0]) : '';
     childrenZero = `<g class="${htmlClass}-zero hidden">\r\n${childrenZero}</g>`;
 
     // Get SVG for gates controlled on 1
-    let childrenOne: string = conditionalChildren != null ? formatGates(conditionalChildren[1]) : '';
+    let childrenOne: string = children != null ? formatGates(children[1]) : '';
     childrenOne = `<g class="${htmlClass}-one">\r\n${childrenOne}</g>`;
 
     // Draw control button and attached dashed line to dashed box
