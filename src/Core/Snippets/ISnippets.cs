@@ -13,10 +13,11 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class SnippetCompiledEventArgs : EventArgs
     {
-        public SnippetCompiledEventArgs(string status, string[] errors, TimeSpan duration)
+        public SnippetCompiledEventArgs(string status, string[] errors, string[] namespaces, TimeSpan duration)
         {
             this.Status = status;
             this.Errors = errors;
+            this.Namespaces = namespaces;
             this.Duration = duration;
         }
 
@@ -29,6 +30,11 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of error ids reported by the Q# parser (if any).
         /// </summary>
         public string[] Errors { get; }
+
+        /// <summary>
+        /// The list of namespaces opened automatically when compiling the snippet.
+        /// </summary>
+        public string[] Namespaces { get; }
 
         /// <summary>
         /// The total time the reload operation took.
