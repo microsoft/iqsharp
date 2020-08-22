@@ -104,6 +104,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override ExecutionResult Run(string input, IChannel channel) =>
             RunAsync(input, channel).Result;
 
+        /// <inheritdoc />
+        public override ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken token) =>
+            RunAsync(input, channel, token).Result;
+
         private async Task HandleStartMessage(Message message) => await Task.Run(() =>
         {
             var content = (message.Content as UnknownContent);
@@ -155,26 +159,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
         });
 
-        private async Task WaitForAdvance(Guid session)
+        private async Task WaitForAdvance(Guid session, CancellationToken? token = null)
         {
             await Task.Run(() =>
-            {
-                ManualResetEvent? @event = null;
-                // Find the event we need to wait on.
-                lock (sessionAdvanceEvents)
                 {
-                    @event = sessionAdvanceEvents[session];
-                }
-                @event.Reset();
-                @event.WaitOne();
-            }, cancellationTokenSource.Token);
+                    ManualResetEvent? @event = null;
+                    // Find the event we need to wait on.
+                    lock (sessionAdvanceEvents)
+                    {
+                        @event = sessionAdvanceEvents[session];
+                    }
+                    @event.Reset();
+                    @event.WaitOne();
+                },
+                token ?? cancellationTokenSource.Token
+            );
         }
 
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
         ///     encoding of its arguments.
         /// </summary>
-        public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
+        public async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken? token = null)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
@@ -214,7 +220,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         }
                     }
                 );
-                WaitForAdvance(session).Wait();
+                WaitForAdvance(session, token).Wait();
             };
 
             channel.Display(new RawHtmlPayload

@@ -378,7 +378,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     BasisStateLabelingConvention.BigEndian => " (big endian)",
                     _ => ""
                 };
-                //TODO: rewrite all this code here for less code written
+                
                 var outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
                         <thead>
