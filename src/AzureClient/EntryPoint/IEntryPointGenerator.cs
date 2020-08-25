@@ -17,9 +17,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public interface IEntryPointGenerator
     {
         /// <summary>
-        /// Gets the compiled workspace assembly for the most recently-generated entry point.
+        /// Gets the compiled workspace assemblies for the most recently-generated entry point.
         /// </summary>
-        public AssemblyInfo? WorkspaceAssemblyInfo { get; }
+        public AssemblyInfo[] WorkspaceAssemblies { get; }
 
         /// <summary>
         /// Gets the compiled snippets assembly for the most recently-generated entry point.
