@@ -28,7 +28,7 @@ namespace Tests.IQSharp
 
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.AreEqual(2, response.Result.Length);
+            Assert.AreEqual(((References)controller.References).AutoLoadPackages.Count, response.Result.Length);
         }
 
         [TestMethod]
