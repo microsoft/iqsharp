@@ -6,10 +6,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -46,16 +52,26 @@ namespace Microsoft.Quantum.IQSharp
                 set { _cacheFolder = value; }
             }
 
+            /// <summary>
+            /// Whether to monitor the file system for changes and automatically reload the workspace.
+            /// </summary>
             public bool MonitorWorkspace { get; set; }
+
+            /// <summary>
+            /// Whether to skip automatically loading the .csproj from the workspace's root folder.
+            /// </summary>
+            public bool SkipAutoLoadProject { get; set; }
         }
 
-        // We use this to keep track of file changes in the workspace and trigger a reload.
-        private FileSystemWatcher Watcher;
-
         /// <summary>
-        /// This event is triggered when ever the workspace is reloaded.
+        /// This event is triggered whenever the workspace is reloaded.
         /// </summary>
         public event EventHandler<ReloadedEventArgs> Reloaded;
+
+        /// <summary>
+        /// This event is triggered whenever a project is loaded into the workspace.
+        /// </summary>
+        public event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
 
         /// <summary>
         /// Logger instance used for .net core logging.
@@ -78,14 +94,37 @@ namespace Microsoft.Quantum.IQSharp
         public string Root { get; set; }
 
         /// <summary>
-        /// Gets the source files to be built for this Workspace.
+        /// Gets or sets a value indicating whether to monitor the file system for
+        /// changes and automatically reload the workspace.
         /// </summary>
-        public IEnumerable<string> SourceFiles => Directory.EnumerateFiles(Root, "*.qs", SearchOption.TopDirectoryOnly);
+        private bool MonitorWorkspace { get; set; }
 
         /// <summary>
-        /// Information about the assembly built from this Workspace.
+        /// Gets or sets a value indicating whether to skip automatically loading
+        /// the .csproj from the workspace's root folder.
         /// </summary>
-        public AssemblyInfo AssemblyInfo { get; set; }
+        private bool SkipAutoLoadProject { get; set; }
+
+        private List<Project> UserAddedProjects { get; } = new List<Project>();
+
+        /// <inheritdoc/>
+        public IEnumerable<Project> Projects { get; set; } = Enumerable.Empty<Project>();
+
+        /// <summary>
+        /// Gets the source files to be built for this Workspace.
+        /// </summary>
+        public IEnumerable<string> SourceFiles => Projects.SelectMany(p => p.SourceFiles).Distinct();
+
+        /// <inheritdoc/>
+        public AssemblyInfo AssemblyInfo =>
+            Projects
+                .Where(p => string.IsNullOrEmpty(p.ProjectFile))
+                .Select(p => p.AssemblyInfo)
+                .FirstOrDefault();
+
+        /// <inheritdoc/>
+        public IEnumerable<AssemblyInfo> Assemblies =>
+            Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
 
         /// <summary>
         /// The compilation errors, if any.
@@ -98,14 +137,9 @@ namespace Microsoft.Quantum.IQSharp
         public bool HasErrors => ErrorMessages == null || ErrorMessages.Any();
 
         /// <summary>
-        /// The folder where the assembly is permanently saved for cache.
+        /// The folder where the project assemblies are permanently saved for cache.
         /// </summary>
         public string CacheFolder { get; set; }
-
-        /// <summary>
-        /// The full qualified file name of the assembly built from this Workspace
-        /// </summary>
-        public string CacheDll => Path.Combine(CacheFolder, "__ws__.dll");
 
         /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
@@ -126,22 +160,107 @@ namespace Microsoft.Quantum.IQSharp
 
             Root = config?.Value.Workspace;
             CacheFolder = config?.Value.CacheFolder;
+            SkipAutoLoadProject = config?.Value.SkipAutoLoadProject ?? false;
+            MonitorWorkspace = config?.Value.MonitorWorkspace ?? false;
 
-            var monitor = config?.Value.MonitorWorkspace == true;
+            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
-            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {monitor}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
+            ResolveProjectReferences();
 
             if (!LoadFromCache())
             {
                 Reload();
             }
-
-            if (monitor)
+            else
             {
-                StartFileWatching();
+                LoadReferencedPackages();
+                if (MonitorWorkspace)
+                {
+                    StartFileWatching();
+                }
             }
 
             eventService?.TriggerServiceInitialized<IWorkspace>(this);
+        }
+
+        private void ResolveProjectReferences()
+        {
+            var projects = new List<Project>() { Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject, Logger) };
+            projects.AddRange(UserAddedProjects);
+
+            var projectsToResolve = projects.Distinct(new ProjectFileComparer()).ToList();
+            while (projectsToResolve.Any())
+            {
+                try
+                {
+                    Logger?.LogInformation($"Looking for project references in .csproj files: {projectsToResolve.ToLogString()}");
+                    projectsToResolve = projectsToResolve.SelectMany(project => project.ProjectReferences).ToList();
+
+                    // Move any already-referenced projects to the end of the list, since other projects depend on them.
+                    var alreadyReferencedProjects = projectsToResolve
+                        .Where(project => projects.Contains(project, new ProjectFileComparer()));
+                    if (alreadyReferencedProjects.Any())
+                    {
+                        projects = projects
+                            .Except(alreadyReferencedProjects, new ProjectFileComparer())
+                            .Concat(alreadyReferencedProjects)
+                            .ToList();
+                        projectsToResolve = projectsToResolve.Except(alreadyReferencedProjects).ToList();
+                    }
+
+                    // Skip projects that do not exist on disk.
+                    var invalidProjects = projectsToResolve.Where(project => !File.Exists(project.ProjectFile));
+                    if (invalidProjects.Any())
+                    {
+                        Logger?.LogError($"Skipping invalid project references: {invalidProjects.ToLogString()}");
+                        projectsToResolve = projectsToResolve.Except(invalidProjects, new ProjectFileComparer()).ToList();
+                    }
+
+                    // Skip projects that do not reference Microsoft.Quantum.Sdk.
+                    var nonSdkProjects = projectsToResolve.Where(project => !project.UsesQuantumSdk);
+                    if (nonSdkProjects.Any())
+                    {
+                        Logger?.LogInformation($"Skipping project references that do not reference Microsoft.Quantum.Sdk: {nonSdkProjects.ToLogString()}");
+                        projectsToResolve = projectsToResolve.Except(nonSdkProjects, new ProjectFileComparer()).ToList();
+                    }
+
+                    // Warn if any projects reference a Microsoft.Quantum.Sdk version that is different than
+                    // the version of Microsoft.Quantum.Standard we have currently loaded.
+                    if (GlobalReferences is References references)
+                    {
+                        const string standardPackageName = "Microsoft.Quantum.Standard";
+                        var currentVersion = references
+                            .Nugets
+                            ?.Items
+                            ?.Where(package => package.Id == standardPackageName)
+                            .FirstOrDefault()
+                            ?.Version
+                            ?.ToString();
+                        if (!string.IsNullOrEmpty(currentVersion))
+                        {
+                            foreach (var project in projectsToResolve.Where(project => !project.Sdk.EndsWith(currentVersion)))
+                            {
+                                Logger?.LogWarning(
+                                    $"Project {project.ProjectFile} references {project.Sdk}, " +
+                                    $"but IQ# is using version {currentVersion} of {standardPackageName}. " +
+                                    $"Project will be compiled using version {currentVersion}.");
+                            }
+                        }
+                    }
+
+                    Logger?.LogInformation($"Adding project references: {projectsToResolve.ToLogString()}");
+                    projects.AddRange(projectsToResolve);
+                }
+                catch (Exception e)
+                {
+                    Logger?.LogError(e, $"Failed to resolve all project references: {e.Message}");
+                    projectsToResolve = new List<Project>();
+                }
+            }
+
+            // The list must now be reversed to reflect the order in which the projects must be built.
+            projects.Reverse();
+            Projects = projects;
         }
 
         /// <summary>
@@ -149,20 +268,17 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private void StartFileWatching()
         {
-            // Create a new FileSystemWatcher and set its properties.
-            Watcher = new FileSystemWatcher(Root, "*.qs");
-            Watcher.IncludeSubdirectories = true;
-            Watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+            foreach (var watcher in Projects.SelectMany(p => p.Watchers))
+            {
+                // Add event handlers.
+                watcher.Changed += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Created += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Deleted += new FileSystemEventHandler(OnFilesChanged);
+                watcher.Renamed += new RenamedEventHandler(OnFilesRenamed);
 
-
-            // Add event handlers.
-            Watcher.Changed += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Created += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Deleted += new FileSystemEventHandler(OnFilesChanged);
-            Watcher.Renamed += new RenamedEventHandler(OnFilesRenamed);
-
-            // Begin watching.
-            Watcher.EnableRaisingEvents = true;
+                // Begin watching.
+                watcher.EnableRaisingEvents = true;
+            }
         }
 
         private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload();
@@ -184,12 +300,16 @@ namespace Microsoft.Quantum.IQSharp
 
             if (IsCacheFresh())
             {
-                Logger?.LogDebug($"Loading workspace from cache assembly: {CacheDll}.");
-                var data = File.ReadAllBytes(CacheDll);
-                var assm = System.Reflection.Assembly.Load(data);
-                AssemblyInfo = new AssemblyInfo(assm, CacheDll, null);
-                ErrorMessages = new string[0];
+                Logger?.LogDebug($"Loading workspace from cached assemblies.");
+                foreach (var project in Projects)
+                {
+                    Logger?.LogDebug($"Loading cache assembly: {project.CacheDllPath}.");
+                    var data = File.ReadAllBytes(project.CacheDllPath);
+                    var assm = System.Reflection.Assembly.Load(data);
+                    project.AssemblyInfo = new AssemblyInfo(assm, project.CacheDllPath, null);
+                }
 
+                ErrorMessages = new string[0];
                 return true;
             }
 
@@ -197,58 +317,178 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <summary>
-        /// Compares the timestamp of the cache.dll with the timestamp of each of the .qs files
-        /// and returns false if any of the .qs files is more recent.
+        /// Compares the timestamp of the cache DLLs for each project with the timestamp of each of the
+        /// .qs and .csproj files and returns false if any of the .qs or .csproj files is more recent.
         /// </summary>
         private bool IsCacheFresh()
         {
-            if (!File.Exists(CacheDll)) return false;
-            var last = File.GetLastWriteTime(CacheDll);
-
-            foreach (var f in SourceFiles)
+            foreach (var project in Projects)
             {
-                if (File.GetLastWriteTime(f) > last)
+                if (!File.Exists(project.CacheDllPath))
                 {
-                    Logger?.LogDebug($"Cache {CacheDll} busted by {f}.");
+                    Logger?.LogDebug($"Cache {project.CacheDllPath} does not exist.");
                     return false;
+                }
+
+                var last = File.GetLastWriteTime(project.CacheDllPath);
+                foreach (var f in project.SourceFiles.Append(project.ProjectFile))
+                {
+                    if (!string.IsNullOrEmpty(f) && File.GetLastWriteTime(f) > last)
+                    {
+                        Logger?.LogDebug($"Cache {project.CacheDllPath} busted by {f}.");
+                        return false;
+                    }
                 }
             }
 
             return true;
         }
 
+        private void LoadReferencedPackages(Action<string> statusCallback = null)
+        {
+            foreach (var project in Projects)
+            {
+                try
+                {
+                    foreach (var packageReference in project.PackageReferences)
+                    {
+                        var package = $"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}";
+                        try
+                        {
+                            Logger?.LogInformation($"Loading package {package} for project {project.ProjectFile}.");
+                            GlobalReferences.AddPackage(package, (newStatus) =>
+                            {
+                                statusCallback?.Invoke($"Adding package {package}: {newStatus}");
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            Logger?.LogError(e, $"Failed to load package {package} for project {project.ProjectFile}: {e.Message}");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger?.LogError(e, $"Failure loading packages for project {project.ProjectFile}: {e.Message}");
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void AddProject(string projectFile)
+        {
+            var fullProjectPath = Path.GetFullPath(projectFile, Root);
+            if (!File.Exists(fullProjectPath))
+            {
+                throw new FileNotFoundException($"Project {fullProjectPath} not found. Please specify a path to a .csproj file.");
+            }
+
+            if (!fullProjectPath.EndsWith(".csproj"))
+            {
+                throw new InvalidOperationException("Please specify a path to a .csproj file.");
+            }
+
+            var project = Project.FromProjectFile(fullProjectPath, CacheFolder);
+            if (!project.UsesQuantumSdk)
+            {
+                throw new InvalidOperationException("Please specify a project that references Microsoft.Quantum.Sdk.");
+            }
+
+            if (Projects.Contains(project, new ProjectFileComparer()))
+            {
+                throw new InvalidOperationException($"Project {fullProjectPath} has already been loaded in this session.");
+            }
+
+            UserAddedProjects.Add(project);
+        }
+
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
-        public void Reload()
+        public void Reload(Action<string> statusCallback = null)
         {
             var duration = Stopwatch.StartNew();
-            var files = new string[0];
-            var errorIds = new string[0];
+            var fileCount = 0;
+            var errorIds = new List<string>();
+            ErrorMessages = new List<string>();
 
             try
             {
                 Logger?.LogInformation($"Reloading workspace at {Root}.");
 
+                foreach (var project in Projects)
+                {
+                    if (File.Exists(project.CacheDllPath)) { File.Delete(project.CacheDllPath); }
+                    foreach (var watcher in project.Watchers)
+                    {
+                        watcher.EnableRaisingEvents = false;
+                        watcher.Dispose();
+                    }
+                }
+                Projects = Enumerable.Empty<Project>();
+
                 // Create a new logger for this compilation:
                 var logger = new QSharpLogger(Logger);
 
-                if (File.Exists(CacheDll)) { File.Delete(CacheDll); }
-
-                files = SourceFiles.ToArray();
-
-                if (files.Length > 0)
+                ResolveProjectReferences();
+                LoadReferencedPackages(statusCallback);
+                if (MonitorWorkspace)
                 {
-                    Logger?.LogDebug($"{files.Length} found in workspace. Compiling.");
-                    AssemblyInfo = Compiler.BuildFiles(files, GlobalReferences.CompilerMetadata, logger, CacheDll);
-                    ErrorMessages = logger.Errors.ToArray();
-                    errorIds = logger.ErrorIds.ToArray();
+                    StartFileWatching();
                 }
-                else
+
+                ErrorMessages = new string[0];
+
+                foreach (var project in Projects)
                 {
-                    Logger?.LogDebug($"No files found in Workspace. Using empty workspace.");
-                    AssemblyInfo = new AssemblyInfo(null, null, null);
-                    ErrorMessages = new string[0];
+                    var projectLoadDuration = Stopwatch.StartNew();
+
+                    if (File.Exists(project.CacheDllPath)) { File.Delete(project.CacheDllPath); }
+
+                    if (project.SourceFiles.Count() > 0)
+                    {
+                        Logger?.LogDebug($"{project.SourceFiles.Count()} found in project {project.ProjectFile}. Compiling.");
+                        statusCallback?.Invoke(
+                            string.IsNullOrWhiteSpace(project.ProjectFile)
+                            ? "Compiling workspace"
+                            : $"Compiling {project.ProjectFile}");
+
+                        try
+                        {
+                            project.AssemblyInfo = Compiler.BuildFiles(
+                                project.SourceFiles.ToArray(),
+                                GlobalReferences.CompilerMetadata.WithAssemblies(Assemblies.ToArray()),
+                                logger,
+                                project.CacheDllPath);
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError(
+                                "IQS003",
+                                $"Error compiling project {project.ProjectFile}: {e.Message}");
+                            project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        }
+
+                        ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
+                        errorIds.AddRange(logger.ErrorIds.ToArray());
+                        fileCount += project.SourceFiles.Count();
+                    }
+                    else
+                    {
+                        Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
+                        project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(project.ProjectFile))
+                    {
+                        ProjectLoaded?.Invoke(this, new ProjectLoadedEventArgs(
+                            new Uri(project.ProjectFile),
+                            project.SourceFiles.Count(),
+                            project.ProjectReferences.Count(),
+                            project.PackageReferences.Count(),
+                            UserAddedProjects.Contains(project, new ProjectFileComparer()),
+                            projectLoadDuration.Elapsed));
+                    }
                 }
 
             }
@@ -256,9 +496,10 @@ namespace Microsoft.Quantum.IQSharp
             {
                 duration.Stop();
                 var status = this.HasErrors ? "error" : "ok";
+                var projectCount = Projects.Count(project => !string.IsNullOrWhiteSpace(project.ProjectFile));
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
-                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, files.Length, errorIds, duration.Elapsed));
+                Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, projectCount, errorIds.ToArray(), duration.Elapsed));
             }
         }
     }
