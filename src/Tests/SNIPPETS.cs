@@ -94,6 +94,15 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string Op7_EndsWithComment =
+@"
+    operation Op7() : Unit
+    {
+        HelloQ();
+    } // This snippet ends with a comment";
+
+        public static string CommentOnly = @"// This snippet contains only a comment";
+
         public static string OpenNamespaces1 =
 @"
     open Microsoft.Quantum.Intrinsic;
