@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
+using Documentation = Microsoft.Jupyter.Core.Documentation;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
