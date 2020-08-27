@@ -1,7 +1,10 @@
 requirejs.config({
     bundles: {
-        '/kernelspecs/iqsharp/bundle.js': ['kernel'],
-    }
+        'bundle': ['kernel'],
+    },
+    paths: {
+        'bundle': window.IPython.notebook.base_url + 'kernelspecs/iqsharp/bundle',
+    },
 });
 
 define(["exports", "kernel"], function (exports, kernel) {
