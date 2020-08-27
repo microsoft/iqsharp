@@ -11,7 +11,10 @@ using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
-using Documentation = Microsoft.Jupyter.Core.Documentation;
+// NB: The name `Documentation` can be ambiguous in this context,
+//     since we rely both on Microsoft.Quantum.Documentation and on
+//     the name from Jupyter Core.
+using JupyterDocumentation = Microsoft.Jupyter.Core.Documentation;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -23,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///     Constructs a new magic symbol given its name and documentation.
         /// </summary>
-        public AbstractMagic(string keyword, Documentation docs)
+        public AbstractMagic(string keyword, JupyterDocumentation docs)
         {
             this.Name = $"%{keyword}";
             this.Documentation = docs;
