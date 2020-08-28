@@ -16,7 +16,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     internal struct MagicSymbolSummary
     {
         public string Name;
-        public Documentation Documentation;
+        public Microsoft.Jupyter.Core.Documentation Documentation;
         public string AssemblyName;
     }
 
