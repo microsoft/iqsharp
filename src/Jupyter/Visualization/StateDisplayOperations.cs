@@ -139,7 +139,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         /// <inheritdoc />
-        public override Func<T, QVoid> Body => (location) =>
+        public override Func<T, QVoid> __Body__ => (location) =>
         {
             if (location == null) { throw new ArgumentNullException(nameof(location)); }
             // Check if we're supposed to be writing to a file. In that case,
@@ -147,7 +147,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             if (!(location is QVoid) && location.ToString().Length != 0)
             {
                 Console.Out.WriteLine("Falling back to base DumpMachine.");
-                return base.Body.Invoke(location);
+                return base.__Body__.Invoke(location);
             }
 
             Debug.Assert(
@@ -182,7 +182,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         /// <inheritdoc />
-        public override Func<(T, IQArray<Qubit>), QVoid> Body => (input) =>
+        public override Func<(T, IQArray<Qubit>), QVoid> __Body__ => (input) =>
         {
             var (location, qubits) = input;
             if (location == null) { throw new ArgumentNullException(nameof(location)); }
@@ -191,7 +191,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             if (!(location is QVoid) && location.ToString().Length != 0)
             {
                 Console.Out.WriteLine("Falling back to base DumpRegister.");
-                return base.Body.Invoke(input);
+                return base.__Body__.Invoke(input);
             }
 
             Debug.Assert(
