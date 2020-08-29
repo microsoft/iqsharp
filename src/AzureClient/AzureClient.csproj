@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.12.20081940-beta" />
+    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.12.20082513" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.21" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />
