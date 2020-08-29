@@ -155,6 +155,10 @@ namespace Tests.IQSharp
             // Compile snippet with operations out of alphabetical order to ensure order is preserved:
             await AssertCompile(controller, SNIPPETS.Op6b_Op6a, "Op6b", "Op6a");
 
+            // Compile snippets that end with comments:
+            await AssertCompile(controller, SNIPPETS.CommentOnly);
+            await AssertCompile(controller, SNIPPETS.Op7_EndsWithComment, "Op7");
+
             // running Op2:
             await AssertSimulate(controller, "Op2", "Hello from quantum world!");
         }
