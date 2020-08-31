@@ -113,9 +113,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                                    .Where(asm => !knownAssemblies.Contains(asm.GetName()))
                 )
                 {
-                    // Look for display encoders in the new assembly.
-                    logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
-
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();
                     try
@@ -138,6 +135,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         continue;
                     }
 
+                    // Look for display encoders in the new assembly.
                     foreach (var type in relevantTypes)
                     {
                         logger.LogDebug(

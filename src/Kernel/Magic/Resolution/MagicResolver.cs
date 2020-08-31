@@ -122,7 +122,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     {
                         if (!t.IsClass && t.IsAbstract) { return false; }
                         var matched = t.IsSubclassOf(typeof(MagicSymbol));
-                        this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
                         return matched;
                     });
 
