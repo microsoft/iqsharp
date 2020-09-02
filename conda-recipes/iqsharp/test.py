@@ -4,7 +4,7 @@
 import unittest
 import jupyter_kernel_test
 
-jupyter_kernel_test.TIMEOUT = 60
+jupyter_kernel_test.TIMEOUT = 120
 
 class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Required --------------------------------------
