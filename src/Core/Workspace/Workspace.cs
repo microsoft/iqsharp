@@ -359,7 +359,7 @@ namespace Microsoft.Quantum.IQSharp
                             GlobalReferences.AddPackage(package, (newStatus) =>
                             {
                                 statusCallback?.Invoke($"Adding package {package}: {newStatus}");
-                            });
+                            }).Wait();
                         }
                         catch (Exception e)
                         {
