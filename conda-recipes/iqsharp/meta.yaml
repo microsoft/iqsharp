@@ -40,7 +40,7 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pip install jupyter_kernel_test
+    - pip install git+https://github.com/jupyter/jupyter_kernel_test
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 
