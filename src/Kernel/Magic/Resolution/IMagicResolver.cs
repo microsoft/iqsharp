@@ -22,8 +22,18 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     {
         ISymbol ISymbolResolver.Resolve(string symbolName) =>
             this.Resolve(symbolName);
+
+        /// <summary>
+        /// Returns the <see cref="MagicSymbol"/> corresponding to the given symbol name,
+        /// searching all loaded assemblies for classes derived from <see cref="MagicSymbol"/>.
+        /// </summary>
+        /// <param name="symbolName">The magic symbol name to resolve.</param>
+        /// <returns>The resolved <see cref="MagicSymbol"/> object, or <c>null</c> if none was found.</returns>
         public new MagicSymbol Resolve(string symbolName);
 
+        /// <summary>
+        /// Returns the list of all <see cref="MagicSymbol"/> objects defined in loaded assemblies.
+        /// </summary>
         public IEnumerable<MagicSymbol> FindAllMagicSymbols();
     }
 }

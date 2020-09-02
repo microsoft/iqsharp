@@ -23,16 +23,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var output = new StreamReader(stream).ReadToEnd();
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
-            var deserializedHistogram = deserializedOutput["Histogram"] as JArray;
 
             var histogram = new Histogram();
-            for (var i = 0; i < deserializedHistogram.Count - 1; i += 2)
+            if (deserializedOutput["Histogram"] is JArray deserializedHistogram)
             {
-                var key = deserializedHistogram[i].ToObject<string>();
-                var value = deserializedHistogram[i + 1].ToObject<double>();
-                histogram[key] = value;
+                for (var i = 0; i < deserializedHistogram.Count - 1; i += 2)
+                {
+                    var key = deserializedHistogram[i].ToObject<string>();
+                    var value = deserializedHistogram[i + 1].ToObject<double>();
+                    if (key != null) histogram[key] = value;
+                }
             }
-
             return histogram;
         }
 
@@ -48,12 +49,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
     }
 
+    /// <summary>
+    /// Encodes a <see cref="Histogram"/> object as HTML.
+    /// </summary>
     public class HistogramToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.Html;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable)
         {
             if (displayable is Histogram histogram)
@@ -106,12 +112,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
     }
 
+
+    /// <summary>
+    /// Encodes a <see cref="Histogram"/> object as plain text.
+    /// </summary>
     public class HistogramToTextEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToTextDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.PlainText;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
             displayable is Histogram histogram
                 ? tableEncoder.Encode(histogram.ToJupyterTable())

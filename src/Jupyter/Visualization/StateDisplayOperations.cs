@@ -35,7 +35,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     dumping states. Computational basis states whose measurement
         ///     probabilities (i.e: squared magnitudes) are below this threshold
         ///     are subject to truncation when
-        ///     <see cref="Microsoft.Quantum.IQSharp.Kernel.JupyterDisplayDumper.TruncateSmallAmplitudes" />
+        ///     <see cref="IConfigurationSource.TruncateSmallAmplitudes" />
         ///     is <c>true</c>.
         /// </summary>
         public double TruncationThreshold { get; set; } = 1e-10;

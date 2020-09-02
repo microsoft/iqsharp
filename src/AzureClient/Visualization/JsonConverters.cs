@@ -13,6 +13,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// Declares classes derived from <see cref="JsonConverter"/> defined in this assembly.
+    /// </summary>
     public static class JsonConverters
     {
         private static readonly ImmutableList<JsonConverter> allConverters = ImmutableList.Create<JsonConverter>(
@@ -23,6 +26,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new AzureClientErrorJsonConverter()
         );
 
+        /// <summary>
+        /// Gets an array of instances of each class derived from <see cref="JsonConverter"/> defined in this assembly.
+        /// </summary>
         public static JsonConverter[] AllConverters => allConverters.ToArray();
     }
 }
