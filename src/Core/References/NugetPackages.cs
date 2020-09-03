@@ -420,7 +420,7 @@ namespace Microsoft.Quantum.IQSharp
                 return resolver.Resolve(resolverContext, CancellationToken.None)
                         .Select(p => dependencies.Single(x => PackageIdentityComparer.Default.Equals(x, p)));
             }
-            catch (NuGetResolverConstraintException exception)
+            catch (Exception exception)
             {
                 Logger.LogWarning($"Exception caught when resolving package dependencies: {exception.Message}");
             }
