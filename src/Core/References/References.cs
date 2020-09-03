@@ -158,7 +158,7 @@ namespace Microsoft.Quantum.IQSharp
             AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
-            PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version.ToNormalizedString(), duration.Elapsed));
+            PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed));
         }
 
         private void Reset()
