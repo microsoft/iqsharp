@@ -26,7 +26,7 @@ namespace Tests.IQSharp
             var controller = Init();
             var response = await controller.List();
             var references = (References)controller.References;
-            var packageCount = references.AutoLoadPackages.Count + references.LazyLoadPackages.Count;
+            var packageCount = references.AutoLoadPackages.Count + references.DeferredLoadPackages.Count;
 
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
