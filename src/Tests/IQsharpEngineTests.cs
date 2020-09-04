@@ -323,15 +323,17 @@ namespace Tests.IQSharp
             var snippets = engine.Snippets as Snippets;
 
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
-            var autoLoadPackageCount = ((References)pkgMagic.References).AutoLoadPackages.Count;
+            var references = ((References)pkgMagic.References);
+            var packageCount = references.AutoLoadPackages.Count + references.DeferredLoadPackages.Count;
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
-            Assert.AreEqual(autoLoadPackageCount, result.Length);
+            Assert.AreEqual(packageCount, result.Length);
             Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result[0]);
+            Assert.AreEqual("Microsoft.Quantum.Standard.Visualization::0.0.0", result[1]);
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
@@ -345,7 +347,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(autoLoadPackageCount + 1, result.Length);
+            Assert.AreEqual(packageCount + 1, result.Length);
 
             // Now it should compile:
             await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");

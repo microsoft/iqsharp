@@ -34,12 +34,21 @@ namespace Microsoft.Quantum.IQSharp
         {
             /// <summary>
             ///      A list of packages to be loaded when the kernel initially
-            ///      starts. Package names should be seperated by <c>,</c>, and
+            ///      starts. Package names should be separated by <c>,</c>, and
             ///      may have optional version specifiers. To suppress all
             ///      automatic package loading, the string <c>"$null"</c> can
             ///      be provided.
             /// </summary>
             public string? AutoLoadPackages { get; set; }
+
+            /// <summary>
+            ///      A list of packages to be loaded asynchronously after the kernel
+            ///      starts. Package names should be separated by <c>,</c>, and
+            ///      may have optional version specifiers. To suppress all
+            ///      deferred package loading, the string <c>"$null"</c> can
+            ///      be provided.
+            /// </summary>
+            public string? DeferredLoadPackages { get; set; }
         }
 
         /// <summary>
@@ -64,6 +73,24 @@ namespace Microsoft.Quantum.IQSharp
             );
 
         /// <summary>
+        /// The list of packages that are included for visualization or other convenience
+        /// purposes, but are not strictly necessary for compilation:
+        ///   * Microsoft.Quantum.Standard.Visualization
+        /// </summary>
+        public readonly ImmutableList<string> DeferredLoadPackages =
+            ImmutableList.Create(
+                "Microsoft.Quantum.Standard.Visualization"
+            );
+
+        private ImmutableList<string> ParsePackages(string pkgs) =>
+            pkgs.Trim() == "$null"
+                ? ImmutableList<string>.Empty
+                : pkgs
+                    .Split(",")
+                    .Select(pkg => pkg.Trim())
+                    .ToImmutableList();
+
+        /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
@@ -79,19 +106,22 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             var referencesOptions = options.Value;
-            if (referencesOptions?.AutoLoadPackages is string pkgs)
+            if (referencesOptions?.AutoLoadPackages is string autoLoadPkgs)
             {
                 logger.LogInformation(
                     "Auto-load packages overridden by startup options: \"{0}\"",
                     referencesOptions.AutoLoadPackages
                 );
-                AutoLoadPackages =
-                    pkgs.Trim() == "$null"
-                    ? ImmutableList<string>.Empty
-                    : pkgs
-                      .Split(",")
-                      .Select(pkg => pkg.Trim())
-                      .ToImmutableList();
+                AutoLoadPackages = ParsePackages(autoLoadPkgs);
+            }
+
+            if (referencesOptions?.DeferredLoadPackages is string deferredLoadPkgs)
+            {
+                logger.LogInformation(
+                    "Deferred-load packages overridden by startup options: \"{0}\"",
+                    referencesOptions.DeferredLoadPackages
+                );
+                DeferredLoadPackages = ParsePackages(deferredLoadPkgs);
             }
 
             foreach (var pkg in AutoLoadPackages)
@@ -104,6 +134,22 @@ namespace Microsoft.Quantum.IQSharp
                 {
                     logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
                 }
+            }
+
+            foreach (var pkg in DeferredLoadPackages)
+            {
+                // Don't wait for DeferredLoadPackages to finish loading
+                this.AddPackage(pkg).ContinueWith(task =>
+                {
+                    if (task.Exception is AggregateException e)
+                    {
+                        logger.LogError(e, $"Unable to load package '{pkg}': {e.InnerException.Message}");
+                    }
+                    else
+                    {
+                        logger.LogError(task.Exception, $"Unable to load package '{pkg}': {task.Exception.Message}");
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
