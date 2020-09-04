@@ -92,25 +92,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     attribute1: new KeyValuePair<string, string>("Version", typeof(AzureClient).Assembly.GetName().Version.ToString()),
                     attribute2: new KeyValuePair<string, string>("ProductGroup", "QDK"))
                 .Build();
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
 
+            MsalCacheHelper? cacheHelper;
             try
             {
+                cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
                 cacheHelper.VerifyPersistence();
             }
-            catch (Exception e)
+            catch (MsalCachePersistenceException e)
             {
-                // Will occur if Linux encryption is unavailable. Fallback to unencrypted cache on Linux, as documented here:
+                // Will occur on Linux if encryption is unavailable. Fallback to unencrypted cache on Linux, as documented here:
                 // https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+                var unencryptedCacheFileName = "iqsharp-unencrypted.bin";
                 logger?.LogWarning(e,
                     "Encrypted credential cache is unavailable. Cache will be stored in plaintext at {Path}. Error: {Message}",
-                    Path.Combine(cacheDirectory, cacheFileName),
+                    Path.Combine(cacheDirectory, unencryptedCacheFileName),
                     e.Message);
-
-                storageCreationProperties = new StorageCreationPropertiesBuilder(cacheFileName, cacheDirectory, ClientId)
-                    .WithMacKeyChain(
-                        serviceName: "Microsoft.Quantum.IQSharp",
-                        accountName: "MSALCache")
+                
+                storageCreationProperties = new StorageCreationPropertiesBuilder(unencryptedCacheFileName, cacheDirectory, ClientId)
                     .WithLinuxUnprotectedFile()
                     .Build();
 
