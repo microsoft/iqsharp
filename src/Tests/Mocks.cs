@@ -162,7 +162,8 @@ namespace Tests.IQSharp
                 }
             }
         }
-
+        
+        public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions => new Dictionary<string, NuGetVersion>();
 
         public Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
         {
