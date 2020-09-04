@@ -84,6 +84,11 @@ namespace Microsoft.Quantum.IQSharp
         public IReferences GlobalReferences { get; }
 
         /// <summary>
+        /// All the references used to compile the Assembly of this workspace.
+        /// </summary>
+        private INugetPackages NugetPackages { get; }
+
+        /// <summary>
         /// The service that takes care of compiling code.
         /// </summary>
         public ICompilerService Compiler { get; }
@@ -150,12 +155,14 @@ namespace Microsoft.Quantum.IQSharp
             IOptions<Settings> config, 
             ICompilerService compiler, 
             IReferences references, 
+            INugetPackages packages,
             ILogger<Workspace> logger, 
             IMetadataController metadata,
             IEventService eventService)
         {
             Compiler = compiler;
             GlobalReferences = references;
+            NugetPackages = packages;
             Logger = logger;
 
             Root = config?.Value.Workspace;
@@ -226,25 +233,21 @@ namespace Microsoft.Quantum.IQSharp
 
                     // Warn if any projects reference a Microsoft.Quantum.Sdk version that is different than
                     // the version of Microsoft.Quantum.Standard we have currently loaded.
-                    if (GlobalReferences is References references)
+                    const string standardPackageName = "Microsoft.Quantum.Standard";
+                    var currentVersion = NugetPackages
+                        ?.Items
+                        ?.Where(package => package.Id == standardPackageName)
+                        .FirstOrDefault()
+                        ?.Version
+                        ?.ToString();
+                    if (!string.IsNullOrEmpty(currentVersion))
                     {
-                        const string standardPackageName = "Microsoft.Quantum.Standard";
-                        var currentVersion = references
-                            .Nugets
-                            ?.Items
-                            ?.Where(package => package.Id == standardPackageName)
-                            .FirstOrDefault()
-                            ?.Version
-                            ?.ToString();
-                        if (!string.IsNullOrEmpty(currentVersion))
+                        foreach (var project in projectsToResolve.Where(project => !project.Sdk.EndsWith(currentVersion)))
                         {
-                            foreach (var project in projectsToResolve.Where(project => !project.Sdk.EndsWith(currentVersion)))
-                            {
-                                Logger?.LogWarning(
-                                    $"Project {project.ProjectFile} references {project.Sdk}, " +
-                                    $"but IQ# is using version {currentVersion} of {standardPackageName}. " +
-                                    $"Project will be compiled using version {currentVersion}.");
-                            }
+                            Logger?.LogWarning(
+                                $"Project {project.ProjectFile} references {project.Sdk}, " +
+                                $"but IQ# is using version {currentVersion} of {standardPackageName}. " +
+                                $"Project will be compiled using version {currentVersion}.");
                         }
                     }
 
@@ -352,7 +355,9 @@ namespace Microsoft.Quantum.IQSharp
                 {
                     foreach (var packageReference in project.PackageReferences)
                     {
-                        var package = $"{packageReference.PackageIdentity.Id}::{packageReference.PackageIdentity.Version}";
+                        var packageId = packageReference.PackageIdentity.Id;
+                        var packageVersion = NugetPackages.DefaultVersions.GetValueOrDefault(packageId, packageReference.PackageIdentity.Version);
+                        var package = $"{packageId}::{packageVersion}";
                         try
                         {
                             Logger?.LogInformation($"Loading package {package} for project {project.ProjectFile}.");

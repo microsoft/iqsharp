@@ -103,9 +103,7 @@ namespace Microsoft.Quantum.IQSharp
         // Nuget's global settings.
         public ISettings NugetSettings { get; }
 
-        // Keeps track of what package version to use for certain packages specified in the packageVersion.json.
-        // This way we can better control what the correct version of Microsoft.Quantum
-        // packages to use, since all of them need to be in-sync.
+        /// <inheritdoc/>
         public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
         public NugetPackages(
