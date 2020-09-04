@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.Extensions.Logging;
@@ -184,11 +186,27 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <summary>
         /// Returns the file name of the .dll to be built for this project.
+        /// If there is no project file, the .dll is named "__ws__0.12.0.0__.dll",
+        /// where 0.12.0.0 is the currently-executing IQ# assembly version.
+        /// If there is a project file, the .dll name will also contain a unique
+        /// representation of the full path to the project file on disk.
         /// </summary>
-        public string CacheDllName =>
-            string.IsNullOrEmpty(ProjectFile)
-                ? "__ws__.dll"
-                : $"__ws__{string.Join("_", ProjectFile.Split(Path.GetInvalidFileNameChars()))}__.dll";
+        public string CacheDllName
+        {
+            get
+            {
+                // Create a filename-safe, collision-avoiding representation of the full
+                // path to the project file on disk.
+                var projectFilenamePart = string.IsNullOrEmpty(ProjectFile)
+                    ? string.Empty
+                    : "__" + string.Join("_x2f_",  // _x2f_ is an arbitrary string to help avoid collisions
+                        ProjectFile
+                            .Replace("_", "_x5f_") // _x5f_ is an arbitrary string to help avoid collisions
+                            .Split(Path.GetInvalidFileNameChars()));
+                var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+                return $"__ws__{assemblyVersion}{projectFilenamePart}__.dll";
+            }
+        }
 
         /// <summary>
         ///     Creates a <see cref="Project"/> for the given workspace folder.

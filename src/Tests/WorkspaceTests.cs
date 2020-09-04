@@ -17,7 +17,7 @@ namespace Tests.IQSharp
         {
             var ws = Startup.Create<Workspace>("Workspace");
 
-            var dll = Path.Combine(ws.CacheFolder, "__ws__.dll");
+            var dll = ws.Projects.Single().CacheDllPath;
             if (File.Exists(dll)) File.Delete(dll);
 
             // First time
