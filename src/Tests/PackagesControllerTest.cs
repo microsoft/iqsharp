@@ -25,10 +25,12 @@ namespace Tests.IQSharp
         {
             var controller = Init();
             var response = await controller.List();
+            var references = (References)controller.References;
+            var packageCount = references.AutoLoadPackages.Count + references.LazyLoadPackages.Count;
 
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            Assert.AreEqual(((References)controller.References).AutoLoadPackages.Count, response.Result.Length);
+            Assert.AreEqual(packageCount, response.Result.Length);
         }
 
         [TestMethod]
