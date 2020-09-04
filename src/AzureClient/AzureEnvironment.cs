@@ -110,6 +110,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     e.Message);
                 
                 storageCreationProperties = new StorageCreationPropertiesBuilder(unencryptedCacheFileName, cacheDirectory, ClientId)
+                    .WithMacKeyChain(
+                        serviceName: "Microsoft.Quantum.IQSharp",
+                        accountName: "MSALCache")
                     .WithLinuxUnprotectedFile()
                     .Build();
 
