@@ -60,7 +60,16 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public readonly ImmutableList<string> AutoLoadPackages =
             ImmutableList.Create(
-                "Microsoft.Quantum.Standard",
+                "Microsoft.Quantum.Standard"
+            );
+
+        /// <summary>
+        /// The list of Packages that are included for visualization or other convenience
+        /// purposes, but are not strictly necessary for compilation:
+        ///   * Microsoft.Quantum.Standard.Visualization
+        /// </summary>
+        public readonly ImmutableList<string> LazyLoadPackages =
+            ImmutableList.Create(
                 "Microsoft.Quantum.Standard.Visualization"
             );
 
@@ -105,6 +114,22 @@ namespace Microsoft.Quantum.IQSharp
                 {
                     logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
                 }
+            }
+
+            foreach (var pkg in LazyLoadPackages)
+            {
+                // Don't wait for LazyLoadPackages to finish loading
+                this.AddPackage(pkg).ContinueWith(task =>
+                {
+                    if (task.Exception is AggregateException e)
+                    {
+                        logger.LogError(e, $"Unable to load package '{pkg}': {e.InnerException.Message}");
+                    }
+                    else
+                    {
+                        logger.LogError(task.Exception, $"Unable to load package '{pkg}': {task.Exception.Message}");
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
