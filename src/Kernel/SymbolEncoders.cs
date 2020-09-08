@@ -4,7 +4,7 @@
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using Microsoft.Jupyter.Core;
-using Markdig;
+//using Markdig;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -52,8 +52,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 var codeLink =
                     $"<a href=\"{symbol.Source}\"><i class=\"fa fas fa-code\"></i></a>";
                 return (
-                    $"<h4><i class=\"fa fas fa-terminal\"></i> {symbol.Name} {codeLink}</h4>" +
-                    Markdown.ToHtml(symbol.Documentation)
+                    $"<h4><i class=\"fa fas fa-terminal\"></i> {symbol.Name} {codeLink}</h4>" //+
+                    //Markdown.ToHtml(symbol.Documentation)
                 ).ToEncodedData();
 
             }
