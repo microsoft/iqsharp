@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -23,6 +24,13 @@ namespace Microsoft.Quantum.IQSharp
         /// List of Assemblies from current Packages.
         /// </summary>
         IEnumerable<AssemblyInfo> Assemblies { get; }
+        
+        /// <summary>
+        /// Keeps track of what package version to use for certain packages specified in appsettings.json.
+        /// This way we can better control what the correct version of Microsoft.Quantum
+        /// packages to use, since all of them should ideally be in-sync.
+        /// </summary>
+        IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
         /// <summary>
         /// Add a package.
