@@ -133,6 +133,12 @@ class IQSharpClient(object):
     def get_packages(self) -> List[str]:
         return self._execute("%package", raise_on_stderr=False)
 
+    def add_project(self, path : str) -> None:
+        return self._execute(f"%project {path}", raise_on_stderr=True)
+
+    def get_projects(self) -> List[str]:
+        return self._execute("%project", raise_on_stderr=False)
+
     def simulate(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('simulate', op, **kwargs)
 

@@ -62,13 +62,13 @@ function defineQSharpMode() {
         },
         {
             token: "builtin",
-            regex: String.raw`(Message|Length|Assert|AssertProb|AssertEqual)\b`,
+            regex: String.raw`(Message|Length)\b`,
             beginWord: true,
         },
         {
             // built-in magic commands
             token: "builtin",
-            regex: String.raw`(%(config|estimate|lsmagic|lsopen|package|performance|simulate|toffoli|trace|version|who|workspace))\b`,
+            regex: String.raw`(%(config|estimate|lsmagic|lsopen|package|performance|project|simulate|toffoli|trace|version|who|workspace))\b`,
             beginWord: true,
         },
         {

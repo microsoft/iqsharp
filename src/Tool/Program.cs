@@ -76,7 +76,9 @@ namespace Microsoft.Quantum.IQSharp
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath",
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
-                            ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces"
+                            ["DEFERRED_LOAD_PACKAGES"] = "DeferredLoadPackages",
+                            ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
+                            ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
                         }
                     })
                     .Build();
@@ -163,11 +165,14 @@ namespace Microsoft.Quantum.IQSharp
                 "Specifies the workspace root folder. " +
                 "All .qs files inside this folder will be automatically compiled and the corresponding " +
                 "operations available for simulation.", CommandOptionType.SingleValue);
+            var skipAutoLoadProjectOption = app.Option("--skipAutoLoadProject",
+                "Specifies whether to skip automatically loading the .csproj from the workspace's root folder.", CommandOptionType.SingleValue);
 
             foreach (var command in app.Commands.Where(c => c.Name == "kernel" || c.Name == "server"))
             {
                 command.Options.Add(cacheOption);
                 command.Options.Add(workspaceOption);
+                command.Options.Add(skipAutoLoadProjectOption);
             }
 
             return app;

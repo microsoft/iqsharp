@@ -17,7 +17,7 @@ namespace Tests.IQSharp
         {
             var ws = Startup.Create<Workspace>("Workspace");
 
-            var dll = Path.Combine(ws.CacheFolder, "__ws__.dll");
+            var dll = ws.Projects.Single().CacheDllPath;
             if (File.Exists(dll)) File.Delete(dll);
 
             // First time
@@ -68,6 +68,74 @@ namespace Tests.IQSharp
             Assert.IsTrue(ws.HasErrors);
         }
 
+        [TestMethod]
+        public void ProjectReferencesWorkspace()
+        {
+            // Loading this workspace should succeed and automatically pull in the referenced projects
+            // Workspace.ProjectReferences.ProjectA and Workspace.ProjectReferences.ProjectB.
+            var ws = Startup.Create<Workspace>("Workspace.ProjectReferences");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
+        }
+
+        [TestMethod]
+        public void ProjectReferencesWorkspaceNoAutoLoad()
+        {
+            // Loading this workspace should fail because the .csproj does not specify <IQSharpLoadAutomatically>,
+            // which prevents the code that depends on Workspace.ProjectReferences.ProjectB from compiling correctly.
+            var ws = Startup.Create<Workspace>("Workspace.ProjectReferences.ProjectA");
+            ws.Reload();
+            Assert.IsTrue(ws.HasErrors);
+
+            // Loading this workspace should succeed, and its Q# operations should be available, but the .csproj
+            // reference should not be loaded because the .csproj specifies <IQSharpLoadAutomatically> as false.
+            ws = Startup.Create<Workspace>("Workspace.ProjectReferences.ProjectB");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            Assert.IsTrue(ws.Projects.Count() == 1);
+            Assert.IsTrue(string.IsNullOrEmpty(ws.Projects.First().ProjectFile));
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
+        }
+
+        [TestMethod]
+        public void ManuallyAddProjects()
+        {
+            var ws = Startup.Create<Workspace>("Workspace");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+
+            ws.AddProject("../Workspace.ProjectReferences.ProjectA/ProjectA.csproj");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsFalse(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+
+            ws.AddProject("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj");
+            ws.Reload();
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+
+            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
+            Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
+
+            // Try to add a project that doesn't exist
+            Assert.ThrowsException<FileNotFoundException>(() =>
+                ws.AddProject("../InvalidProject/InvalidProject.csproj")
+            );
+
+            // Try to add a project that should have already been loaded
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                ws.AddProject("../Workspace.ProjectReferences.ProjectB/ProjectB.csproj")
+            );
+        }
 
         [TestMethod]
         public void ChemistryWorkspace()

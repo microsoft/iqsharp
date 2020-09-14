@@ -115,9 +115,9 @@ namespace Microsoft.Quantum.IQSharp
             ? AssemblyInfo?.Operations
             : AssemblyInfo?.Operations
             .Concat(
-                Workspace
-                ?.AssemblyInfo
-                ?.Operations
+                Workspace?
+                .Assemblies?
+                .SelectMany(asm => asm?.Operations)
             );
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
         private CompilerMetadata LoadCompilerMetadata() =>
             Workspace.HasErrors
                     ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.AssemblyInfo);
+                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
 
         /// <summary>
         /// Compiles the given code. 
@@ -191,7 +191,7 @@ namespace Microsoft.Quantum.IQSharp
                 duration.Stop();
                 var status = logger.HasErrors ? "error" : "ok";
                 var errorIds = logger.ErrorIds .ToArray();
-                SnippetCompiled?.Invoke(this, new SnippetCompiledEventArgs(status, errorIds, duration.Elapsed));
+                SnippetCompiled?.Invoke(this, new SnippetCompiledEventArgs(status, errorIds, Compiler.AutoOpenNamespaces.Keys.ToArray(), duration.Elapsed));
             }
         }
 
@@ -219,9 +219,13 @@ namespace Microsoft.Quantum.IQSharp
             {
                 return this.AssemblyInfo.Assembly;
             }
-            else if (name.Name == Path.GetFileNameWithoutExtension(this.Workspace?.AssemblyInfo?.Location))
+
+            foreach (var asm in this.Workspace?.Assemblies)
             {
-                return this.Workspace.AssemblyInfo.Assembly;
+                if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
+                {
+                    return asm.Assembly;
+                }
             }
 
             return null;
