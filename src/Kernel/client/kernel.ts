@@ -62,7 +62,7 @@ function defineQSharpMode() {
         },
         {
             token: "builtin",
-            regex: String.raw`(Message|Length|Assert|AssertProb|AssertEqual)\b`,
+            regex: String.raw`(Message|Length)\b`,
             beginWord: true,
         },
         {
