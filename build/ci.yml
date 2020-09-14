@@ -5,6 +5,7 @@ trigger: none
 pr:
 - main
 - feature/*
+- features/*
 - release/*
 
 variables:
