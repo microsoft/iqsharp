@@ -12,7 +12,14 @@ import os
 import sys
 import time
 import logging
+import jupyter_client
 from distutils.util import strtobool
+
+class IQSharpNotInstalledError(Exception):
+    pass
+
+class IQSharpNotAvailableError(Exception):
+    pass
 
 def _start_client():
     logger = logging.getLogger(__name__)
@@ -25,7 +32,14 @@ def _start_client():
     elif client_name == "mock":
         import qsharp.clients.mock
         client = qsharp.clients.mock.MockClient()
-    client.start()
+
+    try:
+        client.start()
+    except jupyter_client.kernelspec.NoSuchKernel as ex:
+        message = "IQ# is not installed." + \
+            "\nPlease follow the instructions at https://aka.ms/qdk-install/python."
+        print(message)
+        raise IQSharpNotInstalledError(message)
 
     # Check if the server is up and running:
     server_ready = False
@@ -44,6 +58,9 @@ def _start_client():
             print("!", end='', flush=True)
             time.sleep(1)
     if not server_ready:
-        raise Exception("Q# environment was not available in allocated time.")
+        message = "Q# environment was not available in allocated time." + \
+            "\nPlease check the instructions at https://aka.ms/qdk-install/python."
+        print(message)
+        raise IQSharpNotAvailableError(message)
 
     return client

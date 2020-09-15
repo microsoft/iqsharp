@@ -61,6 +61,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'jupyter_client'
+        'jupyter_client',
+        'numpy'
     ]
 )

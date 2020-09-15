@@ -7,6 +7,8 @@
 # Licensed under the MIT License.
 ##
 
+import numpy as np
+
 # Tuples are json encoded differently in C#, this makes sure they are in the right format.
 def map_tuples(obj):
     """
@@ -17,11 +19,17 @@ def map_tuples(obj):
         result = {
             '@type': 'tuple'
         }
-        for i in range(len(obj)):
+        
+        # For tuples of more than 7 items, the .NET type is ValueTuple<T1,T2,T3,T4,T5,T6,T7,TRest>.
+        # Items beyond Item7 must be nested inside a key called "Rest".
+        maxTupleLength = 7
+        for i in range(min(len(obj), maxTupleLength)):
             result[f"Item{i+1}"] = map_tuples(obj[i])
+        if len(obj) > maxTupleLength:
+            result["Rest"] = map_tuples(obj[maxTupleLength:])
         return result
 
-    elif isinstance(obj, list):
+    elif isinstance(obj, list) or isinstance(obj, np.ndarray):
         result = []
         for i in obj:
             result.append(map_tuples(i))

@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import pytest
 import qsharp
@@ -33,6 +34,56 @@ def test_tuples():
     from Microsoft.Quantum.SanityTests import HelloTuple
     r = HelloTuple.simulate(count=2, tuples=[(0, "Zero"), (1, "One"), (0, "Two"), (0, "Three")])
     assert r == (0, "Two")
+
+def test_ndarray():
+    """
+    Checks that numpy arrays are correctly encoded.
+    """
+    from Microsoft.Quantum.SanityTests import HelloNestedArray, HelloTuple
+
+    r = HelloNestedArray.simulate(index1=1, index2=0, nestedArray=np.array([["00", "01"], np.array(["10", "11"])]))
+    assert r == "10"
+    
+    tuples = [(0, "Zero"), (1, "One")]
+    tuples_array = np.empty(len(tuples), dtype=object)
+    tuples_array[:] = tuples
+    r = HelloTuple.simulate(count=1, tuples=tuples_array)
+    assert r == (1, "One")
+
+def test_result():
+    """
+    Checks that Result-type arguments are handled correctly.
+    """
+    from Microsoft.Quantum.SanityTests import EchoResult
+    r = EchoResult.simulate(input=qsharp.Result.One)
+    assert r == qsharp.Result.One    
+
+    r = EchoResult.simulate(input=1)
+    assert r == qsharp.Result.One
+
+    # Current behavior is that non-integer values will get rounded to
+    # the nearest integer then converted to a Result. Once that behavior
+    # is fixed, this test should be updated to ensure that the following
+    # code throws a qsharp.IQSharpError exception.
+    # See https://github.com/microsoft/qsharp-runtime/issues/376.
+    r = EchoResult.simulate(input=0.2)
+    assert r == qsharp.Result.Zero
+
+def test_long_tuple():
+    """
+    Checks that a 10-tuple argument and return value are handled correctly.
+    """
+    ten_tuple = (0, 10, 20, 30, 40, 50, 60, 70, 80, 90)
+    
+    from Microsoft.Quantum.SanityTests import IndexIntoTenTuple
+    r = IndexIntoTenTuple.simulate(index=3, tenTuple=ten_tuple)
+    assert r == 30
+    r = IndexIntoTenTuple.simulate(index=8, tenTuple=ten_tuple)
+    assert r == 80
+    
+    from Microsoft.Quantum.SanityTests import EchoTenTuple
+    r = EchoTenTuple.simulate(tenTuple=ten_tuple)
+    assert r == ten_tuple
 
 def test_estimate():
     """
