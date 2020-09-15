@@ -6,11 +6,11 @@ print ( qsharp.component_versions() )
 
 def test_simulate():
     """
-    Checks that a simple simulate works correctly
+    Checks that a simple simulate works correctly, both using callable() and 
+    callable.simulate()
     """
     from Microsoft.Quantum.SanityTests import HelloQ
-    r = HelloQ.simulate()
-    assert r == ()
+    assert HelloQ() == HelloQ.simulate() == ()
 
 
 def test_toffoli_simulate():
