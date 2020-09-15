@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IAzureWorkspace? workspace = null;
             try
             {
-                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, resourceGroupName, workspaceName, refreshCredentials);
+                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, refreshCredentials);
             }
             catch (Exception e)
             {
