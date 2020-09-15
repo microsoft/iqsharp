@@ -51,6 +51,12 @@ namespace Microsoft.Quantum.SanityTests {
     }
 
     /// # Summary
+    /// Checks that Pauli-type and arrays of Pauli-type arguments are handled correctly.
+    operation SwapFirstPauli(paulis : Pauli[], pauliToSwap : Pauli) : (Pauli[], Pauli) {
+        return (paulis w/ 0 <- pauliToSwap, paulis[0]);
+    }
+
+    /// # Summary
     /// Checks that a 10-tuple can be round-tripped correctly.
     operation EchoTenTuple(tenTuple : (Int, Int, Int, Int, Int, Int, Int, Int, Int, Int)) : (Int, Int, Int, Int, Int, Int, Int, Int, Int, Int) {
         return tenTuple;

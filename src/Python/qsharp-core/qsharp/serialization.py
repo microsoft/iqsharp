@@ -7,7 +7,10 @@
 # Licensed under the MIT License.
 ##
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 # Tuples are json encoded differently in C#, this makes sure they are in the right format.
 def map_tuples(obj):
@@ -29,7 +32,7 @@ def map_tuples(obj):
             result["Rest"] = map_tuples(obj[maxTupleLength:])
         return result
 
-    elif isinstance(obj, list) or isinstance(obj, np.ndarray):
+    elif isinstance(obj, list) or (np and isinstance(obj, np.ndarray)):
         result = []
         for i in obj:
             result.append(map_tuples(i))
