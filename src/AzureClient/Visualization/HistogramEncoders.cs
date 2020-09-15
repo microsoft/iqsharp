@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,7 +20,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal static class HistogramExtensions
     {
-        internal static Histogram ToHistogram(this Stream stream)
+        internal static Histogram ToHistogram(this Stream stream, ILogger? logger = null)
         {
             var output = new StreamReader(stream).ReadToEnd();
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
@@ -27,6 +28,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var histogram = new Histogram();
             if (deserializedOutput["Histogram"] is JArray deserializedHistogram)
             {
+                // We expect the histogram to have an even number of entries, organized as:
+                // [key, value, key, value, key, value, ...] 
+                // If we have an odd number, we will discard the last entry, but we will also log
+                // a warning, since this indicates that the data was in an unexpected format.
+                if (deserializedHistogram.Count % 2 == 1)
+                {
+                    logger?.LogWarning($"Expected even number of values in histogram, but found {deserializedHistogram.Count}.");
+                }
+
                 for (var i = 0; i < deserializedHistogram.Count - 1; i += 2)
                 {
                     var key = deserializedHistogram[i].ToObject<string>();

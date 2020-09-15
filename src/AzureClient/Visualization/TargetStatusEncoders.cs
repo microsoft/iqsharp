@@ -19,8 +19,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
             new Dictionary<string, object>()
             {
-                ["id"] = target.Id,
-                ["current_availability"] = target.CurrentAvailability,
+                ["id"] = target.Id ?? string.Empty,
+                ["current_availability"] = target.CurrentAvailability ?? string.Empty,
                 ["average_queue_time"] = target.AverageQueueTime ?? 0,
             };
 
