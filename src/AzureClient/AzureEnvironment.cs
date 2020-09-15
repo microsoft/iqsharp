@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum.Client;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Jupyter.Core;
@@ -57,7 +58,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return Production(subscriptionId);
         }
 
-        public async Task<IAzureWorkspace?> GetAuthenticatedWorkspaceAsync(IChannel channel, string resourceGroupName, string workspaceName, bool refreshCredentials)
+        public async Task<IAzureWorkspace?> GetAuthenticatedWorkspaceAsync(
+            IChannel channel,
+            ILogger? logger,
+            string resourceGroupName,
+            string workspaceName,
+            bool refreshCredentials)
         {
             if (Type == AzureEnvironmentType.Mock)
             {
@@ -86,7 +92,34 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     attribute1: new KeyValuePair<string, string>("Version", typeof(AzureClient).Assembly.GetName().Version.ToString()),
                     attribute2: new KeyValuePair<string, string>("ProductGroup", "QDK"))
                 .Build();
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
+
+            MsalCacheHelper? cacheHelper;
+            try
+            {
+                cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
+                cacheHelper.VerifyPersistence();
+            }
+            catch (MsalCachePersistenceException e)
+            {
+                // Will occur on Linux if encryption is unavailable. Fallback to unencrypted cache on Linux, as documented here:
+                // https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+                var unencryptedCacheFileName = "iqsharp-unencrypted.bin";
+                logger?.LogWarning(e,
+                    "Encrypted credential cache is unavailable. Cache will be stored in plaintext at {Path}. Error: {Message}",
+                    Path.Combine(cacheDirectory, unencryptedCacheFileName),
+                    e.Message);
+                
+                storageCreationProperties = new StorageCreationPropertiesBuilder(unencryptedCacheFileName, cacheDirectory, ClientId)
+                    .WithMacKeyChain(
+                        serviceName: "Microsoft.Quantum.IQSharp",
+                        accountName: "MSALCache")
+                    .WithLinuxUnprotectedFile()
+                    .Build();
+
+                cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties);
+                cacheHelper.VerifyPersistence();
+            }
+
             var msalApp = PublicClientApplicationBuilder.Create(ClientId).WithAuthority(Authority).Build();
             cacheHelper.RegisterCache(msalApp.UserTokenCache);
 
