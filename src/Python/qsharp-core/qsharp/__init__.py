@@ -35,6 +35,7 @@ __all__ = [
     'compile', 'reload',
     'get_available_operations', 'get_available_operations_by_namespace',
     'get_workspace_operations',
+    'get_config', 'set_config', 'save_config',
     'packages',
     'projects',
     'IQSharpError',
@@ -87,6 +88,24 @@ def get_workspace_operations() -> List[str]:
     in the current workspace, excluding dynamically compiled snippets.
     """
     return client.get_workspace_operations()
+
+def get_config() -> Dict[str, object]:
+    """
+    TODO: document
+    """
+    return client.get_config()
+
+def set_config(name : str, value : object) -> None:
+    """
+    TODO: document
+    """
+    client.set_config(name, value)
+
+def save_config() -> None:
+    """
+    TODO: document
+    """
+    client.save_config()
 
 def get_available_operations_by_namespace() -> Dict[str, List[str]]:
     """
