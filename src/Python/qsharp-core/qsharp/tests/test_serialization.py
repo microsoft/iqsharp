@@ -38,6 +38,18 @@ class TestSerialization(unittest.TestCase):
             map_tuples(actual), expected
         )
 
+
+    def test_map_numpy_types(self):
+        self.assertEqual(
+            map_tuples(np.array([1, 2, 3], dtype=np.int32)),
+            [1, 2, 3]
+        )
+        self.assertEqual(
+            map_tuples(np.array([1., 2., 3.], dtype=np.single)),
+            [1., 2., 3.]
+        )
+
+
     def test_map_ndarray(self):
         self.assertEqual(
             map_tuples(np.array([1, 2, 3])),
