@@ -44,11 +44,8 @@ def map_tuples(obj):
             result[i] = map_tuples(obj[i])
         return result
 
-    elif np and np.issubdtype(type(obj), np.integer):
-        return int(obj)
-
-    elif np and np.issubdtype(type(obj), np.floating):
-        return float(obj)
+    elif np and isinstance(obj, np.generic):
+        return obj.item()
 
     else:
         return obj
