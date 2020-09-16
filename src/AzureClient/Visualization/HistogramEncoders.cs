@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,20 +20,30 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal static class HistogramExtensions
     {
-        internal static Histogram ToHistogram(this Stream stream)
+        internal static Histogram ToHistogram(this Stream stream, ILogger? logger = null)
         {
             var output = new StreamReader(stream).ReadToEnd();
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
-            var deserializedHistogram = deserializedOutput["Histogram"] as JArray;
 
             var histogram = new Histogram();
-            for (var i = 0; i < deserializedHistogram.Count - 1; i += 2)
+            if (deserializedOutput["Histogram"] is JArray deserializedHistogram)
             {
-                var key = deserializedHistogram[i].ToObject<string>();
-                var value = deserializedHistogram[i + 1].ToObject<double>();
-                histogram[key] = value;
-            }
+                // We expect the histogram to have an even number of entries, organized as:
+                // [key, value, key, value, key, value, ...] 
+                // If we have an odd number, we will discard the last entry, but we will also log
+                // a warning, since this indicates that the data was in an unexpected format.
+                if (deserializedHistogram.Count % 2 == 1)
+                {
+                    logger?.LogWarning($"Expected even number of values in histogram, but found {deserializedHistogram.Count}.");
+                }
 
+                for (var i = 0; i < deserializedHistogram.Count - 1; i += 2)
+                {
+                    var key = deserializedHistogram[i].ToObject<string>();
+                    var value = deserializedHistogram[i + 1].ToObject<double>();
+                    if (key != null) histogram[key] = value;
+                }
+            }
             return histogram;
         }
 
@@ -48,12 +59,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
     }
 
+    /// <summary>
+    /// Encodes a <see cref="Histogram"/> object as HTML.
+    /// </summary>
     public class HistogramToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.Html;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable)
         {
             if (displayable is Histogram histogram)
@@ -106,12 +122,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
     }
 
+
+    /// <summary>
+    /// Encodes a <see cref="Histogram"/> object as plain text.
+    /// </summary>
     public class HistogramToTextEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToTextDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.PlainText;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
             displayable is Histogram histogram
                 ? tableEncoder.Encode(histogram.ToJupyterTable())

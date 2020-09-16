@@ -256,21 +256,21 @@ namespace Tests.IQSharp
             Assert.AreEqual(0, logger.Events.Count);
 
             var count = 0;
-            engine.ExecuteMundane(SNIPPETS.HelloQ, channel);
+            engine.ExecuteMundane(SNIPPETS.HelloQ, channel).Wait();
             Assert.AreEqual(count + 1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.Compile", logger.Events[count].Name);
             Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
 
             count++;
-            engine.Execute("%simulate HelloQ", channel);
+            engine.Execute("%simulate HelloQ", channel).Wait();
             Assert.AreEqual(count + 1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.Action", logger.Events[count].Name);
             Assert.AreEqual("%simulate", logger.Events[count].Properties["Quantum.IQSharp.Command"]);
             Assert.AreEqual("Ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
 
             count++;
-            engine.Execute("%package Microsoft.Quantum.Standard", channel);
+            engine.Execute("%package Microsoft.Quantum.Standard", channel).Wait();
             Assert.AreEqual(count + 2, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[count].Name);
             Assert.AreEqual("Microsoft.Quantum.Standard", logger.Events[count].Properties["Quantum.IQSharp.PackageId"]);

@@ -32,7 +32,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
             if (configurationSource.Configuration.TryGetValue(keyName, out var value))
             {
-                action(value.ToObject<T>());
+                if (value.ToObject<T>() is T obj)
+                    action(obj);
             }
             return configurationSource;
         }
@@ -136,6 +137,19 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return simulator;
         }
 
+        /// <summary>
+        ///     Adds functionality to a given quantum simulator to display
+        ///     diagnostic output and stack traces for exceptions.
+        /// </summary>
+        /// <param name="simulator">
+        ///     The simulator to be augmented with stack trace display functionality.
+        /// </param>
+        /// <param name="channel">
+        ///     The Jupyter display channel to be used to display stack traces.
+        /// </param>
+        /// <returns>
+        ///     The value of <paramref name="simulator" />.
+        /// </returns>
         public static T WithStackTraceDisplay<T>(this T simulator, IChannel channel)
         where T: SimulatorBase
         {

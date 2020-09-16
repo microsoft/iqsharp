@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp
             this SourceRepository repository,
             string packageId,
             bool includePrerelease,
-            NuGet.Common.ILogger logger,
+            NuGet.Common.ILogger? logger,
             int batchSize = 50,
             [EnumeratorCancellation] CancellationToken cancellationToken = default
         )
@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp
             this PackageSearchResource searchResource,
             string packageId,
             bool includePrerelease,
-            NuGet.Common.ILogger logger,
+            NuGet.Common.ILogger? logger,
             int batchSize = 50,
             [EnumeratorCancellation] CancellationToken cancellationToken = default
         )
