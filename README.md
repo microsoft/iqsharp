@@ -33,7 +33,7 @@ cd src/Kernel/
 npm install
 ```
 
-To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/master/iqsharp.sln) solution file.
+To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/main/iqsharp.sln) solution file.
 To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
 
 In either case, the IQ# kernel can be installed by using `dotnet run`:
@@ -85,7 +85,7 @@ In either case, you can also use a Quantum Development Kit version number (0.8 o
 
 | branch | status    |
 |--------|-----------|
-| master | [![Build Status](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_apis/build/status/microsoft.iqsharp?branchName=master)](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_build/latest?definitionId=14&branchName=master) |
+| main | [![Build Status](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_apis/build/status/microsoft.iqsharp?branchName=main)](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_build/latest?definitionId=14&branchName=main) |
 
 ## Feedback ##
 
@@ -118,4 +118,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-For more details, please see [CONTRIBUTING.md](./tree/master/CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/quantum/contributing/).
+For more details, please see [CONTRIBUTING.md](./tree/main/CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/quantum/contributing/).
