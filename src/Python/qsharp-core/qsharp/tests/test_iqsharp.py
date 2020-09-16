@@ -11,7 +11,8 @@ def test_simulate():
     """
     from Microsoft.Quantum.SanityTests import HelloQ, HelloAgain
     assert HelloQ() == HelloQ.simulate() == ()
-    assert HelloAgain(1, "Ada") == HelloAgain.simulate(1, "Ada")
+    assert HelloAgain(
+        count=1, name="Ada") == HelloAgain.simulate(count=1, name="Ada")
 
 
 def test_toffoli_simulate():
