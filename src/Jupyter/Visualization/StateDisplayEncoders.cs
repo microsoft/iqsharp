@@ -224,6 +224,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public EncodedData? Encode(object displayable)
         {
+            if (ConfigurationSource.PlainTextOnly) return null;
+
             string StyleForAngle(double angle) =>
                 $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
                    text-align: center;";
