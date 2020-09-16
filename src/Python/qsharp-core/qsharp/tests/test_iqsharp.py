@@ -32,24 +32,24 @@ def test_tuples():
     """
     Checks that tuples are correctly encoded both ways.
     """
-    from Microsoft.Quantum.SanityTests import HelloTuple
-    r = HelloTuple.simulate(count=2, tuples=[(0, "Zero"), (1, "One"), (0, "Two"), (0, "Three")])
+    from Microsoft.Quantum.SanityTests import IndexIntoTuple
+    r = IndexIntoTuple.simulate(count=2, tuples=[(0, "Zero"), (1, "One"), (0, "Two"), (0, "Three")])
     assert r == (0, "Two")
 
 
-def test_ndarray():
+def test_numpy_types():
     """
-    Checks that numpy arrays are correctly encoded.
+    Checks that numpy types are correctly encoded.
     """
-    from Microsoft.Quantum.SanityTests import HelloNestedArray, HelloTuple
+    from Microsoft.Quantum.SanityTests import IndexIntoNestedArray, IndexIntoTuple
 
-    r = HelloNestedArray.simulate(index1=1, index2=0, nestedArray=np.array([["00", "01"], np.array(["10", "11"])]))
-    assert r == "10"
+    r = IndexIntoNestedArray.simulate(index1=1, index2=0, nestedArray=np.array([[100, 101], np.array([110, 111], dtype=np.int64)]))
+    assert r == 110
     
     tuples = [(0, "Zero"), (1, "One")]
     tuples_array = np.empty(len(tuples), dtype=object)
     tuples_array[:] = tuples
-    r = HelloTuple.simulate(count=1, tuples=tuples_array)
+    r = IndexIntoTuple.simulate(count=1, tuples=tuples_array)
     assert r == (1, "One")
 
 

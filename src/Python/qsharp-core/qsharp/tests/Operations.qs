@@ -34,13 +34,13 @@ namespace Microsoft.Quantum.SanityTests {
 
     /// # Summary
     /// Checks that built-in complex types can be used as arguments.
-    operation HelloTuple(count : Int, tuples : (Result, String)[]) : (Result, String) {
+    operation IndexIntoTuple(count : Int, tuples : (Result, String)[]) : (Result, String) {
         return tuples[count];
     }
 
     /// # Summary
     /// Checks that nested arrays can be used as arguments.
-    operation HelloNestedArray(index1 : Int, index2 : Int, nestedArray : String[][]) : String {
+    operation IndexIntoNestedArray(index1 : Int, index2 : Int, nestedArray : Int[][]) : Int {
         return nestedArray[index1][index2];
     }
 
