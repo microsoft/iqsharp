@@ -9,8 +9,9 @@ def test_simulate():
     Checks that a simple simulate works correctly, both using callable() and 
     callable.simulate()
     """
-    from Microsoft.Quantum.SanityTests import HelloQ
+    from Microsoft.Quantum.SanityTests import HelloQ, HelloAgain
     assert HelloQ() == HelloQ.simulate() == ()
+    assert HelloAgain(1, "Ada") == HelloAgain.simulate(1, "Ada")
 
 
 def test_toffoli_simulate():
