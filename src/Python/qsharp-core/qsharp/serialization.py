@@ -11,6 +11,9 @@ try:
     import numpy as np
 except ImportError:
     np = None
+except Exception as ex:
+    print("Failed to import numpy. Please check your numpy installation.")
+    raise
 
 # Tuples are json encoded differently in C#, this makes sure they are in the right format.
 def map_tuples(obj):

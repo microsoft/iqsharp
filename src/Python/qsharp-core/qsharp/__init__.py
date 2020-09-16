@@ -21,6 +21,7 @@ from distutils.version import LooseVersion
 from qsharp.clients import _start_client
 from qsharp.clients.iqsharp import IQSharpError
 from qsharp.loader import QSharpCallable, QSharpModuleFinder
+from qsharp.config import Config
 from qsharp.packages import Packages
 from qsharp.projects import Projects
 from qsharp.types import Result, Pauli
@@ -35,7 +36,7 @@ __all__ = [
     'compile', 'reload',
     'get_available_operations', 'get_available_operations_by_namespace',
     'get_workspace_operations',
-    'get_config', 'set_config', 'save_config',
+    'config',
     'packages',
     'projects',
     'IQSharpError',
@@ -89,34 +90,6 @@ def get_workspace_operations() -> List[str]:
     """
     return client.get_workspace_operations()
 
-def get_config() -> Dict[str, object]:
-    """
-    Returns a dictionary containing the names and values of the configuration
-    options. Options can be set by calls to qsharp.set_config() or by loading
-    a file previously created by qsharp.save_config().
-    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
-    of supported configuration setting names and values.
-    """
-    return client.get_config()
-
-def set_config(name : str, value : object) -> None:
-    """
-    Sets a specified configuration option with the specified value.
-    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
-    of supported configuration setting names and values.
-    """
-    client.set_config(name, value)
-
-def save_config() -> None:
-    """
-    Saves all current configuration options to a file named .iqsharp-config.json
-    in the current working directory. This file is automatically loaded
-    by the IQ# kernel at initialization time.
-    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
-    of supported configuration setting names and values.
-    """
-    client.save_config()
-
 def get_available_operations_by_namespace() -> Dict[str, List[str]]:
     """
     Returns a dictionary from namespaces to lists of operations and functions
@@ -148,6 +121,7 @@ def component_versions() -> Dict[str, LooseVersion]:
 ## STARTUP ##
 
 client = _start_client()
+config = Config(client)
 packages = Packages(client)
 projects = Projects(client)
 

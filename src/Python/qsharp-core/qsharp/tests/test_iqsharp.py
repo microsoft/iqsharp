@@ -165,24 +165,15 @@ def test_multi_compile():
 
 def test_config():
     """
-    Verifies get and set of config settings
+    Verifies get and set of config settings of various types
     """
-    config = qsharp.get_config()
-    assert len(config) == 0
+    qsharp.config["dump.basisStateLabelingConvention"] = "Bitstring"
+    qsharp.config["dump.truncateSmallAmplitudes"] = True
+    qsharp.config["dump.truncationThreshold"] = 1e-6
 
-    qsharp.set_config("dump.basisStateLabelingConvention", "Bitstring")
-    config = qsharp.get_config()
-    assert config["dump.basisStateLabelingConvention"] == "Bitstring"
-
-    qsharp.set_config("dump.truncateSmallAmplitudes", True)
-    config = qsharp.get_config()
-    assert config["dump.truncateSmallAmplitudes"] == True
-
-    qsharp.set_config("dump.truncationThreshold", 1e-6)
-    config = qsharp.get_config()
-    assert config["dump.truncationThreshold"] == 1e-6
-
-    assert len(config) == 3
+    assert qsharp.config["dump.basisStateLabelingConvention"] == "Bitstring"
+    assert qsharp.config["dump.truncateSmallAmplitudes"] == True
+    assert qsharp.config["dump.truncationThreshold"] == 1e-6
 
 
 def test_packages():
