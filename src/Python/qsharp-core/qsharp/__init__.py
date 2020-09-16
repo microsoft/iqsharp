@@ -91,19 +91,29 @@ def get_workspace_operations() -> List[str]:
 
 def get_config() -> Dict[str, object]:
     """
-    TODO: document
+    Returns a dictionary containing the names and values of the configuration
+    options. Options can be set by calls to qsharp.set_config() or by loading
+    a file previously created by qsharp.save_config().
+    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
+    of supported configuration setting names and values.
     """
     return client.get_config()
 
 def set_config(name : str, value : object) -> None:
     """
-    TODO: document
+    Sets a specified configuration option with the specified value.
+    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
+    of supported configuration setting names and values.
     """
     client.set_config(name, value)
 
 def save_config() -> None:
     """
-    TODO: document
+    Saves all current configuration options to a file named .iqsharp-config.json
+    in the current working directory. This file is automatically loaded
+    by the IQ# kernel at initialization time.
+    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/config for the list
+    of supported configuration setting names and values.
     """
     client.save_config()
 
