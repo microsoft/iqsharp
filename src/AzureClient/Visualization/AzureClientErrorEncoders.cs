@@ -39,25 +39,40 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
     }
 
+    /// <summary>
+    /// Encodes an <see cref="AzureClientError"/> object as HTML.
+    /// </summary>
     public class AzureClientErrorToHtmlEncoder : IResultEncoder
     {
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.Html;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) => (displayable as AzureClientError?)?.ToDescription().ToEncodedData();
     }
 
+    /// <summary>
+    /// Encodes an <see cref="AzureClientError"/> object as plain text.
+    /// </summary>
     public class AzureClientErrorToTextEncoder : IResultEncoder
     {
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.PlainText;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) => (displayable as AzureClientError?)?.ToDescription().ToEncodedData();
     }
 
+    /// <summary>
+    /// Encodes an <see cref="AzureClientError"/> object as JSON.
+    /// </summary>
     public class AzureClientErrorJsonConverter : JsonConverter<AzureClientError>
     {
+        /// <inheritdoc/>
         public override AzureClientError ReadJson(JsonReader reader, Type objectType, AzureClientError existingValue, bool hasExistingValue, JsonSerializer serializer) =>
             throw new NotImplementedException();
 
+        /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, AzureClientError value, JsonSerializer serializer) =>
             JToken.FromObject(value.ToDictionary()).WriteTo(writer);
     }

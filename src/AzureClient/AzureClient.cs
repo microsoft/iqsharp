@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IAzureWorkspace? workspace = null;
             try
             {
-                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, resourceGroupName, workspaceName, refreshCredentials);
+                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, refreshCredentials);
             }
             catch (Exception e)
             {
@@ -410,7 +410,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 var request = WebRequest.Create(job.Details.OutputDataUri);
                 using var responseStream = request.GetResponse().GetResponseStream();
-                return responseStream.ToHistogram().ToExecutionResult();
+                return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
             catch (Exception e)
             {
