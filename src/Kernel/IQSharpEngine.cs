@@ -181,36 +181,39 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             channel = channel.WithNewLines();
 
-            try
+            return await Task.Run(() =>
             {
-                var code = Snippets.Compile(input);
+                try
+                {
+                    var code = Snippets.Compile(input);
 
-                foreach(var m in code.warnings) { channel.Stdout(m); }
+                    foreach (var m in code.warnings) { channel.Stdout(m); }
 
-                // Gets the names of all the operations found for this snippet
-                var opsNames =
-                    code.Elements?
-                        .Where(e => e.IsQsCallable)
-                        .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
-                        .ToArray();
+                    // Gets the names of all the operations found for this snippet
+                    var opsNames =
+                        code.Elements?
+                            .Where(e => e.IsQsCallable)
+                            .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
+                            .ToArray();
 
-                return opsNames.ToExecutionResult();
-            }
-            catch (CompilationErrorsException c)
-            {
-                foreach (var m in c.Errors) channel.Stderr(m);
-                return ExecuteStatus.Error.ToExecutionResult();
-            }
-            catch (Exception e)
-            {
-                Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
-                channel.Stderr(e.Message);
-                return ExecuteStatus.Error.ToExecutionResult();
-            }
-            finally
-            {
-                performanceMonitor.Report();
-            }
+                    return opsNames.ToExecutionResult();
+                }
+                catch (CompilationErrorsException c)
+                {
+                    foreach (var m in c.Errors) channel.Stderr(m);
+                    return ExecuteStatus.Error.ToExecutionResult();
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
+                    channel.Stderr(e.Message);
+                    return ExecuteStatus.Error.ToExecutionResult();
+                }
+                finally
+                {
+                    performanceMonitor.Report();
+                }
+            });
         }
     }
 }

@@ -410,7 +410,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 var request = WebRequest.Create(job.Details.OutputDataUri);
                 using var responseStream = request.GetResponse().GetResponseStream();
-                return responseStream.ToHistogram().ToExecutionResult();
+                return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
             catch (Exception e)
             {

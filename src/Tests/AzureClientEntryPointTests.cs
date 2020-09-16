@@ -49,7 +49,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task FromBrokenSnippet()
+        public void FromBrokenSnippet()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.TwoErrors });
             Assert.ThrowsException<CompilationErrorsException>(() =>
@@ -70,7 +70,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task FromWorkspaceMissingArgument()
+        public void FromWorkspaceMissingArgument()
         {
             var entryPointGenerator = Init("Workspace");
             var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
@@ -83,7 +83,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task FromWorkspaceIncorrectArgumentType()
+        public void FromWorkspaceIncorrectArgumentType()
         {
             var entryPointGenerator = Init("Workspace");
             var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
@@ -109,7 +109,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task FromBrokenWorkspace()
+        public void FromBrokenWorkspace()
         {
             var entryPointGenerator = Init("Workspace.Broken");
             Assert.ThrowsException<CompilationErrorsException>(() =>
@@ -130,7 +130,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task InvalidOperationName()
+        public void InvalidOperationName()
         {
             var entryPointGenerator = Init("Workspace");
             Assert.ThrowsException<UnsupportedOperationException>(() =>
@@ -138,7 +138,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task InvalidEntryPointOperation()
+        public void InvalidEntryPointOperation()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidEntryPoint });
             Assert.ThrowsException<CompilationErrorsException>(() =>
