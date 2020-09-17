@@ -241,8 +241,7 @@ class IQSharpClient(object):
         errors = []
 
         def log_error(msg):
-            if msg['msg_type'] == 'stream' and msg['content']['name'] == 'stderr':
-                errors.append(msg['content']['text'])
+            errors.append(msg)
 
         handlers = {
             'execute_result': (lambda msg: results.append(msg))
