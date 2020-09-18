@@ -183,8 +183,11 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public void AddAssemblies(params AssemblyInfo[] assemblies)
         {
-            Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
-            Reset();
+            lock (this)
+            {
+                Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
+                Reset();
+            }
         }
 
         /// <summary>
