@@ -208,7 +208,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 await DownloadPackages(sourceCacheContext, packages, statusCallback);
 
-                lock (this)
+                lock (this) 
                 {
                     this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
                     this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
