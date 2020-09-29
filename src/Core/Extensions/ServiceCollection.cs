@@ -19,7 +19,7 @@ namespace Microsoft.Quantum.IQSharp
             services.AddSingleton<IReferences, References>();
             services.AddSingleton<IWorkspace, Workspace>();
             services.AddSingleton<ISnippets, Snippets>();
-            services.AddSingleton<PerformanceMonitor>();
+            services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
             services.AddSingleton<IMetadataController, MetadataController>();
         }
     }
