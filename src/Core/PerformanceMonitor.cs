@@ -17,7 +17,10 @@ namespace Microsoft.Quantum.IQSharp
         private bool alive = false;
         private Thread? thread = null;
 
+        /// <inheritdoc />
         public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
+
+        /// <inheritdoc />
         public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
         public PerformanceMonitor(
@@ -27,6 +30,7 @@ namespace Microsoft.Quantum.IQSharp
             Logger = logger;
         }
 
+        /// <inheritdoc />
         public void Report()
         {
 
@@ -44,6 +48,7 @@ namespace Microsoft.Quantum.IQSharp
             ));
         }
 
+        /// <inheritdoc />
         public void Start()
         {
             alive = true;
@@ -51,8 +56,10 @@ namespace Microsoft.Quantum.IQSharp
             thread.Start();
         }
 
+        /// <inheritdoc />
         public void Join() => thread?.Join();
 
+        /// <inheritdoc />
         public void Stop()
         {
             alive = false;
@@ -70,6 +77,10 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        /// <summary>
+        ///      Given a new simulator performance record, emits an event with
+        ///      that performance data.
+        /// </summary>
         internal void ReportSimulatorPerformance(SimulatorPerformanceArgs args)
         {
             this.OnSimulatorPerformanceAvailable?.Invoke(this, args);

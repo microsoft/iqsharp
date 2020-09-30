@@ -11,6 +11,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    
+    /// <summary>
+    ///     Represents details about the performance of a simulator used from
+    ///     the IQ# kernel.
+    /// </summary>
     public class SimulatorPerformanceArgs : EventArgs
     {
         public SimulatorPerformanceArgs(string simulatorName, int nQubits, TimeSpan duration)
@@ -39,6 +44,10 @@ namespace Microsoft.Quantum.IQSharp
         public TimeSpan Duration { get; }
     }
 
+    /// <summary>
+    ///      Represents details about the performance of the IQ# kernel process
+    ///      itself.
+    /// </summary>
     public class KernelPerformanceArgs : EventArgs
     {
         public KernelPerformanceArgs(long managedRamUsed, long totalRamUsed)
@@ -47,18 +56,45 @@ namespace Microsoft.Quantum.IQSharp
             this.TotalRamUsed = totalRamUsed;
         }
 
+        /// <summary>
+        ///      The approximate amount of RAM (in bytes) used by managed code
+        ///      in the kernel process.
+        /// </summary>
         public long ManagedRamUsed { get; }
+        
+        /// <summary>
+        ///      The approximate amount of RAM (in bytes) used by all code in
+        ///      the IQ# kernel process.
+        /// </summary>
         public long TotalRamUsed { get; }
     }
 
+    /// <summary>
+    ///      A service for reporting kernel performance, and collecting
+    ///      performance reports from other kernel services.
+    /// </summary>
     public interface IPerformanceMonitor
     {
+        /// <summary>
+        ///     Forces a report of current kernel performance data to be
+        ///     emitted.
+        /// </summary>
         public void Report();
 
+        /// <summary>
+        ///     Starts a background thread that periodically reports
+        ///     performance data.
+        /// </summary>
         public void Start();
 
+        /// <summary>
+        ///     Joins the background thread used to report performance data.
+        /// </summary>
         public void Join();
 
+        /// <summary>
+        ///     Joins the background thread used to report performance data.
+        /// </summary>
         public void Stop();
 
         /// <summary>

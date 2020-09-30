@@ -138,7 +138,7 @@ namespace Tests.IQSharp
         {
             var engine = Init();
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource, new MockPerformanceMonitor());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
