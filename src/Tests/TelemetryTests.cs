@@ -282,6 +282,7 @@ namespace Tests.IQSharp
             // NB: Not testing Duration, since that is non-determinstic.
 
             // Make sure that forcing a performance report works.
+            count++;
             performanceMonitor.Report();
             Assert.AreEqual(count + 1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.KernelPerformance", logger.Events[count].Name);            
