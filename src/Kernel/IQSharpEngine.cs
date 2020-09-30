@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
-        private readonly PerformanceMonitor performanceMonitor;
+        private readonly IPerformanceMonitor performanceMonitor;
 
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
-            PerformanceMonitor performanceMonitor,
+            IPerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IEventService eventService,
             IMagicSymbolResolver magicSymbolResolver,
