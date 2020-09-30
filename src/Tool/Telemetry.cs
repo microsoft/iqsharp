@@ -86,7 +86,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 performanceMonitor.OnSimulatorPerformanceAvailable += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                 performanceMonitor.OnKernelPerformanceAvailable += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
-            }
+            };
         }
 
         public Applications.Events.ILogger TelemetryLogger { get; private set; }
@@ -233,7 +233,7 @@ namespace Microsoft.Quantum.IQSharp
             return evt;
         }
 
-        pubic static EventProperties AsTelemetryEvent(this SimulatorPerformanceArgs info)
+        public static EventProperties AsTelemetryEvent(this SimulatorPerformanceArgs info)
         {
             var evt = new EventProperties() { Name = "SimulatorPerformance".WithTelemetryNamespace() };
 
@@ -244,7 +244,7 @@ namespace Microsoft.Quantum.IQSharp
             return evt;
         }
 
-        pubic static EventProperties AsTelemetryEvent(this KernelPerformanceArgs info)
+        public static EventProperties AsTelemetryEvent(this KernelPerformanceArgs info)
         {
             var evt = new EventProperties() { Name = "KernelPerformance".WithTelemetryNamespace() };
 
