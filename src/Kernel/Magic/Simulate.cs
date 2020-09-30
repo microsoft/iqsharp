@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IExecutionEngine engine, IPerformanceMonitor monitor) : base(
+        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor) : base(
             "simulate",
             new Documentation
             {
@@ -112,7 +112,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             stopwatch.Stop();
             var result = value.ToExecutionResult();
             (Monitor as PerformanceMonitor)?.ReportSimulatorPerformance(new SimulatorPerformanceArgs(
-                simulatorName: typeof(SimulateMagic).FullName,
+                simulatorName: qsim.GetType().FullName,
                 nQubits: (int)maxNQubits,
                 duration: stopwatch.Elapsed
             ));

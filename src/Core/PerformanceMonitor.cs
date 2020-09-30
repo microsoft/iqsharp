@@ -17,8 +17,8 @@ namespace Microsoft.Quantum.IQSharp
         private bool alive = false;
         private Thread? thread = null;
 
-        public event EventHandler<SimulatorPerformanceArgs> OnSimulatorPerformanceAvailable;
-        public event EventHandler<KernelPerformanceArgs> OnKernelPerformanceAvailable;
+        public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
+        public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
         public PerformanceMonitor(
             ILogger<PerformanceMonitor> logger

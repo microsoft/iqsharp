@@ -58,7 +58,7 @@ namespace Tests.IQSharp
         public static async Task<string> AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver, configSource, new MockPerformanceMonitor());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);

@@ -65,7 +65,13 @@ namespace Microsoft.Quantum.IQSharp
         ///     Raised when a simulator reports information about its
         ///     performance.
         /// </summary>
-        public event EventHandler<SimulatorPerformanceArgs> OnSimulatorPerformanceAvailable;
+        public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
+
+        /// <summary>
+        ///     Raised when information about kernel performance (e.g. RAM
+        ///     usage) is available.
+        /// </summary>
+        public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
     }
 }
