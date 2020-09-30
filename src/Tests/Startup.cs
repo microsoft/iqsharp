@@ -53,6 +53,7 @@ namespace Tests.IQSharp
             services.AddSingleton<IShellRouter>(new MockShellRouter(shell));
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());
             services.AddSingleton<INugetPackages>(new MockNugetPackages());
+            services.AddSingleton<IPerformanceMonitor>(new MockPerformanceMonitor());
         }
 
         public static void AddTelemetry(this IServiceCollection services)
