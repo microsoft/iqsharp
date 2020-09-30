@@ -239,7 +239,7 @@ namespace Microsoft.Quantum.IQSharp
 
             evt.SetProperty("SimulatorName".WithTelemetryNamespace(), info.SimulatorName);
             evt.SetProperty("NQubits".WithTelemetryNamespace(), info.NQubits);
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration);
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
 
             return evt;
         }
