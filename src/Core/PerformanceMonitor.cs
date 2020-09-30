@@ -12,10 +12,32 @@ namespace Microsoft.Quantum.IQSharp
 {
     public class PerformanceMonitor : IPerformanceMonitor
     {
-
-        private readonly ILogger<PerformanceMonitor> Logger;
         private bool alive = false;
         private Thread? thread = null;
+
+        public bool EnableBackgroundReporting
+        {
+            get => alive;
+            set
+            {
+                if (alive == value)
+                {
+                    // No changes needed, return.
+                    return;
+                }
+
+                if (alive && !value)
+                {
+                    // Running, but need to stop.
+                    Stop();
+                }
+                else
+                {
+                    // Stopped, but need to run.
+                    Start();
+                }
+            }
+        }
 
         /// <inheritdoc />
         public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
@@ -23,33 +45,18 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc />
         public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
-        public PerformanceMonitor(
-            ILogger<PerformanceMonitor> logger
-        )
-        {
-            Logger = logger;
-        }
-
         /// <inheritdoc />
         public void Report()
         {
-
             var managedRamUsed = GC.GetTotalMemory(forceFullCollection: false);
             var totalRamUsed = Process.GetCurrentProcess().WorkingSet64;
-            Logger.LogInformation(
-                "Estimated RAM usage:" +
-                "\n\tManaged: {Managed} bytes" +
-                "\n\tTotal:   {Total} bytes",
-                managedRamUsed,
-                totalRamUsed
-            );
             OnKernelPerformanceAvailable?.Invoke(this, new KernelPerformanceArgs(
                 managedRamUsed, totalRamUsed
             ));
         }
 
         /// <inheritdoc />
-        public void Start()
+        protected void Start()
         {
             alive = true;
             thread = new Thread(EventLoop);
@@ -57,10 +64,10 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc />
-        public void Join() => thread?.Join();
+        protected void Join() => thread?.Join();
 
         /// <inheritdoc />
-        public void Stop()
+        protected void Stop()
         {
             alive = false;
             thread?.Interrupt();

@@ -48,7 +48,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
-            performanceMonitor.Start();
+            performanceMonitor.EnableBackgroundReporting = true;
+            performanceMonitor.OnKernelPerformanceAvailable += (source, args) =>
+            {
+                logger.LogInformation(
+                    "Estimated RAM usage:" +
+                    "\n\tManaged: {Managed} bytes" +
+                    "\n\tTotal:   {Total} bytes",
+                    args.ManagedRamUsed,
+                    args.TotalRamUsed
+                );
+            };
 
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();

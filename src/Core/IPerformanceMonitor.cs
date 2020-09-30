@@ -81,21 +81,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public void Report();
 
-        /// <summary>
-        ///     Starts a background thread that periodically reports
-        ///     performance data.
-        /// </summary>
-        public void Start();
-
-        /// <summary>
-        ///     Joins the background thread used to report performance data.
-        /// </summary>
-        public void Join();
-
-        /// <summary>
-        ///     Joins the background thread used to report performance data.
-        /// </summary>
-        public void Stop();
+        public bool EnableBackgroundReporting { get; set; }
 
         /// <summary>
         ///     Raised when a simulator reports information about its

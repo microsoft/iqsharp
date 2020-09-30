@@ -250,6 +250,11 @@ namespace Tests.IQSharp
             var logger = GetAppLogger(services);
 
             var engine = services.GetService<IExecutionEngine>() as IQSharpEngine;
+            var performanceMonitor = services.GetService<IPerformanceMonitor>();
+
+            // Disable background logging so as to enable a determinstic test.
+            performanceMonitor.EnableBackgroundReporting = false;
+
             var channel = new MockChannel();
 
             logger.Events.Clear();
@@ -264,10 +269,22 @@ namespace Tests.IQSharp
 
             count++;
             engine.Execute("%simulate HelloQ", channel).Wait();
-            Assert.AreEqual(count + 1, logger.Events.Count);
+            // We expect both an Action and a SimulatorPerformance event from
+            // running %simulate.
+            Assert.AreEqual(count + 2, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.Action", logger.Events[count].Name);
             Assert.AreEqual("%simulate", logger.Events[count].Properties["Quantum.IQSharp.Command"]);
             Assert.AreEqual("Ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
+            count++;
+            Assert.AreEqual("Quantum.IQSharp.SimulatorPerformance", logger.Events[count].Name);
+            Assert.AreEqual(typeof(QuantumSimulator).FullName, logger.Events[count].Properties["Quantum.IQSharp.SimulatorName"]);
+            Assert.AreEqual("0", logger.Events[count].Properties["Quantum.IQSharp.NQubits"]);
+            // NB: Not testing Duration, since that is non-determinstic.
+
+            // Make sure that forcing a performance report works.
+            performanceMonitor.Report();
+            Assert.AreEqual(count + 1, logger.Events.Count);
+            Assert.AreEqual("Quantum.IQSharp.KernelPerformance", logger.Events[count].Name);            
 
             count++;
             engine.Execute("%package Microsoft.Quantum.Standard", channel).Wait();

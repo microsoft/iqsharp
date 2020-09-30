@@ -129,28 +129,6 @@ namespace Tests.IQSharp
         public void Stdout(string message) => msgs.Add(message);
     }
 
-    public class MockPerformanceMonitor : IPerformanceMonitor
-    {
-        public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
-        public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
-
-        public void Join()
-        {
-        }
-
-        public void Report()
-        {
-        }
-
-        public void Start()
-        {
-        }
-
-        public void Stop()
-        {
-        }
-    }
-
     public class MockOperationResolver : IOperationResolver
     {
         public OperationInfo Resolve(string input)
