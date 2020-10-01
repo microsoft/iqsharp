@@ -77,6 +77,9 @@ namespace Microsoft.Quantum.IQSharp
         /// purposes, but are not strictly necessary for compilation:
         ///   * Microsoft.Quantum.Standard.Visualization
         /// </summary>
+        /// <remarks>
+        /// These packages will be loaded asynchronously as part of workspace initialization.
+        /// </remarks>
         public readonly ImmutableList<string> DeferredLoadPackages =
             ImmutableList.Create(
                 "Microsoft.Quantum.Standard.Visualization"
@@ -134,22 +137,6 @@ namespace Microsoft.Quantum.IQSharp
                 {
                     logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
                 }
-            }
-
-            foreach (var pkg in DeferredLoadPackages)
-            {
-                // Don't wait for DeferredLoadPackages to finish loading
-                this.AddPackage(pkg).ContinueWith(task =>
-                {
-                    if (task.Exception is AggregateException e)
-                    {
-                        logger.LogError(e, $"Unable to load package '{pkg}': {e.InnerException.Message}");
-                    }
-                    else
-                    {
-                        logger.LogError(task.Exception, $"Unable to load package '{pkg}': {task.Exception.Message}");
-                    }
-                }, TaskContinuationOptions.OnlyOnFaulted);
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));

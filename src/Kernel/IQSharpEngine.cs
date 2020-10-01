@@ -53,6 +53,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = magicSymbolResolver;
+            this.Workspace = services.GetService<IWorkspace>();
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
@@ -172,6 +173,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver MagicResolver { get; }
 
+        internal IWorkspace Workspace { get; }
+
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
@@ -185,6 +188,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 try
                 {
+                    Workspace.WaitForInitialization();
+
                     var code = Snippets.Compile(input);
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }

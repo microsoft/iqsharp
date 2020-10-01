@@ -138,5 +138,11 @@ namespace Microsoft.Quantum.IQSharp
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
         void Reload(Action<string> statusCallback = null);
+
+        /// <summary>
+        /// Waits for the initial workspace load to complete, including
+        /// package loads and project compilation.
+        /// </summary>
+        void WaitForInitialization();
     }
 }

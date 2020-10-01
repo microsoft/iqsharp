@@ -16,12 +16,14 @@ namespace Tests.IQSharp
         public void InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
+            ws.WaitForInitialization();
 
             var dll = ws.Projects.Single().CacheDllPath;
             if (File.Exists(dll)) File.Delete(dll);
 
             // First time
             ws = Startup.Create<Workspace>("Workspace");
+            ws.WaitForInitialization();
             Assert.IsFalse(ws.HasErrors);
 
             var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
@@ -29,6 +31,7 @@ namespace Tests.IQSharp
 
             // On next reload:
             ws = Startup.Create<Workspace>("Workspace");
+            ws.WaitForInitialization();
             Assert.IsFalse(ws.HasErrors);
 
             op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
@@ -39,6 +42,7 @@ namespace Tests.IQSharp
         public void ReloadWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
+            ws.WaitForInitialization();
             var originalAssembly = ws.AssemblyInfo;
             var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsFalse(ws.HasErrors);

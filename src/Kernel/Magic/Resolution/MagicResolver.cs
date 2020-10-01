@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private Dictionary<AssemblyInfo, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
+        private IWorkspace workspace;
         private ILogger logger;
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
             this.services = services;
             this.references = services.GetService<IReferences>();
+            this.workspace = services.GetService<IWorkspace>();
         }
 
 
@@ -55,6 +57,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
+            workspace.WaitForInitialization();
+
             foreach (var asm in this.kernelAssemblies)
             {
                 yield return asm;
