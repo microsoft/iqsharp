@@ -284,9 +284,10 @@ namespace Tests.IQSharp
             // Make sure that forcing a performance report works.
             // NB: currently disabled due to an issue that only reproduces in
             //     CI testing.
+            // count++;
             // performanceMonitor.Report();
             // Assert.AreEqual(count + 1, logger.Events.Count);
-            // Assert.AreEqual("Quantum.IQSharp.KernelPerformance", logger.Events[count].Name);            
+            // Assert.AreEqual("Quantum.IQSharp.KernelPerformance", logger.Events[count].Name);
 
             count++;
             engine.Execute("%package Microsoft.Quantum.Standard", channel).Wait();
