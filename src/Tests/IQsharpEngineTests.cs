@@ -467,7 +467,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async void TestResolver()
+        public async Task TestResolver()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
             await snippets.Workspace.Initialization;

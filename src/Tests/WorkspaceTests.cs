@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,7 +14,7 @@ namespace Tests.IQSharp
     public class WorkspaceTests
     {
         [TestMethod]
-        public async void InitWorkspace()
+        public async Task InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
             await ws.Initialization;
@@ -39,7 +40,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async void ReloadWorkspace()
+        public async Task ReloadWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
             await ws.Initialization;
