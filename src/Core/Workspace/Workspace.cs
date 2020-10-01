@@ -154,7 +154,7 @@ namespace Microsoft.Quantum.IQSharp
         private ManualResetEvent initialized = new ManualResetEvent(false);
 
         /// <inheritdoc/>
-        public void WaitForInitialization() => initialized.WaitOne();
+        public Task Initialization => Task.Run(() => initialized.WaitOne());
 
         /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
