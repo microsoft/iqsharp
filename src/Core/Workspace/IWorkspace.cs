@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
 
 namespace Microsoft.Quantum.IQSharp
@@ -140,9 +140,10 @@ namespace Microsoft.Quantum.IQSharp
         void Reload(Action<string> statusCallback = null);
 
         /// <summary>
-        /// Waits for the initial workspace load to complete, including
-        /// package loads and project compilation.
+        /// Task that will be completed when the initial workspace
+        /// initialization has finished, including package loads and
+        /// project compilation.
         /// </summary>
-        void WaitForInitialization();
+        Task Initialization { get; }
     }
 }

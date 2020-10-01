@@ -57,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
-            workspace.WaitForInitialization();
+            workspace.Initialization.Wait();
 
             foreach (var asm in this.kernelAssemblies)
             {

@@ -154,7 +154,7 @@ namespace Microsoft.Quantum.IQSharp
         private ManualResetEvent initialized = new ManualResetEvent(false);
 
         /// <inheritdoc/>
-        public void WaitForInitialization() => initialized.WaitOne();
+        public Task Initialization => Task.Run(() => initialized.WaitOne());
 
         /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
@@ -422,8 +422,6 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public void AddProject(string projectFile)
         {
-            WaitForInitialization();
-
             var fullProjectPath = Path.GetFullPath(projectFile, Root);
             if (!File.Exists(fullProjectPath))
             {
@@ -454,7 +452,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public void Reload(Action<string> statusCallback = null)
         {
-            WaitForInitialization();
+            Initialization.Wait();
             DoReload(statusCallback);
         }
 
