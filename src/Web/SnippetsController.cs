@@ -23,15 +23,18 @@ namespace Microsoft.Quantum.IQSharp
     [ApiController]
     public class SnippetsController : AbstractOperationsController
     {
-        public SnippetsController(ISnippets snippets) : base()
+        public SnippetsController(ISnippets snippets, IWorkspace workspace) : base()
         {
             this.Snippets = snippets;
+            this.Workspace = workspace;
         }
 
         /// <summary>
         /// The list of available Snippets.
         /// </summary>
         public ISnippets Snippets { get; }
+
+        private IWorkspace Workspace { get; }
 
         /// <summary>
         /// Overrides this method to return the list of Operations available from the list of Snippets 
@@ -106,8 +109,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Overrides CheckIfReady by not checking if the Workspace is actually available.
         /// It should be possible to build and run self-contained snippets.
+        /// We still need to wait for Workspace initialization to complete, however,
+        /// since this ensures that the kernel is ready to compile snippets.
         /// </summary>
-        protected override void CheckIfReady() { }
+        protected override void CheckIfReady()
+        {
+            Workspace.WaitForInitialization();
+        }
     }
 }
 
