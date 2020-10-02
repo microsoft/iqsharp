@@ -66,7 +66,6 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Adds any default packages that should be loaded at initialization time.
         /// </summary>
-        /// <returns></returns>
         Task LoadDefaultPackages();
 
         /// <summary>
