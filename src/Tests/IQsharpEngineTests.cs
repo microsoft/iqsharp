@@ -326,7 +326,7 @@ namespace Tests.IQSharp
 
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
             var references = ((References)pkgMagic.References);
-            var packageCount = references.AutoLoadPackages.Count + references.DeferredLoadPackages.Count;
+            var packageCount = references.AutoLoadPackages.Count;
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];

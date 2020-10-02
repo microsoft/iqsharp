@@ -40,15 +40,6 @@ namespace Microsoft.Quantum.IQSharp
             ///      be provided.
             /// </summary>
             public string? AutoLoadPackages { get; set; }
-
-            /// <summary>
-            ///      A list of packages to be loaded asynchronously after the kernel
-            ///      starts. Package names should be separated by <c>,</c>, and
-            ///      may have optional version specifiers. To suppress all
-            ///      deferred package loading, the string <c>"$null"</c> can
-            ///      be provided.
-            /// </summary>
-            public string? DeferredLoadPackages { get; set; }
         }
 
         /// <summary>
@@ -66,22 +57,11 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
+        ///   * Microsoft.Quantum.Standard.Visualization
         /// </summary>
         public readonly ImmutableList<string> AutoLoadPackages =
             ImmutableList.Create(
-                "Microsoft.Quantum.Standard"
-            );
-
-        /// <summary>
-        /// The list of packages that are included for visualization or other convenience
-        /// purposes, but are not strictly necessary for compilation:
-        ///   * Microsoft.Quantum.Standard.Visualization
-        /// </summary>
-        /// <remarks>
-        /// These packages will be loaded asynchronously as part of workspace initialization.
-        /// </remarks>
-        public readonly ImmutableList<string> DeferredLoadPackages =
-            ImmutableList.Create(
+                "Microsoft.Quantum.Standard",
                 "Microsoft.Quantum.Standard.Visualization"
             );
 
@@ -105,6 +85,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
+            Logger = logger;
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
@@ -118,35 +99,32 @@ namespace Microsoft.Quantum.IQSharp
                 AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
-            if (referencesOptions?.DeferredLoadPackages is string deferredLoadPkgs)
-            {
-                logger.LogInformation(
-                    "Deferred-load packages overridden by startup options: \"{0}\"",
-                    referencesOptions.DeferredLoadPackages
-                );
-                DeferredLoadPackages = ParsePackages(deferredLoadPkgs);
-            }
-
-            foreach (var pkg in AutoLoadPackages)
-            {
-                try
-                {
-                    this.AddPackage(pkg).Wait();
-                }
-                catch (AggregateException e)
-                {
-                    logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
-                }
-            }
-
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             AssemblyLoadContext.Default.Resolving += Resolve;
         }
 
+        /// <inheritdoc/>
+        public async Task LoadDefaultPackages()
+        {
+            foreach (var pkg in AutoLoadPackages)
+            {
+                try
+                {
+                    await AddPackage(pkg);
+                }
+                catch (AggregateException e)
+                {
+                    Logger?.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
+                }
+            }
+        }
+
         /// Manages nuget packages.
         internal INugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
+
+        private ILogger<References> Logger { get; }
 
         public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 

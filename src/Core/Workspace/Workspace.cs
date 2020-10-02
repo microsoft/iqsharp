@@ -183,11 +183,11 @@ namespace Microsoft.Quantum.IQSharp
             logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
             // Initialize the workspace asynchronously
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 try
                 {
-                    LoadDeferredPackageReferences();
+                    await GlobalReferences.LoadDefaultPackages();
                     ResolveProjectReferences();
 
                     if (!LoadFromCache())
@@ -210,24 +210,6 @@ namespace Microsoft.Quantum.IQSharp
                     initialized.Set();
                 }
             });
-        }
-
-        private void LoadDeferredPackageReferences()
-        {
-            if (GlobalReferences is References references)
-            {
-                foreach (var pkg in references.DeferredLoadPackages)
-                {
-                    try
-                    {
-                        GlobalReferences.AddPackage(pkg).Wait();
-                    }
-                    catch (AggregateException e)
-                    {
-                        Logger?.LogError($"Failed to load package '{pkg}':  {e.InnerException.Message}");
-                    }
-                }
-            }
         }
 
         private void ResolveProjectReferences()
