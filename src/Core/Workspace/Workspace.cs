@@ -183,11 +183,11 @@ namespace Microsoft.Quantum.IQSharp
             logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
             // Initialize the workspace asynchronously
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 try
                 {
-                    await GlobalReferences.LoadDefaultPackages();
+                    GlobalReferences.LoadDefaultPackages();
                     ResolveProjectReferences();
 
                     if (!LoadFromCache())

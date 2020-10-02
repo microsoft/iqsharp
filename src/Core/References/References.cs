@@ -105,13 +105,13 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public async Task LoadDefaultPackages()
+        public void LoadDefaultPackages()
         {
             foreach (var pkg in AutoLoadPackages)
             {
                 try
                 {
-                    await AddPackage(pkg);
+                    AddPackage(pkg).Wait();
                 }
                 catch (AggregateException e)
                 {
