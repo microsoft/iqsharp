@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -27,7 +28,9 @@ namespace Tests.IQSharp
     {
         public IQSharpEngine Init(string workspace = "Workspace")
         {
-            return Startup.Create<IQSharpEngine>(workspace);
+            var engine = Startup.Create<IQSharpEngine>(workspace);
+            engine.Workspace.Initialization.Wait();
+            return engine;
         }
 
         public static void PrintResult(ExecutionResult result, MockChannel channel)
@@ -85,7 +88,7 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        private async Task AssertTrace(string name, ExecutionPath expectedPath)
+        private async Task AssertTrace(string name, ExecutionPath expectedPath, int expectedDepth)
         {
             var engine = Init("Workspace.ExecutionPathTracer");
             var snippets = engine.Snippets as Snippets;
@@ -118,6 +121,8 @@ namespace Tests.IQSharp
             var content = message.Content as ExecutionPathVisualizerContent;
             Assert.IsNotNull(content);
 
+            Assert.AreEqual(expectedDepth, content.RenderDepth);
+
             var path = content.ExecutionPath.ToObject<ExecutionPath>();
             Assert.IsNotNull(path);
             Assert.AreEqual(expectedPath.ToJson(), path.ToJson());
@@ -129,7 +134,6 @@ namespace Tests.IQSharp
             var engine = Init();
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
-
 
         [TestMethod]
         public async Task CompileAndSimulate()
@@ -321,14 +325,17 @@ namespace Tests.IQSharp
             var snippets = engine.Snippets as Snippets;
 
             var pkgMagic = new PackageMagic(snippets.GlobalReferences);
+            var references = ((References)pkgMagic.References);
+            var packageCount = references.AutoLoadPackages.Count;
             var channel = new MockChannel();
             var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
-            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual(packageCount, result.Length);
             Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result[0]);
+            Assert.AreEqual("Microsoft.Quantum.Standard.Visualization::0.0.0", result[1]);
 
             // Try compiling TrotterEstimateEnergy, it should fail due to the lack
             // of chemistry package.
@@ -342,7 +349,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(packageCount + 1, result.Length);
 
             // Now it should compile:
             await AssertCompile(engine, SNIPPETS.UseJordanWignerEncodingData, "UseJordanWignerEncodingData");
@@ -366,9 +373,24 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task TestProjectMagic()
+        {
+            var engine = Init();
+            var snippets = engine.Snippets as Snippets;
+            var projectMagic = new ProjectMagic(snippets.Workspace);
+            var channel = new MockChannel();
+
+            var response = await projectMagic.Execute("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj", channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            var loadedProjectFiles = response.Output as string[];
+            Assert.AreEqual(3, loadedProjectFiles.Length);
+        }
+
+        [TestMethod]
         public async Task TestWho()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
+            await snippets.Workspace.Initialization;
             snippets.Compile(SNIPPETS.HelloQ);
 
             var whoMagic = new WhoMagic(snippets);
@@ -444,11 +466,11 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
         }
 
-
         [TestMethod]
-        public void TestResolver()
+        public async Task TestResolver()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
+            await snippets.Workspace.Initialization;
             snippets.Compile(SNIPPETS.HelloQ);
 
             var resolver = new SymbolResolver(snippets);
@@ -519,63 +541,48 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestTraceMagic()
         {
-            await AssertTrace("HCirc", new ExecutionPath(
+            await AssertTrace("FooCirc", new ExecutionPath(
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "Reset",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
+                        Gate = "FooCirc",
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
+                    }
                 }
-            ));
+            ), 1);
 
-            // Should only see depth-1 operations
-            await AssertTrace("Depth2Circ", new ExecutionPath(
+            // Depth 2
+            await AssertTrace("FooCirc --depth=2", new ExecutionPath(
                 new QubitDeclaration[] { new QubitDeclaration(0) },
                 new Operation[]
                 {
-                    new Operation()
+                    new Operation ()
                     {
-                        Gate = "FooBar",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
+                        Gate = "FooCirc",
+                        Targets = new List<QubitRegister> () { new QubitRegister (0) },
+                        Children = ImmutableList<Operation>.Empty.AddRange (
+                            new [] {
+                                new Operation () {
+                                    Gate = "Foo",
+                                        DisplayArgs = "(2.1, (\"bar\"))",
+                                        Targets = new List<Register> () { new QubitRegister (0) },
+                                },
+                            }
+                        )
+                    }
                 }
-            ));
-
-            // Should see depth-2 operations
-            await AssertTrace("Depth2Circ --depth=2", new ExecutionPath(
-                new QubitDeclaration[] { new QubitDeclaration(0) },
-                new Operation[]
-                {
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "X",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                    new Operation()
-                    {
-                        Gate = "H",
-                        Targets = new List<Register>() { new QubitRegister(0) },
-                    },
-                }
-            ));
+            ), 2);
         }
     }
 }

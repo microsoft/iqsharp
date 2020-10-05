@@ -25,10 +25,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
             new Dictionary<string, object?>()
             {
-                // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
                 ["id"] = cloudJob.Id,
                 ["name"] = cloudJob.Details.Name,
                 ["status"] = cloudJob.Status,
+                ["uri"] = cloudJob.Uri.ToString(),
                 ["provider"] = cloudJob.Details.ProviderId,
                 ["target"] = cloudJob.Details.Target,
                 ["creation_time"] = cloudJob.Details.CreationTime.ToDateTime()?.ToUniversalTime(),
@@ -41,9 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<CloudJob, string>)>
                 {
-                    // TODO: add cloudJob.Uri after https://github.com/microsoft/qsharp-runtime/issues/236 is fixed.
                     ("Job Name", cloudJob => cloudJob.Details.Name),
-                    ("Job ID", cloudJob => cloudJob.Id),
+                    ("Job ID", cloudJob => $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{cloudJob.Id}</a>"),
                     ("Job Status", cloudJob => cloudJob.Status),
                     ("Target", cloudJob => cloudJob.Details.Target),
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),
@@ -54,45 +53,69 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
     }
 
+    /// <summary>
+    /// Encodes a <see cref="CloudJob"/> object as HTML.
+    /// </summary>
     public class CloudJobToHtmlEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToHtmlDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.Html;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
             displayable.AsEnumerableOf<CloudJob>() is IEnumerable<CloudJob> jobs
                 ? tableEncoder.Encode(jobs.ToJupyterTable())
                 : null;
     }
 
+    /// <summary>
+    /// Encodes a <see cref="CloudJob"/> object as plain text.
+    /// </summary>
     public class CloudJobToTextEncoder : IResultEncoder
     {
         private static readonly IResultEncoder tableEncoder = new TableToTextDisplayEncoder();
 
+        /// <inheritdoc/>
         public string MimeType => MimeTypes.PlainText;
 
+        /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
             displayable.AsEnumerableOf<CloudJob>() is IEnumerable<CloudJob> jobs
                 ? tableEncoder.Encode(jobs.ToJupyterTable())
                 : null;
     }
 
+    /// <summary>
+    /// Encodes a <see cref="CloudJob"/> object as JSON.
+    /// </summary>
     public class CloudJobJsonConverter : JsonConverter<CloudJob>
     {
-        public override CloudJob ReadJson(JsonReader reader, Type objectType, CloudJob existingValue, bool hasExistingValue, JsonSerializer serializer)
+        /// <inheritdoc/>
+        public override CloudJob ReadJson(JsonReader reader, Type objectType, CloudJob? existingValue, bool hasExistingValue, JsonSerializer serializer)
             => throw new NotImplementedException();
 
-        public override void WriteJson(JsonWriter writer, CloudJob value, JsonSerializer serializer) =>
-            JToken.FromObject(value.ToDictionary()).WriteTo(writer);
+        /// <inheritdoc/>
+        public override void WriteJson(JsonWriter writer, CloudJob? value, JsonSerializer serializer)
+        {
+            if (value != null) JToken.FromObject(value.ToDictionary()).WriteTo(writer);
+        }
     }
 
+    /// <summary>
+    /// Encodes an enumeration of <see cref="CloudJob"/> objects as JSON.
+    /// </summary>
     public class CloudJobListJsonConverter : JsonConverter<IEnumerable<CloudJob>>
     {
-        public override IEnumerable<CloudJob> ReadJson(JsonReader reader, Type objectType, IEnumerable<CloudJob> existingValue, bool hasExistingValue, JsonSerializer serializer)
+        /// <inheritdoc/>
+        public override IEnumerable<CloudJob> ReadJson(JsonReader reader, Type objectType, IEnumerable<CloudJob>? existingValue, bool hasExistingValue, JsonSerializer serializer)
             => throw new NotImplementedException();
 
-        public override void WriteJson(JsonWriter writer, IEnumerable<CloudJob> value, JsonSerializer serializer) =>
-            JToken.FromObject(value.Select(job => job.ToDictionary())).WriteTo(writer);
+        /// <inheritdoc/>
+        public override void WriteJson(JsonWriter writer, IEnumerable<CloudJob>? value, JsonSerializer serializer)
+        {
+            if (value != null) JToken.FromObject(value.Select(job => job.ToDictionary())).WriteTo(writer);
+        }
     }
 }

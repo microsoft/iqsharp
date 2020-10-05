@@ -268,6 +268,7 @@ namespace Tests.IQSharp
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
         {
             LastAction = AzureClientAction.SetActiveTarget;
@@ -328,5 +329,6 @@ namespace Tests.IQSharp
             LastAction = AzureClientAction.GetJobResult;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 }

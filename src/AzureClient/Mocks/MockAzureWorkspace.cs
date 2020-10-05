@@ -17,32 +17,40 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
 
-        public string Name { get; private set; }
+        public static string[] MockJobIds { get; set; } = Array.Empty<string>();
 
-        public List<ProviderStatus> Providers { get; } = new List<ProviderStatus>();
-        
-        public List<CloudJob> Jobs { get; } = new List<CloudJob>();
+        public static string[] MockTargetIds { get; set; } = Array.Empty<string>();
 
-        public MockAzureWorkspace(string workspaceName)
+        public string Name { get; private set; } = string.Empty;
+
+        public string SubscriptionId { get; private set; } = string.Empty;
+
+        public string ResourceGroup { get; private set; } = string.Empty;
+
+        public List<ProviderStatus> Providers => new List<ProviderStatus>
         {
-            Name = workspaceName;
-            if (Name == NameWithMockProviders)
-            {
-                // add a mock target for each provider: "ionq.mock", "honeywell.mock", etc.
-                AddMockTargets(
-                    Enum.GetNames(typeof(AzureProvider))
-                        .Select(provider => $"{provider.ToLowerInvariant()}.mock")
-                        .ToArray());
-            }
-        }
+            new ProviderStatus(null, null,
+                ((Name == NameWithMockProviders)
+                        ? Enum.GetNames(typeof(AzureProvider))
+                            .Select(provider => $"{provider.ToLowerInvariant()}.mock")
+                            .ToArray()
+                        : MockTargetIds
+                ).Select(id => new TargetStatus(id)).ToList())
+        };
 
-        public async Task<CloudJob?> GetJobAsync(string jobId) => Jobs.FirstOrDefault(job => job.Id == jobId);
+        public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
-        public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => Providers;
+        public MockAzureWorkspace(string workspaceName) => Name = workspaceName;
 
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => Jobs;
+        public async Task<CloudJob?> GetJobAsync(string jobId) => await Task.Run(() => Jobs.FirstOrDefault(job => job.Id == jobId));
+
+        public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => await Task.Run(() => Providers);
+
+        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => await Task.Run(() => Jobs);
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
+
+        public AzureExecutionTarget? CreateExecutionTarget(string targetId) => MockAzureExecutionTarget.CreateMock(targetId);
 
         public void AddMockJobs(params string[] jobIds)
         {

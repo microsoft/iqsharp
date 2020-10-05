@@ -21,7 +21,9 @@ from distutils.version import LooseVersion
 from qsharp.clients import _start_client
 from qsharp.clients.iqsharp import IQSharpError
 from qsharp.loader import QSharpCallable, QSharpModuleFinder
+from qsharp.config import Config
 from qsharp.packages import Packages
+from qsharp.projects import Projects
 from qsharp.types import Result, Pauli
 try:
     from qsharp.version import __version__
@@ -34,7 +36,9 @@ __all__ = [
     'compile', 'reload',
     'get_available_operations', 'get_available_operations_by_namespace',
     'get_workspace_operations',
+    'config',
     'packages',
+    'projects',
     'IQSharpError',
     'Result', 'Pauli'
 ]
@@ -117,7 +121,9 @@ def component_versions() -> Dict[str, LooseVersion]:
 ## STARTUP ##
 
 client = _start_client()
+config = Config(client)
 packages = Packages(client)
+projects = Projects(client)
 
 # Make sure that we're last on the meta_path so that actual modules are loaded
 # first.

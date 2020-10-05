@@ -127,11 +127,36 @@ class IQSharpClient(object):
     def reload(self) -> None:
         return self._execute(f"%workspace reload", raise_on_stderr=True)
 
+    def get_config(self) -> Dict[str, object]:
+        raw = self._execute(f"%config", raise_on_stderr=True)
+        config_settings = {}
+        for row in raw["rows"]:
+            config_settings[row['Key']] = row['Value']
+        return config_settings
+
+    def set_config(self, name : str, value : object) -> None:
+        from numbers import Number
+        if isinstance(value, bool):
+            self._execute(f"%config {name}={'true' if value else 'false'}", raise_on_stderr=True)
+        elif isinstance(value, Number):
+            self._execute(f"%config {name}={value}", raise_on_stderr=True)
+        else:
+            self._execute(f"%config {name}='{value}'", raise_on_stderr=True)
+
+    def save_config(self) -> None:
+        self._execute(f"%config --save", raise_on_stderr=True)
+
     def add_package(self, name : str) -> None:
         return self._execute(f"%package {name}", raise_on_stderr=True)
 
     def get_packages(self) -> List[str]:
         return self._execute("%package", raise_on_stderr=False)
+
+    def add_project(self, path : str) -> None:
+        return self._execute(f"%project {path}", raise_on_stderr=True)
+
+    def get_projects(self) -> List[str]:
+        return self._execute("%project", raise_on_stderr=False)
 
     def simulate(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('simulate', op, **kwargs)
@@ -216,8 +241,7 @@ class IQSharpClient(object):
         errors = []
 
         def log_error(msg):
-            if msg['msg_type'] == 'stream' and msg['content']['name'] == 'stderr':
-                errors.append(msg['content']['text'])
+            errors.append(msg)
 
         handlers = {
             'execute_result': (lambda msg: results.append(msg))

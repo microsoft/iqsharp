@@ -87,11 +87,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     If `dump.measurementDisplayHistogram` is set to `true`, displays the
                     histogram representation of the state of the simulator underneath the original chart output.
 
+                    **`dump.plainTextOnly`**
+
+                    **Value:** `true` or `false` (default)
+
+                    Forces plain-text output from callables such as `DumpMachine` and `DumpRegister`, even
+                    when using an HTML-enabled client such as Jupyter Notebook.
+
                     **`trace.defaultDepth`**
 
                     **Value:** positive integer (default `1`)
 
                     Configures the default depth used in the `%trace` command for visualizing Q# operations.
+
+                    **`trace.style`**
+
+                    **Value:** `""Default""` (default), `""BlackAndWhite""`, or `""Inverted""`
+
+                    Configures the default style used in generating the visualization of Q# operations with the `%trace` command.
                 ".Dedent(),
                 Examples = new []
                 {

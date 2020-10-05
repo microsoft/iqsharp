@@ -4,8 +4,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.Quantum.IQSharp.Common;
-
 namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
@@ -39,12 +37,8 @@ namespace Microsoft.Quantum.IQSharp
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
             if (snippets?.AssemblyInfo != null) yield return snippets.AssemblyInfo;
-            if (workspace?.AssemblyInfo != null) yield return workspace.AssemblyInfo;
-
-            foreach (var asm in references.Assemblies)
-            {
-                yield return asm;
-            }
+            foreach (var asm in workspace?.Assemblies) yield return asm;
+            foreach (var asm in references.Assemblies) yield return asm;
         }
 
         /// <summary>

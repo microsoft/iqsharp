@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
 
 namespace Microsoft.Quantum.IQSharp
@@ -13,11 +13,12 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class ReloadedEventArgs : EventArgs
     {
-        public ReloadedEventArgs(string workspace, string status, int filecount, string[] errors, TimeSpan duration)
+        public ReloadedEventArgs(string workspace, string status, int fileCount, int projectCount, string[] errors, TimeSpan duration)
         {
             this.Workspace = workspace;
             this.Status = status;
-            this.FileCount = filecount;
+            this.FileCount = fileCount;
+            this.ProjectCount = projectCount;
             this.Errors = errors;
             this.Duration = duration;
         }
@@ -38,6 +39,11 @@ namespace Microsoft.Quantum.IQSharp
         public int FileCount { get; }
 
         /// <summary>
+        /// The number of projects used for compilation.
+        /// </summary>
+        public int ProjectCount { get; }
+
+        /// <summary>
         /// The list of error ids reported by the Q# parser (if any).
         /// </summary>
         public string[] Errors { get; }
@@ -55,14 +61,41 @@ namespace Microsoft.Quantum.IQSharp
     public interface IWorkspace
     {
         /// <summary>
-        /// This event is triggered when ever the workspace is reloaded.
+        /// This event is triggered whenever the workspace is reloaded.
         /// </summary>
         event EventHandler<ReloadedEventArgs> Reloaded;
+
+        /// <summary>
+        /// This event is triggered whenever a project is loaded into the workspace.
+        /// </summary>
+        event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
 
         /// <summary>
         /// The root folder.
         /// </summary>
         string Root { get; }
+
+        /// <summary>
+        /// Gets the projects to be built for this Workspace. The order of the enumeration
+        /// indicates the order in which the projects should be built, i.e., the first
+        /// project in the enumeration should be built first.
+        /// </summary>
+        public IEnumerable<Project> Projects { get; set; }
+
+        /// <summary>
+        /// Attempt to add a Q# project reference to this workspace. This does not trigger
+        /// recompilation of the workspace. Call <see cref="Reload()"/> to recompile.
+        /// </summary>
+        /// <param name="projectFile">
+        /// The path to the project file.
+        /// Must be either absolute or relative to <see cref="Root"/>.
+        /// </param>
+        /// <remarks>
+        /// This will also cause any Q# projects referenced by the specified project file
+        /// to be added implicitly to the list of project references in the workspace.
+        /// All such projects will be recompiled when the workspace is reloaded.
+        /// </remarks>
+        public void AddProject(string projectFile);
 
         /// <summary>
         /// Gets the source files to be built for this Workspace.
@@ -77,7 +110,19 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Information of the assembly built from this Workspace.
         /// </summary>
+        /// <remarks>
+        /// This does NOT include assemblies built from any project references,
+        /// and it will be <c>null</c> in the case that the assemblies are
+        /// built from .csproj files.
+        /// To get all assembly information, use the <see cref="Assemblies"/>
+        /// property.
+        /// </remarks>
         AssemblyInfo AssemblyInfo { get; }
+
+        /// <summary>
+        /// Information of all assemblies built from this Workspace.
+        /// </summary>
+        public IEnumerable<AssemblyInfo> Assemblies { get; }
 
         /// <summary>
         /// The compilation errors, if any.
@@ -92,6 +137,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
-        void Reload();
+        void Reload(Action<string> statusCallback = null);
+
+        /// <summary>
+        /// Task that will be completed when the initial workspace
+        /// initialization has finished, including package loads and
+        /// project compilation.
+        /// </summary>
+        Task Initialization { get; }
     }
 }

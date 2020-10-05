@@ -10,7 +10,8 @@ import { Telemetry, ClientInfo } from "./telemetry";
 import type * as ChartJs from "chart.js";
 import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
-import { executionPathToHtml } from "./ExecutionPathVisualizer";
+import { Visualizer } from "./visualizer";
+import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
 class Kernel {
     hostingEnvironment: string | undefined;
@@ -18,13 +19,19 @@ class Kernel {
     telemetryOptOut?: boolean | null;
 
     constructor() {
-        IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => {
-            this.requestEcho();
-            this.requestClientInfo();
-            this.setupMeasurementHistogramDataListener();
-            this.setupDebugSessionHandlers();
-            this.initExecutionPathVisualizer();
-        });
+        if (IPython.notebook.kernel.is_connected()) {
+            this.onStart();
+        } else {
+            IPython.notebook.kernel.events.on("kernel_ready.Kernel", args => this.onStart());
+        }
+    }
+
+    onStart() {
+        this.requestEcho();
+        this.requestClientInfo();
+        this.setupMeasurementHistogramDataListener();
+        this.setupDebugSessionHandlers();
+        this.initExecutionPathVisualizer();
     }
 
     setupDebugSessionHandlers() {
@@ -248,11 +255,19 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
             message => {
-                const { executionPath, id } = message.content;
-                const html: string = executionPathToHtml(executionPath);
-                const container: HTMLElement = document.getElementById(id);
-                if (container == null) throw new Error(`Div with ID ${id} not found.`);
-                container.innerHTML = html;
+                const {
+                    executionPath,
+                    id,
+                    renderDepth,
+                    style,
+                }: { executionPath: Circuit; id: string; renderDepth: number; style: string } = message.content;
+                
+                // Get styles
+                const userStyleConfig: StyleConfig = STYLES[style] || {};
+    
+                // Visualize execution path
+                const visualizer = new Visualizer(id, userStyleConfig);
+                visualizer.visualize(executionPath, renderDepth);
             }
         );
     }

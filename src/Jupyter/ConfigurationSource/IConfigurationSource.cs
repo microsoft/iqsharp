@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -113,70 +111,23 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("dump.measurementDisplayHistogram", true);
 
         /// <summary>
+        ///     Whether to use only a simple plain-text encoding when dumping states.
+        /// </summary>
+        public bool PlainTextOnly =>
+            GetOptionOrDefault("dump.plainTextOnly", false);
+
+        /// <summary>
         ///     Allows for setting the default depth for visualizing Q# operations using the
         ///     <c>%trace</c> command.
         /// </summary>
         public int TraceVisualizationDefaultDepth =>
             GetOptionOrDefault("trace.defaultDepth", 1);
-    }
-
-
-
-    /// <summary>
-    ///     An implementation of the
-    ///     <see cref="Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource" />
-    ///     service interface that loads and persists configuration values from
-    ///     and to a local JSON file.
-    /// </summary>
-    public class ConfigurationSource : IConfigurationSource
-    {
-        /// <inheritdoc />
-        public IDictionary<string, JToken> Configuration => _Configuration;
-        private readonly IDictionary<string, JToken> _Configuration;
-
-        private string ConfigPath =>
-            Path.Join(Directory.GetCurrentDirectory(), ".iqsharp-config.json");
 
         /// <summary>
-        ///     Constructs a new configuration source, loading initial
-        ///     configuration options from the file <c>.iqsharp-config.json</c>,
-        ///     if that file exists.
+        ///     Allows for setting the default visualization style for visualizing Q# operations
+        ///     using the <c>%trace</c> command.
         /// </summary>
-        public ConfigurationSource(bool skipLoading = false)
-        {
-            // Try loading configuration from a JSON file in the current working
-            // directory.
-            if (!skipLoading && File.Exists(ConfigPath))
-            {
-                var configContents = File.ReadAllText(ConfigPath);
-                var config = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(
-                    configContents,
-                    JsonConverters.TupleConverters
-                );
-                Debug.Assert(
-                    config != null,
-                    "Deserializing JSON configuration resulted in a null value, but no exception was thrown."
-                );
-                _Configuration = config;
-            }
-            else
-            {
-                _Configuration = new Dictionary<string, JToken>();
-            }
-        }
-
-        /// <summary>
-        ///     Persists the current configuration to
-        ///     <c>.iqsharp-config.json</c>.
-        /// </summary>
-        public void Persist()
-        {
-            // Try writing the configuration back to JSON.
-            File.WriteAllText(
-                ConfigPath,
-                JsonConvert.SerializeObject(_Configuration, JsonConverters.TupleConverters)
-            );
-            System.Console.Out.WriteLine($"Wrote config preferences to {ConfigPath}.");
-        }
+        public TraceVisualizationStyle TraceVisualizationStyle =>
+            GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
     }
 }

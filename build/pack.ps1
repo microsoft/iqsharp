@@ -10,6 +10,8 @@ function Pack-Nuget() {
         [string]$project
     );
 
+    Write-Host "##[info]Packing $project..."
+
     dotnet pack (Join-Path $PSScriptRoot $project) `
         --no-build `
         -c $Env:BUILD_CONFIGURATION `
@@ -94,13 +96,9 @@ function Pack-Image() {
     }
 }
 
-Write-Host "##[info]Packing IQ# library..."
 Pack-Nuget '../src/Core/Core.csproj'
-
-Write-Host "##[info]Packing IQ# library with Jupyter extensions..."
+Pack-Nuget '../src/ExecutionPathTracer/ExecutionPathTracer.csproj'
 Pack-Nuget '../src/Jupyter/Jupyter.csproj'
-
-Write-Host "##[info]Packing IQ# tool..."
 Pack-Nuget '../src/Tool/Tool.csproj'
 
 if ($Env:ENABLE_PYTHON -eq "false") {
@@ -132,5 +130,5 @@ if (-not $runDocker -or ($Env:ENABLE_PYTHON -eq "false")) {
     Write-Host "##vso[task.logissue type=warning;]Skipping IQ# magic command documentation, either ENABLE_DOCKER or ENABLE_PYTHON was false.";
 } else {
     Write-Host "##[info]Packing IQ# reference docs..."
-    & (Join-Path $PSScriptRoot "pack-docs.ps1");
+    & (Join-Path $PSScriptRoot "pack-docs.ps1") -DockerImageTag ${Env:BUILD_BUILDNUMBER};
 }

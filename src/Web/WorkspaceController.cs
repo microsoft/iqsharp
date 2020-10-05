@@ -26,7 +26,8 @@ namespace Microsoft.Quantum.IQSharp
         public IWorkspace Workspace { get; set; }
 
         // The list of operations available in the workspace.
-        public override IEnumerable<OperationInfo> Operations => Workspace?.AssemblyInfo?.Operations;
+        public override IEnumerable<OperationInfo> Operations =>
+            Workspace?.Assemblies?.SelectMany(asm => asm.Operations);
 
         public WorkspaceController(IWorkspace workspace)
         {
@@ -111,7 +112,10 @@ namespace Microsoft.Quantum.IQSharp
             {
                 throw new InvalidWorkspaceException($"Workspace is not ready. Try again.");
             }
-            else if (Workspace.HasErrors)
+
+            Workspace.Initialization.Wait();
+            
+            if (Workspace.HasErrors)
             {
                 throw new InvalidWorkspaceException(Workspace.ErrorMessages.ToArray());
             }

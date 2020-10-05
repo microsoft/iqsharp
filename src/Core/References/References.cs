@@ -34,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             /// <summary>
             ///      A list of packages to be loaded when the kernel initially
-            ///      starts. Package names should be seperated by <c>,</c>, and
+            ///      starts. Package names should be separated by <c>,</c>, and
             ///      may have optional version specifiers. To suppress all
             ///      automatic package loading, the string <c>"$null"</c> can
             ///      be provided.
@@ -57,11 +57,21 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Packages that are automatically included for compilation. Namely:
         ///   * Microsoft.Quantum.Standard
+        ///   * Microsoft.Quantum.Standard.Visualization
         /// </summary>
         public readonly ImmutableList<string> AutoLoadPackages =
             ImmutableList.Create(
-                "Microsoft.Quantum.Standard"
+                "Microsoft.Quantum.Standard",
+                "Microsoft.Quantum.Standard.Visualization"
             );
+
+        private ImmutableList<string> ParsePackages(string pkgs) =>
+            pkgs.Trim() == "$null"
+                ? ImmutableList<string>.Empty
+                : pkgs
+                    .Split(",")
+                    .Select(pkg => pkg.Trim())
+                    .ToImmutableList();
 
         /// <summary>
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
@@ -75,35 +85,18 @@ namespace Microsoft.Quantum.IQSharp
         {
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
+            Logger = logger;
 
             eventService?.TriggerServiceInitialized<IReferences>(this);
 
             var referencesOptions = options.Value;
-            if (referencesOptions?.AutoLoadPackages is string pkgs)
+            if (referencesOptions?.AutoLoadPackages is string autoLoadPkgs)
             {
                 logger.LogInformation(
                     "Auto-load packages overridden by startup options: \"{0}\"",
                     referencesOptions.AutoLoadPackages
                 );
-                AutoLoadPackages =
-                    pkgs.Trim() == "$null"
-                    ? ImmutableList<string>.Empty
-                    : pkgs
-                      .Split(",")
-                      .Select(pkg => pkg.Trim())
-                      .ToImmutableList();
-            }
-
-            foreach (var pkg in AutoLoadPackages)
-            {
-                try
-                {
-                    this.AddPackage(pkg).Wait();
-                }
-                catch (AggregateException e)
-                {
-                    logger.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
-                }
+                AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
@@ -111,9 +104,27 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyLoadContext.Default.Resolving += Resolve;
         }
 
+        /// <inheritdoc/>
+        public void LoadDefaultPackages()
+        {
+            foreach (var pkg in AutoLoadPackages)
+            {
+                try
+                {
+                    AddPackage(pkg).Wait();
+                }
+                catch (AggregateException e)
+                {
+                    Logger?.LogError($"Unable to load package '{pkg}':  {e.InnerException.Message}");
+                }
+            }
+        }
+
         /// Manages nuget packages.
         internal INugetPackages Nugets { get; }
         private Lazy<CompilerMetadata> _metadata;
+
+        private ILogger<References> Logger { get; }
 
         public event EventHandler<PackageLoadedEventArgs>? PackageLoaded;
 
@@ -137,8 +148,11 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public void AddAssemblies(params AssemblyInfo[] assemblies)
         {
-            Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
-            Reset();
+            lock (this)
+            {
+                Assemblies = Assemblies.Union(assemblies).ToImmutableArray();
+                Reset();
+            }
         }
 
         /// <summary>
@@ -158,7 +172,7 @@ namespace Microsoft.Quantum.IQSharp
             AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
-            PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version.ToNormalizedString(), duration.Elapsed));
+            PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed));
         }
 
         private void Reset()

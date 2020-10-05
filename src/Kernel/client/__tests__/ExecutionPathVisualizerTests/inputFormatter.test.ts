@@ -1,18 +1,18 @@
-import { Qubit } from "../../ExecutionPathVisualizer/executionPath";
-import { RegisterMap, RegisterType } from "../../ExecutionPathVisualizer/register";
-import { formatInputs, _qubitInput } from "../../ExecutionPathVisualizer/formatters/inputFormatter";
-import { startY, registerHeight, classicalRegHeight } from "../../ExecutionPathVisualizer/constants";
+import { Qubit } from '../../ExecutionPathVisualizer/circuit';
+import { RegisterMap, RegisterType } from '../../ExecutionPathVisualizer/register';
+import { formatInputs, _qubitInput } from '../../ExecutionPathVisualizer/formatters/inputFormatter';
+import { startY, registerHeight, classicalRegHeight } from '../../ExecutionPathVisualizer/constants';
 
-describe("Testing _qubitInput", () => {
-    test("classical register", () => {
+describe('Testing _qubitInput', () => {
+    test('classical register', () => {
         expect(_qubitInput(20)).toMatchSnapshot();
         expect(_qubitInput(50)).toMatchSnapshot();
         expect(_qubitInput(0)).toMatchSnapshot();
     });
 });
 
-describe("Testing formatInputs", () => {
-    test("1 quantum register", () => {
+describe('Testing formatInputs', () => {
+    test('1 quantum register', () => {
         const inputs: Qubit[] = [{ id: 0 }];
         const expectedRegs: RegisterMap = { 0: { type: RegisterType.Qubit, y: startY } };
         const { qubitWires, registers } = formatInputs(inputs);
@@ -20,7 +20,7 @@ describe("Testing formatInputs", () => {
         expect(registers).toEqual(expectedRegs);
         expect(registers).toEqual(expectedRegs);
     });
-    test("Multiple quantum registers", () => {
+    test('Multiple quantum registers', () => {
         const inputs: Qubit[] = [{ id: 0 }, { id: 1 }, { id: 2 }];
         const expectedRegs: RegisterMap = {
             0: { type: RegisterType.Qubit, y: startY },
@@ -32,13 +32,13 @@ describe("Testing formatInputs", () => {
         expect(registers).toEqual(expectedRegs);
         expect(registers).toEqual(expectedRegs);
     });
-    test("Quantum and classical registers", () => {
+    test('Quantum and classical registers', () => {
         let inputs: Qubit[] = [{ id: 0, numChildren: 1 }, { id: 1 }, { id: 2 }];
         let expectedRegs: RegisterMap = {
             0: {
                 type: RegisterType.Qubit,
                 y: startY,
-                children: [{ type: RegisterType.Classical, y: startY + classicalRegHeight }]
+                children: [{ type: RegisterType.Classical, y: startY + classicalRegHeight }],
             },
             1: { type: RegisterType.Qubit, y: startY + classicalRegHeight * 2 },
             2: { type: RegisterType.Qubit, y: startY + registerHeight + classicalRegHeight * 2 },
@@ -57,14 +57,12 @@ describe("Testing formatInputs", () => {
                 children: [
                     { type: RegisterType.Classical, y: startY + registerHeight + classicalRegHeight },
                     { type: RegisterType.Classical, y: startY + registerHeight + classicalRegHeight * 2 },
-                ]
+                ],
             },
             2: {
                 type: RegisterType.Qubit,
                 y: startY + registerHeight + classicalRegHeight * 3,
-                children: [
-                    { type: RegisterType.Classical, y: startY + registerHeight + classicalRegHeight * 4 },
-                ]
+                children: [{ type: RegisterType.Classical, y: startY + registerHeight + classicalRegHeight * 4 }],
             },
         };
         ({ qubitWires, registers } = formatInputs(inputs));
@@ -72,7 +70,7 @@ describe("Testing formatInputs", () => {
         expect(registers).toEqual(expectedRegs);
         expect(registers).toEqual(expectedRegs);
     });
-    test("Skip quantum registers", () => {
+    test('Skip quantum registers', () => {
         const inputs: Qubit[] = [{ id: 0 }, { id: 2 }];
         const expectedRegs: RegisterMap = {
             0: { type: RegisterType.Qubit, y: startY },
