@@ -19,6 +19,9 @@ export interface Qubit {
     numChildren?: number;
 }
 
+/**
+ * Conditions on when to render the given operation.
+ */
 export enum ConditionalRender {
     /** Always rendered. */
     Always,
@@ -26,6 +29,8 @@ export enum ConditionalRender {
     OnZero,
     /** Render classically-controlled operation when measurement is a one. */
     OnOne,
+    /** Render operation as a group of its nested operations. */
+    AsGroup,
 }
 
 /**
