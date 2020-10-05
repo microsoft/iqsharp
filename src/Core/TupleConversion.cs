@@ -119,18 +119,33 @@ namespace Microsoft.Quantum.IQSharp
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var type = value.GetType();
-            var nItems = type.GenericTypeArguments.Length;
             var tokenData = new Dictionary<string, object>
             {
                 ["@type"] = "@tuple"
             };
 
-            foreach (var idx in Enumerable.Range(0, nItems))
+            var itemOffset = 0;
+            while (true)
             {
-                var field = type.GetField($"Item{idx + 1}");
-                Debug.Assert(field != null, $"Failed trying to look at field Item{idx + 1} of a value tuple with {nItems} type arguments, {type.FullName}.");
-                tokenData[$"Item{idx + 1}"] = field.GetValue(value);
+                var type = value.GetType();
+                var nItems = type.GenericTypeArguments.Length;
+
+                // For tuples of more than 7 items, the .NET type is ValueTuple<T1,T2,T3,T4,T5,T6,T7,TRest>
+                const int maxTupleLength = 7;
+                foreach (var idx in Enumerable.Range(0, System.Math.Min(nItems, maxTupleLength)))
+                {
+                    var field = type.GetField($"Item{idx + 1}");
+                    Debug.Assert(field != null, $"Failed trying to look at field Item{idx + 1} of a value tuple with {nItems} type arguments, {type.FullName}.");
+                    tokenData[$"Item{idx + itemOffset + 1}"] = field.GetValue(value);
+                }
+
+                if (nItems <= maxTupleLength)
+                {
+                    break;
+                }
+
+                value = type.GetField("Rest").GetValue(value);
+                itemOffset += maxTupleLength;
             }
 
             // See https://github.com/JamesNK/Newtonsoft.Json/issues/386#issuecomment-421161191

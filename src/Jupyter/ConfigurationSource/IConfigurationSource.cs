@@ -89,6 +89,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
 
         /// <summary>
+        ///     Whether to use only a simple plain-text encoding when dumping states.
+        /// </summary>
+        public bool PlainTextOnly =>
+            GetOptionOrDefault("dump.plainTextOnly", false);
+
+        /// <summary>
         ///     Allows for setting the default depth for visualizing Q# operations using the
         ///     <c>%trace</c> command.
         /// </summary>
