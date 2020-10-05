@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,15 +14,17 @@ namespace Tests.IQSharp
     public class WorkspaceTests
     {
         [TestMethod]
-        public void InitWorkspace()
+        public async Task InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
+            await ws.Initialization;
 
             var dll = ws.Projects.Single().CacheDllPath;
             if (File.Exists(dll)) File.Delete(dll);
 
             // First time
             ws = Startup.Create<Workspace>("Workspace");
+            await ws.Initialization;
             Assert.IsFalse(ws.HasErrors);
 
             var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
@@ -29,6 +32,7 @@ namespace Tests.IQSharp
 
             // On next reload:
             ws = Startup.Create<Workspace>("Workspace");
+            await ws.Initialization;
             Assert.IsFalse(ws.HasErrors);
 
             op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
@@ -36,9 +40,10 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ReloadWorkspace()
+        public async Task ReloadWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
+            await ws.Initialization;
             var originalAssembly = ws.AssemblyInfo;
             var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsFalse(ws.HasErrors);

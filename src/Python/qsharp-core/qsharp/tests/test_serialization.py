@@ -12,6 +12,7 @@
 
 import unittest
 import json
+import numpy as np
 from qsharp.serialization import map_tuples, unmap_tuples
 
 class TestSerialization(unittest.TestCase):
@@ -35,6 +36,35 @@ class TestSerialization(unittest.TestCase):
         }
         self.assertEqual(
             map_tuples(actual), expected
+        )
+
+
+    def test_map_numpy_types(self):
+        self.assertEqual(
+            map_tuples(np.array([1, 2, 3], dtype=np.int32)),
+            [1, 2, 3]
+        )
+        self.assertEqual(
+            map_tuples(np.array([1., 2., 3.], dtype=np.single)),
+            [1., 2., 3.]
+        )
+
+
+    def test_map_ndarray(self):
+        self.assertEqual(
+            map_tuples(np.array([1, 2, 3])),
+            [1, 2, 3]
+        )
+        
+        tuples = [(0, 'Zero'), (1, 'One')]
+        tuples_array = np.empty(len(tuples), dtype=object)
+        tuples_array[:] = tuples
+        self.assertEqual(
+            map_tuples(tuples_array),
+            [
+                {'@type': 'tuple', 'Item1': 0, 'Item2': 'Zero'},
+                {'@type': 'tuple', 'Item1': 1, 'Item2': 'One'}
+            ]
         )
 
     def test_roundtrip_shallow_tuple(self):

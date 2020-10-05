@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
 
 namespace Microsoft.Quantum.IQSharp
@@ -138,5 +138,12 @@ namespace Microsoft.Quantum.IQSharp
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
         void Reload(Action<string> statusCallback = null);
+
+        /// <summary>
+        /// Task that will be completed when the initial workspace
+        /// initialization has finished, including package loads and
+        /// project compilation.
+        /// </summary>
+        Task Initialization { get; }
     }
 }

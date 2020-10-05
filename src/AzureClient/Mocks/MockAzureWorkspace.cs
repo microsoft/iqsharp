@@ -42,11 +42,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public MockAzureWorkspace(string workspaceName) => Name = workspaceName;
 
-        public async Task<CloudJob?> GetJobAsync(string jobId) => Jobs.FirstOrDefault(job => job.Id == jobId);
+        public async Task<CloudJob?> GetJobAsync(string jobId) => await Task.Run(() => Jobs.FirstOrDefault(job => job.Id == jobId));
 
-        public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => Providers;
+        public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => await Task.Run(() => Providers);
 
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => Jobs;
+        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => await Task.Run(() => Jobs);
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
 

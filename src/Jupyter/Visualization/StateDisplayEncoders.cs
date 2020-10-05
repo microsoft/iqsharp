@@ -39,6 +39,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Display phase information as an arrow (<c>↑</c>) rotated by an angle
         ///     dependent on the phase as well as display phase information in number
         ///     format.
+        /// </summary>
         ArrowAndNumber
     }
 
@@ -223,6 +224,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public EncodedData? Encode(object displayable)
         {
+            if (ConfigurationSource.PlainTextOnly) return null;
+
             string StyleForAngle(double angle) =>
                 $@"transform: rotate({angle * 360.0 / TWO_PI}deg);
                    text-align: center;";

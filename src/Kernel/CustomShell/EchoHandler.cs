@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
 
-    public class EchoReplyContent : MessageContent
+    internal class EchoReplyContent : MessageContent
     {
         [JsonProperty("value")]
         public string Value { get; set; }
@@ -24,6 +24,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     {
         private readonly IShellServer shellServer;
         private readonly ILogger<EchoHandler> logger;
+
+        /// <summary>
+        ///     Creates an <see cref="EchoHandler"/> object.
+        /// </summary>
         public EchoHandler(
             ILogger<EchoHandler> logger,
             IShellServer shellServer
@@ -33,40 +37,45 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.shellServer = shellServer;
         }
 
+        /// <inheritdoc/>
         public string MessageType => "iqsharp_echo_request";
 
+        /// <inheritdoc/>
         public async Task HandleAsync(Message message)
         {
             // Find out the thing we need to echo back.
             var value = (message.Content as UnknownContent).Data["value"] as string;
             // Send the echo both as an output and as a reply so that clients
             // can test both kinds of callbacks.
-            shellServer.SendIoPubMessage(
-                new Message
-                {
-                    Header = new MessageHeader
+            await Task.Run(() =>
+            {
+                shellServer.SendIoPubMessage(
+                    new Message
                     {
-                        MessageType = "iqsharp_echo_output"
-                    },
-                    Content = new EchoReplyContent
+                        Header = new MessageHeader
+                        {
+                            MessageType = "iqsharp_echo_output"
+                        },
+                        Content = new EchoReplyContent
+                        {
+                            Value = value
+                        }
+                    }.AsReplyTo(message)
+                );
+                shellServer.SendShellMessage(
+                    new Message
                     {
-                        Value = value
-                    }
-                }.AsReplyTo(message)
-            );
-            shellServer.SendShellMessage(
-                new Message
-                {
-                    Header = new MessageHeader
-                    {
-                        MessageType = "iqsharp_echo_reply"
-                    },
-                    Content = new EchoReplyContent
-                    {
-                        Value = value
-                    }
-                }.AsReplyTo(message)
-            );
+                        Header = new MessageHeader
+                        {
+                            MessageType = "iqsharp_echo_reply"
+                        },
+                        Content = new EchoReplyContent
+                        {
+                            Value = value
+                        }
+                    }.AsReplyTo(message)
+                );
+            });
         }
     }
 }

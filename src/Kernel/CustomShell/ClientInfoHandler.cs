@@ -14,7 +14,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///     Represents information returned to the client about the current
     ///     kernel instance, such as the current hosting environment.
     /// </summary>
-    public class ClientInfoContent : MessageContent
+    internal class ClientInfoContent : MessageContent
     {
         [JsonProperty("hosting_environment")]
         public string HostingEnvironment { get; set; }
@@ -67,7 +67,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///     the client to provide metadata not initially available when the
     ///     kernel starts, such as the browser's user agent string.
     /// </summary>
-    public class ClientInfoHandler : IShellHandler
+    internal class ClientInfoHandler : IShellHandler
     {
         public string UserAgent { get; private set; }
         private readonly ILogger<ClientInfoHandler> logger;
@@ -99,7 +99,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             metadata.ClientHost = content.ClientHost ?? metadata.ClientHost;
             metadata.ClientOrigin = content.ClientOrigin ?? metadata.ClientOrigin;
             metadata.ClientFirstOrigin = content.ClientFirstOrigin ?? metadata.ClientFirstOrigin;
-            shellServer.SendShellMessage(
+            await Task.Run(() => shellServer.SendShellMessage(
                 new Message
                 {
                     Header = new MessageHeader
@@ -109,7 +109,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     Content = metadata.AsClientInfoContent()
                 }
                 .AsReplyTo(message)
-            );
+            ));
         }
     }
 }

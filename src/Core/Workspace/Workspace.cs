@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.CodeAnalysis;
@@ -147,16 +149,24 @@ namespace Microsoft.Quantum.IQSharp
         public string CacheFolder { get; set; }
 
         /// <summary>
+        /// An event that is set after the workspace initialization has completed.
+        /// </summary>
+        private ManualResetEvent initialized = new ManualResetEvent(false);
+
+        /// <inheritdoc/>
+        public Task Initialization => Task.Run(() => initialized.WaitOne());
+
+        /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
         /// </summary>
         /// <param name="logger">Used to log messages to the console.</param>
         /// <param name="references">List of references to use to compile the workspace.</param>
         public Workspace(
-            IOptions<Settings> config, 
-            ICompilerService compiler, 
-            IReferences references, 
+            IOptions<Settings> config,
+            ICompilerService compiler,
+            IReferences references,
             INugetPackages packages,
-            ILogger<Workspace> logger, 
+            ILogger<Workspace> logger,
             IMetadataController metadata,
             IEventService eventService)
         {
@@ -172,22 +182,34 @@ namespace Microsoft.Quantum.IQSharp
 
             logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
-            ResolveProjectReferences();
-
-            if (!LoadFromCache())
+            // Initialize the workspace asynchronously
+            Task.Run(() =>
             {
-                Reload();
-            }
-            else
-            {
-                LoadReferencedPackages();
-                if (MonitorWorkspace)
+                try
                 {
-                    StartFileWatching();
-                }
-            }
+                    GlobalReferences.LoadDefaultPackages();
+                    ResolveProjectReferences();
 
-            eventService?.TriggerServiceInitialized<IWorkspace>(this);
+                    if (!LoadFromCache())
+                    {
+                        DoReload();
+                    }
+                    else
+                    {
+                        LoadReferencedPackages();
+                        if (MonitorWorkspace)
+                        {
+                            StartFileWatching();
+                        }
+                    }
+
+                    eventService?.TriggerServiceInitialized<IWorkspace>(this);
+                }
+                finally
+                {
+                    initialized.Set();
+                }
+            });
         }
 
         private void ResolveProjectReferences()
@@ -412,6 +434,12 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public void Reload(Action<string> statusCallback = null)
         {
+            Initialization.Wait();
+            DoReload(statusCallback);
+        }
+
+        private void DoReload(Action<string> statusCallback = null)
+        { 
             var duration = Stopwatch.StartNew();
             var fileCount = 0;
             var errorIds = new List<string>();
