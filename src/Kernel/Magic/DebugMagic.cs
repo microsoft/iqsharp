@@ -11,23 +11,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Linq;
 using System.Numerics;
 
-
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
-    public class RawHtmlPayload
+    internal class RawHtmlPayload
     {
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
     }
 
-    public class RawHtmlEncoder : IResultEncoder
+    internal class RawHtmlEncoder : IResultEncoder
     {
         public string MimeType => MimeTypes.Html;
 
@@ -37,32 +33,42 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             : (Nullable<EncodedData>)null;
     }
 
-        public class DebugStateDumper: QuantumSimulator.StateDumper
+    internal class DebugStateDumper : QuantumSimulator.StateDumper
+    {
+        private Complex[]? _data = null;
+
+        public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
         {
-            private Complex[]? _data = null;
-            public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
-            {
-
-            }
-
-            public override bool Callback(uint idx, double real, double img)
-            {
-                if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
-                _data[idx] = new Complex(real, img);
-                return true;
-            }
-            
-            public Complex[] getAmplitudes()
-            {
-                var count = this.Simulator.QubitManager.GetAllocatedQubitsCount();
-                _data = new Complex[1 << ((int)count)];
-                var result = base.Dump();
-                    return _data;
-            }
         }
 
+        public override bool Callback(uint idx, double real, double img)
+        {
+            if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
+            _data[idx] = new Complex(real, img);
+            return true;
+        }
+        
+        public Complex[] GetAmplitudes()
+        {
+            var count = this.Simulator.QubitManager?.GetAllocatedQubitsCount() ?? 0;
+            _data = new Complex[1 << ((int)count)];
+            var result = base.Dump();
+            return _data;
+        }
+    }
+
+    /// <summary>
+    ///     A magic command that can be used to step through the execution of a
+    ///     quantum operation using the full-state simulator.
+    /// </summary>
     public class DebugMagic : AbstractMagic
     {
+        /// <summary>
+        ///     Constructs a new magic command given a resolver used to find
+        ///     operations and functions, a configuration source used to set
+        ///     configuration options, and a shell router and shell server for
+        ///     communication with the client.
+        /// </summary>
         public DebugMagic(
                 ISymbolResolver resolver, IConfigurationSource configurationSource, IShellRouter router, IShellServer shellServer,
                 ILogger<DebugMagic> logger
@@ -214,7 +220,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                                 QubitIds = qsim.QubitIds.Select(q => (int)q),
                                 NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
-                                Amplitudes = new DebugStateDumper(qsim).getAmplitudes(),
+                                Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
                                 DivId = divId
                             }
                         }

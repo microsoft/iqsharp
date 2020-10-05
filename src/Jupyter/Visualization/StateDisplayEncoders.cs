@@ -124,7 +124,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     will be displayed.
         /// </summary>
         [JsonProperty("div_id")]
-        public string DivId { get; set; }
+        public string DivId { get; set; } = string.Empty;
 
         /// <summary>
         ///     The indexes of each qubit on which this state is defined, or
