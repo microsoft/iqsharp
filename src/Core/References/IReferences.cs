@@ -64,6 +64,11 @@ namespace Microsoft.Quantum.IQSharp
         IEnumerable<string>? Packages { get; }
 
         /// <summary>
+        /// Adds any default packages that should be loaded at initialization time.
+        /// </summary>
+        void LoadDefaultPackages();
+
+        /// <summary>
         /// Adds a nuget package and its corresponding assemblies to the list of references.
         /// </summary>
         Task AddPackage(string name, Action<string>? statusCallback = null);

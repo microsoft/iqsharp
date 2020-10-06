@@ -65,6 +65,9 @@ namespace Microsoft.Quantum.IQSharp
                 snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IWorkspace>().On += (workspace) =>
             {
+                TelemetryLogger.LogEvent(
+                    "WorkspaceInitialized".AsTelemetryEvent().WithTimeSinceStart()
+                );
                 workspace.Reloaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                 workspace.ProjectLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             };

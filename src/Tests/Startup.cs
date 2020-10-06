@@ -41,6 +41,7 @@ namespace Tests.IQSharp
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();
+            serviceProvider.GetRequiredService<IWorkspace>().Initialization.Wait();
             return serviceProvider;
         }
 
