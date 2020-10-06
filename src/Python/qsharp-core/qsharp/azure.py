@@ -130,7 +130,7 @@ def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
 
 def execute(op : qsharp.QSharpCallable, **params) -> Dict:
     """
-    Executes a job in an Azure Quantum workspace.
+    Submits a job to an Azure Quantum workspace and waits for completion.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute for more details.
     """
     result = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, **params)
