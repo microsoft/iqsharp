@@ -31,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Summary = "Submits a job to an Azure Quantum workspace.",
                     Description = $@"
                         This magic command allows for submitting a Q# operation or function
-                        for execution on the specified target in the current Azure Quantum workspace.
+                        to be run on the specified target in the current Azure Quantum workspace.
                         The command returns immediately after the job is submitted.
 
                         The Azure Quantum workspace must have been previously initialized
