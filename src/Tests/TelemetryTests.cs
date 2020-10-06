@@ -253,7 +253,7 @@ namespace Tests.IQSharp
             var performanceMonitor = services.GetService<IPerformanceMonitor>();
 
             // Disable background logging so as to enable a determinstic test.
-            performanceMonitor.EnableBackgroundReporting = false;
+            // performanceMonitor.EnableBackgroundReporting = false;
 
             var channel = new MockChannel();
 
