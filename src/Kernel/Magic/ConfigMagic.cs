@@ -65,6 +65,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     Configures the phase visualization style in output from callables such as
                     `DumpMachine` or `DumpRegister`. Supports displaying phase as arrows, numbers (in radians), both, or neither.
 
+                    **`dump.plainTextOnly`**
+
+                    **Value:** `true` or `false` (default)
+
+                    Forces plain-text output from callables such as `DumpMachine` and `DumpRegister`, even
+                    when using an HTML-enabled client such as Jupyter Notebook.
+
                     **`trace.defaultDepth`**
 
                     **Value:** positive integer (default `1`)

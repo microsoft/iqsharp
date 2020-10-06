@@ -15,7 +15,7 @@
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Microsoft/IQsharp/tree/master/src/ExecutionPathTracer</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Microsoft/IQsharp/tree/main/src/ExecutionPathTracer</PackageProjectUrl>
     <PackageIcon>qdk-nuget-icon.png</PackageIcon>
     <PackageTags>Quantum Q# Qsharp</PackageTags>
     <PackageId>Microsoft.Quantum.IQSharp.ExecutionPathTracer</PackageId>

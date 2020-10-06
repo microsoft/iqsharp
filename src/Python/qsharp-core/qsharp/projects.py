@@ -39,8 +39,9 @@ class Projects(object):
         """
         Adds a reference to the given Q# project to be loaded
         into the current IQ# session.
+
         :param project_path: Path to the .csproj to be added. May be an absolute
-        path or a path relative to the current workspace root folder.
+            path or a path relative to the current workspace root folder.
         """
         logger.info(f"Loading project: {project_path}")
         loaded_projects = self._client.add_project(project_path)

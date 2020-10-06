@@ -50,7 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
                     try
                     {
-                        return magic(input, channel, cancellationToken);
+                        return await Task.Run(() => magic(input, channel, cancellationToken));
                     }
                     catch (InvalidWorkspaceException ws)
                     {

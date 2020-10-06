@@ -76,6 +76,13 @@ class QSharpCallable(object):
     def __repr__(self) -> str:
         return f"<Q# callable {self._name}>"
 
+    def __call__(self, **kwargs) -> Any:
+        """
+        Executes this function or operation on the QuantumSimulator target
+        machine, returning its output as a Python object.
+        """
+        return self.simulate(**kwargs)
+
     def simulate(self, **kwargs) -> Any:
         """
         Executes this function or operation on the QuantumSimulator target

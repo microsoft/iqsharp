@@ -53,6 +53,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
             this.MagicResolver = magicSymbolResolver;
+            this.Workspace = services.GetService<IWorkspace>();
 
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
@@ -172,6 +173,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver MagicResolver { get; }
 
+        internal IWorkspace Workspace { get; }
+
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
@@ -181,36 +184,41 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             channel = channel.WithNewLines();
 
-            try
+            return await Task.Run(async () =>
             {
-                var code = Snippets.Compile(input);
+                try
+                {
+                    await Workspace.Initialization;
 
-                foreach(var m in code.warnings) { channel.Stdout(m); }
+                    var code = Snippets.Compile(input);
 
-                // Gets the names of all the operations found for this snippet
-                var opsNames =
-                    code.Elements?
-                        .Where(e => e.IsQsCallable)
-                        .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
-                        .ToArray();
+                    foreach (var m in code.warnings) { channel.Stdout(m); }
 
-                return opsNames.ToExecutionResult();
-            }
-            catch (CompilationErrorsException c)
-            {
-                foreach (var m in c.Errors) channel.Stderr(m);
-                return ExecuteStatus.Error.ToExecutionResult();
-            }
-            catch (Exception e)
-            {
-                Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
-                channel.Stderr(e.Message);
-                return ExecuteStatus.Error.ToExecutionResult();
-            }
-            finally
-            {
-                performanceMonitor.Report();
-            }
+                    // Gets the names of all the operations found for this snippet
+                    var opsNames =
+                        code.Elements?
+                            .Where(e => e.IsQsCallable)
+                            .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
+                            .ToArray();
+
+                    return opsNames.ToExecutionResult();
+                }
+                catch (CompilationErrorsException c)
+                {
+                    foreach (var m in c.Errors) channel.Stderr(m);
+                    return ExecuteStatus.Error.ToExecutionResult();
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
+                    channel.Stderr(e.Message);
+                    return ExecuteStatus.Error.ToExecutionResult();
+                }
+                finally
+                {
+                    performanceMonitor.Report();
+                }
+            });
         }
     }
 }
