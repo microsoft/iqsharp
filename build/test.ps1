@@ -39,7 +39,7 @@ function Test-One {
 
         dotnet test $project `
             -c $Env:BUILD_CONFIGURATION `
-            -v diag `
+            -v $Env:BUILD_VERBOSITY `
             --no-build `
             --logger trx `
             --filter $_ `
