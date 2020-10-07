@@ -30,7 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.jobs",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Displays a list of jobs in the current Azure Quantum workspace.",
                     Description = $@"
