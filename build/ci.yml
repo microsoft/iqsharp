@@ -24,7 +24,6 @@ jobs:
       failOnAlert: true
 
 - job: "test_selenium"
-  dependsOn: "iqsharp"
   pool:
     vmImage: 'windows-2019'
   steps:
