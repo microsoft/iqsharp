@@ -41,6 +41,7 @@ steps:
 - script: |
     call activate selenium-env
     call conda info
+    start jupyter notebook --no-browser --NotebookApp.base_url=test/path
     python ./test-selenium.py
   displayName: "Running Selenium tests"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
