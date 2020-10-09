@@ -12,7 +12,7 @@ steps:
   displayName: "Add conda to PATH"
 
 - pwsh: |
-    conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
+    conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
   displayName: "Create conda environment"
 
 - task: UseDotNet@2
