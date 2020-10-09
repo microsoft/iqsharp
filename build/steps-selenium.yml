@@ -11,8 +11,7 @@ steps:
 - pwsh: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   displayName: "Add conda to PATH"
 
-- pwsh: |
-    conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
+- pwsh: conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
   displayName: "Create conda environment"
 
 - task: UseDotNet@2
@@ -21,7 +20,7 @@ steps:
     packageType: sdk
     version: '3.1.100'
 
-- pwsh: .\bootstrap.ps1
+- pwsh: ./bootstrap.ps1
   displayName: "Bootstrap"
   workingDirectory: '$(System.DefaultWorkingDirectory)'
 
