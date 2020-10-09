@@ -30,7 +30,7 @@ steps:
 ##
 - script: |
     call activate selenium-env
-    conda info
+    call conda info
     dotnet run -c %BUILD_CONFIGURATION% -- install --user
   displayName: "Installing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/src/Tool'
@@ -40,7 +40,7 @@ steps:
 ##
 - script: |
     call activate selenium-env
-    conda info
+    call conda info
     python ./test-selenium.py
   displayName: "Running Selenium tests"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
