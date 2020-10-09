@@ -28,20 +28,18 @@ steps:
 ##
 # Install IQ# kernel
 ##
-- pwsh: |
+- script: |
+    call activate selenium-env
     conda info
-    activate selenium-env
-    conda info
-    dotnet run -c $Env:BUILD_CONFIGURATION -- install --user
+    dotnet run -c %BUILD_CONFIGURATION% -- install --user
   displayName: "Installing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/src/Tool'
 
 ##
 # Test
 ##
-- pwsh: |
-    conda info
-    activate selenium-env
+- script: |
+    call activate selenium-env
     conda info
     python ./test-selenium.py
   displayName: "Running Selenium tests"
