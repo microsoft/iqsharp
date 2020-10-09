@@ -4,7 +4,8 @@ import time
 
 from notebook.notebookapp import list_running_servers
 from notebook.tests.selenium.utils import Notebook
-from notebook.tests.selenium.quick_selenium import quick_driver
+from selenium.common.exceptions import JavascriptException
+from selenium.webdriver import Firefox
 
 # workaround for missing os.uname attribute on some Windows systems
 if not hasattr(os, "uname"):
@@ -23,12 +24,21 @@ def setup_module():
 
     if not list(list_running_servers()):
         raise Exception(f"Notebook server did not start in {remaining_time} seconds")
+
+def create_notebook():
+    '''
+    Returns a new IQ# notebook in a Firefox web driver
+    '''
+    server = list(list_running_servers())[0]
+    driver = Firefox()
+    driver.get('{url}?token={token}'.format(**server))
+    return Notebook.new_notebook(driver, kernel_name='kernel-iqsharp')
     
 def test_cell_execution():
     '''
     Check that %version executes and outputs an expected result
     '''
-    nb = Notebook.new_notebook(quick_driver(), kernel_name='kernel-iqsharp')
+    nb = create_notebook()
     nb.edit_cell(index=0, content='%version')
     nb.execute_cell(cell_or_index=0)
     outputs = nb.wait_for_cell_output(index=0, timeout=120)
@@ -37,3 +47,20 @@ def test_cell_execution():
     assert "iqsharp" in outputs[0].text, outputs[0].text
     
     nb.browser.quit()
+
+def test_javascript_loaded():
+    '''
+    Check that the expected IQ# JavaScript modules are properly loaded
+    '''
+    nb = create_notebook()
+
+    with pytest.raises(JavascriptException):
+        nb.browser.execute_script("require('fake/module')")
+
+    nb.browser.execute_script("require('codemirror/addon/mode/simple')")
+    nb.browser.execute_script("require('telemetry')")
+    nb.browser.execute_script("require('visualizer')")
+    nb.browser.execute_script("require('ExecutionPathVisualizer/index')")
+    
+    nb.browser.quit()
+   
