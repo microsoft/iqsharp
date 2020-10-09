@@ -12,7 +12,7 @@ steps:
   displayName: "Add conda to PATH"
 
 - pwsh: |
-    conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
+    conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
   displayName: "Create conda environment"
 
 - task: UseDotNet@2
@@ -29,7 +29,9 @@ steps:
 # Install IQ# kernel
 ##
 - pwsh: |
+    conda info
     activate selenium-env
+    conda info
     dotnet run -c $Env:BUILD_CONFIGURATION -- install --user
   displayName: "Installing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/src/Tool'
@@ -38,7 +40,9 @@ steps:
 # Test
 ##
 - pwsh: |
+    conda info
     activate selenium-env
+    conda info
     python ./test-selenium.py
   displayName: "Running Selenium tests"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
