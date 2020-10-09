@@ -10,7 +10,7 @@ steps:
 ##
 - task: CondaEnvironment@1
   inputs:
-    packageSpecs: "python=3.7 pip setuptools pytest jupyter notebook numpy selenium"
+    packageSpecs: "python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141"
   displayName: 'Create conda environment'
 
 - task: UseDotNet@2
