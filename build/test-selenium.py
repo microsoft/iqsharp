@@ -26,13 +26,14 @@ def setup_module():
     
 def test_cell_execution():
     '''
-    Check that %version executes and outputs a result
+    Check that %version executes and outputs an expected result
     '''
     nb = Notebook.new_notebook(quick_driver(), kernel_name='kernel-iqsharp')
     nb.edit_cell(index=0, content='%version')
     nb.execute_cell(cell_or_index=0)
-    nb.wait_for_cell_output(index=0, timeout=120)
+    outputs = nb.wait_for_cell_output(index=0, timeout=120)
 
-    assert len(nb.get_cell_output(index=0)) > 0
+    assert len(outputs) > 0
+    assert "iqsharp" in outputs[0].text, outputs[0].text
     
     nb.browser.quit()
