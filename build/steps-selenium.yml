@@ -8,10 +8,11 @@ steps:
 ##
 # Pre-reqs
 ##
-- task: CondaEnvironment@1
-  inputs:
-    packageSpecs: "python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141"
-  displayName: 'Create conda environment'
+- pwsh: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  displayName: "Add conda to PATH"
+
+- pwsh: conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
+  displayName: "Create conda environment"
 
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK 3.1.100'
@@ -26,9 +27,6 @@ steps:
 ##
 # Install IQ# kernel
 ##
-- pwsh: conda install pyzmq -y --force-reinstall
-  displayName: "Installing pyzmq"
-
 - pwsh: dotnet run -c $Env:BUILD_CONFIGURATION -- install --user
   displayName: "Installing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/src/Tool'
@@ -36,6 +34,8 @@ steps:
 ##
 # Test
 ##
-- pwsh: python ./test-selenium.py
+- pwsh: |
+    conda activate selenium-env
+    python ./test-selenium.py
   displayName: "Running Selenium tests"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
