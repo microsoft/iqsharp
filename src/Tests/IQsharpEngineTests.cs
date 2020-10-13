@@ -262,6 +262,22 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task DumpToFile()
+        {
+            var engine = Init();
+
+            // Compile DumpMachine snippet.
+            await AssertCompile(engine, SNIPPETS.DumpToFile, "DumpToFile");
+
+            // Run, which should produce files in working directory.
+            await AssertSimulate(engine, "DumpToFile", "Dumped to file!");
+
+            // Ensure the expected files got created.
+            Assert.IsTrue(System.IO.File.Exists("DumpMachine.txt"));
+            Assert.IsTrue(System.IO.File.Exists("DumpRegister.txt"));
+        }
+
+        [TestMethod]
         public async Task UpdateDependency()
         {
             var engine = Init();
