@@ -273,8 +273,20 @@ namespace Tests.IQSharp
             await AssertSimulate(engine, "DumpToFile", "Dumped to file!");
 
             // Ensure the expected files got created.
-            Assert.IsTrue(System.IO.File.Exists("DumpMachine.txt"));
-            Assert.IsTrue(System.IO.File.Exists("DumpRegister.txt"));
+            var machineFile = "DumpMachine.txt";
+            var registerFile = "DumpRegister.txt";
+            Assert.IsTrue(System.IO.File.Exists(machineFile));
+            Assert.IsTrue(System.IO.File.Exists(registerFile));
+
+            // Clean up produced files, if any.
+            if (System.IO.File.Exists(machineFile))
+            {
+                System.IO.File.Delete(machineFile);
+            }
+            if (System.IO.File.Exists(registerFile))
+            {
+                System.IO.File.Delete(registerFile);
+            }
         }
 
         [TestMethod]
