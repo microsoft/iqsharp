@@ -233,8 +233,6 @@ namespace Tests.IQSharp
 
         public static string UseJordanWignerEncodingData =
 @"
-    open Microsoft.Quantum.Convert;
-    open Microsoft.Quantum.Math;
     open Mock.Chemistry;
     
     operation UseJordanWignerEncodingData (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {        
