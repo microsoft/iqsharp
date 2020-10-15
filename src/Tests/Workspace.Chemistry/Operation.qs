@@ -4,10 +4,6 @@
 // This file can only compile if the Mock.Chemistry project
 // is added as a reference.
 namespace Tests.IQSharp.Chemistry.Samples {
-    open Microsoft.Quantum.Intrinsic;
-    open Microsoft.Quantum.Canon;
-    open Microsoft.Quantum.Convert;
-    open Microsoft.Quantum.Math;
     open Mock.Chemistry;
     
     operation UseJordanWignerEncodingData (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {        
