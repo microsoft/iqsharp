@@ -95,15 +95,14 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public ICompilerService Compiler { get; }
 
-        /// <summary>
-        /// The root folder.
-        /// </summary>
+        /// <inheritdoc/>
         public string Root { get; set; }
 
-        /// <summary>
-        /// The folder where the project assemblies are permanently saved for cache.
-        /// </summary>
+        /// <inheritdoc/>
         public string CacheFolder { get; set; }
+
+        /// <inheritdoc/>
+        public bool Ready { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to monitor the file system for
@@ -243,6 +242,7 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 finally
                 {
+                    Ready = true;
                     initialized.Set();
                 }
             });

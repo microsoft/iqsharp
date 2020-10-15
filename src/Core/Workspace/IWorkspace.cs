@@ -81,6 +81,11 @@ namespace Microsoft.Quantum.IQSharp
         string CacheFolder { get; }
 
         /// <summary>
+        /// Whether the workspace has completed initialization and is ready to be used.
+        /// </summary>
+        bool Ready { get; }
+
+        /// <summary>
         /// Gets the projects to be built for this Workspace. The order of the enumeration
         /// indicates the order in which the projects should be built, i.e., the first
         /// project in the enumeration should be built first.
