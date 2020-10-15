@@ -140,7 +140,7 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     remarks = format_as_section('Remarks', doc.get('Remarks', ""))
 
     raw_examples = doc.get('Examples', [])
-    examples = format_as_section('Examples', "\n".join(
+    examples = format_as_section(f'Examples for `{magic_name}`', "\n".join(
         format_as_section(f"Example {i+1}", example, heading_level=3)
         for i, example in enumerate(raw_examples)
     )) if raw_examples else ""
