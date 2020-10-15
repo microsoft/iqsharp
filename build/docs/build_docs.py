@@ -118,6 +118,7 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     magic_name = magic['Name'].strip()
     safe_name = magic_name.replace('%', '')
     uid = f"{uid_base}.{safe_name}"
+    doc = magic['Documentation']
     raw_summary = doc.get('Summary', "")
     metadata = {
         'title': f"{magic_name} (magic command)",
@@ -128,8 +129,8 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
         'ms.topic': 'article'
     }
+    
     header = f"# `{magic_name}`"
-    doc = magic['Documentation']
 
     summary = format_as_section('Summary', raw_summary)
     description = format_as_section(
