@@ -74,11 +74,11 @@ def main(output_dir : str, uid_base : str, package : List[str]):
     with open(output_dir / "index.md", 'w', encoding='utf8') as f:
         f.write(index_content)
 
-def format_as_section(name : str, content : Optional[str]) -> str:
+def format_as_section(name : str, content : Optional[str], heading_level : Optional[int] = 2) -> str:
     content = content.strip() if content else None
     return f"""
 
-## {name}
+{"#" * heading_level} {name}
 
 {content}
 
@@ -118,8 +118,10 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     magic_name = magic['Name'].strip()
     safe_name = magic_name.replace('%', '')
     uid = f"{uid_base}.{safe_name}"
+    raw_summary = doc.get('Summary', "")
     metadata = {
         'title': f"{magic_name} (magic command)",
+        'description': raw_summary.strip(),
         'author': 'rmshaffer',
         'uid': uid,
         'ms.author': 'ryansha',
@@ -129,7 +131,6 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     header = f"# `{magic_name}`"
     doc = magic['Documentation']
 
-    raw_summary = doc.get('Summary', "")
     summary = format_as_section('Summary', raw_summary)
     description = format_as_section(
         'Description',
@@ -138,10 +139,10 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     remarks = format_as_section('Remarks', doc.get('Remarks', ""))
 
     raw_examples = doc.get('Examples', [])
-    examples = "\n".join(
-        format_as_section("Example", example)
+    examples = format_as_section('Examples', "\n".join(
+        format_as_section("Example", example, heading_level=3)
         for example in raw_examples
-    ) if raw_examples else ""
+    )) if raw_examples else ""
 
     raw_see_also = doc.get('SeeAlso', [])
     see_also = format_as_section(
