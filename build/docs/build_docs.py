@@ -141,8 +141,8 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
 
     raw_examples = doc.get('Examples', [])
     examples = format_as_section('Examples', "\n".join(
-        format_as_section("Example", example, heading_level=3)
-        for example in raw_examples
+        format_as_section(f"Example {i+1}", example, heading_level=3)
+        for i, example in enumerate(raw_examples)
     )) if raw_examples else ""
 
     raw_see_also = doc.get('SeeAlso', [])
