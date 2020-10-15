@@ -59,7 +59,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void WorkspaceReload()
+        public async Task WorkspaceReload()
         {
             var workspace = "Workspace";
             var services = Startup.CreateServiceProvider(workspace);
@@ -70,7 +70,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.ReloadAsync();
             Assert.AreEqual(1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.WorkspaceReload", logger.Events[0].Name);
             Assert.AreEqual(PiiKind.GenericData, logger.Events[0].PiiProperties["Quantum.IQSharp.Workspace"]);
@@ -82,7 +82,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void InvalidWorkspaceReload()
+        public async Task InvalidWorkspaceReload()
         {
             var workspace = "Workspace.Broken";
             var services = Startup.CreateServiceProvider(workspace);
@@ -93,7 +93,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.ReloadAsync();
             Assert.AreEqual(1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.WorkspaceReload", logger.Events[0].Name);
             Assert.AreEqual(PiiKind.GenericData, logger.Events[0].PiiProperties["Quantum.IQSharp.Workspace"]);
@@ -191,7 +191,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void LoadProjects()
+        public async Task LoadProjects()
         {
             var workspace = "Workspace.ProjectReferences";
             var services = Startup.CreateServiceProvider(workspace);
@@ -202,7 +202,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.ReloadAsync();
             Assert.AreEqual(5, logger.Events.Count);
 
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
