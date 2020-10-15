@@ -29,7 +29,6 @@ namespace Tests.IQSharp
         public IQSharpEngine Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
-            engine.Workspace.Initialization.Wait();
             return engine;
         }
 
@@ -418,7 +417,6 @@ namespace Tests.IQSharp
         public async Task TestWho()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
-            await snippets.Workspace.Initialization;
             snippets.Compile(SNIPPETS.HelloQ);
 
             var whoMagic = new WhoMagic(snippets);
@@ -498,7 +496,6 @@ namespace Tests.IQSharp
         public async Task TestResolver()
         {
             var snippets = Startup.Create<Snippets>("Workspace");
-            await snippets.Workspace.Initialization;
             snippets.Compile(SNIPPETS.HelloQ);
 
             var resolver = new SymbolResolver(snippets);

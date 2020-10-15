@@ -184,12 +184,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             channel = channel.WithNewLines();
 
-            return await Task.Run(async () =>
+            return await Task.Run(() =>
             {
                 try
                 {
-                    await Workspace.Initialization;
-
                     var code = Snippets.Compile(input);
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }

@@ -80,9 +80,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 throw new InvalidWorkspaceException($"Workspace is not ready. Try again.");
             }
-            else if (Workspace.HasErrors)
+            else if (Workspace.GetHasErrorsAsync().Result)
             {
-                throw new InvalidWorkspaceException(Workspace.ErrorMessages.ToArray());
+                throw new InvalidWorkspaceException(Workspace.GetErrorMessagesAsync().Result.ToArray());
             }
         }
 
@@ -91,13 +91,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var status = new Jupyter.TaskStatus($"Reloading workspace");
             var statusUpdater = channel.DisplayUpdatable(status);
             void Update() => statusUpdater.Update(status);
-            var task = Task.Run(() =>
+            var task = workspace.ReloadAsync((newStatus) =>
             {
-                workspace.Reload((newStatus) =>
-                {
-                    status.Subtask = newStatus;
-                    Update();
-                });
+                status.Subtask = newStatus;
+                Update();
             });
 
             try
@@ -147,7 +144,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             CheckIfReady();
 
             var names = Workspace?
-                .Assemblies?
+                .GetAssembliesAsync()
+                .Result?
                 .SelectMany(asm => asm.Operations)
                 .Select(c => c.FullName)
                 .OrderBy(name => name)

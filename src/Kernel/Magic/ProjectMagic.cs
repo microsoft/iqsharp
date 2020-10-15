@@ -81,12 +81,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (!string.IsNullOrWhiteSpace(projectFile))
             {
                 channel.Stdout($"Adding reference to project: {projectFile}");
-                Workspace.AddProject(projectFile);
+                Workspace.AddProjectAsync(projectFile).Wait();
                 WorkspaceMagic.Reload(Workspace, channel);
             }
 
             return Workspace
-                .Projects
+                .GetProjectsAsync()
+                .Result
                 .Select(project => project.ProjectFile)
                 .Where(projectFile => !string.IsNullOrWhiteSpace(projectFile))
                 .OrderBy(projectFile => projectFile)

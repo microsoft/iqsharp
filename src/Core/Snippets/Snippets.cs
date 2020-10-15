@@ -111,12 +111,12 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Q# operations available across all snippets.
         /// </summary>
         public IEnumerable<OperationInfo> Operations =>
-            (Workspace == null || Workspace.HasErrors)
+            (Workspace == null || Workspace.GetHasErrorsAsync().Result)
             ? AssemblyInfo?.Operations
             : AssemblyInfo?.Operations
             .Concat(
                 Workspace?
-                .Assemblies?
+                .GetAssembliesAsync().Result?
                 .SelectMany(asm => asm?.Operations)
             );
 
@@ -124,9 +124,9 @@ namespace Microsoft.Quantum.IQSharp
         /// Loads the compiler metadata, either from the GlobalReferences or includes the Workspace if available
         /// </summary>
         private CompilerMetadata LoadCompilerMetadata() =>
-            Workspace.HasErrors
+            Workspace.GetHasErrorsAsync().Result
                     ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.GetAssembliesAsync().Result.ToArray());
 
         /// <summary>
         /// Compiles the given code. 
@@ -220,7 +220,7 @@ namespace Microsoft.Quantum.IQSharp
                 return this.AssemblyInfo.Assembly;
             }
 
-            foreach (var asm in this.Workspace?.Assemblies)
+            foreach (var asm in this.Workspace?.GetAssembliesAsync().Result)
             {
                 if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
                 {

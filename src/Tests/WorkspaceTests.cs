@@ -17,25 +17,22 @@ namespace Tests.IQSharp
         public async Task InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
-            await ws.Initialization;
 
-            var dll = ws.Projects.Single().CacheDllPath;
+            var dll = ws.GetProjectsAsync().Result.Single().CacheDllPath;
             if (File.Exists(dll)) File.Delete(dll);
 
             // First time
             ws = Startup.Create<Workspace>("Workspace");
-            await ws.Initialization;
-            Assert.IsFalse(ws.HasErrors);
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            var op = ws.GetAssemblyInfoAsync().Result.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
 
             // On next reload:
             ws = Startup.Create<Workspace>("Workspace");
-            await ws.Initialization;
-            Assert.IsFalse(ws.HasErrors);
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
         }
 
@@ -43,117 +40,118 @@ namespace Tests.IQSharp
         public async Task ReloadWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
-            await ws.Initialization;
-            var originalAssembly = ws.AssemblyInfo;
-            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
-            Assert.IsFalse(ws.HasErrors);
+            var originalAssembly = await ws.GetAssemblyInfoAsync();
+            var op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
             Assert.IsNotNull(op);
 
             // Calling Reload with no changes, should regenerate the dll:
-            ws.Reload();
-            op = ws.AssemblyInfo?.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
-            Assert.IsFalse(ws.HasErrors);
+            await ws.ReloadAsync();
+            op = (await ws.GetAssemblyInfoAsync())?.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
             Assert.IsNotNull(op);
-            Assert.AreNotSame(originalAssembly, ws.AssemblyInfo);
+            Assert.AreNotSame(originalAssembly, await ws.GetAssemblyInfoAsync());
 
             var fileName = Path.Combine(Path.GetFullPath("Workspace"), "BasicOps.qs");
             File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
-            ws.Reload();
-            op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
-            Assert.IsFalse(ws.HasErrors);
-            Assert.AreNotSame(originalAssembly, ws.AssemblyInfo);
+            await ws.ReloadAsync();
+            op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
+            Assert.AreNotSame(originalAssembly, await ws.GetAssemblyInfoAsync());
             Assert.IsNotNull(op);
         }
 
         [TestMethod]
-        public void BrokenWorkspace()
+        public async Task BrokenWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.Broken");
-            ws.Reload();
-            Assert.IsTrue(ws.HasErrors);
+            await ws.ReloadAsync();
+            Assert.IsTrue(await ws.GetHasErrorsAsync());
         }
 
         [TestMethod]
-        public void ProjectReferencesWorkspace()
+        public async Task ProjectReferencesWorkspace()
         {
             // Loading this workspace should succeed and automatically pull in the referenced projects
             // Workspace.ProjectReferences.ProjectA and Workspace.ProjectReferences.ProjectB.
             var ws = Startup.Create<Workspace>("Workspace.ProjectReferences");
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync(), string.Join(Environment.NewLine, await ws.GetErrorMessagesAsync()));
 
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = (await ws.GetProjectsAsync()).SelectMany(p => p.AssemblyInfo?.Operations);
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
         }
 
         [TestMethod]
-        public void ProjectReferencesWorkspaceNoAutoLoad()
+        public async Task ProjectReferencesWorkspaceNoAutoLoad()
         {
             // Loading this workspace should fail because the .csproj does not specify <IQSharpLoadAutomatically>,
             // which prevents the code that depends on Workspace.ProjectReferences.ProjectB from compiling correctly.
             var ws = Startup.Create<Workspace>("Workspace.ProjectReferences.ProjectA");
-            ws.Reload();
-            Assert.IsTrue(ws.HasErrors);
+            await ws.ReloadAsync();
+            Assert.IsTrue(await ws.GetHasErrorsAsync());
 
             // Loading this workspace should succeed, and its Q# operations should be available, but the .csproj
             // reference should not be loaded because the .csproj specifies <IQSharpLoadAutomatically> as false.
             ws = Startup.Create<Workspace>("Workspace.ProjectReferences.ProjectB");
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
-            Assert.IsTrue(ws.Projects.Count() == 1);
-            Assert.IsTrue(string.IsNullOrEmpty(ws.Projects.First().ProjectFile));
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync(), string.Join(Environment.NewLine, await ws.GetErrorMessagesAsync()));
+
+            var projects = await ws.GetProjectsAsync();
+            Assert.IsTrue(projects.Count() == 1);
+            Assert.IsTrue(string.IsNullOrEmpty(projects.First().ProjectFile));
+            var operations = projects.SelectMany(p => p.AssemblyInfo?.Operations);
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
         }
 
         [TestMethod]
-        public void ManuallyAddProjects()
+        public async Task ManuallyAddProjects()
         {
             var ws = Startup.Create<Workspace>("Workspace");
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync(), string.Join(Environment.NewLine, await ws.GetErrorMessagesAsync()));
 
-            ws.AddProject("../Workspace.ProjectReferences.ProjectA/ProjectA.csproj");
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            await ws.AddProjectAsync("../Workspace.ProjectReferences.ProjectA/ProjectA.csproj");
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync(), string.Join(Environment.NewLine, await ws.GetErrorMessagesAsync()));
             
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = (await ws.GetProjectsAsync()).SelectMany(p => p.AssemblyInfo?.Operations);
             Assert.IsFalse(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 
-            ws.AddProject("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj");
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            await ws.AddProjectAsync("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj");
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync(), string.Join(Environment.NewLine, await ws.GetErrorMessagesAsync()));
 
-            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            operations = (await ws.GetProjectsAsync()).SelectMany(p => p.AssemblyInfo?.Operations);
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 
             // Try to add a project that doesn't exist
-            Assert.ThrowsException<FileNotFoundException>(() =>
-                ws.AddProject("../InvalidProject/InvalidProject.csproj")
+            await Assert.ThrowsExceptionAsync<FileNotFoundException>(() =>
+                ws.AddProjectAsync("../InvalidProject/InvalidProject.csproj")
             );
 
             // Try to add a project that should have already been loaded
-            Assert.ThrowsException<InvalidOperationException>(() =>
-                ws.AddProject("../Workspace.ProjectReferences.ProjectB/ProjectB.csproj")
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>
+                ws.AddProjectAsync("../Workspace.ProjectReferences.ProjectB/ProjectB.csproj")
             );
         }
 
         [TestMethod]
-        public void ChemistryWorkspace()
+        public async Task ChemistryWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.Chemistry");
-            ws.Reload();
-            Assert.IsTrue(ws.HasErrors);
+            await ws.ReloadAsync();
+            Assert.IsTrue(await ws.GetHasErrorsAsync());
 
             ws.GlobalReferences.AddPackage($"mock.chemistry").Wait();
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors);
+            await ws.ReloadAsync();
+            Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
+            var op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
             Assert.IsNotNull(op);
         }
     }

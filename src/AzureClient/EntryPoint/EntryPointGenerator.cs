@@ -89,13 +89,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointAssemblyInfo = null;
 
             // Compile the workspace against the provided execution target
-            var workspaceFiles = Workspace.SourceFiles.ToArray();
+            var workspaceFiles = Workspace.GetSourceFilesAsync().Result.ToArray();
             if (workspaceFiles.Any())
             {
                 Logger?.LogDebug($"{workspaceFiles.Length} files found in workspace. Compiling.");
 
                 var workspaceAssemblies = new List<AssemblyInfo>();
-                foreach (var project in Workspace.Projects.Where(p => p.SourceFiles.Any()))
+                foreach (var project in Workspace.GetProjectsAsync().Result.Where(p => p.SourceFiles.Any()))
                 {
                     try
                     {

@@ -101,6 +101,11 @@ namespace Microsoft.Quantum.IQSharp
         public string Root { get; set; }
 
         /// <summary>
+        /// The folder where the project assemblies are permanently saved for cache.
+        /// </summary>
+        public string CacheFolder { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether to monitor the file system for
         /// changes and automatically reload the workspace.
         /// </summary>
@@ -114,47 +119,78 @@ namespace Microsoft.Quantum.IQSharp
 
         private List<Project> UserAddedProjects { get; } = new List<Project>();
 
+        private IEnumerable<Project> Projects { get; set; } = Enumerable.Empty<Project>();
         /// <inheritdoc/>
-        public IEnumerable<Project> Projects { get; set; } = Enumerable.Empty<Project>();
+        public async Task<IEnumerable<Project>> GetProjectsAsync()
+        {
+            await Initialization;
+            return Projects;
+        }
 
-        /// <summary>
-        /// Gets the source files to be built for this Workspace.
-        /// </summary>
-        public IEnumerable<string> SourceFiles => Projects.SelectMany(p => p.SourceFiles).Distinct();
-
+        private IEnumerable<string> SourceFiles => Projects.SelectMany(p => p.SourceFiles).Distinct();
         /// <inheritdoc/>
-        public AssemblyInfo AssemblyInfo =>
+        public async Task<IEnumerable<string>> GetSourceFilesAsync()
+        {
+            await Initialization;
+            return SourceFiles;
+        }
+
+        private AssemblyInfo AssemblyInfo =>
             Projects
                 .Where(p => string.IsNullOrEmpty(p.ProjectFile))
                 .Select(p => p.AssemblyInfo)
                 .FirstOrDefault();
+        /// <summary>
+        /// Information of the assembly built from this Workspace.
+        /// </summary>
+        /// <remarks>
+        /// This does NOT include assemblies built from any project references,
+        /// and it will be <c>null</c> in the case that the assemblies are
+        /// built from .csproj files.
+        /// To get all assembly information, use <see cref="GetAssembliesAsync"/>.
+        /// </remarks>
+        public async Task<AssemblyInfo> GetAssemblyInfoAsync()
+        {
+            await Initialization;
+            return AssemblyInfo;
+        }
 
-        /// <inheritdoc/>
-        public IEnumerable<AssemblyInfo> Assemblies =>
+        private IEnumerable<AssemblyInfo> Assemblies =>
             Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
+        /// <inheritdoc/>
+        public async Task<IEnumerable<AssemblyInfo>> GetAssembliesAsync()
+        {
+            await Initialization;
+            return Assemblies;
+        }
 
-        /// <summary>
-        /// The compilation errors, if any.
-        /// </summary>
-        public IEnumerable<string> ErrorMessages { get; set; }
+        private IEnumerable<string> ErrorMessages { get; set; }
+        /// <inheritdoc/>
+        public async Task<IEnumerable<string>> GetErrorMessagesAsync()
+        {
+            await Initialization;
+            return ErrorMessages;
+        }
 
-        /// <summary>
-        /// If any of the files in the workspace had any compilation errors.
-        /// </summary>
-        public bool HasErrors => ErrorMessages == null || ErrorMessages.Any();
-
-        /// <summary>
-        /// The folder where the project assemblies are permanently saved for cache.
-        /// </summary>
-        public string CacheFolder { get; set; }
+        private bool HasErrors => ErrorMessages == null || ErrorMessages.Any();
+        /// <inheritdoc/>
+        public async Task<bool> GetHasErrorsAsync()
+        {
+            await Initialization;
+            return HasErrors;
+        }
 
         /// <summary>
         /// An event that is set after the workspace initialization has completed.
         /// </summary>
         private ManualResetEvent initialized = new ManualResetEvent(false);
 
-        /// <inheritdoc/>
-        public Task Initialization => Task.Run(() => initialized.WaitOne());
+        /// <summary>
+        /// Task that will be completed when the initial workspace
+        /// initialization has finished, including package loads and
+        /// project compilation.
+        /// </summary>
+        private Task Initialization => Task.Run(() => initialized.WaitOne());
 
         /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
@@ -192,7 +228,7 @@ namespace Microsoft.Quantum.IQSharp
 
                     if (!LoadFromCache())
                     {
-                        DoReload();
+                        Reload();
                     }
                     else
                     {
@@ -402,7 +438,13 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public void AddProject(string projectFile)
+        public async Task AddProjectAsync(string projectFile)
+        {
+            await Initialization;
+            AddProject(projectFile);
+        }
+
+        private void AddProject(string projectFile)
         {
             var fullProjectPath = Path.GetFullPath(projectFile, Root);
             if (!File.Exists(fullProjectPath))
@@ -429,16 +471,14 @@ namespace Microsoft.Quantum.IQSharp
             UserAddedProjects.Add(project);
         }
 
-        /// <summary>
-        /// Reloads the workspace from disk.
-        /// </summary>
-        public void Reload(Action<string> statusCallback = null)
+        /// <inheritdoc/>
+        public async Task ReloadAsync(Action<string> statusCallback = null)
         {
-            Initialization.Wait();
-            DoReload(statusCallback);
+            await Initialization;
+            Reload(statusCallback);
         }
 
-        private void DoReload(Action<string> statusCallback = null)
+        private void Reload(Action<string> statusCallback = null)
         { 
             var duration = Stopwatch.StartNew();
             var fileCount = 0;

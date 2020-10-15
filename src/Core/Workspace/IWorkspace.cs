@@ -76,11 +76,16 @@ namespace Microsoft.Quantum.IQSharp
         string Root { get; }
 
         /// <summary>
+        /// The folder where the assembly is permanently saved for cache.
+        /// </summary>
+        string CacheFolder { get; }
+
+        /// <summary>
         /// Gets the projects to be built for this Workspace. The order of the enumeration
         /// indicates the order in which the projects should be built, i.e., the first
         /// project in the enumeration should be built first.
         /// </summary>
-        public IEnumerable<Project> Projects { get; set; }
+        Task<IEnumerable<Project>> GetProjectsAsync();
 
         /// <summary>
         /// Attempt to add a Q# project reference to this workspace. This does not trigger
@@ -95,55 +100,31 @@ namespace Microsoft.Quantum.IQSharp
         /// to be added implicitly to the list of project references in the workspace.
         /// All such projects will be recompiled when the workspace is reloaded.
         /// </remarks>
-        public void AddProject(string projectFile);
+        Task AddProjectAsync(string projectFile);
 
         /// <summary>
         /// Gets the source files to be built for this Workspace.
         /// </summary>
-        public IEnumerable<string> SourceFiles { get; }
-
-        /// <summary>
-        /// The folder where the assembly is permanently saved for cache.
-        /// </summary>
-        string CacheFolder { get; }
-
-        /// <summary>
-        /// Information of the assembly built from this Workspace.
-        /// </summary>
-        /// <remarks>
-        /// This does NOT include assemblies built from any project references,
-        /// and it will be <c>null</c> in the case that the assemblies are
-        /// built from .csproj files.
-        /// To get all assembly information, use the <see cref="Assemblies"/>
-        /// property.
-        /// </remarks>
-        AssemblyInfo AssemblyInfo { get; }
+        Task<IEnumerable<string>> GetSourceFilesAsync();
 
         /// <summary>
         /// Information of all assemblies built from this Workspace.
         /// </summary>
-        public IEnumerable<AssemblyInfo> Assemblies { get; }
+        Task<IEnumerable<AssemblyInfo>> GetAssembliesAsync();
 
         /// <summary>
         /// The compilation errors, if any.
         /// </summary>
-        IEnumerable<string> ErrorMessages { get; }
+        Task<IEnumerable<string>> GetErrorMessagesAsync();
 
         /// <summary>
         /// If any of the files in the workspace had any compilation errors.
         /// </summary>
-        bool HasErrors { get; }
+        Task<bool> GetHasErrorsAsync();
 
         /// <summary>
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
-        void Reload(Action<string> statusCallback = null);
-
-        /// <summary>
-        /// Task that will be completed when the initial workspace
-        /// initialization has finished, including package loads and
-        /// project compilation.
-        /// </summary>
-        Task Initialization { get; }
+        Task ReloadAsync(Action<string> statusCallback = null);
     }
 }

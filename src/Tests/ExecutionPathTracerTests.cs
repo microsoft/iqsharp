@@ -20,10 +20,9 @@ namespace Tests.IQSharp
         public Workspace InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
-            ws.Initialization.Wait();
             ws.GlobalReferences.AddPackage("mock.standard").Wait();
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors);
+            ws.ReloadAsync().Wait();
+            Assert.IsFalse(ws.GetHasErrorsAsync().Result);
             return ws;
         }
 
@@ -32,7 +31,7 @@ namespace Tests.IQSharp
             if (this.operations == null)
             {
                 var ws = InitWorkspace();
-                this.operations = ws.AssemblyInfo.Operations;
+                this.operations = ws.GetAssemblyInfoAsync().Result.Operations;
             }
 
             var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
