@@ -200,6 +200,7 @@ def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str)
     )
     metadata = {
         'title': "IQ# Magic Commands",
+        'description': "Lists the magic commands available in the IQ# Jupyter kernel.",
         'author': 'rmshaffer',
         'uid': f"{uid_base}.index",
         'ms.author': 'ryansha',
