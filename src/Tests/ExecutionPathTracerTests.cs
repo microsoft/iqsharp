@@ -20,6 +20,7 @@ namespace Tests.IQSharp
         public Workspace InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
+            ws.ReloadAsync().Wait();
             ws.GlobalReferences.AddPackage("mock.standard").Wait();
             ws.ReloadAsync().Wait();
             Assert.IsFalse(ws.GetHasErrorsAsync().Result);

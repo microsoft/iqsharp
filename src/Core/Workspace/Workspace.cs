@@ -102,7 +102,7 @@ namespace Microsoft.Quantum.IQSharp
         public string CacheFolder { get; set; }
 
         /// <inheritdoc/>
-        public bool Ready { get; private set; }
+        public IEnumerable<AssemblyInfo> AvailableAssemblies => Assemblies.ToArray();
 
         /// <summary>
         /// Gets or sets a value indicating whether to monitor the file system for
@@ -242,7 +242,6 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 finally
                 {
-                    Ready = true;
                     initialized.Set();
                 }
             });

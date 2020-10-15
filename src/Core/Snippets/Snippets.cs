@@ -220,14 +220,11 @@ namespace Microsoft.Quantum.IQSharp
                 return this.AssemblyInfo.Assembly;
             }
 
-            if (this.Workspace.Ready)
+            foreach (var asm in this.Workspace?.AvailableAssemblies)
             {
-                foreach (var asm in this.Workspace.GetAssembliesAsync().Result)
+                if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
                 {
-                    if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
-                    {
-                        return asm.Assembly;
-                    }
+                    return asm.Assembly;
                 }
             }
 

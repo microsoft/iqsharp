@@ -81,9 +81,12 @@ namespace Microsoft.Quantum.IQSharp
         string CacheFolder { get; }
 
         /// <summary>
-        /// Whether the workspace has completed initialization and is ready to be used.
+        /// Information of all assemblies built from this workspace that have
+        /// already been fully compiled and are available. This may not be the complete
+        /// list of assemblies for the workspace if called during workspace initialization.
+        /// If the full list is required, use <see cref="GetAssembliesAsync"/>.
         /// </summary>
-        bool Ready { get; }
+        IEnumerable<AssemblyInfo> AvailableAssemblies { get; }
 
         /// <summary>
         /// Gets the projects to be built for this Workspace. The order of the enumeration
