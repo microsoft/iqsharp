@@ -42,5 +42,10 @@ test:
 about:
   home: https://docs.microsoft.com/quantum
   license: MIT
-  summary: Python client for Q#, a domain-specific quantum programming language
+  summary: Python client for Q#, a domain-specific quantum programming language.
+  description: |
+    For details on how to get started with Python and Q#, please see the guide at https://docs.microsoft.com/quantum/install-guide/python.
+    You can also try our Quantum Computing Fundamentals learning path (https://aka.ms/learnqc) to get familiar with the basic concepts
+    of quantum computing, build quantum programs, and identify the kind of problems that can be solved.
   dev_url: https://github.com/microsoft/iqsharp
+  doc_url: https://docs.microsoft.com/quantum/install-guide/python
