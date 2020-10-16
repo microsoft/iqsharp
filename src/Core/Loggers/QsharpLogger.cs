@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 
@@ -23,6 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Common
         public List<LSP.Diagnostic> Logs { get; }
 
         public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.ErrorCode>();
+        public List<QsCompiler.Diagnostics.WarningCode> WarningCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.WarningCode>();
 
         public QSharpLogger(ILogger logger, int lineNrOffset = 0) :
             base(lineNrOffset : lineNrOffset)
@@ -75,7 +76,8 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         protected override void Print(LSP.Diagnostic m)
         {
-            if (ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
+            if (m.IsError() && ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
+            if (m.IsWarning() && WarningCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
 
             Logger?.Log(MapLevel(m.Severity), $"{m.Code}: {m.Message}");
             Logs.Add(m);
