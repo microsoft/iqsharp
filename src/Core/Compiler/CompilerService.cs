@@ -218,9 +218,11 @@ namespace Microsoft.Quantum.IQSharp
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
+            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
             var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapabilities);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
+            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
 
             if (logger.HasErrors) return null;
 
