@@ -186,15 +186,15 @@ namespace Microsoft.Quantum.IQSharp
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 
             // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
-            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            var warningCodesToIgnore = new List<QsCompiler.Diagnostics.WarningCode>()
             {
-                QsCompiler.Diagnostics.ErrorCode.TypeRedefinition,
-                QsCompiler.Diagnostics.ErrorCode.TypeConstructorOverlapWithCallable,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAleadyOpen,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAliasIsAlreadyDefined,
             };
 
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Add(code));
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
             var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Remove(code));
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
         }
