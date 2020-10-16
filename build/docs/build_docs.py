@@ -74,7 +74,7 @@ def main(output_dir : str, uid_base : str, package : List[str]):
     with open(output_dir / "index.md", 'w', encoding='utf8') as f:
         f.write(index_content)
 
-def format_as_section(name : str, content : Optional[str], heading_level : Optional[int] = 2) -> str:
+def format_as_section(name : str, content : Optional[str], heading_level : int = 2) -> str:
     content = content.strip() if content else None
     return f"""
 
