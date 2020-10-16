@@ -105,7 +105,8 @@ namespace Tests.IQSharp
 
         public static string OpenNamespaces1 =
 @"
-    open Microsoft.Quantum.Math;
+    open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Diagnostics;
 ";
 
         public static string OpenNamespaces2 =
