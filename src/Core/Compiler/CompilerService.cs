@@ -111,7 +111,7 @@ namespace Microsoft.Quantum.IQSharp
             return loader.VerifiedCompilation.Tokenization.Values
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
-                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind))
+                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind!))
                 .Where(openDirective => !string.IsNullOrEmpty(openDirective.Item1.Symbol?.AsDeclarationName(null)))
                 .ToDictionary(
                     openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
@@ -126,9 +126,9 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones.
         /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
-        private QsCompilation UpdateCompilation(
+        private QsCompilation? UpdateCompilation(
             ImmutableDictionary<Uri, string> sources,
-            QsReferences? references = null,
+            QsReferences references,
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
@@ -186,15 +186,15 @@ namespace Microsoft.Quantum.IQSharp
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 
             // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
-            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            var warningCodesToIgnore = new List<QsCompiler.Diagnostics.WarningCode>()
             {
-                QsCompiler.Diagnostics.ErrorCode.TypeRedefinition,
-                QsCompiler.Diagnostics.ErrorCode.TypeConstructorOverlapWithCallable,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAleadyOpen,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAliasIsAlreadyDefined,
             };
 
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Add(code));
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
             var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Remove(code));
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
         }
@@ -218,11 +218,11 @@ namespace Microsoft.Quantum.IQSharp
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
-            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+            logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
             var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapabilities);
-            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+            logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
-            if (logger.HasErrors) return null;
+            if (logger.HasErrors || qsCompilation == null) return null;
 
             try
             {
