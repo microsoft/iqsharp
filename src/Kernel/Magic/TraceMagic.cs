@@ -186,7 +186,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore });
 
             // Render empty div with unique ID as cell output
-            var divId = $"execution-path-container-{Guid.NewGuid().ToString()}";
+            var divId = $"execution-path-container-{Guid.NewGuid()}";
             var content = new ExecutionPathVisualizerContent(
                 executionPathJToken,
                 divId,

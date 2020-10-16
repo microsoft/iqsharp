@@ -18,21 +18,6 @@ using System.Numerics;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
-    internal class RawHtmlPayload
-    {
-        public string Value { get; set; } = string.Empty;
-    }
-
-    internal class RawHtmlEncoder : IResultEncoder
-    {
-        public string MimeType => MimeTypes.Html;
-
-        public EncodedData? Encode(object displayable) =>
-            displayable is RawHtmlPayload payload
-            ? payload.Value.ToEncodedData()
-            : (Nullable<EncodedData>)null;
-    }
-
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
         private Complex[]? _data = null;
@@ -52,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             var count = this.Simulator.QubitManager?.GetAllocatedQubitsCount() ?? 0;
             _data = new Complex[1 << ((int)count)];
-            var result = base.Dump();
+            _ = base.Dump();
             return _data;
         }
     }
@@ -76,23 +61,50 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "debug",
             new Documentation
             {
-                Summary = "TODO"
+                Summary = "Steps through the execution of a given Q# operation or function.",
+                Description = $@"
+                    This magic command allows for stepping through the execution of a given Q# operation
+                    or function using the QuantumSimulator.
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
+                Examples = new[]
+                {
+                    @"
+                        Step through the execution of a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %debug MyOperation
+                        Out[]: <interactive HTML for stepping through the operation>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Step through the execution of a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %debug MyOperation a=5 b=10
+                        Out[]: <interactive HTML for stepping through the operation>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
-            this.shellServer = shellServer;
-            this.logger = logger;
+            this.ShellServer = shellServer;
+            this.Logger = logger;
             router.RegisterHandler("iqsharp_debug_request", this.HandleStartMessage);
             router.RegisterHandler("iqsharp_debug_advance", this.HandleAdvanceMessage);
         }
 
         private const string ParameterNameOperationName = "__operationName__";
-        private ConcurrentDictionary<Guid, ManualResetEvent> sessionAdvanceEvents
+        private readonly ConcurrentDictionary<Guid, ManualResetEvent> SessionAdvanceEvents
             = new ConcurrentDictionary<Guid, ManualResetEvent>();
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private IShellServer shellServer;
-        private ILogger<DebugMagic> logger;
+        private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        private readonly IShellServer ShellServer;
+        private readonly ILogger<DebugMagic> Logger;
 
         /// <summary>
         ///      The symbol resolver used by this magic command to find
@@ -116,15 +128,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         private async Task HandleStartMessage(Message message) => await Task.Run(() =>
         {
-            var content = (message.Content as UnknownContent);
+            var content = message.Content as UnknownContent;
             var session = content?.Data?["debug_session"];
             if (session == null)
             {
-                this.logger.LogError("Missing debug_session field in iqsharp_debug_request message.");
+                this.Logger.LogError("Missing debug_session field in iqsharp_debug_request message.");
             }
             else
             {
-                shellServer.SendShellMessage(
+                ShellServer.SendShellMessage(
                     new Message
                     {
                         Header = new MessageHeader
@@ -146,20 +158,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         private async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
         {
-            logger.LogDebug("Got debug advance message:", message);
+            Logger.LogDebug("Got debug advance message:", message);
             var content = (message.Content as UnknownContent);
             var session = content?.Data?["debug_session"];
             if (session == null)
             {
-                logger.LogWarning("Got debug advance message, but debug_session was null.", message);
+                Logger.LogWarning("Got debug advance message, but debug_session was null.", message);
             }
             else
             {
                 var sessionGuid = Guid.Parse(session.ToString());
                 ManualResetEvent? @event = null;
-                lock (sessionAdvanceEvents)
+                lock (SessionAdvanceEvents)
                 {
-                    @event = sessionAdvanceEvents[sessionGuid];
+                    @event = SessionAdvanceEvents[sessionGuid];
                 }
                 @event.Set();
             }
@@ -171,14 +183,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 {
                     ManualResetEvent? @event = null;
                     // Find the event we need to wait on.
-                    lock (sessionAdvanceEvents)
+                    lock (SessionAdvanceEvents)
                     {
-                        @event = sessionAdvanceEvents[session];
+                        @event = SessionAdvanceEvents[session];
                     }
                     @event.Reset();
                     @event.WaitOne();
                 },
-                token ?? cancellationTokenSource.Token
+                token ?? CancellationTokenSource.Token
             );
         }
 
@@ -191,21 +203,22 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var session = Guid.NewGuid();
             var divId = session.ToString();
-            lock (sessionAdvanceEvents)
+            lock (SessionAdvanceEvents)
             {
-                sessionAdvanceEvents[session] = new ManualResetEvent(true);
+                SessionAdvanceEvents[session] = new ManualResetEvent(true);
             }
 
             using var qsim = new QuantumSimulator();
             qsim.OnOperationStart += (callable, args) =>
             {
                 // Tell the IOPub channel that we're starting a new operation.
-                shellServer.SendIoPubMessage(
+                ShellServer.SendIoPubMessage(
                     new Message
                     {
                         Header = new MessageHeader
@@ -229,14 +242,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 WaitForAdvance(session, token).Wait();
             };
 
-            channel.Display(new RawHtmlPayload
-            {
-                Value = $@"
-                    <div id=""{divId}""></div>
-                "
-            });
+            channel.Display(new DisplayableHtmlElement($@"<div id=""{divId}""></div>"));
 
-            shellServer.SendIoPubMessage(
+            ShellServer.SendIoPubMessage(
                 new Message
                 {
                     Header = new MessageHeader
