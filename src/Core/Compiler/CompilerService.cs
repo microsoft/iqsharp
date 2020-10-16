@@ -126,9 +126,9 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones.
         /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
-        private QsCompilation UpdateCompilation(
+        private QsCompilation? UpdateCompilation(
             ImmutableDictionary<Uri, string> sources,
-            QsReferences? references = null,
+            QsReferences references,
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
@@ -222,7 +222,7 @@ namespace Microsoft.Quantum.IQSharp
             var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapabilities);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
-            if (logger.HasErrors) return null;
+            if (logger.HasErrors || qsCompilation == null) return null;
 
             try
             {
