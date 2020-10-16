@@ -199,6 +199,18 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task CompileApplyWithin()
+        {
+            var engine = Init();
+
+            // Compile:
+            await AssertCompile(engine, SNIPPETS.ApplyWithinBlock, "ApplyWithinBlock");
+
+            // Run:
+            await AssertSimulate(engine, "ApplyWithinBlock", "Within", "Apply", "Within");
+        }
+
+        [TestMethod]
         public async Task Estimate()
         {
             var engine = Init();

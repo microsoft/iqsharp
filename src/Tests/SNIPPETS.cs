@@ -145,6 +145,28 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string ApplyWithinBlock =
+ @"
+    /// # Summary
+    ///     Checks that within/apply block is properly compiled.
+    ///     See https://github.com/microsoft/iqsharp/issues/266.
+    @EntryPoint()
+    operation ApplyWithinBlock() : Unit
+    {
+        using (q = Qubit())
+        {
+            within {
+                H(q);
+                Message(""Within"");
+            }
+            apply {
+                X(q);
+                Message(""Apply"");
+            }
+        }
+    }
+";
+
         public static string DependsOnWorkspace =
 @"
     /// # Summary
