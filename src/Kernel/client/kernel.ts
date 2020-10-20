@@ -120,7 +120,7 @@ class Kernel {
     }
 
     advanceDebugger(debugSession: string) {
-        console.log("entered advanceDebugger");
+        console.log("Sending iqsharp_debug_advance message");
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_debug_advance",
             { debug_session: debugSession },
