@@ -285,7 +285,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         var (amplitude, basisLabel) = item;
 
-                        //different options for displaying phase style
+                        // Different options for displaying phase style.
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
                         {
                             PhaseDisplayStyle.None => "",
@@ -296,24 +296,23 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             "),
                             PhaseDisplayStyle.ArrowAndNumber => FormattableString.Invariant($@"
                                 <td>
-                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div style=""{StyleForNumber()}"">{amplitude.Phase}</div>
+                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div>
+                                 <div style=""{StyleForNumber()}"">{amplitude.Phase:F4}</div>
                                 </td>
                             "),
                             PhaseDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    {amplitude.Phase}
+                                 {amplitude.Phase:F4}
                                 </td>
                             "),
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
-
-                        var elementId = $"round-{System.Guid.NewGuid()}"; //randomly generate ID for each <p>
-
-                        //Different options for displaying measurement style.
+                        
+                        // Different options for displaying measurement style.
                         var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
-
                         var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
-    
+                        
+                        var elementId = $"round-{System.Guid.NewGuid()}"; //randomly generate ID for each <p>
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
                             MeasurementDisplayStyle.None => String.Empty,
@@ -360,6 +359,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.MeasurementDisplayStyle}")
                         };
 
+                        // Construct and return the full table row for this basis state.
                         return FormattableString.Invariant($@"
                             <tr>
                                 <td>$\left|{basisLabel}\right\rangle$</td>

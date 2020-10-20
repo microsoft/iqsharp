@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Linq;
@@ -177,8 +178,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
         });
 
-        private async Task WaitForAdvance(Guid session, CancellationToken? token = null)
-        {
+        private async Task WaitForAdvance(Guid session, CancellationToken? token = null) =>
             await Task.Run(() =>
                 {
                     ManualResetEvent? @event = null;
@@ -188,11 +188,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         @event = SessionAdvanceEvents[session];
                     }
                     @event.Reset();
-                    @event.WaitOne();
+                    WaitHandle.WaitAny(new[] { @event, (token ?? CancellationTokenSource.Token).WaitHandle });
                 },
-                token ?? CancellationTokenSource.Token
-            );
-        }
+            token ?? CancellationTokenSource.Token);
 
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
@@ -208,41 +206,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var session = Guid.NewGuid();
-            var divId = session.ToString();
+            var debugSessionDivId = session.ToString();
             lock (SessionAdvanceEvents)
             {
                 SessionAdvanceEvents[session] = new ManualResetEvent(true);
             }
 
-            using var qsim = new QuantumSimulator();
-            qsim.OnOperationStart += (callable, args) =>
-            {
-                // Tell the IOPub channel that we're starting a new operation.
-                ShellServer.SendIoPubMessage(
-                    new Message
-                    {
-                        Header = new MessageHeader
-                        {
-                            MessageType = "iqsharp_debug_opstart"
-                        },
-                        Content = new DebugStatusContent
-                        {
-                            DebugSession = session.ToString(),
-                            State = new DisplayableState
-                            {
+            // Set up the simulator and execution path tracer
+            var tracer = new ExecutionPathTracer.ExecutionPathTracer();
+            using var qsim = new QuantumSimulator()
+                .WithExecutionPathTracer(tracer);
 
-                                QubitIds = qsim.QubitIds.Select(q => (int)q),
-                                NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
-                                Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                DivId = divId
-                            }
-                        }
-                    }
-                );
-                WaitForAdvance(session, token).Wait();
-            };
-
-            channel.Display(new DisplayableHtmlElement($@"<div id=""{divId}""></div>"));
+            // Render the placeholder for the debug UX.
+            channel.Stdout($"Starting debug session for {name}...");
+            channel.Display(new DisplayableHtmlElement($@"<div id='{debugSessionDivId}' />"));
 
             ShellServer.SendIoPubMessage(
                 new Message
@@ -253,14 +230,85 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     },
                     Content = new DebugSessionContent
                     {
-                        DivId = divId,
+                        DivId = debugSessionDivId,
                         DebugSession = session.ToString(),                        
                     }
                 }
             );
 
-            var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters));
-            return value.ToExecutionResult();
+            // Render the placeholder for the execution path.
+            var executionPathDivId = $"execution-path-container-{Guid.NewGuid()}";
+            channel.Display(new DisplayableHtmlElement($"<div id='{executionPathDivId}' />"));
+
+            // Set up the OnOperationStart handler.
+            qsim.OnOperationStart += (callable, args) =>
+            {
+                if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
+                {
+                    // Tell the IOPub channel that we're starting a new operation.
+                    ShellServer.SendIoPubMessage(
+                        new Message
+                        {
+                            Header = new MessageHeader
+                            {
+                                MessageType = "iqsharp_debug_opstart"
+                            },
+                            Content = new DebugStatusContent
+                            {
+                                DebugSession = session.ToString(),
+                                State = new DisplayableState
+                                {
+
+                                    QubitIds = qsim.QubitIds.Select(q => (int)q),
+                                    NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
+                                    Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
+                                    DivId = debugSessionDivId
+                                }
+                            }
+                        }
+                    );
+                }
+                WaitForAdvance(session, token).Wait();
+            };
+
+            qsim.OnOperationEnd += (callable, args) =>
+            {
+                if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
+                {
+                    // Render the `ExecutionPath` traced out by the `ExecutionPathTracer`
+                    tracer.RenderExecutionPath(
+                        channel,
+                        executionPathDivId,
+                        renderDepth: 1,
+                        this.ConfigurationSource.TraceVisualizationStyle);
+                }
+            };
+
+            try
+            {
+                // Simulate the operation.
+                var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters), token ?? CancellationTokenSource.Token);
+                return value.ToExecutionResult();
+            }
+            finally
+            {
+                // Report completion.
+                channel.Stdout($"Finished debug session for {name}.");
+                ShellServer.SendIoPubMessage(
+                    new Message
+                    {
+                        Header = new MessageHeader
+                        {
+                            MessageType = "iqsharp_debug_sessionend"
+                        },
+                        Content = new DebugSessionContent
+                        {
+                            DivId = debugSessionDivId,
+                            DebugSession = session.ToString(),                        
+                        }
+                    }
+                );
+            }
         }
     }
 }
