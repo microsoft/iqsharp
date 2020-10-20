@@ -23,6 +23,13 @@ jobs:
     inputs:
       failOnAlert: true
 
+- job: "test_selenium"
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - template: steps-selenium.yml
+  condition: ne(variables['Skip.Tests'], 'true')
+
 - job: "pack_selfcontained"
   dependsOn: "iqsharp"
   pool:
