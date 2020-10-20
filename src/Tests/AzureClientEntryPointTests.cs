@@ -6,15 +6,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Quantum.Simulation.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
