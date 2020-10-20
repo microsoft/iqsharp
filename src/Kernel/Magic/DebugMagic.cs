@@ -245,6 +245,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
                 {
+                    var allocatedQubitsCount = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0);
+                    if (allocatedQubitsCount == 0) return;
+
                     // Tell the IOPub channel that we're starting a new operation.
                     ShellServer.SendIoPubMessage(
                         new Message
@@ -260,7 +263,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                 {
 
                                     QubitIds = qsim.QubitIds.Select(q => (int)q),
-                                    NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
+                                    NQubits = allocatedQubitsCount,
                                     Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
                                     DivId = debugSessionDivId
                                 }

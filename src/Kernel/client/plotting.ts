@@ -216,7 +216,6 @@ export function createNewCanvas(
 ): { chart: ChartJs } {
     let canvas = document.createElement("canvas");
     canvas.style.width = "100%"
-    //set dimensions of canvas here add style property => 100% 
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
