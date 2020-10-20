@@ -57,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public DebugMagic(
                 ISymbolResolver resolver, IConfigurationSource configurationSource, IShellRouter router, IShellServer shellServer,
-                ILogger<DebugMagic> logger
+                ILogger<DebugMagic>? logger
         ) : base(
             "debug",
             new Documentation
@@ -96,7 +96,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.ConfigurationSource = configurationSource;
             this.ShellServer = shellServer;
             this.Logger = logger;
-            router.RegisterHandler("iqsharp_debug_request", this.HandleStartMessage);
             router.RegisterHandler("iqsharp_debug_advance", this.HandleAdvanceMessage);
         }
 
@@ -105,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             = new ConcurrentDictionary<Guid, ManualResetEvent>();
         private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
         private readonly IShellServer ShellServer;
-        private readonly ILogger<DebugMagic> Logger;
+        private readonly ILogger<DebugMagic>? Logger;
 
         /// <summary>
         ///      The symbol resolver used by this magic command to find
@@ -127,44 +126,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken token) =>
             RunAsync(input, channel, token).Result;
 
-        private async Task HandleStartMessage(Message message) => await Task.Run(() =>
+        internal async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
         {
-            var content = message.Content as UnknownContent;
-            var session = content?.Data?["debug_session"];
-            if (session == null)
-            {
-                this.Logger.LogError("Missing debug_session field in iqsharp_debug_request message.");
-            }
-            else
-            {
-                ShellServer.SendShellMessage(
-                    new Message
-                    {
-                        Header = new MessageHeader
-                        {
-                            MessageType = "iqsharp_debug_reply"
-                        },
-                        Content = new UnknownContent
-                        {
-                            Data = new Dictionary<string, object>
-                            {
-                                ["debug_session"] = session
-                            }
-                        }
-                    }
-                    .AsReplyTo(message)
-                );
-            }
-        });
-
-        private async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
-        {
-            Logger.LogDebug("Got debug advance message:", message);
+            Logger?.LogDebug("Got debug advance message:", message);
             var content = (message.Content as UnknownContent);
             var session = content?.Data?["debug_session"];
             if (session == null)
             {
-                Logger.LogWarning("Got debug advance message, but debug_session was null.", message);
+                Logger?.LogWarning("Got debug advance message, but debug_session was null.", message);
             }
             else
             {
@@ -221,7 +190,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             channel.Stdout($"Starting debug session for {name}...");
             channel.Display(new DisplayableHtmlElement($@"<div id='{debugSessionDivId}' />"));
 
-            ShellServer.SendIoPubMessage(
+            channel.SendIoPubMessage(
                 new Message
                 {
                     Header = new MessageHeader
@@ -249,7 +218,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     if (allocatedQubitsCount == 0) return;
 
                     // Tell the IOPub channel that we're starting a new operation.
-                    ShellServer.SendIoPubMessage(
+                    channel.SendIoPubMessage(
                         new Message
                         {
                             Header = new MessageHeader
@@ -297,7 +266,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 // Report completion.
                 channel.Stdout($"Finished debug session for {name}.");
-                ShellServer.SendIoPubMessage(
+                channel.SendIoPubMessage(
                     new Message
                     {
                         Header = new MessageHeader
