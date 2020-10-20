@@ -29,11 +29,6 @@ steps:
   displayName: "Building IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   
-- pwsh: .\manifest.ps1
-  displayName: "List built assemblies"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: succeededOrFailed()
-
 - pwsh: .\test.ps1
   displayName: "Testing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
@@ -42,6 +37,11 @@ steps:
 - pwsh: .\pack.ps1
   displayName: "Packing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+
+- pwsh: .\manifest.ps1
+  displayName: "List built packages & assemblies"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: succeededOrFailed()
 
 ##
 # Publish tests results and build artifacts.
