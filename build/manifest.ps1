@@ -37,7 +37,7 @@ $artifacts = @{
 } 
 
 if ($ValidatePackages -eq $True) {
-    $artifacts.Packages | ForEach-Object { Get-Item (Join-Path $env:NUGET_OUTDIR "$_.*.nupkg") };
+    $artifacts.Packages | ForEach-Object { Get-Item (Join-Path $Env:NUGET_OUTDIR "$_.$Env:NUGET_VERSION.nupkg") };
 }
 
 if ($ValidateAssemblies -eq $True) {
