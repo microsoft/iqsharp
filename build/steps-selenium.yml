@@ -8,11 +8,15 @@ steps:
 ##
 # Pre-reqs
 ##
-- pwsh: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-  displayName: "Add conda to PATH"
+- task: CondaEnvironment@1
+  inputs:
+    packageSpecs: "python=3.7 pip setuptools"
+  displayName: 'Use conda environment w/ Python 3.'
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-- pwsh: conda create -n selenium-env -y python=3.7 pip setuptools pytest jupyter_client=6.1.7 notebook=6.1.1 selenium=3.141
-  displayName: "Create conda environment"
+- pwsh: pip install -r ./test-selenium-requirements.txt
+  displayName: 'Install Selenium and Jupyter Notebook'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK 3.1.100'
@@ -27,10 +31,7 @@ steps:
 ##
 # Install IQ# kernel
 ##
-- script: |
-    call activate selenium-env
-    call conda info
-    dotnet run -c %BUILD_CONFIGURATION% -- install --user
+- script: dotnet run -c %BUILD_CONFIGURATION% -- install --user
   displayName: "Installing IQ#"
   workingDirectory: '$(System.DefaultWorkingDirectory)/src/Tool'
 
@@ -38,8 +39,6 @@ steps:
 # Test
 ##
 - script: |
-    call activate selenium-env
-    call conda info
     start jupyter notebook --no-browser --NotebookApp.base_url=test/path
     pytest -v ./test-selenium.py
   displayName: "Running Selenium tests"

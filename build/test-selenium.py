@@ -7,14 +7,14 @@ from notebook.tests.selenium.utils import Notebook
 from selenium.common.exceptions import JavascriptException
 from selenium.webdriver import Firefox
 
-# workaround for missing os.uname attribute on some Windows systems
-if not hasattr(os, "uname"):
-    os.uname = lambda: ["Windows"]
-
 def setup_module():
     '''
     Wait for notebook server to start
     '''
+    # workaround for missing os.uname attribute on some Windows systems
+    if not hasattr(os, "uname"):
+        os.uname = lambda: ["Windows"]
+
     remaining_time = 180
     iteration_time = 5
     print("Waiting for notebook server to start...")
