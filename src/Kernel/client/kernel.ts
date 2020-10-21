@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-///<amd-dependency path="codemirror/lib/codemirror" />
-///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
 declare var IPython: IPython;

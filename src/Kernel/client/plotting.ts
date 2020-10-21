@@ -8,7 +8,7 @@
 // Using this hack, we can split the type import and
 // the runtime import apart, then glue them back
 // together using a declare global to solve TS2686.
-/// <amd-dependency path="../kernelspecs/iqsharp/chart.js" name="Chart" />
+/// <amd-dependency path="chart" name="Chart" />
 import type * as ChartJs from "chart.js";
 declare global {
     const Chart: typeof ChartJs;

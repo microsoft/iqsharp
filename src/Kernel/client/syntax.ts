@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+///<amd-dependency path="codemirror/lib/codemirror" />
+///<amd-dependency path="codemirror/addon/mode/simple" />
 
 export function defineQSharpMode() {
     console.log("Loading IQ# kernel-specific extension...");
