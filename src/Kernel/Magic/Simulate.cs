@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
             "simulate",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Runs a given function or operation on the QuantumSimulator target machine.",
                 Description = @"

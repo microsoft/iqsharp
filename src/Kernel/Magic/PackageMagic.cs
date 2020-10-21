@@ -25,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public PackageMagic(IReferences references) : base(
             "package",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Provides the ability to load a NuGet package.",
                 Description = @"

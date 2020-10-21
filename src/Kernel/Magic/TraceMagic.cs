@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
             "trace",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Visualizes the execution path of the given operation.",
                 Description = $@"
