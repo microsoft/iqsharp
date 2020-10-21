@@ -126,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpMachine<T> : Microsoft.Quantum.Diagnostics.DumpMachine<T>
+    public class JupyterDumpMachine<T> : Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.QsimDumpMachine<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
@@ -169,7 +169,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpRegister<T> : Microsoft.Quantum.Diagnostics.DumpRegister<T>
+    public class JupyterDumpRegister<T> : Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.QSimDumpRegister<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
