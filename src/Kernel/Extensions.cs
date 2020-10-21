@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -36,11 +38,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ) =>
             operation.Header.Attributes.Where(
                 attribute =>
-                    attribute.TypeId.Item.Namespace.Value == namespaceName &&
-                    attribute.TypeId.Item.Name.Value == attributeName
+                    // Since QsNullable<UserDefinedType>.Item can be null,
+                    // we use a pattern match here to make sure that we have
+                    // an actual UDT to compare against.
+                    attribute.TypeId.Item is UserDefinedType udt &&
+                    udt.Namespace.Value == namespaceName &&
+                    udt.Name.Value == attributeName
             );
 
-        internal static bool TryAsStringLiteral(this TypedExpression expression, [NotNullWhen(true)] out string value)
+        internal static bool TryAsStringLiteral(this TypedExpression expression, [NotNullWhen(true)] out string? value)
         {
             if (expression.Expression is QsExpressionKind<TypedExpression, Identifier, ResolvedType>.StringLiteral literal)
             {
@@ -64,9 +70,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     attribute.Argument.TryAsStringLiteral(out var value)
                     ? value : null
             )
-            .Where(value => value != null);
+            .Where(value => value != null)
+            // The Where above ensures that all elements are non-nullable,
+            // but the C# compiler doesn't quite figure that out, so we
+            // need to help it with a no-op that uses the null-forgiving
+            // operator.
+            .Select(value => value!);
 
-        internal static IDictionary<string, string> GetDictionaryAttributes(
+        internal static IDictionary<string?, string?> GetDictionaryAttributes(
             this OperationInfo operation, string attributeName,
             string namespaceName = "Microsoft.Quantum.Documentation"
         ) => operation
