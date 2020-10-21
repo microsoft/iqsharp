@@ -23,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ConfigMagic(IConfigurationSource configurationSource) : base(
             "config",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Allows setting or querying configuration options.",
                 Description = @"

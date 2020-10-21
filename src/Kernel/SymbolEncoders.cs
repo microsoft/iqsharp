@@ -51,10 +51,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 var codeLink =
                     $"<a href=\"{symbol.Source}\"><i class=\"fa fas fa-code\"></i></a>";
-                return (
-                    $"<h4><i class=\"fa fas fa-terminal\"></i> {symbol.Name} {codeLink}</h4>" +
-                    Markdown.ToHtml(symbol.Documentation)
-                ).ToEncodedData();
+                return $@"
+                    <h4><i class=""fa fas fa-terminal""></i> {symbol.Name} {codeLink}</h4>
+                    <h5>Summary</h5>
+                    {Markdown.ToHtml(symbol.Summary)}
+                    <h5>Description</h5>
+                    {Markdown.ToHtml(symbol.Description)}
+                ".ToEncodedData();
 
             }
             else return null;
