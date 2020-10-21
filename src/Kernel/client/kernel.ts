@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-///<amd-dependency path="codemirror/lib/codemirror" />
-///<amd-dependency path="codemirror/addon/mode/simple" />
 
 import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
 import type * as ChartJs from "chart.js";
-import { DisplayableState, createBarChart, createBarChartRealImagOption, createBarChartAmplitudePhaseOption, attachDumpMachineToolbar, createNewCanvas, PlotStyle, updateChart } from "./plotting";
+import { DisplayableState, addToolbarButton as addToolbarButton, attachDumpMachineToolbar, createNewCanvas, createToolbarContainer, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 import { Visualizer } from "./visualizer";
 import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
@@ -40,7 +38,8 @@ class Kernel {
             lastState: DisplayableState | null,
             plotStyle: PlotStyle
         }>();
-        let update = (debugSession: string) => {
+        let update = (debugSession: string, plotStyle: PlotStyle) => {
+            activeSessions.get(debugSession).plotStyle = plotStyle;
             let state = (activeSessions.get(debugSession)).lastState;
             if (state !== null) {
                 updateChart(
@@ -52,55 +51,35 @@ class Kernel {
         };
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_debug_sessionstart", message => {
+                console.log("iqsharp_debug_sessionstart message received", message);
+
                 let debugSession: string = message.content.debug_session;
-                let stateDiv: (string | null) = message.content.div_id;
+                let stateDivId: (string | null) = message.content.div_id;
                 
-                if (stateDiv != null) {
-                    let div = document.getElementById(stateDiv);
-                    if (div != null) {
-                        let { canvas: graph, chart: chart } = createNewCanvas(div);
+                if (stateDivId != null) {
+                    let stateDiv = document.getElementById(stateDivId);
+                    if (stateDiv != null) {
+                        let { chart: chart } = createNewCanvas(stateDiv);
                         activeSessions.set(debugSession, {
                             chart: chart,
                             lastState: null,
-                            plotStyle: "amplitude-phase"
-                        });
-                        let startDebugToolbar = document.createElement("button");
-                        startDebugToolbar.appendChild(document.createTextNode("Step through Program"));
-                        div.appendChild(startDebugToolbar);
-
-                        startDebugToolbar.addEventListener("click", event => {
-                            this.advanceMeasurementHistogramDebugger(debugSession);
+                            plotStyle: "amplitude-squared"
                         });
 
-                        //create buttons that will set the plotstyle to one of three options
-                        //update function handles switching between plotstyle
-                        let amplitudePhaseButton = document.createElement("button");
-                        amplitudePhaseButton.appendChild(document.createTextNode("Amplitude/Phase"));
-                        div.appendChild(amplitudePhaseButton);
+                        // Create toolbar container and insert at the beginning of the state div
+                        let toolbarContainer = createToolbarContainer("Chart options:");
+                        stateDiv.insertBefore(toolbarContainer, stateDiv.firstChild);
 
-                        amplitudePhaseButton.addEventListener("click", event => {
-                            activeSessions.get(debugSession).plotStyle = "amplitude-phase";
-                            update(debugSession);
-                        });
+                        // Create buttons to change plot style
+                        addToolbarButton(toolbarContainer, "Measurement Probability", event => update(debugSession, "amplitude-squared"));
+                        addToolbarButton(toolbarContainer, "Amplitude and Phase", event => update(debugSession, "amplitude-phase"));
+                        addToolbarButton(toolbarContainer, "Real and Imaginary", event => update(debugSession,  "real-imag"));
 
-                        let amplitudeSquaredButton = document.createElement("button");
-                        amplitudeSquaredButton.appendChild(document.createTextNode("Amplitude^2"));
-                        div.appendChild(amplitudeSquaredButton);
-
-                        amplitudeSquaredButton.addEventListener("click", event => {
-                            activeSessions.get(debugSession).plotStyle = "amplitude-squared";
-                            update(debugSession);
-                        });
-
-                        let realImagButton = document.createElement("button");
-                        realImagButton.appendChild(document.createTextNode("Real/Imag"));
-                        div.appendChild(realImagButton);
-
-                        realImagButton.addEventListener("click", event => {
-                            activeSessions.get(debugSession).plotStyle = "real-imag";
-                            update(debugSession);
-                        });
-
+                        // Create debug toolbar
+                        let debugContainer = createToolbarContainer("Debug controls:");
+                        debugContainer.className = "iqsharp-debug-toolbar";
+                        stateDiv.insertBefore(debugContainer, stateDiv.firstChild);
+                        addToolbarButton(debugContainer, "▶️ Next step", event => this.advanceDebugger(debugSession));
                     }
                 }
                 
@@ -115,13 +94,31 @@ class Kernel {
                 let state: DisplayableState = message.content.state;
                 let debugSession: string = message.content.debug_session;
                 activeSessions.get(debugSession).lastState = state;
-                update(debugSession);
+                update(debugSession, "amplitude-squared");
+            }
+        );
+
+        IPython.notebook.kernel.register_iopub_handler(
+            "iqsharp_debug_sessionend",
+            message => {
+                console.log("iqsharp_debug_sessionend message received", message);
+
+                let stateDivId: (string | null) = message.content.div_id;                
+                if (stateDivId != null) {
+                    let stateDiv = document.getElementById(stateDivId);
+                    if (stateDiv != null) {
+                        // Disable any buttons in the debug toolbar
+                        stateDiv.querySelectorAll(".iqsharp-debug-toolbar button").forEach(button => {
+                            (<HTMLInputElement>button).disabled = true;
+                        });
+                    }
+                }
             }
         );
     }
 
-    advanceMeasurementHistogramDebugger(debugSession: string) {
-        console.log("entered advanceMeasurementHistogramDebugger");
+    advanceDebugger(debugSession: string) {
+        console.log("Sending iqsharp_debug_advance message");
         IPython.notebook.kernel.send_shell_message(
             "iqsharp_debug_advance",
             { debug_session: debugSession },
@@ -140,17 +137,18 @@ class Kernel {
         IPython.notebook.kernel.register_iopub_handler(
             "iqsharp_state_dump",
             message => {
-                console.log("my message received", message);
+                console.log("iqsharp_state_dump message received", message);
                 let state: DisplayableState = message.content.state;
-                let state_div = state.div_id;
-                if (state_div != null) {
-                    let div = document.getElementById(state_div);
-                    if (div != null) {
-                        let { canvas: graph, chart: chart} = createNewCanvas(div, state);
-                        attachDumpMachineToolbar(graph, chart, state);
+                let stateDivId = state.div_id;
+                if (stateDivId != null) {
+                    let stateDiv = document.getElementById(stateDivId);
+                    if (stateDiv != null) {
+                        let { chart: chart} = createNewCanvas(stateDiv, state);
+                        attachDumpMachineToolbar(chart, state);
                     }
                 }
-            });
+            }
+        );
     }
 
     requestEcho() {

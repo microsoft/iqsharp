@@ -67,25 +67,25 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     **`dump.measurementDisplayStyle`**
 
-                    **Value:** '""NumberOnly""' , `""BarOnly""`, `""BarAndNumber""` (default), or `""None""`
+                    **Value:** `""NumberOnly""`, `""BarOnly""`, `""BarAndNumber""` (default), or `""None""`
 
                     Configures the measurement probability visualization style in output of callables such as 
                     `DumpMachine` or `DumpRegister`. Supports displaying measurement probability as progress bars, numbers, both,
                     or neither. 
 
-                    **'dump.measurementDisplayPrecision'**
+                    **`dump.measurementDisplayPrecision`**
 
-                    **Value:** non-negative integer such as '1' or '2' (default '4')
+                    **Value:** non-negative integer (default `4`)
 
-                    Sets the precision of the measurement probability represented as a percentage when set to 'NumberOnly' or
-                    'BarAndNumber'.
+                    Sets the precision of the measurement probability displayed as a percentage when
+                    `dump.measurementDisplayStyle` is set to `""NumberOnly""` or `""BarAndNumber""`.
 
                     **`dump.measurementDisplayHistogram`**
 
-                    **Value:** `true` (default) or `false'
+                    **Value:** `true` or `false` (default)
 
-                    If `dump.measurementDisplayHistogram` is set to `true`, displays the
-                    histogram representation of the state of the simulator underneath the original chart output.
+                    If `dump.measurementDisplayHistogram` is set to `true`, displays an interactive
+                    histogram representation of the state of the simulator underneath the static state visualization.
 
                     **`dump.plainTextOnly`**
 

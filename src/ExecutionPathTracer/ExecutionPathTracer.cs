@@ -37,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
                         ? this.classicalRegisters[k].Count
                         : 0
                     )),
-                this.operations.ToList().WhereNotNull()
+                this.operations.Reverse().ToList().WhereNotNull()
             );
 
         /// <summary>

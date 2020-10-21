@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Linq;
@@ -18,21 +19,6 @@ using System.Numerics;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
-    internal class RawHtmlPayload
-    {
-        public string Value { get; set; } = string.Empty;
-    }
-
-    internal class RawHtmlEncoder : IResultEncoder
-    {
-        public string MimeType => MimeTypes.Html;
-
-        public EncodedData? Encode(object displayable) =>
-            displayable is RawHtmlPayload payload
-            ? payload.Value.ToEncodedData()
-            : (Nullable<EncodedData>)null;
-    }
-
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
         private Complex[]? _data = null;
@@ -52,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             var count = this.Simulator.QubitManager?.GetAllocatedQubitsCount() ?? 0;
             _data = new Complex[1 << ((int)count)];
-            var result = base.Dump();
+            _ = base.Dump();
             return _data;
         }
     }
@@ -71,28 +57,54 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public DebugMagic(
                 ISymbolResolver resolver, IConfigurationSource configurationSource, IShellRouter router, IShellServer shellServer,
-                ILogger<DebugMagic> logger
+                ILogger<DebugMagic>? logger
         ) : base(
             "debug",
             new Documentation
             {
-                Summary = "TODO"
+                Summary = "Steps through the execution of a given Q# operation or function.",
+                Description = $@"
+                    This magic command allows for stepping through the execution of a given Q# operation
+                    or function using the QuantumSimulator.
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
+                Examples = new[]
+                {
+                    @"
+                        Step through the execution of a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %debug MyOperation
+                        Out[]: <interactive HTML for stepping through the operation>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Step through the execution of a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %debug MyOperation a=5 b=10
+                        Out[]: <interactive HTML for stepping through the operation>
+                        ```
+                    ".Dedent(),
+                }
             })
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
-            this.shellServer = shellServer;
-            this.logger = logger;
-            router.RegisterHandler("iqsharp_debug_request", this.HandleStartMessage);
+            this.ShellServer = shellServer;
+            this.Logger = logger;
             router.RegisterHandler("iqsharp_debug_advance", this.HandleAdvanceMessage);
         }
 
         private const string ParameterNameOperationName = "__operationName__";
-        private ConcurrentDictionary<Guid, ManualResetEvent> sessionAdvanceEvents
+        private readonly ConcurrentDictionary<Guid, ManualResetEvent> SessionAdvanceEvents
             = new ConcurrentDictionary<Guid, ManualResetEvent>();
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private IShellServer shellServer;
-        private ILogger<DebugMagic> logger;
+        private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        private readonly IShellServer ShellServer;
+        private readonly ILogger<DebugMagic>? Logger;
 
         /// <summary>
         ///      The symbol resolver used by this magic command to find
@@ -114,73 +126,40 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override ExecutionResult RunCancellable(string input, IChannel channel, CancellationToken token) =>
             RunAsync(input, channel, token).Result;
 
-        private async Task HandleStartMessage(Message message) => await Task.Run(() =>
+        internal async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
         {
+            Logger?.LogDebug("Got debug advance message:", message);
             var content = (message.Content as UnknownContent);
             var session = content?.Data?["debug_session"];
             if (session == null)
             {
-                this.logger.LogError("Missing debug_session field in iqsharp_debug_request message.");
-            }
-            else
-            {
-                shellServer.SendShellMessage(
-                    new Message
-                    {
-                        Header = new MessageHeader
-                        {
-                            MessageType = "iqsharp_debug_reply"
-                        },
-                        Content = new UnknownContent
-                        {
-                            Data = new Dictionary<string, object>
-                            {
-                                ["debug_session"] = session
-                            }
-                        }
-                    }
-                    .AsReplyTo(message)
-                );
-            }
-        });
-
-        private async Task HandleAdvanceMessage(Message message) => await Task.Run(() =>
-        {
-            logger.LogDebug("Got debug advance message:", message);
-            var content = (message.Content as UnknownContent);
-            var session = content?.Data?["debug_session"];
-            if (session == null)
-            {
-                logger.LogWarning("Got debug advance message, but debug_session was null.", message);
+                Logger?.LogWarning("Got debug advance message, but debug_session was null.", message);
             }
             else
             {
                 var sessionGuid = Guid.Parse(session.ToString());
                 ManualResetEvent? @event = null;
-                lock (sessionAdvanceEvents)
+                lock (SessionAdvanceEvents)
                 {
-                    @event = sessionAdvanceEvents[sessionGuid];
+                    @event = SessionAdvanceEvents[sessionGuid];
                 }
                 @event.Set();
             }
         });
 
-        private async Task WaitForAdvance(Guid session, CancellationToken? token = null)
-        {
+        private async Task WaitForAdvance(Guid session, CancellationToken? token = null) =>
             await Task.Run(() =>
                 {
                     ManualResetEvent? @event = null;
                     // Find the event we need to wait on.
-                    lock (sessionAdvanceEvents)
+                    lock (SessionAdvanceEvents)
                     {
-                        @event = sessionAdvanceEvents[session];
+                        @event = SessionAdvanceEvents[session];
                     }
                     @event.Reset();
-                    @event.WaitOne();
+                    WaitHandle.WaitAny(new[] { @event, (token ?? CancellationTokenSource.Token).WaitHandle });
                 },
-                token ?? cancellationTokenSource.Token
-            );
-        }
+            token ?? CancellationTokenSource.Token);
 
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
@@ -191,52 +170,27 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var session = Guid.NewGuid();
-            var divId = session.ToString();
-            lock (sessionAdvanceEvents)
+            var debugSessionDivId = session.ToString();
+            lock (SessionAdvanceEvents)
             {
-                sessionAdvanceEvents[session] = new ManualResetEvent(true);
+                SessionAdvanceEvents[session] = new ManualResetEvent(true);
             }
 
-            using var qsim = new QuantumSimulator();
-            qsim.OnOperationStart += (callable, args) =>
-            {
-                // Tell the IOPub channel that we're starting a new operation.
-                shellServer.SendIoPubMessage(
-                    new Message
-                    {
-                        Header = new MessageHeader
-                        {
-                            MessageType = "iqsharp_debug_opstart"
-                        },
-                        Content = new DebugStatusContent
-                        {
-                            DebugSession = session.ToString(),
-                            State = new DisplayableState
-                            {
+            // Set up the simulator and execution path tracer
+            var tracer = new ExecutionPathTracer.ExecutionPathTracer();
+            using var qsim = new QuantumSimulator()
+                .WithExecutionPathTracer(tracer);
 
-                                QubitIds = qsim.QubitIds.Select(q => (int)q),
-                                NQubits = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0),
-                                Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                DivId = divId
-                            }
-                        }
-                    }
-                );
-                WaitForAdvance(session, token).Wait();
-            };
+            // Render the placeholder for the debug UX.
+            channel.Stdout($"Starting debug session for {name}...");
+            channel.Display(new DisplayableHtmlElement($@"<div id='{debugSessionDivId}' />"));
 
-            channel.Display(new RawHtmlPayload
-            {
-                Value = $@"
-                    <div id=""{divId}""></div>
-                "
-            });
-
-            shellServer.SendIoPubMessage(
+            channel.SendIoPubMessage(
                 new Message
                 {
                     Header = new MessageHeader
@@ -245,14 +199,88 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     },
                     Content = new DebugSessionContent
                     {
-                        DivId = divId,
+                        DivId = debugSessionDivId,
                         DebugSession = session.ToString(),                        
                     }
                 }
             );
 
-            var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters));
-            return value.ToExecutionResult();
+            // Render the placeholder for the execution path.
+            var executionPathDivId = $"execution-path-container-{Guid.NewGuid()}";
+            channel.Display(new DisplayableHtmlElement($"<div id='{executionPathDivId}' />"));
+
+            // Set up the OnOperationStart handler.
+            qsim.OnOperationStart += (callable, args) =>
+            {
+                if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
+                {
+                    var allocatedQubitsCount = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0);
+                    if (allocatedQubitsCount == 0) return;
+
+                    // Tell the IOPub channel that we're starting a new operation.
+                    channel.SendIoPubMessage(
+                        new Message
+                        {
+                            Header = new MessageHeader
+                            {
+                                MessageType = "iqsharp_debug_opstart"
+                            },
+                            Content = new DebugStatusContent
+                            {
+                                DebugSession = session.ToString(),
+                                State = new DisplayableState
+                                {
+
+                                    QubitIds = qsim.QubitIds.Select(q => (int)q),
+                                    NQubits = allocatedQubitsCount,
+                                    Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
+                                    DivId = debugSessionDivId
+                                }
+                            }
+                        }
+                    );
+                }
+                WaitForAdvance(session, token).Wait();
+            };
+
+            qsim.OnOperationEnd += (callable, args) =>
+            {
+                if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
+                {
+                    // Render the `ExecutionPath` traced out by the `ExecutionPathTracer`
+                    tracer.RenderExecutionPath(
+                        channel,
+                        executionPathDivId,
+                        renderDepth: 1,
+                        this.ConfigurationSource.TraceVisualizationStyle);
+                }
+            };
+
+            try
+            {
+                // Simulate the operation.
+                var value = await Task.Run(() => symbol.Operation.RunAsync(qsim, inputParameters), token ?? CancellationTokenSource.Token);
+                return value.ToExecutionResult();
+            }
+            finally
+            {
+                // Report completion.
+                channel.Stdout($"Finished debug session for {name}.");
+                channel.SendIoPubMessage(
+                    new Message
+                    {
+                        Header = new MessageHeader
+                        {
+                            MessageType = "iqsharp_debug_sessionend"
+                        },
+                        Content = new DebugSessionContent
+                        {
+                            DivId = debugSessionDivId,
+                            DebugSession = session.ToString(),                        
+                        }
+                    }
+                );
+            }
         }
     }
 }

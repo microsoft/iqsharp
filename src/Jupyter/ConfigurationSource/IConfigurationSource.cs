@@ -86,7 +86,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     option to show None. 
         /// </summary>
         public PhaseDisplayStyle PhaseDisplayStyle =>
-            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowAndNumber);
+            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
 
         /// <summary>
         ///     Allows for options to view measurement as horizontal histograms for each
@@ -108,7 +108,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     measurement probability in a vertical histogram format. 
         /// </summary>
         public bool MeasurementDisplayHistogram =>
-            GetOptionOrDefault("dump.measurementDisplayHistogram", true);
+            GetOptionOrDefault("dump.measurementDisplayHistogram", false);
 
         /// <summary>
         ///     Whether to use only a simple plain-text encoding when dumping states.

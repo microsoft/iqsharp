@@ -8,7 +8,7 @@
 // Using this hack, we can split the type import and
 // the runtime import apart, then glue them back
 // together using a declare global to solve TS2686.
-/// <amd-dependency path="/kernelspecs/iqsharp/chart.js" name="Chart" />
+/// <amd-dependency path="chart" name="Chart" />
 import type * as ChartJs from "chart.js";
 declare global {
     const Chart: typeof ChartJs;
@@ -26,24 +26,6 @@ export interface DisplayableState {
     div_id: string;
     amplitudes: Complex[] | null;
 };
-
-function removeData(element: Chart) {
-    element.data.labels.pop();
-    element.data.datasets.forEach((dataset) => {
-        dataset.data.pop();
-    });
-    element.update();
-
-};
-
-function addData(element: Chart, label: string, data) {
-    element.data.labels.push(label);
-    element.data.datasets.forEach((dataset) => {
-        dataset.data.push(data);
-    });
-    element.update();
-
-}
 
 export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
 
@@ -109,7 +91,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Amplitude/Phase'
+                labelString: 'Amplitude and Phase'
             },
             ticks: {
                 beginAtZero: true
@@ -157,7 +139,7 @@ function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState)
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Meas. Probability'
+                labelString: 'Measurement Probability'
             },
             ticks: {
                 beginAtZero: true,
@@ -195,7 +177,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
                 }),
                 backgroundColor: "#48bfe3",
                 borderColor: "#48bfe3",
-                label: "Imag"
+                label: "Imaginary"
             }
         ],
     };
@@ -216,7 +198,7 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
         yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'Real/Imag'
+                labelString: 'Real and Imaginary'
             },
             ticks: {
                 beginAtZero: true,
@@ -230,11 +212,10 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
 }
 
 export function createNewCanvas(
-    parentNode: HTMLElement, initalState?: DisplayableState | null
-): { canvas: HTMLCanvasElement, chart: ChartJs } {
+    parentNode: HTMLElement, initialState?: DisplayableState | null
+): { chart: ChartJs } {
     let canvas = document.createElement("canvas");
     canvas.style.width = "100%"
-    //set dimensions of canvas here add style property => 100% 
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
@@ -242,62 +223,51 @@ export function createNewCanvas(
         }
     });
 
-    if (initalState !== null && initalState !== undefined) {
-        updateWithAmplitudeSquaredData(measurementHistogram, initalState);
+    if (initialState !== null && initialState !== undefined) {
+        updateWithAmplitudeSquaredData(measurementHistogram, initialState);
     }
 
     parentNode.appendChild(canvas);
 
-    return {
-        canvas: canvas,
-        chart: measurementHistogram
-    };
+    return { chart: measurementHistogram };
 }
 
-export function attachDumpMachineToolbar(element: HTMLCanvasElement, chart: ChartJs, state: DisplayableState) {
-    //create legend and append to state div
-    let legendDiv = document.createElement("div");
-    legendDiv.id = "legendDiv";
-   
-    let state_div = state.div_id;
-    let div = document.getElementById(state_div);
-    div.appendChild(legendDiv);
+export function addToolbarButton(container: HTMLElement, label: string, onClick: EventListener) {
+    let toolbarButton = document.createElement("button");
+    toolbarButton.appendChild(document.createTextNode(label));
+    container.appendChild(toolbarButton);
+    toolbarButton.addEventListener("click", onClick);
+    toolbarButton.className = "btn btn-default btn-sm"
+    toolbarButton.style.marginRight = "10px";
+}
 
-    //style the legend
-    document.getElementById("legendDiv").style.border = "thin solid #000000";
-    document.getElementById("legendDiv").style.textAlign = "center";
+export function createToolbarContainer(toolbarName: string) {
+    let toolbarContainer = document.createElement("div");
+    toolbarContainer.style.marginTop = "10px";
+    toolbarContainer.style.marginBottom = "10px";
 
-    let legendTitle = document.createElement("p");
-    legendTitle.innerHTML = "Select Graph";
+    let toolbarTitle = document.createElement("span");
+    toolbarTitle.appendChild(document.createTextNode(toolbarName))
+    toolbarTitle.style.marginRight = "10px";
+    toolbarTitle.style.fontWeight = "bold";
+    toolbarContainer.appendChild(toolbarTitle);
 
+    return toolbarContainer;
+}
 
-    //create buttons
-    let buttonAmplitudeSquared = document.createElement("button");
-    buttonAmplitudeSquared.innerHTML = "amplitude^2";
+export function attachDumpMachineToolbar(chart: ChartJs, state: DisplayableState) {
+    // Create toolbar container and insert at the beginning of the state div
+    let stateDiv = document.getElementById(state.div_id);
+    let toolbarContainer = createToolbarContainer("Chart options:");
+    stateDiv.insertBefore(toolbarContainer, stateDiv.firstChild);
 
-    let buttonAmplitudePhase = document.createElement("button");
-    buttonAmplitudePhase.innerHTML = "amplitude/phase";
-
-    var buttonRealImag = document.createElement("button");
-    buttonRealImag.innerHTML = "real/imag";
-
-    //append button to legend
-    legendDiv.appendChild(legendTitle);
-    legendDiv.appendChild(buttonAmplitudeSquared);
-    legendDiv.appendChild(buttonAmplitudePhase);
-    legendDiv.appendChild(buttonRealImag);
-
-    //create event listeners
-    buttonAmplitudeSquared.addEventListener("click", function() {
-        updateWithAmplitudeSquaredData(chart, state);
-    });
-    buttonAmplitudePhase.addEventListener("click", function () {
-        updateWithAmplitudePhaseData(chart, state);
-    });
-    buttonRealImag.addEventListener("click", function () {
-        updateWithRealImagData(chart, state);
-    });
-
+    // Create buttons to change plot style
+    addToolbarButton(toolbarContainer, "Measurement Probability", event => updateWithAmplitudeSquaredData(chart, state));
+    addToolbarButton(toolbarContainer, "Amplitude and Phase", event => updateWithAmplitudePhaseData(chart, state));
+    addToolbarButton(toolbarContainer, "Real and Imaginary", event => updateWithRealImagData(chart, state));
+                        
+    // Add horizontal rule above toolbar
+    stateDiv.insertBefore(document.createElement("hr"), stateDiv.firstChild);
 };
 
 export function createBarChart(element: HTMLCanvasElement, state: DisplayableState) {
@@ -342,7 +312,7 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Meas. Probability'
+                        labelString: 'Measurement Probability'
                     },
                     ticks: {
                         beginAtZero: true,
@@ -383,7 +353,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                     }),
                     backgroundColor: "#48bfe3",
                     borderColor: "#48bfe3",
-                    label: "Imag"
+                    label: "Imaginary"
                 }
             ],
         },
@@ -406,7 +376,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Amplitude'
+                        labelString: 'Real and Imaginary'
                     },
                     ticks: {
                         suggestedMax: 1,
@@ -469,7 +439,7 @@ export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, s
                 yAxes: [{
                     scaleLabel: {
                         display: true,
-                        labelString: 'Value'
+                        labelString: 'Amplitude and Phase'
                     },
                     ticks: {
                         beginAtZero: true,
