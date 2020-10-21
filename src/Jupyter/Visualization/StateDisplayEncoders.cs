@@ -312,7 +312,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
                         var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
                         
-                        var elementId = $"round-{System.Guid.NewGuid()}"; //randomly generate ID for each <p>
+                        var elementId = $"round-{System.Guid.NewGuid()}"; // Randomly generate an ID for each <p> element.
                         var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
                         {
                             MeasurementDisplayStyle.None => String.Empty,
