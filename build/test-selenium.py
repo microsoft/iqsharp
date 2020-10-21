@@ -98,15 +98,19 @@ def test_debug_magic():
         assert expected_trace == outputs[2].text, outputs[2].text
         assert 'Finished debug session' in outputs[3].text, outputs[3].text
 
-    def click_debug_button():
-        debug_button_selector = ".iqsharp-debug-toolbar .btn"
+    debug_button_selector = ".iqsharp-debug-toolbar .btn"
+
+    def wait_for_debug_button():
         wait_for_selector(nb.browser, debug_button_selector, single=True)
+
+    def click_debug_button():
         nb.browser.find_element_by_css_selector(debug_button_selector).click()
 
     #
-    # Run %debug and interrupt kernel immediately
+    # Run %debug and interrupt kernel without clicking "Next step"
     #
     nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    wait_for_debug_button()
     interrupt_from_menu(nb)
 
     outputs = nb.wait_for_cell_output(index=1, timeout=120)
@@ -117,6 +121,7 @@ def test_debug_magic():
     #
     nb.clear_cell_output(index=1)
     nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    wait_for_debug_button()
     click_debug_button()
     interrupt_from_menu(nb)
 
@@ -129,6 +134,7 @@ def test_debug_magic():
     #
     nb.clear_cell_output(index=1)
     nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    wait_for_debug_button()
     click_debug_button()
     click_debug_button()
 
