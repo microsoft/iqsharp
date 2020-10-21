@@ -35,6 +35,20 @@ def create_notebook():
     driver = Firefox()
     driver.get('{url}?token={token}'.format(**server))
     return Notebook.new_notebook(driver, kernel_name='kernel-iqsharp')
+
+def get_sample_operation():
+    '''
+    Returns a sample Q# operation to be entered into a Jupyter Notebook cell
+    '''    
+    # Jupyter Notebook automatically adds a closing brace when typing
+    # an open brace into a code cell. To work around this, we omit the
+    # closing braces from the string that we enter.
+    return '''
+        operation DoNothing() : Unit {
+            using (q = Qubit()) {
+                H(q);
+                H(q);
+    '''
     
 def test_kernel_startup():
     '''
@@ -61,34 +75,19 @@ def test_kernel_startup():
     
     nb.browser.quit()
 
-def test_trace_debug_magics():
+def test_trace_magic():
     '''
-    Check that the IQ# %trace and %debug commands work correctly
+    Check that the IQ# %trace command works correctly
     '''
     nb = create_notebook()
 
-    # Jupyter Notebook automatically adds a closing brace when typing
-    # an open brace into a code cell. To work around this, we omit the
-    # closing braces from the string that we enter.
-    sample_operation = '''
-        operation DoNothing() : Unit {
-            using (q = Qubit()) {
-                H(q);
-                H(q);
-    '''
-
-    # Compile a Q# operation
     cell_index = 0
-    nb.add_and_execute_cell(index=cell_index, content=sample_operation)
+    nb.add_and_execute_cell(index=cell_index, content=get_sample_operation())
     outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
     assert len(outputs) > 0
     assert "DoNothing" == outputs[0].text, outputs[0].text
 
     cell_index = 1
-
-    #
-    # Test %trace
-    #
     nb.add_and_execute_cell(index=cell_index, content='%trace DoNothing')
     outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
     assert len(outputs) > 0
@@ -101,9 +100,20 @@ def test_trace_debug_magics():
     outputs = nb.get_cell_output(index=cell_index)
     assert expected_trace == outputs[0].text, outputs[0].text
 
-    #
-    # Test %debug
-    #
+    nb.browser.quit()
+
+def test_debug_magic():
+    '''
+    Check that the IQ# %debug command works correctly
+    '''
+    nb = create_notebook()
+
+    cell_index = 0
+    nb.add_and_execute_cell(index=cell_index, content=get_sample_operation())
+    outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
+    assert len(outputs) > 0
+    assert "DoNothing" == outputs[0].text, outputs[0].text
+
     def validate_outputs(index, expected_trace):
         WebDriverWait(nb.browser, 60).until(
             lambda b: len(nb.get_cell_output(index=index)) >= 4 and \
@@ -126,27 +136,36 @@ def test_trace_debug_magics():
 
     cell_index = 1
 
+    #
     # Run %debug and interrupt kernel without clicking "Next step"
-    nb.clear_cell_output(index=cell_index)
+    #
     nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     interrupt_from_menu(nb)
+
     validate_outputs(index=cell_index, expected_trace='')
 
+    #
     # Run %debug and click the "Next step" button before interrupting
+    #
     nb.clear_cell_output(index=cell_index)
     nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     click_debug_button()
     interrupt_from_menu(nb)
+
     validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H') # \u27E9 is mathematical right angle bracket
     
-    # Run %debug and click the "Next step" button twice, which should finish running the operation
+    #
+    # Run %debug and click the "Next step" button twice,
+    # which should finish running the operation
+    #
     nb.clear_cell_output(index=cell_index)
     nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     click_debug_button()
     click_debug_button()
+
     validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H H') # \u27E9 is mathematical right angle bracket
 
     nb.browser.quit()
