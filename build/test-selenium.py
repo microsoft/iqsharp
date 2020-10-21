@@ -114,7 +114,7 @@ def test_debug_magic():
     assert len(outputs) > 0
     assert "DoNothing" == outputs[0].text, outputs[0].text
 
-    def validate_outputs(index, expected_trace):
+    def validate_debug_outputs(index, expected_trace):
         WebDriverWait(nb.browser, 60).until(
             lambda b: len(nb.get_cell_output(index=index)) >= 4 and \
                       expected_trace == nb.get_cell_output(index=index)[2].text
@@ -136,36 +136,11 @@ def test_debug_magic():
 
     cell_index = 1
 
-    #
     # Run %debug and interrupt kernel without clicking "Next step"
-    #
     nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     interrupt_from_menu(nb)
 
-    validate_outputs(index=cell_index, expected_trace='')
-
-    #
-    # Run %debug and click the "Next step" button before interrupting
-    #
-    nb.clear_cell_output(index=cell_index)
-    nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
-    wait_for_debug_button()
-    click_debug_button()
-    interrupt_from_menu(nb)
-
-    validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H') # \u27E9 is mathematical right angle bracket
-    
-    #
-    # Run %debug and click the "Next step" button twice,
-    # which should finish running the operation
-    #
-    nb.clear_cell_output(index=cell_index)
-    nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
-    wait_for_debug_button()
-    click_debug_button()
-    click_debug_button()
-
-    validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H H') # \u27E9 is mathematical right angle bracket
+    validate_debug_outputs(index=cell_index, expected_trace='')
 
     nb.browser.quit()
