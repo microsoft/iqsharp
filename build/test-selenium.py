@@ -7,6 +7,7 @@ from notebook.tests.selenium.test_interrupt import interrupt_from_menu
 from notebook.tests.selenium.utils import Notebook, wait_for_selector
 from selenium.common.exceptions import JavascriptException
 from selenium.webdriver import Firefox
+from selenium.webdriver.support.ui import WebDriverWait
 
 def setup_module():
     '''
@@ -86,13 +87,16 @@ def test_debug_magic():
     '''
     nb = create_notebook()
 
-    nb.add_and_execute_cell(index=0, content=get_sample_operation())
-    outputs = nb.wait_for_cell_output(index=0, timeout=120)
+    cell_index = 0
+    nb.add_and_execute_cell(index=cell_index, content=get_sample_operation())
+    outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
     assert len(outputs) > 0
     assert "DoNothing" == outputs[0].text, outputs[0].text
 
-    def validate_outputs(outputs, expected_trace):
-        assert len(outputs) > 0
+    def validate_outputs(index, expected_trace):
+        WebDriverWait(nb.browser, 60).until(lambda b: len(nb.get_cell_output(index=index)) >= 4)
+        outputs = nb.get_cell_output(index=index)
+        assert len(outputs) >= 4
         assert 'Starting debug session' in outputs[0].text, outputs[0].text
         assert 'Debug controls' in outputs[1].text, outputs[1].text
         assert expected_trace == outputs[2].text, outputs[2].text
@@ -106,40 +110,39 @@ def test_debug_magic():
     def click_debug_button():
         nb.browser.find_element_by_css_selector(debug_button_selector).click()
 
+    cell_index = 1
+
     #
     # Run %debug and interrupt kernel without clicking "Next step"
     #
-    nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     interrupt_from_menu(nb)
 
-    outputs = nb.wait_for_cell_output(index=1, timeout=120)
-    validate_outputs(outputs, expected_trace='')
+    validate_outputs(index=cell_index, expected_trace='')
 
     #
     # Run %debug and click the "Next step" button before interrupting
     #
-    nb.clear_cell_output(index=1)
-    nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    nb.clear_cell_output(index=cell_index)
+    nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     click_debug_button()
     interrupt_from_menu(nb)
 
-    outputs = nb.wait_for_cell_output(index=1, timeout=120)
-    validate_outputs(outputs, expected_trace='|0\u27E9 q0 H') # \u27E9 is mathematical right angle bracket
+    validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H') # \u27E9 is mathematical right angle bracket
     
     #
     # Run %debug and click the "Next step" button twice,
     # which should finish running the operation
     #
-    nb.clear_cell_output(index=1)
-    nb.add_and_execute_cell(index=1, content='%debug DoNothing')
+    nb.clear_cell_output(index=cell_index)
+    nb.add_and_execute_cell(index=cell_index, content='%debug DoNothing')
     wait_for_debug_button()
     click_debug_button()
     click_debug_button()
 
-    outputs = nb.wait_for_cell_output(index=1, timeout=120)
-    validate_outputs(outputs, expected_trace='|0\u27E9 q0 H H') # \u27E9 is mathematical right angle bracket
+    validate_outputs(index=cell_index, expected_trace='|0\u27E9 q0 H H') # \u27E9 is mathematical right angle bracket
 
     nb.browser.quit()
 
@@ -149,16 +152,21 @@ def test_trace_magic():
     '''
     nb = create_notebook()
 
-    nb.add_and_execute_cell(index=0, content=get_sample_operation())
-    outputs = nb.wait_for_cell_output(index=0, timeout=120)
+    cell_index = 0
+    nb.add_and_execute_cell(index=cell_index, content=get_sample_operation())
+    outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
     assert len(outputs) > 0
     assert "DoNothing" == outputs[0].text, outputs[0].text
 
-    nb.add_and_execute_cell(index=1, content='%trace DoNothing')
-    outputs = nb.wait_for_cell_output(index=1, timeout=120)
+    cell_index = 1
+    nb.add_and_execute_cell(index=cell_index, content='%trace DoNothing')
+    outputs = nb.wait_for_cell_output(index=cell_index, timeout=120)
     assert len(outputs) > 0
 
     # Verify expected text output
-    assert '|0\u27E9 q0 H H' == outputs[0].text, outputs[0].text # \u27E9 is mathematical right angle bracket
+    expected_trace = '|0\u27E9 q0 H H' # \u27E9 is mathematical right angle bracket
+    WebDriverWait(nb.browser, 60).until(lambda b: expected_trace == nb.get_cell_output(index=cell_index)[0].text)
+    outputs = nb.get_cell_output(index=cell_index)
+    assert expected_trace == outputs[0].text, outputs[0].text
 
     nb.browser.quit()
