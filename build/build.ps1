@@ -51,9 +51,6 @@ Pop-Location
 
 Build-One build '../iqsharp.sln'
 
-Write-Host "##[info]Verifying manifest..."
-& (Join-Path $PSScriptRoot "manifest.ps1") -ValidatePackages $False -ValidateAssemblies $True
-
 if (-not $all_ok) 
 {
     throw "At least one project failed to compile. Check the logs."
