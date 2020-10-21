@@ -73,11 +73,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     `DumpMachine` or `DumpRegister`. Supports displaying measurement probability as progress bars, numbers, both,
                     or neither. 
 
-                    **'dump.measurementDisplayPrecision'**
+                    **`dump.measurementDisplayPrecision`**
 
-                    **Value:** non-negative integer such as '1' or '2' (default '4')
+                    **Value:** non-negative integer (default `4`)
 
-                    Sets the precision of the measurement probability represented as a percentage when
+                    Sets the precision of the measurement probability displayed as a percentage when
                     `dump.measurementDisplayStyle` is set to `""NumberOnly""` or `""BarAndNumber""`.
 
                     **`dump.measurementDisplayHistogram`**
