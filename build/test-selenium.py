@@ -94,7 +94,10 @@ def test_debug_magic():
     assert "DoNothing" == outputs[0].text, outputs[0].text
 
     def validate_outputs(index, expected_trace):
-        WebDriverWait(nb.browser, 60).until(lambda b: len(nb.get_cell_output(index=index)) >= 4)
+        WebDriverWait(nb.browser, 60).until(
+            lambda b: len(nb.get_cell_output(index=index)) >= 4 and \
+                      expected_trace == nb.get_cell_output(index=index)[2].text
+        )
         outputs = nb.get_cell_output(index=index)
         assert len(outputs) >= 4
         assert 'Starting debug session' in outputs[0].text, outputs[0].text
@@ -165,7 +168,9 @@ def test_trace_magic():
 
     # Verify expected text output
     expected_trace = '|0\u27E9 q0 H H' # \u27E9 is mathematical right angle bracket
-    WebDriverWait(nb.browser, 60).until(lambda b: expected_trace == nb.get_cell_output(index=cell_index)[0].text)
+    WebDriverWait(nb.browser, 60).until(
+        lambda b: expected_trace == nb.get_cell_output(index=cell_index)[0].text
+    )
     outputs = nb.get_cell_output(index=cell_index)
     assert expected_trace == outputs[0].text, outputs[0].text
 
