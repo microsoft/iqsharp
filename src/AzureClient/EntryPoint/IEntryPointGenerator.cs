@@ -3,10 +3,7 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Quantum.QsCompiler.ReservedKeywords;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -45,6 +42,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="runtimeCapabilities">The runtime capabilities of the intended execution target.</param>
         /// <returns>The generated entry point.</returns>
         public IEntryPoint Generate(string operationName, string? executionTarget,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown);
+            RuntimeCapability? runtimeCapabilities = null);
     }
 }

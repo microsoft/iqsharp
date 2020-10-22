@@ -145,6 +145,19 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string SimpleDebugOperation =
+ @"
+    operation SimpleDebugOperation() : (Result, Result)
+    {
+        using (qubits = Qubit[2])
+        {
+            H(qubits[0]);
+            H(qubits[1]);
+            return (M(qubits[0]), M(qubits[1]));
+        }
+    }
+";
+
         public static string ApplyWithinBlock =
  @"
     /// # Summary

@@ -1,7 +1,7 @@
 import { formatRegisters, _classicalRegister, _qubitRegister } from '../../ExecutionPathVisualizer/formatters/registerFormatter';
 import { RegisterMap, RegisterType } from '../../ExecutionPathVisualizer/register';
-import { Metadata } from '../../ExecutionPathVisualizer/metadata';
-import { startY, registerHeight, classicalRegHeight, GateType, startX, minGateWidth } from '../../ExecutionPathVisualizer/constants';
+import { Metadata, GateType } from '../../ExecutionPathVisualizer/metadata';
+import { startY, registerHeight, classicalRegHeight, startX, minGateWidth } from '../../ExecutionPathVisualizer/constants';
 
 describe('Testing _classicalRegister', () => {
     test('register with normal width', () => {
