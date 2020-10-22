@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -60,7 +60,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 ILogger<DebugMagic>? logger
         ) : base(
             "debug",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Steps through the execution of a given Q# operation or function.",
                 Description = $@"
