@@ -23,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ToffoliMagic(ISymbolResolver resolver) : base(
             "toffoli",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Runs a given function or operation on the ToffoliSimulator target machine.",
                 Description = @"

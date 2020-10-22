@@ -16,7 +16,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     internal struct MagicSymbolSummary
     {
         public string Name;
-        public Documentation Documentation;
+        public Microsoft.Jupyter.Core.Documentation Documentation;
         public string AssemblyName;
     }
 
@@ -33,7 +33,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine) : base(
             "lsmagic",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Returns a list of all currently available magic commands.",
                 Description = @"

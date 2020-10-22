@@ -23,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public LsOpenMagic(ICompilerService compiler) : base(
             "lsopen",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Lists currently opened namespaces and their aliases.",
                 Description = @"

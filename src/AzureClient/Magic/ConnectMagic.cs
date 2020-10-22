@@ -42,7 +42,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.connect",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Connects to an Azure Quantum workspace or displays current connection status.",
                     Description = $@"
