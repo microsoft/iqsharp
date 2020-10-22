@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public EstimateMagic(ISymbolResolver resolver) : base(
             "estimate",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Runs a given function or operation on the ResourcesEstimator target machine.",
                 Description = @"

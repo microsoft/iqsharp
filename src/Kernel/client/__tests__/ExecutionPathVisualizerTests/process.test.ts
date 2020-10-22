@@ -1,6 +1,6 @@
 import { Operation, ConditionalRender } from '../../ExecutionPathVisualizer/circuit';
 import { RegisterMap, RegisterType, Register } from '../../ExecutionPathVisualizer/register';
-import { Metadata } from '../../ExecutionPathVisualizer/metadata';
+import { Metadata, GateType } from '../../ExecutionPathVisualizer/metadata';
 import {
     processOperations,
     _groupOperations,
@@ -14,7 +14,6 @@ import {
     _offsetChildrenX,
 } from '../../ExecutionPathVisualizer/process';
 import {
-    GateType,
     minGateWidth,
     startX,
     startY,
@@ -22,7 +21,7 @@ import {
     gatePadding,
     classicalRegHeight,
     controlBtnOffset,
-    classicalBoxPadding,
+    groupBoxPadding,
 } from '../../ExecutionPathVisualizer/constants';
 
 describe('Testing _groupOperations', () => {
@@ -1397,8 +1396,8 @@ describe('Testing _opToMetadata', () => {
             controlsY: [startY + classicalRegHeight],
             targetsY: [startY, startY + classicalRegHeight * 2],
             label: '',
-            width: minGateWidth + controlBtnOffset + classicalBoxPadding * 2,
-            conditionalChildren: [
+            width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1423,6 +1422,74 @@ describe('Testing _opToMetadata', () => {
         };
         expect(_opToMetadata(op, registers)).toEqual(metadata);
     });
+    test('grouped gates', () => {
+        const op: Operation = {
+            gate: 'Foo',
+            isMeasurement: false,
+            isConditional: false,
+            isControlled: false,
+            isAdjoint: false,
+            conditionalRender: ConditionalRender.AsGroup,
+            controls: [],
+            targets: [
+                { type: RegisterType.Qubit, qId: 0 },
+                { type: RegisterType.Qubit, qId: 1 },
+            ],
+            children: [
+                {
+                    gate: 'X',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                    conditionalRender: ConditionalRender.OnZero,
+                },
+                {
+                    gate: 'H',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 1 }],
+                    conditionalRender: ConditionalRender.OnOne,
+                },
+            ],
+        };
+        const registers: RegisterMap = {
+            0: { type: RegisterType.Qubit, y: startY },
+            1: { type: RegisterType.Qubit, y: startY + registerHeight },
+        };
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: 0,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        expect(_opToMetadata(op, registers)).toEqual(metadata);
+    });
     test('no render on null', () => {
         const metadata: Metadata = {
             type: GateType.Invalid,
@@ -1430,7 +1497,7 @@ describe('Testing _opToMetadata', () => {
             controlsY: [],
             targetsY: [],
             label: '',
-            width: minGateWidth,
+            width: -1,
         };
         expect(_opToMetadata(null, [])).toEqual(metadata);
     });
@@ -1535,7 +1602,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [[], []],
+            children: [[], []],
             label: 'X',
             width: minGateWidth,
         };
@@ -1544,7 +1611,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [[], []],
+            children: [[], []],
             label: 'X',
             width: minGateWidth,
             htmlClass: 'classname',
@@ -1582,7 +1649,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1612,7 +1679,7 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
@@ -1651,14 +1718,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        conditionalChildren: [
+                        children: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -1703,14 +1770,14 @@ describe('Testing _addClass', () => {
             x: 0,
             controlsY: [],
             targetsY: [],
-            conditionalChildren: [
+            children: [
                 [
                     {
                         type: GateType.Unitary,
                         x: 0,
                         controlsY: [],
                         targetsY: [],
-                        conditionalChildren: [
+                        children: [
                             [
                                 {
                                     type: GateType.Unitary,
@@ -1963,7 +2030,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -1988,7 +2055,7 @@ describe('Testing _offsetChildrenX', () => {
                     targetsY: [],
                     width: minGateWidth,
                     label: 'X',
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2085,7 +2152,7 @@ describe('Testing _fillMetadataX', () => {
                     x: 0,
                     controlsY: [],
                     targetsY: [],
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
@@ -2108,7 +2175,7 @@ describe('Testing _fillMetadataX', () => {
                         ],
                     ],
                     label: 'X',
-                    width: minGateWidth + controlBtnOffset + classicalBoxPadding * 2,
+                    width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
                 },
             ],
         ];
@@ -2119,11 +2186,11 @@ describe('Testing _fillMetadataX', () => {
                     x: startX,
                     controlsY: [],
                     targetsY: [],
-                    conditionalChildren: [
+                    children: [
                         [
                             {
                                 type: GateType.Unitary,
-                                x: controlBtnOffset + classicalBoxPadding,
+                                x: controlBtnOffset + groupBoxPadding,
                                 controlsY: [],
                                 targetsY: [],
                                 label: 'X',
@@ -2133,7 +2200,7 @@ describe('Testing _fillMetadataX', () => {
                         [
                             {
                                 type: GateType.Unitary,
-                                x: controlBtnOffset + classicalBoxPadding,
+                                x: controlBtnOffset + groupBoxPadding,
                                 controlsY: [],
                                 targetsY: [],
                                 label: 'X',
@@ -2142,7 +2209,7 @@ describe('Testing _fillMetadataX', () => {
                         ],
                     ],
                     label: 'X',
-                    width: minGateWidth + controlBtnOffset + classicalBoxPadding * 2,
+                    width: minGateWidth + controlBtnOffset + groupBoxPadding * 2,
                 },
             ],
         ];
@@ -2374,6 +2441,307 @@ describe('Testing processOperations', () => {
         const expectedWidth: number = startX + (minGateWidth + gatePadding * 2) * 3;
         const { metadataList, svgWidth } = processOperations(operations, registers);
         expect(metadataList).toEqual(expectedOps);
+        expect(svgWidth).toEqual(expectedWidth);
+    });
+    test('classically-controlled gates', () => {
+        const op: Operation = {
+            gate: 'X',
+            isMeasurement: false,
+            isConditional: true,
+            isControlled: true,
+            isAdjoint: false,
+            controls: [{ type: RegisterType.Classical, qId: 0, cId: 0 }],
+            targets: [
+                { type: RegisterType.Qubit, qId: 0 },
+                { type: RegisterType.Qubit, qId: 1 },
+            ],
+            children: [
+                {
+                    gate: 'X',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                    conditionalRender: ConditionalRender.OnZero,
+                },
+                {
+                    gate: 'H',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 1 }],
+                    conditionalRender: ConditionalRender.OnOne,
+                },
+                {
+                    gate: 'Z',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                    conditionalRender: ConditionalRender.OnZero,
+                },
+            ],
+        };
+        const registers: RegisterMap = {
+            0: {
+                type: RegisterType.Qubit,
+                y: startY,
+                children: [{ type: RegisterType.Classical, y: startY + classicalRegHeight }],
+            },
+            1: { type: RegisterType.Qubit, y: startY + classicalRegHeight * 2 },
+        };
+        const metadata: Metadata = {
+            type: GateType.ClassicalControlled,
+            x: startX,
+            controlsY: [startY + classicalRegHeight],
+            targetsY: [startY, startY + classicalRegHeight * 2],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + controlBtnOffset + groupBoxPadding * 2,
+            htmlClass: 'classically-controlled-1',
+            children: [
+                [
+                    {
+                        type: GateType.Unitary,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY]],
+                        label: 'X',
+                        width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
+                    },
+                    {
+                        type: GateType.Unitary,
+                        x:
+                            startX +
+                            minGateWidth +
+                            minGateWidth / 2 +
+                            gatePadding * 2 +
+                            controlBtnOffset +
+                            groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY]],
+                        label: 'Z',
+                        width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
+                    },
+                ],
+                [
+                    {
+                        type: GateType.Unitary,
+                        x: startX + minGateWidth / 2 + controlBtnOffset + groupBoxPadding,
+                        controlsY: [],
+                        targetsY: [[startY + classicalRegHeight * 2]],
+                        label: 'H',
+                        width: minGateWidth,
+                        htmlClass: 'classically-controlled-1',
+                    },
+                ],
+            ],
+        };
+        const expectedWidth: number =
+            startX + minGateWidth * 2 + gatePadding * 4 + controlBtnOffset + groupBoxPadding * 2;
+        const { metadataList, svgWidth } = processOperations([op], registers);
+        expect(metadataList).toEqual([metadata]);
+        expect(svgWidth).toEqual(expectedWidth);
+    });
+    test('grouped gates', () => {
+        const op: Operation = {
+            gate: 'Foo',
+            isMeasurement: false,
+            isConditional: false,
+            isControlled: false,
+            isAdjoint: false,
+            controls: [],
+            targets: [
+                { type: RegisterType.Qubit, qId: 0 },
+                { type: RegisterType.Qubit, qId: 1 },
+            ],
+            conditionalRender: ConditionalRender.AsGroup,
+            children: [
+                {
+                    gate: 'X',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                },
+                {
+                    gate: 'H',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 1 }],
+                },
+                {
+                    gate: 'Z',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                },
+            ],
+        };
+        const registers: RegisterMap = {
+            0: { type: RegisterType.Qubit, y: startY },
+            1: { type: RegisterType.Qubit, y: startY + registerHeight },
+        };
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 2,
+            children: [
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'X',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY]],
+                    label: 'Z',
+                    width: minGateWidth,
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth / 2 + groupBoxPadding,
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        const expectedWidth: number = startX + minGateWidth * 2 + gatePadding * 4 + groupBoxPadding * 2;
+        const { metadataList, svgWidth } = processOperations([op], registers);
+        expect(metadataList).toEqual([metadata]);
+        expect(svgWidth).toEqual(expectedWidth);
+    });
+    test('nested grouped gates', () => {
+        const op: Operation = {
+            gate: 'Foo',
+            isMeasurement: false,
+            isConditional: false,
+            isControlled: false,
+            isAdjoint: false,
+            controls: [],
+            targets: [
+                { type: RegisterType.Qubit, qId: 0 },
+                { type: RegisterType.Qubit, qId: 1 },
+            ],
+            conditionalRender: ConditionalRender.AsGroup,
+            children: [
+                {
+                    gate: 'Foo',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                    conditionalRender: ConditionalRender.AsGroup,
+                    children: [
+                        {
+                            gate: 'X',
+                            isMeasurement: false,
+                            isConditional: false,
+                            isControlled: false,
+                            isAdjoint: false,
+                            controls: [],
+                            targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                        },
+                        {
+                            gate: 'Z',
+                            isMeasurement: false,
+                            isConditional: false,
+                            isControlled: false,
+                            isAdjoint: false,
+                            controls: [],
+                            targets: [{ type: RegisterType.Qubit, qId: 0 }],
+                        },
+                    ],
+                },
+                {
+                    gate: 'H',
+                    isMeasurement: false,
+                    isConditional: false,
+                    isControlled: false,
+                    isAdjoint: false,
+                    controls: [],
+                    targets: [{ type: RegisterType.Qubit, qId: 1 }],
+                },
+            ],
+        };
+        const registers: RegisterMap = {
+            0: { type: RegisterType.Qubit, y: startY },
+            1: { type: RegisterType.Qubit, y: startY + registerHeight },
+        };
+        const metadata: Metadata = {
+            type: GateType.Group,
+            x: startX,
+            controlsY: [],
+            targetsY: [startY, startY + registerHeight],
+            label: '',
+            width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 4,
+            children: [
+                {
+                    type: GateType.Group,
+                    x: startX + gatePadding,
+                    controlsY: [],
+                    targetsY: [startY],
+                    label: '',
+                    width: minGateWidth * 2 + gatePadding * 2 + groupBoxPadding * 2,
+                    children: [
+                        {
+                            type: GateType.Unitary,
+                            x: startX + minGateWidth / 2 + groupBoxPadding * 2,
+                            controlsY: [],
+                            targetsY: [[startY]],
+                            label: 'X',
+                            width: minGateWidth,
+                        },
+                        {
+                            type: GateType.Unitary,
+                            x: startX + minGateWidth + minGateWidth / 2 + gatePadding * 2 + groupBoxPadding * 2,
+                            controlsY: [],
+                            targetsY: [[startY]],
+                            label: 'Z',
+                            width: minGateWidth,
+                        },
+                    ],
+                },
+                {
+                    type: GateType.Unitary,
+                    x: startX + minGateWidth + gatePadding + groupBoxPadding * 2, // startX + half of above gate's width + padding
+                    controlsY: [],
+                    targetsY: [[startY + registerHeight]],
+                    label: 'H',
+                    width: minGateWidth,
+                },
+            ],
+        };
+        const expectedWidth: number = startX + minGateWidth * 2 + gatePadding * 4 + groupBoxPadding * 4;
+        const { metadataList, svgWidth } = processOperations([op], registers);
+        expect(metadataList).toEqual([metadata]);
         expect(svgWidth).toEqual(expectedWidth);
     });
     test('measure gates', () => {

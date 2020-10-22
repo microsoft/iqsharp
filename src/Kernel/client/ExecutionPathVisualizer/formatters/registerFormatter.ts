@@ -1,6 +1,6 @@
 import { RegisterMap } from '../register';
-import { regLineStart, GateType } from '../constants';
-import { Metadata } from '../metadata';
+import { regLineStart } from '../constants';
+import { Metadata, GateType } from '../metadata';
 import { line } from './formatUtils';
 
 /**

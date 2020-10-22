@@ -1,8 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using Microsoft.Jupyter.Core;
@@ -52,7 +55,26 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         [JsonProperty("documentation")]
         public string Documentation => String.Join("\n", Operation.Header.Documentation);
 
-        // TODO: expose documentation here.
+        /// <summary>
+        ///      A short summary of the given symbol, as provided by its API
+        ///      documentation comments.
+        /// </summary>
+        [JsonProperty("summary", NullValueHandling=NullValueHandling.Ignore)]
+        public string? Summary { get; private set; } = null;        
+
+        /// <summary>
+        ///      An extended description of the given symbol, as provided by its API
+        ///      documentation comments.
+        /// </summary>
+        [JsonProperty("description", NullValueHandling=NullValueHandling.Ignore)]
+        public string? Description { get; private set; } = null;
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty("inputs", NullValueHandling=NullValueHandling.Ignore)]
+        public ImmutableDictionary<string, string>? Inputs { get; private set; } = null;
+
+        // TODO: continue exposing documentation here.
 
         /// <summary>
         ///     Constructs a new symbol given information about an operation
@@ -63,6 +85,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (op == null) { throw new ArgumentNullException(nameof(op)); }
             this.Operation = op;
             this.Kind = SymbolKind.Other;
+
+            this.Summary = this
+                .Operation
+                .GetStringAttributes("Summary")
+                .SingleOrDefault();
+            this.Description = this
+                .Operation
+                .GetStringAttributes("Description")
+                .SingleOrDefault();
+            var inputs = this
+                .Operation
+                .GetDictionaryAttributes("Input");
+            this.Inputs = inputs.Count >= 0
+                ? inputs.ToImmutableDictionary()
+                : null;
         }
     }
 

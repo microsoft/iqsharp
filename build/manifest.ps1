@@ -20,6 +20,7 @@ param(
 $artifacts = @{
     Packages = @(
         "Microsoft.Quantum.IQSharp.Core",
+        "Microsoft.Quantum.IQSharp.ExecutionPathTracer",
         "Microsoft.Quantum.IQSharp.Jupyter",
         "Microsoft.Quantum.IQSharp"
     ) | ForEach-Object { Join-Path $Env:NUGET_OUTDIR "$_.$Env:NUGET_VERSION.nupkg" };
@@ -28,6 +29,7 @@ $artifacts = @{
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.AzureClient.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Core.dll",
+        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.ExecutionPathTracer.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Jupyter.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Kernel.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Web.dll"
