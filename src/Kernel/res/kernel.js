@@ -4,6 +4,7 @@ requirejs.config({
     },
     paths: {
         'bundle': window.IPython.notebook.base_url + 'kernelspecs/iqsharp/bundle',
+        'chart': window.IPython.notebook.base_url + 'kernelspecs/iqsharp/chart',
     },
 });
 

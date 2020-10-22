@@ -173,39 +173,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // Simulate operation and attach `ExecutionPathTracer` to trace out operations performed
             // in its execution path
             using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, ConfigurationSource)
-                .WithStackTraceDisplay(channel)
                 .WithExecutionPathTracer(tracer);
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
 
-            // Retrieve the `ExecutionPath` traced out by the `ExecutionPathTracer`
-            var executionPath = tracer.GetExecutionPath();
-
-            // Convert executionPath to JToken for serialization
-            var executionPathJToken = JToken.FromObject(executionPath,
-                new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore });
-
-            // Render empty div with unique ID as cell output
-            var divId = $"execution-path-container-{Guid.NewGuid().ToString()}";
-            var content = new ExecutionPathVisualizerContent(
-                executionPathJToken,
-                divId,
-                depth,
-                this.ConfigurationSource.TraceVisualizationStyle
-            );
+            var divId = $"execution-path-container-{Guid.NewGuid()}";
             channel.DisplayUpdatable(new DisplayableHtmlElement($"<div id='{divId}' />"));
 
-            // Send execution path to JavaScript via iopub for rendering
-            channel.SendIoPubMessage(
-                new Message
-                {
-                    Header = new MessageHeader
-                    {
-                        MessageType = "render_execution_path"
-                    },
-                    Content = content,
-                }
-            );
+            // Render the `ExecutionPath` traced out by the `ExecutionPathTracer`
+            tracer.RenderExecutionPath(channel, divId, depth, this.ConfigurationSource.TraceVisualizationStyle);
 
             return ExecuteStatus.Ok.ToExecutionResult();
         }

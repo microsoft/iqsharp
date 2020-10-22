@@ -1,5 +1,6 @@
 import { getGateWidth, _getStringWidth, createUUID } from '../../ExecutionPathVisualizer/utils';
-import { GateType, minGateWidth, labelPadding } from '../../ExecutionPathVisualizer/constants';
+import { minGateWidth, labelPadding } from '../../ExecutionPathVisualizer/constants';
+import { GateType } from '../../ExecutionPathVisualizer/metadata';
 
 describe('Testing createUUID', () => {
     test('no x in uuid', () => expect(createUUID()).not.toContain('x'));
