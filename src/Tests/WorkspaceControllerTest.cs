@@ -87,7 +87,7 @@ namespace Tests.IQSharp
             var response = await controller.Estimate("Tests.qss.CCNOTDriver", args, messages.Add);
 
             Assert.AreEqual(0, messages.Count);
-            Assert.AreEqual(8, response.Count);
+            Assert.AreEqual(9, response.Count);
             Assert.AreEqual(10.0, response["CNOT"]);
             Assert.AreEqual(7.0, response["T"]);
             Assert.AreEqual(3.0, response["Width"]);

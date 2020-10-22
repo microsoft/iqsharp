@@ -79,7 +79,7 @@ namespace Tests.IQSharp
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
             Assert.IsNotNull(result);
-            Assert.AreEqual(8, result.Rows.Count);
+            Assert.AreEqual(9, result.Rows.Count);
             var keys = result.Rows.Cast<DataRow>().Select(row => row.ItemArray[0]).ToList();
             CollectionAssert.Contains(keys, "T");
             CollectionAssert.Contains(keys, "CNOT");
