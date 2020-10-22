@@ -10,7 +10,6 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
-using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -139,11 +138,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     }
 
     /// <summary>
-    ///     An implementation of <see cref="Microsoft.Quantum.Diagnostics.DumpMachine{__T__}" />
+    ///     An implementation of <see cref="Diagnostics.DumpMachine{__T__}" />
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpMachine<T> : Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.QsimDumpMachine<T>
+    public class JupyterDumpMachine<T> : QuantumSimulator.QsimDumpMachine<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
@@ -182,11 +181,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     }
 
     /// <summary>
-    ///     An implementation of <see cref="Microsoft.Quantum.Diagnostics.DumpRegister{__T__}" />
+    ///     An implementation of <see cref="Diagnostics.DumpRegister{__T__}" />
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpRegister<T> : Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.QSimDumpRegister<T>
+    public class JupyterDumpRegister<T> : QuantumSimulator.QSimDumpRegister<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
