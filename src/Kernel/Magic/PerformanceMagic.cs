@@ -26,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public PerformanceMagic() : base(
             "performance",
-            new Documentation {
+            new Microsoft.Jupyter.Core.Documentation {
                 Summary = "Reports current performance metrics for this kernel.",
                 Description = @"
                     Reports various performance metrics for the current IQ# kernel process, including:

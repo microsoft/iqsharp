@@ -1,14 +1,18 @@
 {
-    "scripts": {
-        "test": "jest"
+    "dependencies": {
+        "chart.js": "2.8.0"
     },
     "devDependencies": {
         "@types/codemirror": "0.0.56",
+        "@types/chart.js": "2.8.0",
         "@types/jest": "^26.0.4",
         "canvas": "^2.6.1",
         "jest": "^26.1.0",
         "ts-jest": "^26.1.2",
         "typescript": "^3.9.6"
+    },
+    "scripts": {
+        "test": "jest"
     },
     "jest": {
         "transform": {

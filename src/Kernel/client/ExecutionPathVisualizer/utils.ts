@@ -1,5 +1,5 @@
-import { Metadata } from './metadata';
-import { GateType, minGateWidth, labelPadding, labelFontSize, argsFontSize } from './constants';
+import { Metadata, GateType } from './metadata';
+import { minGateWidth, labelPadding, labelFontSize, argsFontSize } from './constants';
 
 /**
  * Generate a UUID using `Math.random`.
@@ -23,10 +23,9 @@ const createUUID = (): string =>
  * @returns Width of given gate (in pixels).
  */
 const getGateWidth = ({ type, label, displayArgs, width }: Metadata): number => {
+    if (width > 0) return width;
+
     switch (type) {
-        case GateType.ClassicalControlled:
-            // Already computed before.
-            return width;
         case GateType.Measure:
         case GateType.Cnot:
         case GateType.Swap:

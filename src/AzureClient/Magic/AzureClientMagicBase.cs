@@ -8,6 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
+// NB: The name `Documentation` can be ambiguous in this context,
+//     since we rely both on Microsoft.Quantum.Documentation and on
+//     the name from Jupyter Core.
+using JupyterDocumentation = Microsoft.Jupyter.Core.Documentation;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -34,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">The <see cref="IAzureClient"/> object used to interact with Azure.</param>
         /// <param name="keyword">The name used to invoke the magic command.</param>
         /// <param name="docs">Documentation describing the usage of this magic command.</param>
-        public AzureClientMagicBase(IAzureClient azureClient, string keyword, Documentation docs):
+        public AzureClientMagicBase(IAzureClient azureClient, string keyword, JupyterDocumentation docs):
             base(keyword, docs)
         {
             this.AzureClient = azureClient;

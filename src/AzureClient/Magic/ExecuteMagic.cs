@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.execute",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Submits a job to an Azure Quantum workspace and waits for completion.",
                     Description = $@"

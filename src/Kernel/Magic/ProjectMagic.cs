@@ -25,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public ProjectMagic(IWorkspace workspace) : base(
             "project",
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Provides the ability to view or add Q# project references.",
                 Description = @"
