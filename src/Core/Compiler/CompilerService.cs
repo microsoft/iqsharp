@@ -13,7 +13,6 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
@@ -132,14 +131,14 @@ namespace Microsoft.Quantum.IQSharp
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
-                RuntimeCapabilities = runtimeCapabilities
+                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -147,7 +146,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -164,7 +163,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapabilities);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability);
         }
 
         /// <summary>
@@ -173,7 +172,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the same name as the snippet id.
         /// </summary>
         public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
@@ -193,7 +192,7 @@ namespace Microsoft.Quantum.IQSharp
             };
 
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
@@ -203,7 +202,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapabilities = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
             return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
@@ -213,13 +212,13 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
         private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities)
+            RuntimeCapability? runtimeCapability)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapabilities);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
             if (logger.HasErrors || qsCompilation == null) return null;

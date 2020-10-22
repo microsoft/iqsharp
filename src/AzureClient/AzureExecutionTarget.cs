@@ -4,7 +4,7 @@
 #nullable enable
 
 using System;
-using Microsoft.Quantum.QsCompiler.ReservedKeywords;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -16,12 +16,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         
         public virtual string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
 
-        public AssemblyConstants.RuntimeCapabilities RuntimeCapabilities => GetProvider(TargetId) switch
+        public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
         {
-            AzureProvider.IonQ      => AssemblyConstants.RuntimeCapabilities.QPRGen0,
-            AzureProvider.Honeywell => AssemblyConstants.RuntimeCapabilities.QPRGen1,
-            AzureProvider.QCI       => AssemblyConstants.RuntimeCapabilities.QPRGen1,
-            _                       => AssemblyConstants.RuntimeCapabilities.Unknown
+            AzureProvider.IonQ      => RuntimeCapability.BasicQuantumFunctionality,
+            AzureProvider.Honeywell => RuntimeCapability.BasicMeasurementFeedback,
+            AzureProvider.QCI       => RuntimeCapability.BasicMeasurementFeedback,
+            _                       => RuntimeCapability.FullComputation
         };
 
         public static bool IsValid(string targetId) => GetProvider(targetId) != null;

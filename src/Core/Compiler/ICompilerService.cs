@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 
@@ -25,19 +26,19 @@ namespace Microsoft.Quantum.IQSharp
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
         AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown);
+            RuntimeCapability runtimeCapability = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
         AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown);
+            RuntimeCapability runtimeCapabilities = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown);
+            RuntimeCapability runtimeCapability = null);
 
         /// <summary>
         /// Returns the names of all declared callables and types. 
