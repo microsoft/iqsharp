@@ -202,17 +202,17 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapabilities = null)
+            RuntimeCapability? runtimeCapability = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
         private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability)
+            RuntimeCapability? runtimeCapability = null)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
