@@ -188,6 +188,7 @@ def test_packages():
         qsharp.packages.add('Invalid.Package.!!!!!!')
     assert pkg_count == len(qsharp.packages._client.get_packages())
 
+    # We test using a non-QDK package name to avoid possible version conflicts.
     qsharp.packages.add('Microsoft.Extensions.Logging')
     assert (pkg_count+1) == len(qsharp.packages._client.get_packages())
 
