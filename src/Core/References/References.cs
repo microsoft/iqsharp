@@ -50,7 +50,8 @@ namespace Microsoft.Quantum.IQSharp
         public static readonly AssemblyInfo[] QUANTUM_CORE_ASSEMBLIES =
         {
             new AssemblyInfo(typeof(Simulation.Core.Operation<,>).Assembly),
-            new AssemblyInfo(typeof(Intrinsic.X).Assembly)
+            new AssemblyInfo(typeof(Intrinsic.X).Assembly),
+            new AssemblyInfo(typeof(Core.EntryPoint).Assembly)
         };
 
 
