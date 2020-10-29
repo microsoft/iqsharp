@@ -26,13 +26,13 @@ $artifacts = @{
     ) | ForEach-Object { Join-Path $Env:NUGET_OUTDIR "$_.$Env:NUGET_VERSION.nupkg" };
 
     Assemblies = @(
+        "./src/AzureClient/bin/$Env:BUILD_CONFIGURATION/netstandard2.1/Microsoft.Quantum.IQSharp.AzureClient.dll",
+        "./src/Core/bin/$Env:BUILD_CONFIGURATION/netstandard2.1/Microsoft.Quantum.IQSharp.Core.dll",
+        "./src/ExecutionPathTracer/bin/$Env:BUILD_CONFIGURATION/netstandard2.1/Microsoft.Quantum.IQSharp.ExecutionPathTracer.dll",
+        "./src/Jupyter/bin/$Env:BUILD_CONFIGURATION/netstandard2.1/Microsoft.Quantum.IQSharp.Jupyter.dll",
+        "./src/Kernel/bin/$Env:BUILD_CONFIGURATION/netstandard2.1/Microsoft.Quantum.IQSharp.Kernel.dll",
         "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.AzureClient.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Core.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.ExecutionPathTracer.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Jupyter.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Kernel.dll",
-        "./src/Tool/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Web.dll"
+        "./src/Web/bin/$Env:BUILD_CONFIGURATION/netcoreapp3.1/Microsoft.Quantum.IQSharp.Web.dll"
     ) | ForEach-Object { Join-Path $PSScriptRoot (Join-Path ".." $_) };
 } 
 
