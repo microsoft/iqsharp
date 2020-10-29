@@ -33,7 +33,8 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class NugetPackages : INugetPackages
     {
-        private HashSet<SourcePackageDependencyInfo> AvailablePackages = new HashSet<SourcePackageDependencyInfo>();
+        // Keeps track of all the packages that are available, i.e. packages explicitly added and their dependencies.
+        internal HashSet<SourcePackageDependencyInfo> AvailablePackages = new HashSet<SourcePackageDependencyInfo>();
 
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
