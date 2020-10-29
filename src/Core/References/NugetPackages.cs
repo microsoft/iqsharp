@@ -33,6 +33,8 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class NugetPackages : INugetPackages
     {
+        private HashSet<SourcePackageDependencyInfo> AvailablePackages = new HashSet<SourcePackageDependencyInfo>();
+
         // The string we use to delimit the version from the package id.
         public static readonly string PACKAGE_VERSION_DELIMITER = "::";
 
@@ -238,9 +240,6 @@ namespace Microsoft.Quantum.IQSharp
         {
             foreach (var pkg in packagesToInstall)
             {
-                // Ignore all SDK packages:
-                if (IsSystemPackage(pkg)) continue;
-
                 if (!IsInstalled(pkg))
                 {
                     statusCallback?.Invoke($"downloading {pkg.Id}");
@@ -385,15 +384,13 @@ namespace Microsoft.Quantum.IQSharp
             PackageIdentity package,
             SourceCacheContext context)
         {
-            var all = new HashSet<SourcePackageDependencyInfo>(PackageIdentityComparer.Default);
+            await FindDependencies(package, context);
 
-            await FindDependencies(package, context, all);
-
-            return ResolveDependencyGraph(package, all);
+            return ResolveDependencyGraph(package);
         }
 
         /// Flattens the list of dependency packages to a single list of packages to be installed.
-        public IEnumerable<SourcePackageDependencyInfo> ResolveDependencyGraph(PackageIdentity pkgId, IEnumerable<SourcePackageDependencyInfo> dependencies)
+        public IEnumerable<SourcePackageDependencyInfo> ResolveDependencyGraph(PackageIdentity pkgId)
         {
             // We used PackageResolver to flatten the dependency graph. This is the process Nuget uses 
             // when adding a package to a project. It takes:
@@ -410,7 +407,7 @@ namespace Microsoft.Quantum.IQSharp
                 requiredPackageIds: Enumerable.Empty<string>(),
                 packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_1, true)),
                 preferredVersions: Enumerable.Empty<PackageIdentity>(),
-                availablePackages: dependencies,
+                availablePackages: AvailablePackages,
                 packageSources: Repositories.Select(s => s.PackageSource),
                 log: Logger);
 
@@ -419,7 +416,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 return resolver.Resolve(resolverContext, CancellationToken.None)
-                        .Select(p => dependencies.Single(x => PackageIdentityComparer.Default.Equals(x, p)));
+                        .Select(p => AvailablePackages.Single(x => PackageIdentityComparer.Default.Equals(x, p)));
             }
             catch (NuGetResolverConstraintException exception)
             {
@@ -437,7 +434,7 @@ namespace Microsoft.Quantum.IQSharp
                 dependencies that could be found using the latest versions that are available in
                 the local folders.                
             */
-            var uniquePackageIds = dependencies.Select(pkg => pkg.Id).Distinct();
+            var uniquePackageIds = AvailablePackages.Select(pkg => pkg.Id).Distinct();
             var uniqueAvailablePackages = uniquePackageIds.SelectMany(
                     pkgId =>
                         LocalPackagesFinder.FindPackagesById(pkgId, Logger, CancellationToken.None)
@@ -447,7 +444,7 @@ namespace Microsoft.Quantum.IQSharp
                             pkg => new SourcePackageDependencyInfo(
                                 id: pkg.Identity.Id,
                                 version: pkg.Identity.Version,
-                                dependencies: dependencies
+                                dependencies: AvailablePackages
                                                 .Where(d => d.Id == pkg.Identity.Id)
                                                 .OrderByDescending(d => d.Version.Version)
                                                 .FirstOrDefault()
@@ -464,10 +461,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         internal async Task FindDependencies(
             PackageIdentity package,
-            SourceCacheContext context,
-            ISet<SourcePackageDependencyInfo> dependencies)
+            SourceCacheContext context)
         {
-            if (dependencies.Contains(package)) return;
+            if (AvailablePackages.Contains(package)) return;
 
             foreach (var repo in this.Repositories)
             {
@@ -479,13 +475,13 @@ namespace Microsoft.Quantum.IQSharp
                     var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_1, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
 
-                    dependencies.Add(dependencyInfo);
+                    AvailablePackages.Add(dependencyInfo);
 
                     foreach (var dependency in dependencyInfo.Dependencies)
                     {
                         await FindDependencies(
                             new PackageIdentity(dependency.Id, dependency.VersionRange.MinVersion),
-                            context, dependencies);
+                            context);
                     }
 
                     // dependencies found, no need to look into next repo
