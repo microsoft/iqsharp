@@ -1,9 +1,29 @@
+#!/bin/env python
+# -*- coding: utf-8 -*-
+##
+# test_iqsharp.py: Tests basic Q#/Python interop functionality.
+##
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+##
+
+## IMPORTS ##
+
 import numpy as np
 import os
 import pytest
 import qsharp
+from .utils import set_environment_variables
 
 print ( qsharp.component_versions() )
+
+## SETUP ##
+
+@pytest.fixture(scope="session", autouse=True)
+def session_setup():
+    set_environment_variables()
+
+## TESTS ##
 
 def test_simulate():
     """
