@@ -72,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         /// </summary>
         [JsonProperty("inputs", NullValueHandling=NullValueHandling.Ignore)]
-        public ImmutableDictionary<string, string>? Inputs { get; private set; } = null;
+        public ImmutableDictionary<string?, string?>? Inputs { get; private set; } = null;
 
         // TODO: continue exposing documentation here.
 
@@ -146,7 +146,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public ISymbol Resolve(string symbolName)
+        public ISymbol? Resolve(string symbolName)
         {
             var op = opsResolver.Resolve(symbolName);
             return op == null ? null : new IQSharpSymbol(op);
