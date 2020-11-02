@@ -152,6 +152,7 @@ namespace Microsoft.Quantum.IQSharp
            return WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://localhost:8888")
                 .UseStartup<Startup>()
+                .UseConfiguration(Configuration)
                 .Build();
         }
 

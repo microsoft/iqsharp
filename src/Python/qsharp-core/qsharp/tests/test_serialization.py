@@ -1,4 +1,3 @@
-
 #!/bin/env python
 # -*- coding: utf-8 -*-
 ##
@@ -13,7 +12,17 @@
 import unittest
 import json
 import numpy as np
+import pytest
 from qsharp.serialization import map_tuples, unmap_tuples
+from .utils import set_environment_variables
+
+## SETUP ##
+
+@pytest.fixture(scope="session", autouse=True)
+def session_setup():
+    set_environment_variables()
+
+## TESTS ##
 
 class TestSerialization(unittest.TestCase):
     def test_map_shallow_tuple(self):
