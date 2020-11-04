@@ -171,8 +171,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
         /// with the same name as the snippet id.
         /// </summary>
-        public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+        public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
@@ -192,7 +191,7 @@ namespace Microsoft.Quantum.IQSharp
             };
 
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false);
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
@@ -201,18 +200,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+        public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null)
+        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName,
+            bool compileAsExecutable, string? executionTarget = null, RuntimeCapability? runtimeCapability = null)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
