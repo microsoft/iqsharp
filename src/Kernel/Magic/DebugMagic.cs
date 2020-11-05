@@ -36,7 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         
         public Complex[] GetAmplitudes()
         {
-            var count = this.Simulator.QubitManager?.GetAllocatedQubitsCount() ?? 0;
+            var count = this.Simulator.QubitManager?.AllocatedQubitsCount ?? 0;
             _data = new Complex[1 << ((int)count)];
             _ = base.Dump();
             return _data;
@@ -214,7 +214,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 if (!(token ?? CancellationTokenSource.Token).IsCancellationRequested)
                 {
-                    var allocatedQubitsCount = (int) (qsim.QubitManager?.GetAllocatedQubitsCount() ?? 0);
+                    var allocatedQubitsCount = (int) (qsim.QubitManager?.AllocatedQubitsCount ?? 0);
                     if (allocatedQubitsCount == 0) return;
 
                     // Tell the IOPub channel that we're starting a new operation.
