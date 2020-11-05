@@ -225,7 +225,7 @@ def test_projects(tmp_path):
 
     temp_project_path = tmp_path / 'temp_iqsharp_pytest_project.csproj'
     temp_project_path.write_text(f'''
-        <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
+        <Project Sdk="Microsoft.Quantum.Sdk/0.13.201118141-beta">
             <PropertyGroup>
                 <TargetFramework>netstandard2.1</TargetFramework>
                 <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
