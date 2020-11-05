@@ -25,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             DisplayName = "Q#",
 
             LanguageName = "qsharp",
-            LanguageVersion = "0.14",
+            LanguageVersion = "0.13",
             LanguageMimeType = "text/x-qsharp",
             LanguageFileExtension = ".qs",
 
