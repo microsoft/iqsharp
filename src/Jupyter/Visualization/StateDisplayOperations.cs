@@ -46,6 +46,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public BasisStateLabelingConvention BasisStateLabelingConvention { get; set; } = BasisStateLabelingConvention.Bitstring;
 
+        /// <summary>
+        ///     Whether the measurement probabilities will be displayed as an
+        ///     interactive histogram.
+        /// </summary>
+        private bool ShowMeasurementDisplayHistogram { get; set; } = false;
 
         /// <summary>
         ///     Sets the properties of this display dumper from a given
@@ -54,6 +59,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public JupyterDisplayDumper Configure(IConfigurationSource configurationSource)
         {
             configurationSource
+                .ApplyConfiguration<bool>("dump.measurementDisplayHistogram", value => ShowMeasurementDisplayHistogram = value)
                 .ApplyConfiguration<bool>("dump.truncateSmallAmplitudes", value => TruncateSmallAmplitudes = value)
                 .ApplyConfiguration<double>("dump.truncationThreshold", value => TruncationThreshold = value)
                 .ApplyConfiguration<BasisStateLabelingConvention>(
@@ -89,7 +95,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public override bool Dump(IQArray<Qubit>? qubits = null)
         {
             _count = qubits == null
-                        ? this.Simulator?.QubitManager?.GetAllocatedQubitsCount() ?? 0
+                        ? this.Simulator?.QubitManager?.AllocatedQubitsCount ?? 0
                         : qubits.Length;
             _data = new Complex[1 << ((int)_count)];
             var result = base.Dump(qubits);
@@ -110,17 +116,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             };
             Channel.Display(state);
 
-            Channel.SendIoPubMessage(new Message
+            if (ShowMeasurementDisplayHistogram)
             {
-                Header = new MessageHeader()
+                Channel.SendIoPubMessage(new Message
                 {
-                    MessageType = "iqsharp_state_dump"
-                },
-                Content = new MeasurementHistogramContent()
-                {
-                    State = state
-                },
-            });
+                    Header = new MessageHeader()
+                    {
+                        MessageType = "iqsharp_state_dump"
+                    },
+                    Content = new MeasurementHistogramContent()
+                    {
+                        State = state
+                    },
+                });
+            }
 
             // Clean up the state vector buffer.
             _data = null;
