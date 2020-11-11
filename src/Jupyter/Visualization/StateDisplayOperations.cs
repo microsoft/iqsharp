@@ -95,7 +95,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public override bool Dump(IQArray<Qubit>? qubits = null)
         {
             _count = qubits == null
-                        ? this.Simulator?.QubitManager?.GetAllocatedQubitsCount() ?? 0
+                        ? this.Simulator?.QubitManager?.AllocatedQubitsCount ?? 0
                         : qubits.Length;
             _data = new Complex[1 << ((int)_count)];
             var result = base.Dump(qubits);
