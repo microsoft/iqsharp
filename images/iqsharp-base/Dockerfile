@@ -24,7 +24,9 @@ RUN apt-get update && \
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
                        # given what we have already installed.
-                       git && \
+                       git \
+                       # Used to retrieve node version information.
+                       curl && \
     # Upgrade optional dependencies brought in by the previous step.
     apt-get -y upgrade libidn2-0 && \
     # We clean the apt cache at the end of each apt command so that the caches
@@ -124,3 +126,20 @@ RUN echo "Adding standard packages..." && \
         python -c "import qsharp; qsharp.packages.add('$p')" && \
         echo "Added package: $p"; \
     done
+
+# Get the Azure CLI tool
+ENV AZURE_CLI_VERSION "0.10.13"
+ENV NODEJS_APT_ROOT "node_6.x"
+ENV NODEJS_VERSION "6.10.0"
+RUN curl https://deb.nodesource.com/${NODEJS_APT_ROOT}/pool/main/n/nodejs/nodejs_${NODEJS_VERSION}-1nodesource1~jessie1_amd64.deb > node.deb && \
+    dpkg -i node.deb && \
+    rm node.deb && \
+    npm install --global azure-cli@${AZURE_CLI_VERSION} && \
+    azure --completion >> ~/azure.completion.sh && \
+    echo 'source ~/azure.completion.sh' >> ~/.bashrc && \
+    azure
+
+RUN azure config mode arm
+
+# Get the az quantum extension
+RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl
