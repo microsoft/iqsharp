@@ -109,7 +109,7 @@ ENV AZURE_CLI_VERSION "2.14.2"
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Get the az quantum extension
-RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl
+RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
 # Switch to the notebook user to finish the installation.
 USER ${USER}
