@@ -104,19 +104,9 @@ RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
 RUN pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
 
 # Get the Azure CLI tool
-ENV AZURE_CLI_VERSION "0.10.13"
-ENV NODEJS_APT_ROOT "node_6.x"
-ENV NODEJS_VERSION "6.10.0"
+ENV AZURE_CLI_VERSION "2.14.2"
 
-RUN curl https://deb.nodesource.com/${NODEJS_APT_ROOT}/pool/main/n/nodejs/nodejs_${NODEJS_VERSION}-1nodesource1~jessie1_amd64.deb > node.deb && \
-    dpkg -i node.deb && \
-    rm node.deb && \
-    npm install --global azure-cli@${AZURE_CLI_VERSION} && \
-    azure --completion >> ~/azure.completion.sh && \
-    echo 'source ~/azure.completion.sh' >> ~/.bashrc && \
-    azure
-
-RUN azure config mode arm
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Get the az quantum extension
 RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl
