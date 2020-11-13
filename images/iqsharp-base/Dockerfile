@@ -24,7 +24,9 @@ RUN apt-get update && \
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
                        # given what we have already installed.
-                       git && \
+                       git \
+                       # Used to retrieve node version information.
+                       curl && \
     # Upgrade optional dependencies brought in by the previous step.
     apt-get -y upgrade libidn2-0 && \
     # We clean the apt cache at the end of each apt command so that the caches
@@ -100,6 +102,14 @@ RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
 
 # Install all wheels from the build context.
 RUN pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
+
+# Get the Azure CLI tool
+ENV AZURE_CLI_VERSION "2.14.2"
+
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# Get the az quantum extension
+RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
 # Switch to the notebook user to finish the installation.
 USER ${USER}
