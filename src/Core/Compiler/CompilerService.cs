@@ -96,8 +96,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             var loader = CreateTemporaryLoader(source);
             if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
-            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
+            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(Snippets.SNIPPETS_NAMESPACE, out var tree)
                    ? tree.Elements
                    : ImmutableArray<QsNamespaceElement>.Empty;
         }
@@ -154,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp
             var entryPointUri = new Uri(Path.GetFullPath(Path.Combine("/", $"entrypoint.qs")));
             var entryPointSnippet = @$"namespace ENTRYPOINT
                 {{
-                    open {operation.Header.QualifiedName.Namespace.Value};
+                    open {operation.Header.QualifiedName.Namespace};
                     @{BuiltIn.EntryPoint.FullName}()
                     operation {signature}
                     {{
@@ -236,7 +235,7 @@ namespace Microsoft.Quantum.IQSharp
                     var code = SimulationCode.generate(sourceFile, codegenContext);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
-                    logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");
+                    logger.LogDebug($"Generated the following C# code for {sourceFile}:\n=============\n{code}\n=============\n");
                 }
 
                 // Compile the C# syntax trees:
@@ -253,7 +252,7 @@ namespace Microsoft.Quantum.IQSharp
                 using (var bsonStream = new MemoryStream())
                 {
                     using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
-                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
+                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
                     Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints));
 
                     var resourceDescription = new ResourceDescription

@@ -172,12 +172,12 @@ namespace Microsoft.Quantum.IQSharp
                         id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
                         code = s.code,
                         warnings = logger.Logs
-                            .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri).Value)
+                            .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri))
                             .Select(logger.Format)
                             .ToArray(),
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
-                            .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri).Value)
+                            .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri))
                             .ToArray()
                     };
 
