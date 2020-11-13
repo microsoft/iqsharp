@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string ClientId { get; set; } = string.Empty;
         private string Authority { get; set; } = string.Empty;
         private List<string> Scopes { get; set; } = new List<string>();
-        private Uri? BaseUri { get; set; }
+        private Func<string?, Uri> BaseUriForLocation { get; set; } = (location) => new Uri($"https://{location}.quantum.azure.com/");
 
         private AzureEnvironment()
         {
@@ -58,17 +58,39 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return Production(subscriptionId);
         }
 
+        private string GetNormalizedLocation(string location)
+        {
+            if (Type == AzureEnvironmentType.Canary)
+            {
+                return "eastus2euap";
+            }
+
+            // Convert user-provided location into names recognized by Azure resource manager.
+            // For example, a customer-provided value of "West US" should be converted to "westus".
+            var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
+            if (UriHostNameType.Unknown == Uri.CheckHostName(normalizedLocation))
+            {
+                // If provided location is invalid, "westus" is used.
+                normalizedLocation = "westus";
+            }
+
+            return normalizedLocation;
+        }
+
         public async Task<IAzureWorkspace?> GetAuthenticatedWorkspaceAsync(
             IChannel channel,
             ILogger? logger,
             string resourceGroupName,
             string workspaceName,
+            string location,
             bool refreshCredentials)
         {
+            location = GetNormalizedLocation(location);
+
             if (Type == AzureEnvironmentType.Mock)
             {
                 channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to the real service.");
-                return new MockAzureWorkspace(workspaceName);
+                return new MockAzureWorkspace(workspaceName, location);
             }
 
             // Find the token cache folder
@@ -163,16 +185,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 SubscriptionId = SubscriptionId,
                 ResourceGroupName = resourceGroupName,
                 WorkspaceName = workspaceName,
-                BaseUri = BaseUri,
+                BaseUri = BaseUriForLocation(location),
             };
             var azureQuantumWorkspace = new Azure.Quantum.Workspace(
                 azureQuantumClient.SubscriptionId,
                 azureQuantumClient.ResourceGroupName,
                 azureQuantumClient.WorkspaceName,
                 authenticationResult?.AccessToken,
-                BaseUri);
+                BaseUriForLocation(location));
 
-            return new AzureWorkspace(azureQuantumClient, azureQuantumWorkspace);
+            return new AzureWorkspace(azureQuantumClient, azureQuantumWorkspace, location);
         }
 
         private static AzureEnvironment Production(string subscriptionId) =>
@@ -182,7 +204,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ClientId = "84ba0947-6c53-4dd2-9ca9-b3694761521b",      // QDK client ID
                 Authority = "https://login.microsoftonline.com/common",
                 Scopes = new List<string>() { "https://quantum.microsoft.com/Jobs.ReadWrite" },
-                BaseUri = new Uri("https://app-jobscheduler-prod.azurewebsites.net/"),
                 SubscriptionId = subscriptionId,
             };
 
@@ -193,7 +214,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ClientId = "46a998aa-43d0-4281-9cbb-5709a507ac36",      // QDK dogfood client ID
                 Authority = GetDogfoodAuthority(subscriptionId),
                 Scopes = new List<string>() { "api://dogfood.azure-quantum/Jobs.ReadWrite" },
-                BaseUri = new Uri("https://app-jobscheduler-test.azurewebsites.net/"),
+                BaseUriForLocation = (location) => new Uri($"https://{location}.quantum-test.azure.com/"),
                 SubscriptionId = subscriptionId,
             };
 
@@ -201,7 +222,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var canary = Production(subscriptionId);
             canary.Type = AzureEnvironmentType.Canary;
-            canary.BaseUri = new Uri("https://app-jobs-canarysouthcentralus.azurewebsites.net/");
             return canary;
         }
 
