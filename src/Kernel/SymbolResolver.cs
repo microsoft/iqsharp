@@ -46,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     symbol was defined.
         /// </summary>
         [JsonProperty("source")]
-        public string Source => Operation.Header.SourceFile.Value;
+        public string Source => Operation.Header.SourceFile;
 
         /// <summary>
         ///     The documentation for this symbol, as provided by its API
