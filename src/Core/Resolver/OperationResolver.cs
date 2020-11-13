@@ -62,7 +62,7 @@ namespace Microsoft.Quantum.IQSharp
             var isQualified = name.Contains('.');
             foreach (var operation in assemblies.SelectMany(asm => asm.Operations))
             {
-                if (name == (isQualified ? operation.FullName : operation.Header.QualifiedName.Name.Value))
+                if (name == (isQualified ? operation.FullName : operation.Header.QualifiedName.Name))
                 {
                     return operation;
                 }

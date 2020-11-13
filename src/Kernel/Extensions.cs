@@ -77,15 +77,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     // we use a pattern match here to make sure that we have
                     // an actual UDT to compare against.
                     attribute.TypeId.Item is UserDefinedType udt &&
-                    udt.Namespace.Value == namespaceName &&
-                    udt.Name.Value == attributeName
+                    udt.Namespace == namespaceName &&
+                    udt.Name == attributeName
             );
 
         internal static bool TryAsStringLiteral(this TypedExpression expression, [NotNullWhen(true)] out string? value)
         {
             if (expression.Expression is QsExpressionKind<TypedExpression, Identifier, ResolvedType>.StringLiteral literal)
             {
-                value = literal.Item1.Value;
+                value = literal.Item1;
                 return true;
             }
             else
