@@ -245,52 +245,52 @@ namespace Microsoft.Quantum.IQSharp
                     options);
 
                 // Generate the assembly from the C# compilation:
-                using (var ms = new MemoryStream())
+                var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
+                var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+
+                using var serializedCompilation = new MemoryStream();
+                QsCompiler.BondSchemas.Protocols.SerializeQsCompilationToSimpleBinary(syntaxTree, serializedCompilation);
+
+                var resourceDescription = new ResourceDescription
+                (
+                    resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
+                    dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                    isPublic: true
+                );
+
+                using var ms = new MemoryStream();
+                var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
+
+                if (!result.Success)
                 {
-                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
-                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
-                    QsCompiler.BondSchemas.Protocols.SerializeQsCompilationToSimpleBinary(syntaxTree, ms);
+                    IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
+                        diagnostic.IsWarningAsError ||
+                        diagnostic.Severity == DiagnosticSeverity.Error);
 
-                    var resourceDescription = new ResourceDescription
-                    (
-                        resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
-                        dataProvider: () => new MemoryStream(ms.ToArray()), 
-                        isPublic: true
-                    );
+                    logger.LogError("IQS000", "Could not compile Roslyn dll from working folder.");
 
-                    var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
-
-                    if (!result.Success)
+                    foreach (Diagnostic diagnostic in failures)
                     {
-                        IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
-                            diagnostic.IsWarningAsError ||
-                            diagnostic.Severity == DiagnosticSeverity.Error);
-
-                        logger.LogError("IQS000", "Could not compile Roslyn dll from working folder.");
-
-                        foreach (Diagnostic diagnostic in failures)
-                        {
-                            logger.LogError(diagnostic.Id, diagnostic.GetMessage());
-                        }
-
-                        return null;
+                        logger.LogError(diagnostic.Id, diagnostic.GetMessage());
                     }
-                    else
+
+                    return null;
+                }
+                else
+                {
+                    logger.LogDebug($"Assembly successfully generated. Caching at {dllName}.");
+                    var data = ms.ToArray();
+
+                    try
                     {
-                        logger.LogDebug($"Assembly successfully generated. Caching at {dllName}.");
-                        var data = ms.ToArray();
-
-                        try
-                        {
-                            File.WriteAllBytes(dllName, data);
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
-                        }
-
-                        return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray());
+                        File.WriteAllBytes(dllName, data);
                     }
+                    catch (Exception e)
+                    {
+                        logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
+                    }
+
+                    return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray());
                 }
             }
             catch (Exception e)
