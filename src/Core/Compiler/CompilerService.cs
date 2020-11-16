@@ -19,15 +19,12 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
-using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
-using Microsoft.Quantum.QsCompiler.Serialization;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
-using Newtonsoft.Json.Bson;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 
@@ -249,19 +246,17 @@ namespace Microsoft.Quantum.IQSharp
 
                 // Generate the assembly from the C# compilation:
                 using (var ms = new MemoryStream())
-                using (var bsonStream = new MemoryStream())
                 {
-                    using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
                     var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
-                    Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints));
+                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+                    QsCompiler.BondSchemas.Protocols.SerializeQsCompilationToSimpleBinary(syntaxTree, ms);
 
                     var resourceDescription = new ResourceDescription
                     (
-                        resourceName: QsCompiler.ReservedKeywords.DotnetCoreDll.ResourceName,
-                        dataProvider: () => new MemoryStream(bsonStream.ToArray()), 
+                        resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
+                        dataProvider: () => new MemoryStream(ms.ToArray()), 
                         isPublic: true
                     );
-
 
                     var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
 
