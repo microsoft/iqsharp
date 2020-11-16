@@ -11,6 +11,7 @@ import sys
 from types import ModuleType, new_class
 import importlib
 from importlib.abc import MetaPathFinder, Loader
+import json
 import qsharp
 
 from typing import Optional, Any, Dict
@@ -76,29 +77,29 @@ class QSharpCallable(object):
     def __repr__(self) -> str:
         return f"<Q# callable {self._name}>"
 
-    def __call__(self, **kwargs) -> Any:
+    def __call__(self, encoder : json.JSONEncoder = None, **kwargs) -> Any:
         """
         Executes this function or operation on the QuantumSimulator target
         machine, returning its output as a Python object.
         """
-        return self.simulate(**kwargs)
+        return self.simulate(encoder, **kwargs)
 
-    def simulate(self, **kwargs) -> Any:
+    def simulate(self, encoder : json.JSONEncoder = None, **kwargs) -> Any:
         """
         Executes this function or operation on the QuantumSimulator target
         machine, returning its output as a Python object.
         """
-        return qsharp.client.simulate(self, **kwargs)
+        return qsharp.client.simulate(self, encoder, **kwargs)
 
-    def toffoli_simulate(self, **kwargs) -> Any:
+    def toffoli_simulate(self, encoder : json.JSONEncoder = None, **kwargs) -> Any:
         """
         Executes this function or operation on the ToffoliSimulator target
         machine, returning its output as a Python object.
         """
-        return qsharp.client.toffoli_simulate(self, **kwargs)
+        return qsharp.client.toffoli_simulate(self, encoder, **kwargs)
 
-    def estimate_resources(self, **kwargs) -> Dict[str, int]:
-        return qsharp.client.estimate(self, **kwargs)
+    def estimate_resources(self, encoder : json.JSONEncoder = None, **kwargs) -> Dict[str, int]:
+        return qsharp.client.estimate(self, encoder, **kwargs)
 
 class QSharpModule(ModuleType):
     _qs_name : str

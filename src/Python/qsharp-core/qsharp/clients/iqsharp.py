@@ -158,14 +158,14 @@ class IQSharpClient(object):
     def get_projects(self) -> List[str]:
         return self._execute("%project", raise_on_stderr=False)
 
-    def simulate(self, op, **kwargs) -> Any:
-        return self._execute_callable_magic('simulate', op, **kwargs)
+    def simulate(self, op, encoder : json.JSONEncoder = None, **kwargs) -> Any:
+        return self._execute_callable_magic('simulate', op, encoder=encoder, **kwargs)
 
-    def toffoli_simulate(self, op, **kwargs) -> Any:
-        return self._execute_callable_magic('toffoli', op, **kwargs)
+    def toffoli_simulate(self, op, encoder : json.JSONEncoder = None, **kwargs) -> Any:
+        return self._execute_callable_magic('toffoli', op, encoder=encoder, **kwargs)
 
-    def estimate(self, op, **kwargs) -> Dict[str, int]:
-        raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
+    def estimate(self, op, encoder : json.JSONEncoder = None, **kwargs) -> Dict[str, int]:
+        raw_counts = self._execute_callable_magic('estimate', op, encoder=encoder, **kwargs)
         # Note that raw_counts will have the form:
         # [
         #     {"Metric": "<name>", "Sum": "<value>"},
@@ -195,20 +195,22 @@ class IQSharpClient(object):
 
     ## Internal-Use Methods ##
 
-    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, encoder : json.JSONEncoder = None, _quiet_ : bool = False, **kwargs) -> Any:
         return self._execute(
-            f'%{magic} {json.dumps(map_tuples(kwargs))}',
+            f'%{magic} {json.dumps(map_tuples(kwargs), cls=encoder)}',
             raise_on_stderr=raise_on_stderr, _quiet_=_quiet_
         )
 
     def _execute_callable_magic(self, magic : str, op,
             raise_on_stderr : bool = False,
+            encoder : json.JSONEncoder = None,
             _quiet_ : bool = False,
             **kwargs
     ) -> Any:
         return self._execute_magic(
             f"{magic} {op._name}",
             raise_on_stderr=raise_on_stderr,
+            encoder=encoder,
             _quiet_=_quiet_,
             **kwargs
         )
