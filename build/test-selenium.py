@@ -32,7 +32,8 @@ def setup_module():
 def create_notebook():
     '''
     Returns a new IQ# notebook in a Firefox web driver
-    '''    
+    '''
+    driver = None
     max_retries = 5
     for _ in range(max_retries):
         try:
