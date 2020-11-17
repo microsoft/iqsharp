@@ -98,7 +98,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     break;
 
                 case AzureEnvironmentType.Production:
-                    logger?.LogInformation($"AZURE_QUANTUM_ENV set to Production. Connecting to production service.");
+                    logger?.LogInformation($"AZURE_QUANTUM_ENV not set, or set to Production. Connecting to production service.");
                     break;
             }
 
