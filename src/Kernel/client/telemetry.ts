@@ -44,12 +44,8 @@ export interface ClientInfo {
     FirstOrigin: string;
 }
 
-enum consentCategories {
-    Required = "Required",
-    Analytics = "Analytics",
-    SocialMedia = "SocialMedia",
-    Advertising = "Advertising"
-}
+type ConsentCategories = "Required" | "Analytics" | "SocialMedia" | "Advertising";
+
 enum Themes {
     light = "light",
     dark = "dark",
@@ -58,14 +54,14 @@ enum Themes {
 
 interface SiteConsent {
     readonly isConsentRequired: boolean;
-    getConsent(): Record<consentCategories, boolean>;
-    getConsentFor(consentCategory: consentCategories): boolean;
+    getConsent(): Record<ConsentCategories, boolean>;
+    getConsentFor(consentCategory: ConsentCategories): boolean;
     manageConsent(): void;
-    onConsentChanged(callbackMethod: (newConsent: Record<consentCategories, boolean>) => void);
+    onConsentChanged(callbackMethod: (newConsent: Record<ConsentCategories, boolean>) => void);
 }
 
 interface WcpConsentInterface {
-    init(culture: string, placeholderIdOrElement: string | HTMLElement, initCallback?: (err?: Error, siteConsent?: SiteConsent) => void, onConsentChanged?: (newConsent: Record<consentCategories, boolean>) => void, theme?: Themes): void;
+    init(culture: string, placeholderIdOrElement: string | HTMLElement, initCallback?: (err?: Error, siteConsent?: SiteConsent) => void, onConsentChanged?: (newConsent: Record<ConsentCategories, boolean>) => void, theme?: Themes): void;
 }
 
 declare let WcpConsent: WcpConsentInterface | null;
@@ -88,7 +84,7 @@ class CookieConsentHelper {
         });
     }
 
-    private onConsentChanged(categoryPreferences: Record<consentCategories, boolean>) {
+    private onConsentChanged(categoryPreferences: Record<ConsentCategories, boolean>) {
         console.log("onConsentChanged", categoryPreferences);
         this.checkRequiredConsent();
     }
