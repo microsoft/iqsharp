@@ -4,6 +4,8 @@
 //[SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This function access is supposed to be public.")]
 const CLIENT_INFO_API_URL = 'https://iqsharp-telemetry.azurewebsites.net/api/GetClientInfo?code=1kIsLwHdwLlH9n5LflhgVlafZaTH122yPK/3xezIjCQqC87MJrkdyQ==';
 
+const COOKIE_CONSENT_JS = 'https://wcpstatic.microsoft.com/mscc/lib/v2/wcp-consent.js';
+
 /*
 There are npm packages for this but I preferred to keep it small
 and simple with no additional dependencies
@@ -34,60 +36,51 @@ class LiteEvent<T> implements ILiteEvent<T> {
     }
 }
 
-
-
 export interface ClientInfo {
     Id: string;
     IsNew: boolean;
     CountryCode: string;
-    CookieConsentMarkup: ConsentMarkup;
     HasConsent: boolean;
     FirstOrigin: string;
 }
 
-interface ConsentMarkup {
-    Markup: string;
-    Javascripts: string[];
-    Stylesheets: string[];
+enum consentCategories {
+    Required = "Required",
+    Analytics = "Analytics",
+    SocialMedia = "SocialMedia",
+    Advertising = "Advertising"
+}
+enum Themes {
+    light = "light",
+    dark = "dark",
+    highContrast = "high-contrast"
 }
 
-interface MSCC {
-    on(eventName: "consent", handler: ()=>void): void;
-    hasConsent(): boolean;
-    setConsent(): void;
+interface SiteConsent {
+    readonly isConsentRequired: boolean;
+    getConsent(): Record<consentCategories, boolean>;
+    getConsentFor(consentCategory: consentCategories): boolean;
+    manageConsent(): void;
+    onConsentChanged(callbackMethod: (newConsent: Record<consentCategories, boolean>) => void);
 }
 
-declare var mscc: MSCC | null;
+interface WcpConsentInterface {
+    init(culture: string, placeholderIdOrElement: string | HTMLElement, initCallback?: (err?: Error, siteConsent?: SiteConsent) => void, onConsentChanged?: (newConsent: Record<consentCategories, boolean>) => void, theme?: Themes): void;
+}
+
+declare let WcpConsent: WcpConsentInterface | null;
 
 class CookieConsentHelper {
     private onConsentGranted: () => void;
-    private mscc: MSCC;
+    private siteConsent: SiteConsent;
 
     constructor(onConsentGranted: () => void) {
         this.onConsentGranted = onConsentGranted;
     }
 
-    public setConsent() {
-        if (this.mscc != null) {
-            console.log("Consent granted by engagement.");
-            this.mscc.setConsent();
-        }
-    }
-
-    private addStylesheet(cssUrl: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            var style = document.createElement('link');
-            style.onload = () => { resolve(); };
-            style.href = cssUrl;
-            style.type = 'text/css';
-            style.rel = 'stylesheet';
-            document.head.append(style);
-        });
-    }
-
     private addJavascript(javascriptUrl: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            var script = document.createElement('script');
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
             script.onload = () => { resolve(); };
             script.type = 'text/javascript';
             script.src = javascriptUrl;
@@ -95,33 +88,45 @@ class CookieConsentHelper {
         });
     }
 
-    public async requestConsent(consentMarkup: ConsentMarkup) {
-        console.log(`Adding Cookie API Stylesheets to the document: ${consentMarkup.Stylesheets.length} files`);
-        await Promise.all(consentMarkup.Stylesheets.map((css, _, __) => this.addStylesheet(css)));
-        console.log(`Cookie API Stylesheets loaded.`);
+    private onConsentChanged(categoryPreferences: Record<consentCategories, boolean>) {
+        console.log("onConsentChanged", categoryPreferences);
+        this.checkRequiredConsent();
+    }
 
-        var div = document.createElement('div');
-        div.innerHTML = consentMarkup.Markup;
-        document.body.prepend(div);
-        console.log("Cookie API markup div added");
-
-        console.log(`Adding Cookie API Javascripts to the document: ${consentMarkup.Javascripts.length} files`);
-        await Promise.all(consentMarkup.Javascripts.map((javascript, _, __) => this.addJavascript(javascript)));
-        console.log(`Cookie API Javascripts loaded.`);
-
-        this.mscc = mscc;
-        if (this.mscc == null) {
-            console.log("Cookie API javascript was not loaded correctly. Consent cannot be obtained.");
-            return;
-        }
-
-        console.log("Calling Cookie API hasConsent");
-        this.mscc.on('consent', this.onConsentGranted);
-        var hasConsent = this.mscc.hasConsent();
+    private checkRequiredConsent() {
+        const hasConsent = this.siteConsent.getConsentFor(consentCategories.Required);
         console.log(`HasConsent: ${hasConsent}`);
         if (hasConsent) {
             this.onConsentGranted();
         }
+    }
+
+    public async requestConsent() {
+        const div = document.createElement('div');
+        div.id = "cookie-banner";
+        document.body.prepend(div);
+        console.log("Cookie banner div added");
+
+        console.log(`Adding Cookie API Javascript to the document`);
+        await this.addJavascript(COOKIE_CONSENT_JS);
+        console.log(`Cookie API Javascripts loaded.`);
+
+        if (WcpConsent === null) {
+            console.log("Cookie API javascript was not loaded correctly. Consent cannot be obtained.");
+            return;
+        }
+
+        console.log("Initializing WcpConsent...");
+        const userLanguage = navigator.language;
+        WcpConsent && WcpConsent.init(userLanguage, div.id, (err, siteConsent) => {
+            if (!err) {
+                this.siteConsent = siteConsent;
+                console.log("WcpConsent initialized.");
+                this.checkRequiredConsent();
+            } else {
+                console.log("Error initializing WcpConsent: " + err);
+            }
+        }, this.onConsentChanged, Themes.light);
     }
 }
 
@@ -131,8 +136,7 @@ class TelemetryHelper {
     public origin: string;
 
     constructor() {
-        var telemetryHelper = this;
-        this.cookieConsentHelper = new CookieConsentHelper(function () { telemetryHelper.consentGranted() });
+        this.cookieConsentHelper = new CookieConsentHelper(() => { this.consentGranted() });
     }
 
     private async fetchExt<T>(
@@ -148,18 +152,19 @@ class TelemetryHelper {
             const body = await response.json();
             return body;
         } catch (ex) {
+            console.error(`Error fetching url ${request.toString()}`)
             throw ex;
         }
     }
 
-    private async getClientInfoAsync(setHasConsent: boolean = false): Promise<ClientInfo> {
+    private async getClientInfoAsync(setHasConsent = false): Promise<ClientInfo> {
         console.log("Getting ClientInfo");
-        var url =
+        const url =
             CLIENT_INFO_API_URL
             + (setHasConsent ? "&hasconsent=1" : "")
-            + ((this.origin != null && this.origin != "") ? "&origin=" + this.origin : "");
+            + ((this.origin !== null && this.origin !== "") ? "&origin=" + this.origin : "");
         try {
-            var clientInfo = await this.fetchExt<ClientInfo>(url);
+            const clientInfo = await this.fetchExt<ClientInfo>(url);
             console.log(`ClientInfo: ${JSON.stringify(clientInfo)}`);
             return clientInfo;
         } catch (ex) {
@@ -170,27 +175,22 @@ class TelemetryHelper {
 
     private async consentGranted() {
         console.log("Consent granted from the client");
-        var clientInfo = await this.getClientInfoAsync(true);
-        if (clientInfo != null) {
+        const clientInfo = await this.getClientInfoAsync(true);
+        if (clientInfo !== null) {
             this._clientInfoAvailable.trigger(clientInfo);
         }
     }
 
     public async initAsync() {
-        var clientInfo = await this.getClientInfoAsync();
-        if (clientInfo != null) {
-            if (!clientInfo.HasConsent
-                && clientInfo.CookieConsentMarkup != null) {
-                this.cookieConsentHelper.requestConsent(clientInfo.CookieConsentMarkup);
+        const clientInfo = await this.getClientInfoAsync();
+        if (clientInfo !== null) {
+            if (!clientInfo.HasConsent) {
+                this.cookieConsentHelper.requestConsent();
             }
             else {
                 this._clientInfoAvailable.trigger(clientInfo);
             }
         }
-    }
-
-    public async registerEngagement() {
-        this.cookieConsentHelper.setConsent();
     }
 
     public get clientInfoAvailable() { return this._clientInfoAvailable.expose(); }
