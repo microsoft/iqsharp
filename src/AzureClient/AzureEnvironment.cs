@@ -60,13 +60,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private string GetNormalizedLocation(string location, IChannel channel)
         {
+            // Default to "westus" if no location was specified.
+            var defaultLocation = "westus";
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                location = defaultLocation;
+            }
+
             // Convert user-provided location into names recognized by Azure resource manager.
             // For example, a customer-provided value of "West US" should be converted to "westus".
             var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
             if (UriHostNameType.Unknown == Uri.CheckHostName(normalizedLocation))
             {
                 // If provided location is invalid, "westus" is used.
-                normalizedLocation = "westus";
+                normalizedLocation = defaultLocation;
                 channel.Stdout($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
             }
 
