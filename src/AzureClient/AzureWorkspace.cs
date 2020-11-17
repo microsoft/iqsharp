@@ -19,15 +19,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public string? Name => AzureQuantumClient?.WorkspaceName;
         public string? SubscriptionId => AzureQuantumClient?.SubscriptionId;
         public string? ResourceGroup => AzureQuantumClient?.ResourceGroupName;
+        public string? Location { get; private set; }
 
         private Azure.Quantum.IWorkspace AzureQuantumWorkspace { get; set; }
         private QuantumClient AzureQuantumClient { get; set; }
         private ILogger<AzureWorkspace> Logger { get; } = new LoggerFactory().CreateLogger<AzureWorkspace>();
 
-        public AzureWorkspace(QuantumClient azureQuantumClient, Azure.Quantum.Workspace azureQuantumWorkspace)
+        public AzureWorkspace(QuantumClient azureQuantumClient, Azure.Quantum.Workspace azureQuantumWorkspace, string location)
         {
             AzureQuantumClient = azureQuantumClient;
             AzureQuantumWorkspace = azureQuantumWorkspace;
+            Location = location;
         }
 
         public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync()
