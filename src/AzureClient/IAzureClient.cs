@@ -28,6 +28,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string storageAccountConnectionString,
+            string location,
             bool refreshCredentials = false);
 
         /// <summary>

@@ -32,6 +32,7 @@ namespace Tests.IQSharp
         private readonly string resourceGroupName = "TEST_RESOURCE_GROUP_NAME";
         private readonly string workspaceName = "TEST_WORKSPACE_NAME";
         private readonly string storageAccountConnectionString = "TEST_CONNECTION_STRING";
+        private readonly string location = "TEST_LOCATION";
         private readonly string jobId = "TEST_JOB_ID";
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
@@ -57,6 +58,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+            Assert.AreEqual(string.Empty, azureClient.Location);
 
             // valid input with implied resource ID key, without surrounding quotes
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
@@ -66,6 +68,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+            Assert.AreEqual(string.Empty, azureClient.Location);
 
             // valid input with implied resource ID key, with surrounding quotes
             connectMagic.Test($"\"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}\"");
@@ -75,6 +78,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+            Assert.AreEqual(string.Empty, azureClient.Location);
 
             // valid input with resource ID and storage account connection string
             connectMagic.Test(
@@ -86,23 +90,27 @@ namespace Tests.IQSharp
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+            Assert.AreEqual(string.Empty, azureClient.Location);
 
             // valid input with individual parameters
             connectMagic.Test(
                 @$"subscription={subscriptionId}
                    resourceGroup={resourceGroupName}
                    workspace={workspaceName}
-                   storage={storageAccountConnectionString}");
+                   storage={storageAccountConnectionString}
+                   location={location}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+            Assert.AreEqual(location, azureClient.Location);
 
             // valid input with extra whitespace and quotes
             connectMagic.Test(
-                @$"subscription   =   {subscriptionId}
+                @$"location ={location}
+                   subscription   =   {subscriptionId}
                    resourceGroup=  ""{resourceGroupName}""
                    workspace  ={workspaceName}
                    storage = '{storageAccountConnectionString}'");
@@ -112,6 +120,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+            Assert.AreEqual(location, azureClient.Location);
 
             // valid input with forced login
             connectMagic.Test(
@@ -263,6 +272,7 @@ namespace Tests.IQSharp
         internal string ResourceGroupName = string.Empty;
         internal string WorkspaceName = string.Empty;
         internal string ConnectionString = string.Empty;
+        internal string Location = string.Empty;
         internal bool RefreshCredentials = false;
         internal string ActiveTargetId = string.Empty;
         internal List<string> SubmittedJobs = new List<string>();
@@ -295,13 +305,14 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, bool refreshCredentials)
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, string location, bool refreshCredentials)
         {
             LastAction = AzureClientAction.Connect;
             SubscriptionId = subscriptionId;
             ResourceGroupName = resourceGroupName;
             WorkspaceName = workspaceName;
             ConnectionString = storageAccountConnectionString;
+            Location = location;
             RefreshCredentials = refreshCredentials;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
