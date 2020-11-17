@@ -43,6 +43,32 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ArrowAndNumber
     }
 
+    /// <summary> 
+    ///     Represents different styles for displaying the measurement probability
+    ///     of state vectors as HTML.
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum MeasurementDisplayStyle
+    {
+        /// <summary>
+        ///     Suppress measurement probability information.
+        /// </summary>
+        None,
+        /// <summary>
+        ///     Display measurement probability information as a horizontal histogram.
+        /// </summary>
+        BarOnly,
+        /// <summary>
+        ///     Display measurement probability information as a numerical percentage.
+        /// </summary>
+        NumberOnly,
+        /// <summary>
+        ///     Display measurement probability information as a horizontal histogram as well
+        ///     in a numerical percentage format.
+        /// </summary>
+        BarAndNumber
+    }
+
     /// <summary>
     ///     The convention to be used in labeling computational basis states
     ///     given their representations as strings of classical bits.
@@ -94,14 +120,23 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             );
 
         /// <summary>
+        ///     ID for an HTML element where the vertical measurement probability histogram
+        ///     will be displayed.
+        /// </summary>
+        [JsonProperty("div_id")]
+        public string DivId { get; set; } = string.Empty;
+
+        /// <summary>
         ///     The indexes of each qubit on which this state is defined, or
         ///     <c>null</c> if these indexes are not known.
         /// </summary>
+        [JsonProperty("qubit_ids")]
         public IEnumerable<int>? QubitIds { get; set; }
 
         /// <summary>
         ///     The number of qubits on which this state is defined.
         /// </summary>
+        [JsonProperty("n_qubits")]
         public int NQubits { get; set; }
 
         /// <remarks>
@@ -109,6 +144,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     labeled in little-endian order, as per the behavior of
         ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
         /// </remarks>
+        [JsonProperty("amplitudes")]
         public Complex[]? Amplitudes { get; set; }
 
         /// <summary>
@@ -249,7 +285,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         var (amplitude, basisLabel) = item;
 
-                        //different options for displaying phase style
+                        // Different options for displaying phase style.
                         var phaseCell = ConfigurationSource.PhaseDisplayStyle switch
                         {
                             PhaseDisplayStyle.None => "",
@@ -260,21 +296,27 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                             "),
                             PhaseDisplayStyle.ArrowAndNumber => FormattableString.Invariant($@"
                                 <td>
-                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div> <div style=""{StyleForNumber()}"">{amplitude.Phase}</div>
+                                 <div style=""{StyleForAngle(amplitude.Phase)}""> ↑ </div>
+                                 <div style=""{StyleForNumber()}"">{amplitude.Phase:F4}</div>
                                 </td>
                             "),
                             PhaseDisplayStyle.NumberOnly => FormattableString.Invariant($@"
                                 <td> 
-                                    {amplitude.Phase}
+                                 {amplitude.Phase:F4}
                                 </td>
                             "),
                             _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.PhaseDisplayStyle}")
                         };
-
-                        return FormattableString.Invariant($@"
-                            <tr>
-                                <td>$\left|{basisLabel}\right\rangle$</td>
-                                <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
+                        
+                        // Different options for displaying measurement style.
+                        var measurementHistogram = ConfigurationSource.MeasurementDisplayHistogram;
+                        var measurementPrecision = ConfigurationSource.MeasurementDisplayPrecision;
+                        
+                        var elementId = $"round-{System.Guid.NewGuid()}"; // Randomly generate an ID for each <p> element.
+                        var measurementCell = ConfigurationSource.MeasurementDisplayStyle switch
+                        {
+                            MeasurementDisplayStyle.None => String.Empty,
+                            MeasurementDisplayStyle.BarOnly => FormattableString.Invariant($@"
                                 <td>
                                     <progress
                                         max=""100""
@@ -282,6 +324,47 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                                         style=""width: 100%;""
                                     >
                                 </td>
+                            "),
+                            MeasurementDisplayStyle.BarAndNumber => FormattableString.Invariant($@"
+                                <td>
+                                    <progress
+                                        max=""100""
+                                        value=""{System.Math.Pow(amplitude.Magnitude, 2.0) * 100}""
+                                        style=""width: 100%;""
+                                    > 
+                                    <td>
+                                    <p id=""{elementId}""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed({measurementPrecision});
+                                    var num_string = num + ""%"";
+                                     document.getElementById(""{elementId}"").innerHTML = num_string;
+                                    </script> </p>
+                                    </td>
+                                </td>
+                            "), 
+                            
+                            MeasurementDisplayStyle.NumberOnly => FormattableString.Invariant($@"
+                                <td> 
+                                    <p id=""{elementId}"" style=""text-align: right""> 
+                                    <script>
+                                    var num = {System.Math.Pow(amplitude.Magnitude, 2.0) * 100};
+                                    num = num.toFixed({measurementPrecision});
+                                    var num_string = num + ""%"";
+                                     document.getElementById(""{elementId}"").innerHTML = num_string;
+                                    </script> </p>
+                                    
+                                </td>
+                            "),
+                            _ => throw new ArgumentException($"Unsupported style {ConfigurationSource.MeasurementDisplayStyle}")
+                        };
+
+                        // Construct and return the full table row for this basis state.
+                        return FormattableString.Invariant($@"
+                            <tr>
+                                <td>$\left|{basisLabel}\right\rangle$</td>
+                                <td>${amplitude.Real:F4} {(amplitude.Imaginary >= 0 ? "+" : "")} {amplitude.Imaginary:F4} i$</td>
+                                {measurementCell}
                                 {phaseCell}
                             </tr>
                         ");
@@ -297,23 +380,33 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     BasisStateLabelingConvention.BigEndian => " (big endian)",
                     _ => ""
                 };
+                
                 var outputTable = $@"
                     <table style=""table-layout: fixed; width: 100%"">
                         <thead>
                             {qubitIdsRow}
                             <tr>
                                 <th style=""width: {basisWidth}ch)"">Basis state{basisStateMnemonic}</th>
-                                <th style=""width: 20ch"">Amplitude</th>
-                                <th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>
-                                <th style=""width: 6ch"">Phase</th>
+                                <th style=""width: 20ch"">Amplitude</th>";
+                if (ConfigurationSource.MeasurementDisplayStyle != MeasurementDisplayStyle.None) {
+                    outputTable += $@"<th style=""width: calc(100% - 26ch - {basisWidth}ch)"">Meas. Pr.</th>";
+
+                };
+                if (ConfigurationSource.PhaseDisplayStyle != PhaseDisplayStyle.None) {
+                    outputTable += $@"<th style=""width: 6ch"">Phase</th>";
+
+                };
+                outputTable += $@"
                             </tr>
                         </thead>
-
                         <tbody>
-                            {formattedData}
+                        {formattedData}
                         </tbody>
-                    </table>
-                ";
+                    </table>";
+                
+                if (ConfigurationSource.MeasurementDisplayHistogram) {
+                    outputTable += $@"<div id=""{vector.DivId}""></div>";
+                };
                 return outputTable.ToEncodedData();
             }
             else return null;

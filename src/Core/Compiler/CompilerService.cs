@@ -13,7 +13,6 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
@@ -97,8 +96,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             var loader = CreateTemporaryLoader(source);
             if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
-            var ns = NonNullable<string>.New(Snippets.SNIPPETS_NAMESPACE);
-            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
+            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(Snippets.SNIPPETS_NAMESPACE, out var tree)
                    ? tree.Elements
                    : ImmutableArray<QsNamespaceElement>.Empty;
         }
@@ -111,7 +109,7 @@ namespace Microsoft.Quantum.IQSharp
             return loader.VerifiedCompilation.Tokenization.Values
                 .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
                 .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
-                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind))
+                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind!))
                 .Where(openDirective => !string.IsNullOrEmpty(openDirective.Item1.Symbol?.AsDeclarationName(null)))
                 .ToDictionary(
                     openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
@@ -126,20 +124,20 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones.
         /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
-        private QsCompilation UpdateCompilation(
+        private QsCompilation? UpdateCompilation(
             ImmutableDictionary<Uri, string> sources,
-            QsReferences? references = null,
+            QsReferences references,
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
-                RuntimeCapabilities = runtimeCapabilities
+                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -147,7 +145,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -155,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp
             var entryPointUri = new Uri(Path.GetFullPath(Path.Combine("/", $"entrypoint.qs")));
             var entryPointSnippet = @$"namespace ENTRYPOINT
                 {{
-                    open {operation.Header.QualifiedName.Namespace.Value};
+                    open {operation.Header.QualifiedName.Namespace};
                     @{BuiltIn.EntryPoint.FullName}()
                     operation {signature}
                     {{
@@ -164,7 +162,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapabilities);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability);
         }
 
         /// <summary>
@@ -173,7 +171,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the same name as the snippet id.
         /// </summary>
         public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
@@ -186,15 +184,15 @@ namespace Microsoft.Quantum.IQSharp
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 
             // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
-            var errorCodesToIgnore = new List<QsCompiler.Diagnostics.ErrorCode>()
+            var warningCodesToIgnore = new List<QsCompiler.Diagnostics.WarningCode>()
             {
-                QsCompiler.Diagnostics.ErrorCode.TypeRedefinition,
-                QsCompiler.Diagnostics.ErrorCode.TypeConstructorOverlapWithCallable,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAleadyOpen,
+                QsCompiler.Diagnostics.WarningCode.NamespaceAliasIsAlreadyDefined,
             };
 
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Add(code));
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
-            errorCodesToIgnore.ForEach(code => logger.ErrorCodesToIgnore.Remove(code));
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
         }
@@ -203,26 +201,26 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities = AssemblyConstants.RuntimeCapabilities.Unknown)
+            RuntimeCapability? runtimeCapability = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapabilities);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
         private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            AssemblyConstants.RuntimeCapabilities runtimeCapabilities)
+            RuntimeCapability? runtimeCapability = null)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
-            logger.ErrorCodesToIgnore.Add(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapabilities);
-            logger.ErrorCodesToIgnore.Remove(QsCompiler.Diagnostics.ErrorCode.EntryPointInLibrary);
+            logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability);
+            logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
-            if (logger.HasErrors) return null;
+            if (logger.HasErrors || qsCompilation == null) return null;
 
             try
             {
@@ -237,7 +235,7 @@ namespace Microsoft.Quantum.IQSharp
                     var code = SimulationCode.generate(sourceFile, codegenContext);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
-                    logger.LogDebug($"Generated the following C# code for {sourceFile.Value}:\n=============\n{code}\n=============\n");
+                    logger.LogDebug($"Generated the following C# code for {sourceFile}:\n=============\n{code}\n=============\n");
                 }
 
                 // Compile the C# syntax trees:
@@ -254,7 +252,7 @@ namespace Microsoft.Quantum.IQSharp
                 using (var bsonStream = new MemoryStream())
                 {
                     using var writer = new BsonDataWriter(bsonStream) { CloseOutput = false };
-                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.Value.EndsWith(".qs")));
+                    var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
                     Json.Serializer.Serialize(writer, new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints));
 
                     var resourceDescription = new ResourceDescription

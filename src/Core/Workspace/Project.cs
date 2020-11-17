@@ -185,8 +185,8 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <summary>
         /// Returns the file name of the .dll to be built for this project.
-        /// If there is no project file, the .dll is named "__ws__0.12.0.0__.dll",
-        /// where 0.12.0.0 is the currently-executing IQ# assembly version.
+        /// If there is no project file, the .dll is named "__ws__0.14.0.0__.dll",
+        /// where 0.14.0.0 is the currently-executing IQ# assembly version.
         /// If there is a project file, the .dll name will also contain a unique
         /// representation of the full path to the project file on disk.
         /// </summary>

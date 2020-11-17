@@ -81,9 +81,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string storageAccountConnectionString,
+            string location,
             bool refreshCredentials = false)
         {
-            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, refreshCredentials);
+            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, refreshCredentials);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -98,7 +99,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ActiveTarget = null;
             MostRecentJobId = string.Empty;
 
-            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
+            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name} in location {ActiveWorkspace.Location}.");
 
             if (ValidExecutionTargets.Count() == 0)
             {
@@ -112,13 +113,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
+            string location,
             bool refreshCredentials)
         {
             var azureEnvironment = AzureEnvironment.Create(subscriptionId);
             IAzureWorkspace? workspace = null;
             try
             {
-                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, refreshCredentials);
+                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, location, refreshCredentials);
             }
             catch (Exception e)
             {
@@ -135,6 +137,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var providers = await workspace.GetProvidersAsync();
             if (providers == null)
             {
+                channel.Stderr($"The Azure Quantum workspace {workspace.Name} in location {workspace.Location} could not be reached. " +
+                    "Please check the provided parameters and try again.");
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
@@ -156,6 +160,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace.SubscriptionId ?? string.Empty,
                 ActiveWorkspace.ResourceGroup ?? string.Empty,
                 ActiveWorkspace.Name ?? string.Empty,
+                ActiveWorkspace.Location ?? string.Empty,
                 refreshCredentials: false);
         }
 
@@ -173,7 +178,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name}.");
+            channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.Name} in location {ActiveWorkspace.Location}.");
 
             return ValidExecutionTargets.ToExecutionResult();
         }
@@ -221,7 +226,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEntryPoint? entryPoint = null;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapabilities);
+                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapability);
             }
             catch (UnsupportedOperationException)
             {

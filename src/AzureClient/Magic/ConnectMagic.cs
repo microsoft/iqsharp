@@ -25,6 +25,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameResourceGroupName = "resourceGroup";
         private const string ParameterNameWorkspaceName = "workspace";
         private const string ParameterNameResourceId = "resourceId";
+        private const string ParameterNameLocation = "location";
         
         // A valid resource ID looks like:
         // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
@@ -42,7 +43,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.connect",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Connects to an Azure Quantum workspace or displays current connection status.",
                     Description = $@"
@@ -73,6 +74,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - `{ParameterNameStorageAccountConnectionString}=<string>`: The connection string to the Azure storage
                         account. Required if the specified Azure Quantum workspace was not linked to a storage
                         account at workspace creation time.
+                        - `{ParameterNameLocation}=<string>`: The Azure region where the Azure Quantum workspace is provisioned.
+                        This may be specified as a region name such as `""East US""` or a location name such as `""eastus""`.
+                        If no valid value is specified, defaults to `""westus""`.
                         
                         #### Possible errors
 
@@ -85,17 +89,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Connect to an Azure Quantum workspace using its resource ID:
                             ```
                             In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
-                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
 
                         $@"
-                            Connect to an Azure Quantum workspace using its resource ID and a storage account connection string:
+                            Connect to an Azure Quantum workspace using its resource ID, a storage account connection string, and a location:
                             ```
                             In []: %azure.connect {ParameterNameResourceId}=""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
-                                                    {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
-                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                                  {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
+                                                  {ParameterNameLocation}=""East US""
+                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location eastus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
@@ -104,10 +109,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Connect to an Azure Quantum workspace using individual subscription ID, resource group name, and workspace name parameters:
                             ```
                             In []: %azure.connect {ParameterNameSubscriptionId}=""SUBSCRIPTION_ID""
-                                                    {ParameterNameResourceGroupName}=""RESOURCE_GROUP_NAME""
-                                                    {ParameterNameWorkspaceName}=""WORKSPACE_NAME""
-                                                    {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
-                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                                  {ParameterNameResourceGroupName}=""RESOURCE_GROUP_NAME""
+                                                  {ParameterNameWorkspaceName}=""WORKSPACE_NAME""
+                                                  {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
+                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
@@ -119,7 +124,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
                                     and enter the code [login code] to authenticate.
-                                    Connected to Azure Quantum workspace WORKSPACE_NAME.
+                                    Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
@@ -128,7 +133,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Print information about the currently-connected Azure Quantum workspace:
                             ```
                             In []: %azure.connect
-                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME.
+                            Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
@@ -187,6 +192,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
+            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
             var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
@@ -194,6 +200,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 resourceGroupName,
                 workspaceName,
                 storageAccountConnectionString,
+                location,
                 refreshCredentials);
         }
     }

@@ -52,7 +52,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(expectedError, (AzureClientError)result.Output);
         }
 
-        private Task<ExecutionResult> ConnectToWorkspaceAsync(IAzureClient azureClient, string workspaceName = "TEST_WORKSPACE_NAME")
+        private Task<ExecutionResult> ConnectToWorkspaceAsync(
+            IAzureClient azureClient,
+            string workspaceName = "TEST_WORKSPACE_NAME",
+            string locationName = "")
         {
             MockAzureWorkspace.MockJobIds = new string[] { };
             MockAzureWorkspace.MockTargetIds = new string[] { };
@@ -61,7 +64,8 @@ namespace Tests.IQSharp
                 "TEST_SUBSCRIPTION_ID",
                 "TEST_RESOURCE_GROUP_NAME",
                 workspaceName,
-                "TEST_CONNECTION_STRING");
+                "TEST_CONNECTION_STRING",
+                locationName);
         }
 
         [TestMethod]
@@ -297,6 +301,25 @@ namespace Tests.IQSharp
             ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "honeywell.mock"));
             var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             Assert.IsNotNull(job);
+        }
+
+        [TestMethod]
+        public void TestLocations()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+
+            // Default location should be westus
+            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
+
+            // Locations with whitespace should be converted correctly
+            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
+            Assert.AreEqual("australiacentral2", azureClient.ActiveWorkspace?.Location);
+
+            // Locations with invalid hostname characters should fall back to default westus
+            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
+            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
         }
     }
 }

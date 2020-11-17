@@ -1,11 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
-using Microsoft.Quantum.QsCompiler.DataTypes;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.Simulation.Simulators;
 
@@ -16,7 +13,7 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public static partial class Extensions
     {
-        public static readonly QsQualifiedName UNKNOWN_OPERATION = new QsQualifiedName(NonNullable<string>.New("UNKNOWN"), NonNullable<string>.New("UNKNOWN"));
+        public static readonly QsQualifiedName UNKNOWN_OPERATION = new QsQualifiedName("UNKNOWN", "UNKNOWN");
 
         /// <summary>
         /// Returns the source of the given QsNamespaceElement (either QsCallable or QsCustomTypes)
@@ -25,11 +22,11 @@ namespace Microsoft.Quantum.IQSharp
         {
             if (e is QsNamespaceElement.QsCallable c)
             {
-                return c.Item.SourceFile.Value;
+                return c.Item.SourceFile;
             }
             else if (e is QsNamespaceElement.QsCustomType t)
             {
-                return t.Item.SourceFile.Value;
+                return t.Item.SourceFile;
             }
 
             return "[Unknown]";
@@ -51,14 +48,14 @@ namespace Microsoft.Quantum.IQSharp
                 name = t.Item.FullName;
             }
 
-            return $"{name.Namespace.Value}.{name.Name.Value}";
+            return $"{name.Namespace}.{name.Name}";
         }
 
         /// <summary>
         ///      Formats a qualified name using dotted-name syntax.
         /// <summary>
         public static string ToFullName(this QsQualifiedName name) =>
-            name?.Namespace.Value + "." + name?.Name.Value;
+            name?.Namespace + "." + name?.Name;
 
         /// <summary>
         /// Removes the given namespace, from the given name, iff name starts with namespace.

@@ -1,14 +1,14 @@
-import { Metadata } from '../metadata';
+import { Metadata, GateType } from '../metadata';
 import {
-    GateType,
     minGateWidth,
     gateHeight,
     labelFontSize,
     argsFontSize,
     controlBtnRadius,
     controlBtnOffset,
-    classicalBoxPadding,
+    groupBoxPadding,
     classicalRegHeight,
+    nestedGroupPadding,
 } from '../constants';
 import { group, controlDot, line, box, text, arc, dashedLine, dashedBox } from './formatUtils';
 import { DataAttributes } from '../circuit';
@@ -17,11 +17,12 @@ import { DataAttributes } from '../circuit';
  * Given an array of operations (in metadata format), return the SVG representation.
  *
  * @param opsMetadata Array of Metadata representation of operations.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
  *
  * @returns SVG representation of operations.
  */
-const formatGates = (opsMetadata: Metadata[]): string => {
-    const formattedGates: string[] = opsMetadata.map(_formatGate);
+const formatGates = (opsMetadata: Metadata[], nestedDepth = 0): string => {
+    const formattedGates: string[] = opsMetadata.map((metadata) => _formatGate(metadata, nestedDepth));
     return formattedGates.flat().join('\n');
 };
 
@@ -43,10 +44,11 @@ const _createGate = (svgElems: string[], dataAttributes: DataAttributes = {}): s
  * Takes in an operation's metadata and formats it into SVG.
  *
  * @param metadata Metadata object representation of gate.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
  *
  * @returns SVG representation of gate.
  */
-const _formatGate = (metadata: Metadata): string => {
+const _formatGate = (metadata: Metadata, nestedDepth = 0): string => {
     const { type, x, controlsY, targetsY, label, displayArgs, dataAttributes, width } = metadata;
     switch (type) {
         case GateType.Measure:
@@ -60,6 +62,8 @@ const _formatGate = (metadata: Metadata): string => {
         case GateType.Cnot:
         case GateType.ControlledUnitary:
             return _controlledGate(metadata);
+        case GateType.Group:
+            return _groupedOperations(metadata, nestedDepth);
         case GateType.ClassicalControlled:
             return _classicalControlled(metadata);
         default:
@@ -245,6 +249,29 @@ const _oplus = (x: number, y: number, r = 15): string => {
 };
 
 /**
+ * Generates the SVG for a group of nested operations.
+ *
+ * @param metadata Metadata representation of gate.
+ * @param nestedDepth Depth of nested operations (used in classically controlled and grouped operations).
+ *
+ * @returns SVG representation of gate.
+ */
+const _groupedOperations = (metadata: Metadata, nestedDepth = 0): string => {
+    const { x, children, width, dataAttributes } = metadata;
+    const padding = groupBoxPadding - nestedDepth * nestedGroupPadding;
+    if ((children?.length || 0) === 0) throw new Error('No children found for grouped operation.');
+    const targetsY: number[] = metadata.targetsY as number[];
+    const childrenGates: string = children != null ? formatGates(children as Metadata[], nestedDepth + 1) : '';
+    const maxY: number = Math.max(...(targetsY as number[])) + gateHeight / 2 + padding;
+    const minY: number = Math.min(...(targetsY as number[])) - gateHeight / 2 - padding;
+    const height: number = maxY - minY;
+
+    // Draw dashed box around children gates
+    const box: string = dashedBox(x + groupBoxPadding - padding, minY, width + (padding - groupBoxPadding) * 2, height);
+    return _createGate([box, childrenGates], dataAttributes);
+};
+
+/**
  * Generates the SVG for a classically controlled group of operations.
  *
  * @param metadata Metadata representation of gate.
@@ -252,20 +279,21 @@ const _oplus = (x: number, y: number, r = 15): string => {
  *
  * @returns SVG representation of gate.
  */
-const _classicalControlled = (metadata: Metadata, padding: number = classicalBoxPadding): string => {
-    const { controlsY, conditionalChildren, dataAttributes } = metadata;
+const _classicalControlled = (metadata: Metadata, padding: number = groupBoxPadding): string => {
+    const { controlsY, dataAttributes } = metadata;
     const targetsY: number[] = metadata.targetsY as number[];
+    const children: Metadata[][] = metadata.children as Metadata[][];
     let { x, width, htmlClass } = metadata;
 
     const controlY = controlsY[0];
     if (htmlClass == null) htmlClass = 'classically-controlled';
 
     // Get SVG for gates controlled on 0 and make them hidden initially
-    let childrenZero: string = conditionalChildren != null ? formatGates(conditionalChildren[0]) : '';
+    let childrenZero: string = children != null ? formatGates(children[0]) : '';
     childrenZero = `<g class="${htmlClass}-zero hidden">\r\n${childrenZero}</g>`;
 
     // Get SVG for gates controlled on 1
-    let childrenOne: string = conditionalChildren != null ? formatGates(conditionalChildren[1]) : '';
+    let childrenOne: string = children != null ? formatGates(children[1]) : '';
     childrenOne = `<g class="${htmlClass}-one">\r\n${childrenOne}</g>`;
 
     // Draw control button and attached dashed line to dashed box
@@ -277,8 +305,8 @@ const _classicalControlled = (metadata: Metadata, padding: number = classicalBox
     x += controlBtnOffset;
     const horLine: string = dashedLine(controlCircleX, lineY2, x, lineY2, 'classical-line');
 
-    width = width - controlBtnOffset + (padding - classicalBoxPadding) * 2;
-    x += classicalBoxPadding - padding;
+    width = width - controlBtnOffset + (padding - groupBoxPadding) * 2;
+    x += groupBoxPadding - padding;
     const y: number = targetsY[0] - gateHeight / 2 - padding;
     const height: number = targetsY[1] - targetsY[0] + gateHeight + padding * 2;
 
@@ -310,4 +338,14 @@ const _controlCircle = (x: number, y: number, cls: string, r: number = controlBt
 <text class="${cls} classically-controlled-text" font-size="${labelFontSize}" x="${x}" y="${y}">?</text>
 </g>`;
 
-export { formatGates, _formatGate, _createGate, _measure, _unitary, _swap, _controlledGate, _classicalControlled };
+export {
+    formatGates,
+    _formatGate,
+    _createGate,
+    _measure,
+    _unitary,
+    _swap,
+    _controlledGate,
+    _groupedOperations,
+    _classicalControlled,
+};

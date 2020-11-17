@@ -6,6 +6,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Web.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +16,25 @@ namespace Tests.IQSharp
     [TestClass]
     public class HttpServerIntegrationTests
     {
+        private string autoLoadPackagesEnvVarName = "IQSHARP_AUTO_LOAD_PACKAGES";
+        private string originalAutoLoadPackages = string.Empty;
+        
+        [TestInitialize]
+        public void SetTestEnvironment()
+        {
+            // Avoid loading default packages during this test by setting IQSHARP_AUTO_LOAD_PACKAGES to $null.
+            // Microsoft.Quantum.Standard and related packages are built from the QuantumLibraries repo,
+            // which is downstream of this one. So loading those packages could cause problems in E2E builds.
+            originalAutoLoadPackages = Environment.GetEnvironmentVariable(autoLoadPackagesEnvVarName) ?? string.Empty;
+            Environment.SetEnvironmentVariable(autoLoadPackagesEnvVarName, "$null");
+        }
+
+        [TestCleanup]
+        public void RestoreEnvironment()
+        {
+            Environment.SetEnvironmentVariable(autoLoadPackagesEnvVarName, originalAutoLoadPackages);
+        }
+
         [TestMethod]
         public async Task CompileAndSimulateViaApi()
         {
@@ -32,6 +52,19 @@ namespace Tests.IQSharp
                         ["--hosting-env"] = "IQSHARP_HOSTING_ENV"
                     }
                 )
+                .Add(new NormalizedEnvironmentVariableConfigurationSource
+                {
+                    Prefix = "IQSHARP_",
+                    Aliases = new Dictionary<string, string>
+                    {
+                        ["USER_AGENT"] = "UserAgent",
+                        ["HOSTING_ENV"] = "HostingEnvironment",
+                        ["LOG_PATH"] = "LogPath",
+                        ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
+                        ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
+                        ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
+                    }
+                })
                 .Build();
 
             using (IWebHost server = Program.GetHttpServer(args))
