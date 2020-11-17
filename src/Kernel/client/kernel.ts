@@ -228,10 +228,10 @@ class Kernel {
             || location.hostname == "127.0.0.1"
             || this.hostingEnvironment == null
             || this.hostingEnvironment == "";
-        const enableClientTelemetry =
-            this.hostingEnvironment == "ENABLE_CLIENT_TELEMETRY";
+        const forceEnableClientTelemetry =
+            this.hostingEnvironment == "FORCE_ENABLE_CLIENT_TELEMETRY";
 
-        if (!enableClientTelemetry && isLocalEnvironment) {
+        if (!forceEnableClientTelemetry && isLocalEnvironment) {
             console.log("Client telemetry disabled on local environment");
             return;
         }
