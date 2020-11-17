@@ -223,13 +223,15 @@ class Kernel {
             return;
         }
 
-        var isLocalEnvironment =
+        const isLocalEnvironment =
             location.hostname == "localhost"
             || location.hostname == "127.0.0.1"
             || this.hostingEnvironment == null
             || this.hostingEnvironment == "";
+        const enableClientTelemetry =
+            this.hostingEnvironment == "ENABLE_CLIENT_TELEMETRY";
 
-        if (isLocalEnvironment) {
+        if (!enableClientTelemetry && isLocalEnvironment) {
             console.log("Client telemetry disabled on local environment");
             return;
         }
