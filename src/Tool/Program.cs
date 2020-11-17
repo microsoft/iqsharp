@@ -63,7 +63,8 @@ namespace Microsoft.Quantum.IQSharp
                         new Dictionary<string, string>()
                         {
                             ["--user-agent"] = "UserAgent",
-                            ["--hosting-env"] = "HostingEnvironment"
+                            ["--hosting-env"] = "HostingEnvironment",
+                            ["--register-folders-for-telemetry"] = "RegisterFoldersForTelemetry"
                         }
                     )
                     .Add(new NormalizedEnvironmentVariableConfigurationSource
@@ -135,7 +136,7 @@ namespace Microsoft.Quantum.IQSharp
                                 "--hosting-env <ENV>",
                                 "Specifies the hosting environment that this kernel is being run in.",
                                 CommandOptionType.SingleValue
-                            );
+                            );                            
                         }
                     )
                 );
@@ -168,11 +169,18 @@ namespace Microsoft.Quantum.IQSharp
             var skipAutoLoadProjectOption = app.Option("--skipAutoLoadProject",
                 "Specifies whether to skip automatically loading the .csproj from the workspace's root folder.", CommandOptionType.SingleValue);
 
+            var registerFoldersForTelemetryOption = app.Option<string>(
+                "--register-folders-for-telemetry <FOLDER>",
+                "Sends the sub-folders names of <FOLDER> as plain-text to Microsoft telemetry systems.",
+                CommandOptionType.SingleValue
+            );
+
             foreach (var command in app.Commands.Where(c => c.Name == "kernel" || c.Name == "server"))
             {
                 command.Options.Add(cacheOption);
                 command.Options.Add(workspaceOption);
                 command.Options.Add(skipAutoLoadProjectOption);
+                command.Options.Add(registerFoldersForTelemetryOption);
             }
 
             return app;

@@ -112,6 +112,27 @@ namespace Microsoft.Quantum.IQSharp
             telemetryLogger.SetContext("DeviceId".WithTelemetryNamespace(), GetDeviceId(), PiiKind.GenericData);
             telemetryLogger.SetContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
             telemetryLogger.SetContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("HostingEnvironment"));
+            RegisterFoldersForTelemetry(config?.GetValue<string>("RegisterFoldersForTelemetry"));
+            LogManager.UploadNow();
+            System.Threading.Thread.Sleep(10000);
+        }
+
+        private void RegisterFoldersForTelemetry(string folder, string rootFolder = null)
+        {
+            rootFolder ??= Directory.GetParent(folder).FullName;
+            if (!string.IsNullOrEmpty(folder))
+            {
+                var evt = new EventProperties() { Name = "WellKnownFolder".WithTelemetryNamespace() };
+                evt.SetProperty("FolderName".WithTelemetryNamespace(), Path.GetRelativePath(rootFolder, folder), PiiKind.None);
+                evt.SetProperty("FolderNameHash".WithTelemetryNamespace(), Path.GetFileName(folder), PiiKind.GenericData);
+                TelemetryLogger.LogEvent(evt);
+
+                var subFolders = Directory.EnumerateDirectories(folder).Where(s => !Path.GetFileName(s).StartsWith(".")).ToList();
+                foreach (var subFolder in subFolders)
+                {
+                    RegisterFoldersForTelemetry(subFolder, rootFolder);
+                }
+            }
         }
 
         /// <summary>
