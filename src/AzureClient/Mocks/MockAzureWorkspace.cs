@@ -27,6 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string ResourceGroup { get; private set; } = string.Empty;
 
+        public string Location { get; private set; } = string.Empty;
+
         public List<ProviderStatus> Providers => new List<ProviderStatus>
         {
             new ProviderStatus(null, null,
@@ -40,7 +42,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
-        public MockAzureWorkspace(string workspaceName) => Name = workspaceName;
+        public MockAzureWorkspace(string workspaceName, string location)
+        {
+            Name = workspaceName;
+            Location = location;
+        }
 
         public async Task<CloudJob?> GetJobAsync(string jobId) => await Task.Run(() => Jobs.FirstOrDefault(job => job.Id == jobId));
 
