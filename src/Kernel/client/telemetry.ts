@@ -44,7 +44,12 @@ export interface ClientInfo {
     FirstOrigin: string;
 }
 
-type ConsentCategories = "Required" | "Analytics" | "SocialMedia" | "Advertising";
+enum ConsentCategories {
+    Required = "Required",
+    Analytics = "Analytics",
+    SocialMedia = "SocialMedia",
+    Advertising = "Advertising"
+}
 
 enum Themes {
     light = "light",
@@ -90,7 +95,7 @@ class CookieConsentHelper {
     }
 
     private checkRequiredConsent() {
-        const hasConsent = this.siteConsent.getConsentFor(consentCategories.Required);
+        const hasConsent = this.siteConsent.getConsentFor(ConsentCategories.Required);
         console.log(`HasConsent: ${hasConsent}`);
         if (hasConsent) {
             this.onConsentGranted();
