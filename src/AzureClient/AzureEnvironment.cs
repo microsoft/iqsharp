@@ -58,13 +58,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return Production(subscriptionId);
         }
 
-        private string GetNormalizedLocation(string location)
+        private string GetNormalizedLocation(string location, IChannel channel)
         {
-            if (Type == AzureEnvironmentType.Canary)
-            {
-                return "eastus2euap";
-            }
-
             // Convert user-provided location into names recognized by Azure resource manager.
             // For example, a customer-provided value of "West US" should be converted to "westus".
             var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
@@ -72,6 +67,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 // If provided location is invalid, "westus" is used.
                 normalizedLocation = "westus";
+                channel.Stdout($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
             }
 
             return normalizedLocation;
@@ -85,12 +81,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string location,
             bool refreshCredentials)
         {
-            location = GetNormalizedLocation(location);
+            location = GetNormalizedLocation(location, channel);
 
-            if (Type == AzureEnvironmentType.Mock)
+            switch (Type)
             {
-                channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to the real service.");
-                return new MockAzureWorkspace(workspaceName, location);
+                case AzureEnvironmentType.Mock:
+                    channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to a real service.");
+                    return new MockAzureWorkspace(workspaceName, location);
+                
+                case AzureEnvironmentType.Canary:
+                    channel.Stdout($"AZURE_QUANTUM_ENV set to Canary. Connecting to location eastus2euap rather than specified location {location}.");
+                    break;
+
+                case AzureEnvironmentType.Dogfood:
+                    channel.Stdout($"AZURE_QUANTUM_ENV set to Dogfood. Connecting to test endpoint rather than production service.");
+                    break;
+
+                case AzureEnvironmentType.Production:
+                    logger?.LogInformation($"AZURE_QUANTUM_ENV set to Production. Connecting to production service.");
+                    break;
             }
 
             // Find the token cache folder
@@ -222,6 +231,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var canary = Production(subscriptionId);
             canary.Type = AzureEnvironmentType.Canary;
+            canary.BaseUriForLocation = (_) => new Uri($"https://eastus2euap.quantum.azure.com/");
             return canary;
         }
 
