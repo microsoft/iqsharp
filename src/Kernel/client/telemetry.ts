@@ -126,7 +126,7 @@ class CookieConsentHelper {
             } else {
                 console.log("Error initializing WcpConsent: " + err);
             }
-        }, this.onConsentChanged, Themes.light);
+        }, this.onConsentChanged, window.matchMedia('prefers-color-scheme: dark').matches ? Themes.dark : Themes.light);
     }
 }
 
