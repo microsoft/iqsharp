@@ -1,5 +1,5 @@
 pytest
 jupyter_client==6.1.7
-notebook==6.1.1
+notebook==6.1.5
 pyzmq==19.0.2
 selenium==3.141
