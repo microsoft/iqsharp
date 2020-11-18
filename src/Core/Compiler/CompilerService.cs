@@ -249,7 +249,11 @@ namespace Microsoft.Quantum.IQSharp
                 var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
 
                 using var serializedCompilation = new MemoryStream();
-                QsCompiler.BondSchemas.Protocols.SerializeQsCompilationToSimpleBinary(syntaxTree, serializedCompilation);
+                if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                {
+                    logger.LogError("IQS005", "Failed to write compilation to binary stream.");
+                    return null;
+                }
 
                 var resourceDescription = new ResourceDescription
                 (
