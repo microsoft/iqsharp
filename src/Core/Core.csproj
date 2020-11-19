@@ -41,6 +41,7 @@
     <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.13.2011.802-alpha" />
     <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.13.2011.801-alpha" />
     <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.13.201118141-beta" />
+    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.13.201118141-beta" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
