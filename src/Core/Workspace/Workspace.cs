@@ -101,9 +101,6 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public string CacheFolder { get; set; }
 
-        /// <inheritdoc/>
-        public IEnumerable<AssemblyInfo> AvailableAssemblies => Assemblies.ToArray();
-
         /// <summary>
         /// Gets or sets a value indicating whether to monitor the file system for
         /// changes and automatically reload the workspace.
@@ -122,7 +119,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task<IEnumerable<Project>> GetProjectsAsync()
         {
-            await Initialization;
+            await InitializationFinished;
             return Projects;
         }
 
@@ -130,9 +127,11 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task<IEnumerable<string>> GetSourceFilesAsync()
         {
-            await Initialization;
+            await InitializationFinished;
             return SourceFiles;
         }
+
+        private readonly object assemblyLock = new object();
 
         private AssemblyInfo AssemblyInfo =>
             Projects
@@ -150,8 +149,11 @@ namespace Microsoft.Quantum.IQSharp
         /// </remarks>
         public async Task<AssemblyInfo> GetAssemblyInfoAsync()
         {
-            await Initialization;
-            return AssemblyInfo;
+            await InitializationStarted;
+            lock (assemblyLock)
+            {
+                return AssemblyInfo;
+            }
         }
 
         private IEnumerable<AssemblyInfo> Assemblies =>
@@ -159,15 +161,18 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task<IEnumerable<AssemblyInfo>> GetAssembliesAsync()
         {
-            await Initialization;
-            return Assemblies;
+            await InitializationStarted;
+            lock (assemblyLock)
+            {
+                return Assemblies;
+            }
         }
 
         private IEnumerable<string> ErrorMessages { get; set; }
         /// <inheritdoc/>
         public async Task<IEnumerable<string>> GetErrorMessagesAsync()
         {
-            await Initialization;
+            await InitializationFinished;
             return ErrorMessages;
         }
 
@@ -175,21 +180,32 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task<bool> GetHasErrorsAsync()
         {
-            await Initialization;
+            await InitializationFinished;
             return HasErrors;
         }
 
         /// <summary>
+        /// An event that is set after the workspace initialization has started.
+        /// </summary>
+        private ManualResetEvent initializationStarted = new ManualResetEvent(false);
+
+        /// <summary>
         /// An event that is set after the workspace initialization has completed.
         /// </summary>
-        private ManualResetEvent initialized = new ManualResetEvent(false);
+        private ManualResetEvent initializationFinished = new ManualResetEvent(false);
+
+        /// <summary>
+        /// Task that will be completed after the initial workspace
+        /// initialization has started.
+        /// </summary>
+        private Task InitializationStarted => Task.Run(() => initializationStarted.WaitOne());
 
         /// <summary>
         /// Task that will be completed when the initial workspace
         /// initialization has finished, including package loads and
         /// project compilation.
         /// </summary>
-        private Task Initialization => Task.Run(() => initialized.WaitOne());
+        private Task InitializationFinished => Task.Run(() => initializationFinished.WaitOne());
 
         /// <summary>
         /// Main constructor that accepts ILogger and IReferences as dependencies.
@@ -220,29 +236,35 @@ namespace Microsoft.Quantum.IQSharp
             // Initialize the workspace asynchronously
             Task.Run(() =>
             {
-                try
+                // Ensure that only this thread can access assembly information
+                // until initialization has completed.
+                lock (assemblyLock)
                 {
-                    GlobalReferences.LoadDefaultPackages();
-                    ResolveProjectReferences();
+                    initializationStarted.Set();
+                    try
+                    {
+                        GlobalReferences.LoadDefaultPackages();
+                        ResolveProjectReferences();
 
-                    if (!LoadFromCache())
-                    {
-                        Reload();
-                    }
-                    else
-                    {
-                        LoadReferencedPackages();
-                        if (MonitorWorkspace)
+                        if (!LoadFromCache())
                         {
-                            StartFileWatching();
+                            Reload();
                         }
-                    }
+                        else
+                        {
+                            LoadReferencedPackages();
+                            if (MonitorWorkspace)
+                            {
+                                StartFileWatching();
+                            }
+                        }
 
-                    eventService?.TriggerServiceInitialized<IWorkspace>(this);
-                }
-                finally
-                {
-                    initialized.Set();
+                        eventService?.TriggerServiceInitialized<IWorkspace>(this);
+                    }
+                    finally
+                    {
+                        initializationFinished.Set();
+                    }
                 }
             });
         }
@@ -439,7 +461,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task AddProjectAsync(string projectFile)
         {
-            await Initialization;
+            await InitializationFinished;
             AddProject(projectFile);
         }
 
@@ -473,7 +495,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <inheritdoc/>
         public async Task ReloadAsync(Action<string> statusCallback = null)
         {
-            await Initialization;
+            await InitializationFinished;
             Reload(statusCallback);
         }
 
