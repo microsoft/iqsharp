@@ -32,7 +32,7 @@ namespace Tests.IQSharp
             if (this.operations == null)
             {
                 var ws = InitWorkspace();
-                this.operations = ws.GetAssemblyInfoAsync().Result.Operations;
+                this.operations = ws.GetAssemblyInfo().Operations;
             }
 
             var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");

@@ -40,7 +40,7 @@ namespace Tests.IQSharp
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();
-            serviceProvider.GetRequiredService<IWorkspace>().GetAssembliesAsync().Wait();
+            serviceProvider.GetRequiredService<IWorkspace>().GetProjectsAsync().Wait();
             return serviceProvider;
         }
 

@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp
 
         // The list of operations available in the workspace.
         public override IEnumerable<OperationInfo> Operations =>
-            Workspace?.GetAssembliesAsync().Result?.SelectMany(asm => asm.Operations);
+            Workspace?.GetAssemblies().SelectMany(asm => asm.Operations);
 
         public WorkspaceController(IWorkspace workspace)
         {

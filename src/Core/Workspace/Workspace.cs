@@ -132,12 +132,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         private readonly object assemblyLock = new object();
-
-        private AssemblyInfo AssemblyInfo =>
-            Projects
-                .Where(p => string.IsNullOrEmpty(p.ProjectFile))
-                .Select(p => p.AssemblyInfo)
-                .FirstOrDefault();
+            
         /// <summary>
         /// Information of the assembly built from this Workspace.
         /// </summary>
@@ -145,26 +140,27 @@ namespace Microsoft.Quantum.IQSharp
         /// This does NOT include assemblies built from any project references,
         /// and it will be <c>null</c> in the case that the assemblies are
         /// built from .csproj files.
-        /// To get all assembly information, use <see cref="GetAssembliesAsync"/>.
+        /// To get all assembly information, use <see cref="GetAssemblies"/>.
         /// </remarks>
-        public async Task<AssemblyInfo> GetAssemblyInfoAsync()
+        public AssemblyInfo GetAssemblyInfo()
         {
-            await InitializationStarted;
+            InitializationStarted.Wait();
             lock (assemblyLock)
             {
-                return AssemblyInfo;
+                return Projects
+                    .Where(p => string.IsNullOrEmpty(p.ProjectFile))
+                    .Select(p => p.AssemblyInfo)
+                    .FirstOrDefault();
             }
         }
-
-        private IEnumerable<AssemblyInfo> Assemblies =>
-            Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
+            
         /// <inheritdoc/>
-        public async Task<IEnumerable<AssemblyInfo>> GetAssembliesAsync()
+        public IEnumerable<AssemblyInfo> GetAssemblies()
         {
-            await InitializationStarted;
+            InitializationStarted.Wait();
             lock (assemblyLock)
             {
-                return Assemblies;
+                return Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
             }
         }
 
@@ -551,7 +547,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             project.AssemblyInfo = Compiler.BuildFiles(
                                 project.SourceFiles.ToArray(),
-                                GlobalReferences.CompilerMetadata.WithAssemblies(Assemblies.ToArray()),
+                                GlobalReferences.CompilerMetadata.WithAssemblies(GetAssemblies().ToArray()),
                                 logger,
                                 project.CacheDllPath);
                         }

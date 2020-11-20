@@ -114,7 +114,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         protected override void CheckIfReady()
         {
-            Workspace.GetAssembliesAsync().Wait();
+            Workspace.GetProjectsAsync().Wait();
         }
     }
 }

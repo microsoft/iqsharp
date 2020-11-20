@@ -37,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
             if (snippets?.AssemblyInfo != null) yield return snippets.AssemblyInfo;
-            foreach (var asm in workspace?.GetAssembliesAsync().Result) yield return asm;
+            foreach (var asm in workspace?.GetAssemblies()) yield return asm;
             foreach (var asm in references.Assemblies) yield return asm;
         }
 

@@ -110,7 +110,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Information of all assemblies built from this Workspace.
         /// </summary>
-        Task<IEnumerable<AssemblyInfo>> GetAssembliesAsync();
+        IEnumerable<AssemblyInfo> GetAssemblies();
 
         /// <summary>
         /// The compilation errors, if any.

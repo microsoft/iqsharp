@@ -116,7 +116,7 @@ namespace Microsoft.Quantum.IQSharp
             : AssemblyInfo?.Operations
             .Concat(
                 Workspace?
-                .GetAssembliesAsync().Result?
+                .GetAssemblies()
                 .SelectMany(asm => asm?.Operations)
             );
 
@@ -126,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
         private CompilerMetadata LoadCompilerMetadata() =>
             Workspace.GetHasErrorsAsync().Result
                     ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.GetAssembliesAsync().Result.ToArray());
+                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.GetAssemblies().ToArray());
 
         /// <summary>
         /// Compiles the given code. 
@@ -220,7 +220,7 @@ namespace Microsoft.Quantum.IQSharp
                 return this.AssemblyInfo.Assembly;
             }
 
-            foreach (var asm in this.Workspace?.GetAssembliesAsync().Result)
+            foreach (var asm in this.Workspace?.GetAssemblies())
             {
                 if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
                 {

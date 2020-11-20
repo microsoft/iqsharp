@@ -25,14 +25,14 @@ namespace Tests.IQSharp
             ws = Startup.Create<Workspace>("Workspace");
             Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            var op = ws.GetAssemblyInfoAsync().Result.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            var op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
 
             // On next reload:
             ws = Startup.Create<Workspace>("Workspace");
             Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
         }
 
@@ -40,24 +40,24 @@ namespace Tests.IQSharp
         public async Task ReloadWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace");
-            var originalAssembly = await ws.GetAssemblyInfoAsync();
-            var op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            var originalAssembly = ws.GetAssemblyInfo();
+            var op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsFalse(await ws.GetHasErrorsAsync());
             Assert.IsNotNull(op);
 
             // Calling Reload with no changes, should regenerate the dll:
             await ws.ReloadAsync();
-            op = (await ws.GetAssemblyInfoAsync())?.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsFalse(await ws.GetHasErrorsAsync());
             Assert.IsNotNull(op);
-            Assert.AreNotSame(originalAssembly, await ws.GetAssemblyInfoAsync());
+            Assert.AreNotSame(originalAssembly, ws.GetAssemblyInfo());
 
             var fileName = Path.Combine(Path.GetFullPath("Workspace"), "BasicOps.qs");
             File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
             await ws.ReloadAsync();
-            op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsFalse(await ws.GetHasErrorsAsync());
-            Assert.AreNotSame(originalAssembly, await ws.GetAssemblyInfoAsync());
+            Assert.AreNotSame(originalAssembly, ws.GetAssemblyInfo());
             Assert.IsNotNull(op);
         }
 
@@ -151,7 +151,7 @@ namespace Tests.IQSharp
             await ws.ReloadAsync();
             Assert.IsFalse(await ws.GetHasErrorsAsync());
 
-            var op = (await ws.GetAssemblyInfoAsync()).Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
+            var op = ws.GetAssemblyInfo().Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
             Assert.IsNotNull(op);
         }
     }
