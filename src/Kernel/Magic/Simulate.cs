@@ -103,9 +103,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
             qsim.OnDisplayableDiagnostic += channel.Display;
-            qsim.OnAllocateQubits += nQubits =>
+            qsim.AfterAllocateQubits += (args) =>
             {
-                maxNQubits = System.Math.Max(qsim.QubitManager.GetAllocatedQubitsCount(), maxNQubits);
+                maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);
             };
             var stopwatch = new Stopwatch();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
