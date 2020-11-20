@@ -30,7 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.target",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Sets or displays the active execution target for Q# job submission in an Azure Quantum workspace.",
                     Description = $@"

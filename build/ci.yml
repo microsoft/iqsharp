@@ -10,7 +10,7 @@ pr:
 
 variables:
   Build.Major: 0
-  Build.Minor: 12
+  Build.Minor: 13
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
 
@@ -22,6 +22,13 @@ jobs:
     displayName: 'Component Detection'
     inputs:
       failOnAlert: true
+
+- job: "test_selenium"
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - template: steps-selenium.yml
+  condition: ne(variables['Skip.Tests'], 'true')
 
 - job: "pack_selfcontained"
   dependsOn: "iqsharp"

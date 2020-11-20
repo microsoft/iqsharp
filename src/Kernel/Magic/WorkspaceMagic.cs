@@ -24,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public WorkspaceMagic(IWorkspace workspace) : base(
             "workspace", 
-            new Documentation
+            new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Provides actions related to the current workspace.",
                 Description = @"

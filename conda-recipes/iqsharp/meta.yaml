@@ -26,6 +26,7 @@ requirements:
   run:
     - python
     - jupyter_client
+    - pyzmq<20.0.0       # due to incompatibility of IQ# with pyzmq>=20.0.0
     - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
@@ -33,6 +34,7 @@ test:
     - notebook=6.0.1
     - python>=3.6
     - jupyter_client<5.3.3
+    - pyzmq==19.0.2
     - pip
 
   source_files:
@@ -47,5 +49,10 @@ test:
 about:
   home: https://docs.microsoft.com/quantum
   license: MIT
-  summary: Microsoft's IQ# Server.
+  summary: Microsoft's IQ# kernel providing Q# support for the Jupyter platform.
+  description: |
+    For details on how to get started with Jupyter and Q#, please see the guide at https://docs.microsoft.com/quantum/install-guide/jupyter.
+    You can also try our Quantum Computing Fundamentals learning path (https://aka.ms/learnqc) to get familiar with the basic concepts
+    of quantum computing, build quantum programs, and identify the kind of problems that can be solved.
   dev_url: https://github.com/microsoft/iqsharp
+  doc_url: https://docs.microsoft.com/quantum/install-guide/jupyter
