@@ -127,7 +127,7 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
         'uid': uid,
         'ms.author': 'ryansha',
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
-        'ms.topic': 'article'
+        'ms.topic': 'managed-reference'
     }
     
     header = f"# `{magic_name}`"
