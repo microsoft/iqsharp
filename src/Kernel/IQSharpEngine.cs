@@ -66,7 +66,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
-            RegisterJsonEncoder(
+            RegisterJsonEncoder("application/x-qsharp-data",
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
                 .ToArray());
