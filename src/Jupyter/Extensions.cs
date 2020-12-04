@@ -195,13 +195,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///      Retrieves and JSON-decodes the value for the given parameter name.
         /// </summary>
-        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default)
+        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default) where T : notnull
         {
             if (!parameters.TryGetValue(parameterName, out string parameterValue))
             {
-                return defaultValue;
+                return defaultValue!;
             }
-            return (T)System.Convert.ChangeType(JsonConvert.DeserializeObject(parameterValue), typeof(T)) ?? defaultValue;
+            return (T)System.Convert.ChangeType(JsonConvert.DeserializeObject(parameterValue), typeof(T)) ?? defaultValue!;
         }
     }
 }
