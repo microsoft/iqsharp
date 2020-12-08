@@ -44,7 +44,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IShellRouter shellRouter,
             IEventService eventService,
             IMagicSymbolResolver magicSymbolResolver,
-            IReferences references
+            IReferences references,
+            IMetadataController metadataController
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -66,7 +67,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
-            RegisterJsonEncoder("application/x-qsharp-data",
+            // For back-compat with older versions of qsharp.py <= 0.14.2011.120240
+            // that expected the application/json MIME type for the JSON data.
+            var userAgentVersion = metadataController.GetUserAgentVersion();
+            var jsonMimeType = userAgentVersion == null || userAgentVersion > new Version(0, 14, 2011, 120240)
+                ? "application/x-qsharp-data"
+                : "application/json";
+            RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
                 .ToArray());
