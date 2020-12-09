@@ -132,7 +132,7 @@ namespace Microsoft.Quantum.IQSharp
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
-                LoadReferencesBasedOnGeneratedCsharp = string.IsNullOrEmpty(executionTarget), // serialization is unnecessary if no execution target
+                LoadReferencesBasedOnGeneratedCsharp = string.IsNullOrEmpty(executionTarget), // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
                 RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
