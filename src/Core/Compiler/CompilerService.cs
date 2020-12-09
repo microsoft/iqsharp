@@ -132,6 +132,7 @@ namespace Microsoft.Quantum.IQSharp
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
+                LoadReferencesBasedOnGeneratedCsharp = string.IsNullOrEmpty(executionTarget), // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
                 RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
@@ -244,26 +245,33 @@ namespace Microsoft.Quantum.IQSharp
                     metadata.RoslynMetadatas,
                     options);
 
-                // Generate the assembly from the C# compilation:
                 var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
-                var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
 
-                using var serializedCompilation = new MemoryStream();
-                if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                // Only create the serialization if we are compiling for an execution target:
+                List<ResourceDescription>? manifestResources = null;
+                if (!string.IsNullOrEmpty(executionTarget))
                 {
-                    logger.LogError("IQS005", "Failed to write compilation to binary stream.");
-                    return null;
+                    // Generate the assembly from the C# compilation:
+                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+
+                    using var serializedCompilation = new MemoryStream();
+                    if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                    {
+                        logger.LogError("IQS005", "Failed to write compilation to binary stream.");
+                        return null;
+                    }
+
+                    manifestResources = new List<ResourceDescription>() {
+                        new ResourceDescription(
+                            resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
+                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                            isPublic: true
+                        )
+                    };
                 }
 
-                var resourceDescription = new ResourceDescription
-                (
-                    resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
-                    dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
-                    isPublic: true
-                );
-
                 using var ms = new MemoryStream();
-                var result = compilation.Emit(ms, manifestResources: new[] { resourceDescription });
+                var result = compilation.Emit(ms, manifestResources: manifestResources);
 
                 if (!result.Success)
                 {
