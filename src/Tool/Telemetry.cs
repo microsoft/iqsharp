@@ -113,8 +113,12 @@ namespace Microsoft.Quantum.IQSharp
             telemetryLogger.SetContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
             telemetryLogger.SetContext("HostingEnvironment".WithTelemetryNamespace(), config?.GetValue<string>("HostingEnvironment"));
             RegisterFoldersForTelemetry(config?.GetValue<string>("RegisterFoldersForTelemetry"));
-            LogManager.UploadNow();
-            System.Threading.Thread.Sleep(10000);
+
+            if (config?.GetValue<string>("HostingEnvironment") == "build-agent")
+            {
+                RegisterFoldersForTelemetry(Path.GetFileName(Directory.GetCurrentDirectory()));
+                LogManager.UploadNow();
+            }
         }
 
         private void RegisterFoldersForTelemetry(string folder, string rootFolder = null)
