@@ -77,7 +77,6 @@ namespace Microsoft.Quantum.IQSharp
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath",
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
-                            ["DEFERRED_LOAD_PACKAGES"] = "DeferredLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
                         }
@@ -154,6 +153,7 @@ namespace Microsoft.Quantum.IQSharp
            return WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://localhost:8888")
                 .UseStartup<Startup>()
+                .UseConfiguration(Configuration)
                 .Build();
         }
 

@@ -27,12 +27,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 azureClient,
                 "azure.execute",
-                new Documentation
+                new Microsoft.Jupyter.Core.Documentation
                 {
-                    Summary = "Executes a job in an Azure Quantum workspace.",
+                    Summary = "Submits a job to an Azure Quantum workspace and waits for completion.",
                     Description = $@"
-                        This magic command allows for executing a Q# operation or function
-                        on the specified target in the current Azure Quantum workspace.
+                        This magic command allows for submitting a Q# operation or function
+                        to be run on the specified target in the current Azure Quantum workspace.
                         The command waits a specified amount of time for the job to complete before returning.
 
                         The Azure Quantum workspace must have been previously initialized
@@ -72,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         @"
-                            Execute a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            Run a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
                             on the active target in the current Azure Quantum workspace:
                             ```
                             In []: %azure.execute MyOperation a=5 b=10
@@ -88,7 +88,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                         @"
-                            Execute a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
+                            Run a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
                             on the active target in the current Azure Quantum workspace,
                             specifying a custom job name, number of shots, timeout, and polling interval:
                             ```

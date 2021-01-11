@@ -112,7 +112,10 @@ namespace Microsoft.Quantum.IQSharp
             {
                 throw new InvalidWorkspaceException($"Workspace is not ready. Try again.");
             }
-            else if (Workspace.HasErrors)
+
+            Workspace.Initialization.Wait();
+            
+            if (Workspace.HasErrors)
             {
                 throw new InvalidWorkspaceException(Workspace.ErrorMessages.ToArray());
             }

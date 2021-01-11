@@ -7,9 +7,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Microsoft.Jupyter.Core;
+using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
-using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -46,6 +46,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public BasisStateLabelingConvention BasisStateLabelingConvention { get; set; } = BasisStateLabelingConvention.Bitstring;
 
+        /// <summary>
+        ///     Whether the measurement probabilities will be displayed as an
+        ///     interactive histogram.
+        /// </summary>
+        private bool ShowMeasurementDisplayHistogram { get; set; } = false;
 
         /// <summary>
         ///     Sets the properties of this display dumper from a given
@@ -54,6 +59,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public JupyterDisplayDumper Configure(IConfigurationSource configurationSource)
         {
             configurationSource
+                .ApplyConfiguration<bool>("dump.measurementDisplayHistogram", value => ShowMeasurementDisplayHistogram = value)
                 .ApplyConfiguration<bool>("dump.truncateSmallAmplitudes", value => TruncateSmallAmplitudes = value)
                 .ApplyConfiguration<double>("dump.truncationThreshold", value => TruncationThreshold = value)
                 .ApplyConfiguration<BasisStateLabelingConvention>(
@@ -89,7 +95,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public override bool Dump(IQArray<Qubit>? qubits = null)
         {
             _count = qubits == null
-                        ? this.Simulator?.QubitManager?.GetAllocatedQubitsCount() ?? 0
+                        ? this.Simulator?.QubitManager?.AllocatedQubitsCount ?? 0
                         : qubits.Length;
             _data = new Complex[1 << ((int)_count)];
             var result = base.Dump(qubits);
@@ -97,14 +103,33 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // At this point, _data should be filled with the full state
             // vector, so let's display it, counting on the right display
             // encoder to be there to pack it into a table.
-            Channel.Display(new DisplayableState
+
+            var id = System.Guid.NewGuid();
+            var state = new DisplayableState
             {
                 // We cast here as we don't support a large enough number
                 // of qubits to saturate an int.
                 QubitIds = qubits?.Select(q => q.Id) ?? Simulator?.QubitIds.Select(q => (int)q) ?? Enumerable.Empty<int>(),
                 NQubits = (int)_count,
-                Amplitudes = _data
-            });
+                Amplitudes = _data,
+                DivId = $"dump-machine-div-{id}" 
+            };
+            Channel.Display(state);
+
+            if (ShowMeasurementDisplayHistogram)
+            {
+                Channel.SendIoPubMessage(new Message
+                {
+                    Header = new MessageHeader()
+                    {
+                        MessageType = "iqsharp_state_dump"
+                    },
+                    Content = new MeasurementHistogramContent()
+                    {
+                        State = state
+                    },
+                });
+            }
 
             // Clean up the state vector buffer.
             _data = null;
@@ -122,11 +147,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     }
 
     /// <summary>
-    ///     An implementation of <see cref="Microsoft.Quantum.Diagnostics.DumpMachine{__T__}" />
+    ///     An implementation of <see cref="Diagnostics.DumpMachine{__T__}" />
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpMachine<T> : Microsoft.Quantum.Diagnostics.DumpMachine<T>
+    public class JupyterDumpMachine<T> : QuantumSimulator.QsimDumpMachine<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
@@ -165,11 +190,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     }
 
     /// <summary>
-    ///     An implementation of <see cref="Microsoft.Quantum.Diagnostics.DumpRegister{__T__}" />
+    ///     An implementation of <see cref="Diagnostics.DumpRegister{__T__}" />
     ///     that dumps the state of its target machine to a Jupyter-displayable
     ///     object.
     /// </summary>
-    public class JupyterDumpRegister<T> : Microsoft.Quantum.Diagnostics.DumpRegister<T>
+    public class JupyterDumpRegister<T> : QuantumSimulator.QSimDumpRegister<T>
     {
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;

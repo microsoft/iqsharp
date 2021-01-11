@@ -74,11 +74,11 @@ def main(output_dir : str, uid_base : str, package : List[str]):
     with open(output_dir / "index.md", 'w', encoding='utf8') as f:
         f.write(index_content)
 
-def format_as_section(name : str, content : Optional[str]) -> str:
+def format_as_section(name : str, content : Optional[str], heading_level : int = 2) -> str:
     content = content.strip() if content else None
     return f"""
 
-## {name}
+{"#" * heading_level} {name}
 
 {content}
 
@@ -118,18 +118,20 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     magic_name = magic['Name'].strip()
     safe_name = magic_name.replace('%', '')
     uid = f"{uid_base}.{safe_name}"
+    doc = magic['Documentation']
+    raw_summary = doc.get('Summary', "")
     metadata = {
         'title': f"{magic_name} (magic command)",
+        'description': raw_summary.strip(),
         'author': 'rmshaffer',
         'uid': uid,
-        'ms.author': 'rmshaffer',
+        'ms.author': 'ryansha',
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
-        'ms.topic': 'article'
+        'ms.topic': 'managed-reference'
     }
+    
     header = f"# `{magic_name}`"
-    doc = magic['Documentation']
 
-    raw_summary = doc.get('Summary', "")
     summary = format_as_section('Summary', raw_summary)
     description = format_as_section(
         'Description',
@@ -138,10 +140,10 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     remarks = format_as_section('Remarks', doc.get('Remarks', ""))
 
     raw_examples = doc.get('Examples', [])
-    examples = "\n".join(
-        format_as_section("Example", example)
-        for example in raw_examples
-    ) if raw_examples else ""
+    examples = format_as_section(f'Examples for `{magic_name}`', "\n".join(
+        format_as_section(f"Example {i+1}", example, heading_level=3)
+        for i, example in enumerate(raw_examples)
+    )) if raw_examples else ""
 
     raw_see_also = doc.get('SeeAlso', [])
     see_also = format_as_section(
@@ -179,11 +181,17 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
 def format_toc(all_magics : Dict[str, MagicReferenceDocument]) -> str:
     toc_content = [
         {
+            'href': "index.md",
+            'name': "IQ# magic commands"
+        }
+    ]
+    toc_content.extend([
+        {
             'href': f"{doc.safe_name}.md",
             'name': f"{doc.name} magic command"
         }
         for magic_name, doc in sorted(all_magics.items(), key=lambda item: item[0])
-    ]
+    ])
     
     as_yaml = StringIO()
     yaml.dump(toc_content, as_yaml)
@@ -198,9 +206,10 @@ def format_index(all_magics : Dict[str, MagicReferenceDocument], uid_base : str)
     )
     metadata = {
         'title': "IQ# Magic Commands",
+        'description': "Lists the magic commands available in the IQ# Jupyter kernel.",
         'author': 'rmshaffer',
         'uid': f"{uid_base}.index",
-        'ms.author': 'rmshaffer',
+        'ms.author': 'ryansha',
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
         'ms.topic': 'article'
     }

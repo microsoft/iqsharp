@@ -16,6 +16,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public string? Name { get; }
         public string? SubscriptionId { get; }
         public string? ResourceGroup { get; }
+        public string? Location { get; }
 
         public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
         public Task<CloudJob?> GetJobAsync(string jobId);

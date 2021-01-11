@@ -145,6 +145,41 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string SimpleDebugOperation =
+ @"
+    operation SimpleDebugOperation() : (Result, Result)
+    {
+        using (qubits = Qubit[2])
+        {
+            H(qubits[0]);
+            H(qubits[1]);
+            return (M(qubits[0]), M(qubits[1]));
+        }
+    }
+";
+
+        public static string ApplyWithinBlock =
+ @"
+    /// # Summary
+    ///     Checks that within/apply block is properly compiled.
+    ///     See https://github.com/microsoft/iqsharp/issues/266.
+    @EntryPoint()
+    operation ApplyWithinBlock() : Unit
+    {
+        using (q = Qubit())
+        {
+            within {
+                H(q);
+                Message(""Within"");
+            }
+            apply {
+                X(q);
+                Message(""Apply"");
+            }
+        }
+    }
+";
+
         public static string DependsOnWorkspace =
 @"
     /// # Summary
@@ -152,6 +187,21 @@ namespace Tests.IQSharp
     operation DependsOnWorkspace() : Result[]
     {
         return Tests.qss.HelloAgain(5, ""Foo"");
+    }
+";
+
+        public static string DumpToFile =
+@"
+    /// # Summary
+    ///     This checks the ability to dump simulator state to a file.
+    operation DumpToFile() : Unit
+    {
+        using (qs = Qubit[2])
+        {
+            Microsoft.Quantum.Diagnostics.DumpMachine(""DumpMachine.txt"");
+            Microsoft.Quantum.Diagnostics.DumpRegister(""DumpRegister.txt"", qs);
+            Message(""Dumped to file!"");
+        }
     }
 ";
 
@@ -218,8 +268,6 @@ namespace Tests.IQSharp
 
         public static string UseJordanWignerEncodingData =
 @"
-    open Microsoft.Quantum.Convert;
-    open Microsoft.Quantum.Math;
     open Mock.Chemistry;
     
     operation UseJordanWignerEncodingData (qSharpData: JordanWignerEncodingData, nBitsPrecision : Int, trotterStepSize : Double) : (Double, Double) {        

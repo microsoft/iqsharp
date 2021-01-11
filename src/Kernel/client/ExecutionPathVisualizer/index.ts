@@ -3,8 +3,7 @@ import { formatGates } from './formatters/gateFormatter';
 import { formatRegisters } from './formatters/registerFormatter';
 import { processOperations } from './process';
 import { Circuit } from './circuit';
-import { Metadata } from './metadata';
-import { GateType } from './constants';
+import { Metadata, GateType } from './metadata';
 import { StyleConfig, style, STYLES } from './styles';
 import { createUUID } from './utils';
 
@@ -177,7 +176,8 @@ class ExecutionPathVisualizer {
 /** Exported function for creating a new ExecutionPathVisualizer class. */
 export const createExecutionPathVisualizer = (): ExecutionPathVisualizer => new ExecutionPathVisualizer();
 export { STYLES } from './styles';
+export { ConditionalRender } from './circuit';
 
 // Export types
 export type { Circuit, StyleConfig, ExecutionPathVisualizer, ComposedCircuit };
-export type { Qubit, Operation, ConditionalRender } from './circuit';
+export type { Qubit, Operation } from './circuit';
