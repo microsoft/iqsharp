@@ -52,7 +52,6 @@ namespace Tests.IQSharp
             var response = await engine.ExecuteMundane(source, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            Assert.AreEqual(0, channel.msgs.Count);
             CollectionAssert.AreEquivalent(expectedOps, response.Output as string[]);
 
             return response.Output?.ToString();
