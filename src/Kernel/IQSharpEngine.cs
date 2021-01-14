@@ -78,6 +78,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // and deserializers. Since that runs in the background, starting
             // the engine should not be blocked, and other services can
             // continue to initialize while the Q# compilation loader works.
+            //
+            // For more details, see:
+            //     https://github.com/microsoft/qsharp-compiler/pull/727
+            //     https://github.com/microsoft/qsharp-compiler/pull/810
             logger.LogDebug("Loading serialization and deserialziation protocols.");
             Protocols.Initialize();
 
