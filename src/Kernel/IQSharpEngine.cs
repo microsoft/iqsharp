@@ -44,6 +44,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal IWorkspace? Workspace { get; private set; } = null;
 
+        private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
+        private Task initialized => initializedSource.Task;
+
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
         /// of compiling and keeping track of the code Snippets provided by users.
@@ -120,8 +123,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Process.GetCurrentProcess().Id
             );
 
-
             eventService?.TriggerServiceInitialized<IExecutionEngine>(this);
+
+            var initializedSuccessfully = initializedSource.TrySetResult(true);
+            #if DEBUG
+                Debug.Assert(initializedSuccessfully, "Was unable to complete initialization task.");
+            #endif
         }
 
         /// <summary>
@@ -217,9 +224,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 try
                 {
-                    await Workspace.Initialization;
+                    await this.initialized;
+                    // Once the engine is initialized, we know that Workspace
+                    // and Snippets are both not-null.
+                    var workspace = this.Workspace!;
+                    var snippets = this.Snippets!;
 
-                    var code = Snippets.Compile(input);
+                    await workspace.Initialization;
+
+                    var code = snippets.Compile(input);
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
 
