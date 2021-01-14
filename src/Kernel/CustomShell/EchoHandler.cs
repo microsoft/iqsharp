@@ -13,7 +13,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     internal class EchoReplyContent : MessageContent
     {
         [JsonProperty("value")]
-        public string Value { get; set; }
+        public string Value { get; set; } = "";
     }
 
     /// <summary>
