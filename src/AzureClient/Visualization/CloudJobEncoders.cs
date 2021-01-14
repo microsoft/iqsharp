@@ -22,6 +22,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? dateTime
             : null as DateTime?;
 
+        // Overloading `ToDateTime` in order to unblock changes in PR https://github.com/microsoft/qsharp-runtime/pull/467. 
         private static DateTime? ToDateTime(this DateTime? dateTime) => dateTime;
 
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
