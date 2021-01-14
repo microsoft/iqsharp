@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public MagicSymbol Resolve(string symbolName)
+        public MagicSymbol? Resolve(string symbolName)
         {
             if (symbolName == null || !symbolName.TrimStart().StartsWith("%")) return null;
 
@@ -102,59 +102,65 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             return null;
         }
 
-        /// <summary>
-        /// Finds the MagicSymbols inside an assembly, and returns an instance of each.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindMagic(AssemblyInfo assm)
         {
             var result = new MagicSymbol[0];
 
-            if (cache.TryGetValue(assm, out result))
+            lock (cache)
             {
-                return result;
-            }
-
-            this.logger.LogInformation($"Looking for MagicSymbols in {assm.Assembly.FullName}");
-
-            // If types from an assembly cannot be loaded, log a warning and continue.
-            var allMagic = new List<MagicSymbol>();
-            try
-            {
-                var magicTypes = assm.Assembly
-                    .GetTypes()
-                    .Where(t =>
-                    {
-                        if (!t.IsClass && t.IsAbstract) { return false; }
-                        var matched = t.IsSubclassOf(typeof(MagicSymbol));
-                        this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
-                        return matched;
-                    });
-
-                foreach (var t in magicTypes)
+                if (cache.TryGetValue(assm, out result))
                 {
-                    try
+                    return result;
+                }
+
+                this.logger.LogInformation($"Looking for MagicSymbols in {assm.Assembly.FullName}");
+
+                // If types from an assembly cannot be loaded, log a warning and continue.
+                var allMagic = new List<MagicSymbol>();
+                try
+                {
+                    var magicTypes = assm.Assembly
+                        .GetTypes()
+                        .Where(t =>
+                        {
+                            if (!t.IsClass && t.IsAbstract) { return false; }
+                            var matched = t.IsSubclassOf(typeof(MagicSymbol));
+
+                            // This logging statement is expensive, so we only run it when we need to for debugging.
+                            #if DEBUG
+                            this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
+                            #endif
+
+                            return matched;
+                        });
+
+                    foreach (var t in magicTypes)
                     {
-                        var m = ActivatorUtilities.CreateInstance(services, t) as MagicSymbol;
-                        allMagic.Add(m);
-                        this.logger.LogInformation($"Found MagicSymbols {m.Name} ({t.FullName})");
-                    }
-                    catch (Exception e)
-                    {
-                        this.logger.LogWarning($"Unable to create instance of MagicSymbol {t.FullName}. Magic will not be enabled.\nMessage:{e.Message}");
+                        try
+                        {
+                            var m = ActivatorUtilities.CreateInstance(services, t) as MagicSymbol;
+                            allMagic.Add(m);
+                            this.logger.LogInformation($"Found MagicSymbols {m.Name} ({t.FullName})");
+                        }
+                        catch (Exception e)
+                        {
+                            this.logger.LogWarning($"Unable to create instance of MagicSymbol {t.FullName}. Magic will not be enabled.\nMessage:{e.Message}");
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(
-                    ex,
-                    "Encountered exception loading types from {AssemblyName}.",
-                    assm.Assembly.FullName
-                );
-            }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(
+                        ex,
+                        "Encountered exception loading types from {AssemblyName}.",
+                        assm.Assembly.FullName
+                    );
+                }
 
-            result = allMagic.ToArray();
-            cache[assm] = result;
+                result = allMagic.ToArray();
+                cache[assm] = result;
+            }
 
             return result;
         }
