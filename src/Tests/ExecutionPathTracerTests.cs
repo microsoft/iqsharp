@@ -67,11 +67,12 @@ namespace Tests.IQSharp
         }
 
         // Helper functions for tests
-        public Operation ControlledX(int[] controlId, int targetId) =>
+        public Operation ControlledX(int[] controlId, int targetId, bool isAdjoint = false) =>
             new Operation()
             {
                 Gate = "X",
                 IsControlled = true,
+                IsAdjoint = isAdjoint,
                 Controls = controlId.Select(id => new QubitRegister(id)),
                 Targets = new List<Register>() { new QubitRegister(targetId) },
             };
@@ -194,7 +195,7 @@ namespace Tests.IQSharp
                         new [] {
                             ControlledX(new int[] { 0 }, 1),
                             ControlledX(new int[] { 1 }, 0),
-                            ControlledX(new int[] { 0 }, 1),
+                            ControlledX(new int[] { 0 }, 1, isAdjoint: true),
                         }
                     )
                 },
