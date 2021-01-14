@@ -17,6 +17,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal static class CloudJobExtensions
     {
+        private static DateTime? ToDateTime(this string serializedDateTime) =>
+            DateTime.TryParse(serializedDateTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime)
+            ? dateTime
+            : null as DateTime?;
+
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
             new Dictionary<string, object?>()
             {
@@ -26,9 +31,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ["uri"] = cloudJob.Uri.ToString(),
                 ["provider"] = cloudJob.Details.ProviderId,
                 ["target"] = cloudJob.Details.Target,
-                ["creation_time"] = cloudJob.Details.CreationTime?.ToUniversalTime(),
-                ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime?.ToUniversalTime(),
-                ["end_execution_time"] = cloudJob.Details.EndExecutionTime?.ToUniversalTime(),
+                ["creation_time"] = cloudJob.Details.CreationTime.ToDateTime()?.ToUniversalTime(),
+                ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToUniversalTime(),
+                ["end_execution_time"] = cloudJob.Details.EndExecutionTime.ToDateTime()?.ToUniversalTime(),
             };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
@@ -40,9 +45,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Job ID", cloudJob => $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{cloudJob.Id}</a>"),
                     ("Job Status", cloudJob => cloudJob.Status),
                     ("Target", cloudJob => cloudJob.Details.Target),
-                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
-                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
-                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
+                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),
+                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
+                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
