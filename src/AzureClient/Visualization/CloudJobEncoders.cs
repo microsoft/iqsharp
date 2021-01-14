@@ -22,6 +22,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? dateTime
             : null as DateTime?;
 
+        private static DateTime? ToDateTime(this DateTime? dateTime) => dateTime;
+
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
             new Dictionary<string, object?>()
             {
