@@ -30,6 +30,8 @@ namespace Tests.IQSharp
         public IQSharpEngine Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
+            engine.Start();
+            engine.Initialized.Wait();
             engine.Workspace.Initialization.Wait();
             return engine;
         }

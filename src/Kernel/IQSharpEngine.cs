@@ -45,7 +45,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         internal IWorkspace? Workspace { get; private set; } = null;
 
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
-        private Task initialized => initializedSource.Task;
+        internal Task Initialized => initializedSource.Task;
 
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
@@ -224,7 +224,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 try
                 {
-                    await this.initialized;
+                    await this.Initialized;
                     // Once the engine is initialized, we know that Workspace
                     // and Snippets are both not-null.
                     var workspace = this.Workspace!;
