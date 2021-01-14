@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
 
 using Microsoft.Jupyter.Core;
@@ -54,8 +55,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             })
         {
             this.resolver = resolver;
-            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
-            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
+            if (engine is IQSharpEngine iQSharpEngine)
+            {
+                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
+                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
+            }
+            else
+            {
+                throw new Exception($"Expected execution engine to be an IQ# engine, but was {engine.GetType()}.");
+            }
         }
 
         /// <inheritdoc />

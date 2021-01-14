@@ -36,7 +36,7 @@ namespace Tests.IQSharp
         {
             var mgr = Init();
 
-            async Task TestOne(string pkg, string version)
+            async Task TestOne(string pkg, string? version)
             {
                 var actual = await mgr.GetLatestVersion(pkg);
 
