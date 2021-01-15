@@ -27,13 +27,13 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
-        public IQSharpEngine Init(string workspace = "Workspace")
+        public async Task<IQSharpEngine> Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
             engine.Start();
-            engine.Initialized.Wait();
+            await engine.Initialized;
             Assert.IsNotNull(engine.Workspace);
-            engine.Workspace!.Initialization.Wait();
+            await engine.Workspace!.Initialization;
             return engine;
         }
 
@@ -48,6 +48,16 @@ namespace Tests.IQSharp
             Console.WriteLine("Messages:");
             foreach (var m in channel.msgs) Console.WriteLine($"  {m}");
         }
+
+        public static string SessionAsString(IEnumerable<Message> session) =>
+            string.Join("\n",
+                session.Select(message =>
+                    $"\tHeader: {JsonConvert.SerializeObject(message.Header)}\n" +
+                    $"\tParent header: {JsonConvert.SerializeObject(message.ParentHeader)}\n" +
+                    $"\tMetadata: {JsonConvert.SerializeObject(message.Metadata)}\n" +
+                    $"\tContent: {JsonConvert.SerializeObject(message.Content)}\n\n"
+                )
+            );
 
         public static async Task<string?> AssertCompile(IQSharpEngine engine, string source, params string[] expectedOps)
         {
@@ -98,7 +108,7 @@ namespace Tests.IQSharp
 
         private async Task AssertTrace(string name, ExecutionPath expectedPath, int expectedDepth)
         {
-            var engine = Init("Workspace.ExecutionPathTracer");
+            var engine = await Init("Workspace.ExecutionPathTracer");
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
             Assert.IsNotNull(engine.SymbolsResolver);
@@ -141,14 +151,14 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task CompileOne()
         {
-            var engine = Init();
+            var engine = await Init();
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
         }
 
         [TestMethod]
         public async Task CompileAndSimulate()
         {
-            var engine = Init();
+            var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource);
@@ -172,7 +182,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task SimulateWithArguments()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile it:
             await AssertCompile(engine, SNIPPETS.Reverse, "Reverse");
@@ -185,7 +195,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task OpenNamespaces()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile:
             await AssertCompile(engine, SNIPPETS.OpenNamespaces1);
@@ -199,7 +209,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task OpenAliasedNamespaces()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile:
             await AssertCompile(engine, SNIPPETS.OpenAliasedNamespace);
@@ -212,7 +222,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task CompileApplyWithin()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile:
             await AssertCompile(engine, SNIPPETS.ApplyWithinBlock, "ApplyWithinBlock");
@@ -224,7 +234,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task Estimate()
         {
-            var engine = Init();
+            var engine = await Init();
             var channel = new MockChannel();
 
             // Compile it:
@@ -237,7 +247,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task Toffoli()
         {
-            var engine = Init();
+            var engine = await Init();
             var channel = new MockChannel();
             Assert.IsNotNull(engine.SymbolsResolver);
 
@@ -257,7 +267,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task DependsOnWorkspace()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile it:
             await AssertCompile(engine, SNIPPETS.DependsOnWorkspace, "DependsOnWorkspace");
@@ -270,7 +280,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task UpdateSnippet()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile it:
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
@@ -288,7 +298,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task DumpToFile()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile DumpMachine snippet.
             await AssertCompile(engine, SNIPPETS.DumpToFile, "DumpToFile");
@@ -316,7 +326,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task UpdateDependency()
         {
-            var engine = Init();
+            var engine = await Init();
 
             // Compile HelloQ
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
@@ -334,7 +344,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task ReportWarnings()
         {
-            var engine = Init();
+            var engine = await Init();
 
             {
                 var channel = new MockChannel();
@@ -364,7 +374,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task ReportErrors()
         {
-            var engine = Init();
+            var engine = await Init();
 
             var channel = new MockChannel();
             var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
@@ -377,7 +387,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestPackages()
         {
-            var engine = Init();
+            var engine = await Init();
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
 
@@ -415,7 +425,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestInvalidPackages()
         {
-            var engine = Init();
+            var engine = await Init();
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
             var pkgMagic = new PackageMagic(snippets!.GlobalReferences);
@@ -433,7 +443,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestProjectMagic()
         {
-            var engine = Init();
+            var engine = await Init();
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
             var projectMagic = new ProjectMagic(snippets!.Workspace);
@@ -468,7 +478,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestWorkspace()
         {
-            var engine = Init("Workspace.Chemistry");
+            var engine = await Init("Workspace.Chemistry");
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
 
@@ -605,7 +615,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestDebugMagic()
         {
-            var engine = Init();
+            var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
 
@@ -656,9 +666,20 @@ namespace Tests.IQSharp
             Assert.AreEqual(System.Threading.Tasks.TaskStatus.RanToCompletion, debugTask.Status);
 
             // Ensure that expected messages were sent
-            Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_opstart", channel.iopubMessages[1].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages.Last().Header.MessageType);
+            try
+            {
+                Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_opstart", channel.iopubMessages[1].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages.Last().Header.MessageType);
+            }
+            catch (AssertFailedException ex)
+            {
+                await Console.Error.WriteLineAsync(
+                    "IOPub messages sent by %debug were incorrect.\nReceived messages:\n" +
+                    SessionAsString(channel.iopubMessages)
+                );
+                throw ex;
+            }
             Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
             Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
 
@@ -671,7 +692,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestDebugMagicCancel()
         {
-            var engine = Init();
+            var engine = await Init();
             // Since Init guarantees that engine services have started, we
             // assert non-nullness here.
             Assert.IsNotNull(engine.SymbolsResolver);
@@ -694,8 +715,19 @@ namespace Tests.IQSharp
             Assert.ThrowsException<AggregateException>(() => debugTask.Wait());
 
             // Ensure that expected messages were sent
-            Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[1].Header.MessageType);
+            try
+            {
+                Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[1].Header.MessageType);
+            }
+            catch (AssertFailedException ex)
+            {
+                await Console.Error.WriteLineAsync(
+                    "IOPub messages sent by %debug were incorrect.\nReceived messages:\n" +
+                    SessionAsString(channel.iopubMessages)
+                );
+                throw ex;
+            }
             Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
             Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
         }
