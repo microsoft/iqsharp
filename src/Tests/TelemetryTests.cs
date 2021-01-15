@@ -39,6 +39,16 @@ namespace Tests.IQSharp
     {
         public static readonly Type TelemetryServiceType = typeof(MockTelemetryService);
 
+        public IQSharpEngine Init(IServiceProvider services)
+        {
+            var engine = services.GetService<IExecutionEngine>() as IQSharpEngine;
+            engine.Start();
+            engine.Initialized.Wait();
+            Assert.IsNotNull(engine.Workspace);
+            engine.Workspace!.Initialization.Wait();
+            return engine;
+        }
+
         [TestMethod]
         public void MockTelemetryService()
         {
@@ -249,7 +259,7 @@ namespace Tests.IQSharp
             var services = Startup.CreateServiceProvider(workspace);
             var logger = GetAppLogger(services);
 
-            var engine = services.GetService<IExecutionEngine>() as IQSharpEngine;
+            var engine = Init(services);
             var channel = new MockChannel();
 
             logger.Events.Clear();
