@@ -43,6 +43,10 @@ function Test-One {
             --no-build `
             --logger trx `
             --filter $_ `
+            <# Enable additional output from the test logger, but
+               without also turning on lots of additional noise from msbuild.
+            #> `
+            --logger:"console;verbosity=detailed" `
             /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
             /property:InformationalVersion=$Env:SEMVER_VERSION `
             /property:Version=$Env:ASSEMBLY_VERSION
