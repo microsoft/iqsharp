@@ -27,6 +27,10 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
+        // We want to make sure that tests that exercise the %debug magic
+        // do not run at the same time, since they each check the list of IOPub
+        // messages going back and forth to the rest of the kernel.
+        private object debugTestLock = new object();
         public IQSharpEngine Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
@@ -605,99 +609,105 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task TestDebugMagic()
         {
-            var engine = Init();
-            Assert.IsNotNull(engine.SymbolsResolver);
-            await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
-
-            var configSource = new ConfigurationSource(skipLoading: true);
-            var debugMagic = new DebugMagic(engine.SymbolsResolver!, configSource, engine.ShellRouter, engine.ShellServer, null);
-
-            // Start a debug session
-            var channel = new MockChannel();
-            var cts = new CancellationTokenSource();
-            var debugTask = debugMagic.RunAsync("SimpleDebugOperation", channel, cts.Token);
-
-            // Retrieve the debug session ID
-            var message = channel.iopubMessages[0];
-            Assert.IsNotNull(message);
-            Assert.AreEqual("iqsharp_debug_sessionstart", message.Header.MessageType);
-
-            var content = message.Content as DebugSessionContent;
-            Assert.IsNotNull(content);
-            var debugSessionId = content!.DebugSession;
-
-            // Send several iqsharp_debug_advance messages
-            var debugAdvanceMessage = new Message
+            lock (debugTestLock)
             {
-                Header = new MessageHeader
+                var engine = Init();
+                Assert.IsNotNull(engine.SymbolsResolver);
+                await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
+
+                var configSource = new ConfigurationSource(skipLoading: true);
+                var debugMagic = new DebugMagic(engine.SymbolsResolver!, configSource, engine.ShellRouter, engine.ShellServer, null);
+
+                // Start a debug session
+                var channel = new MockChannel();
+                var cts = new CancellationTokenSource();
+                var debugTask = debugMagic.RunAsync("SimpleDebugOperation", channel, cts.Token);
+
+                // Retrieve the debug session ID
+                var message = channel.iopubMessages[0];
+                Assert.IsNotNull(message);
+                Assert.AreEqual("iqsharp_debug_sessionstart", message.Header.MessageType);
+
+                var content = message.Content as DebugSessionContent;
+                Assert.IsNotNull(content);
+                var debugSessionId = content!.DebugSession;
+
+                // Send several iqsharp_debug_advance messages
+                var debugAdvanceMessage = new Message
                 {
-                    MessageType = "iqsharp_debug_advance"
-                },
-                Content = new UnknownContent
-                {
-                    Data = new Dictionary<string, object>
+                    Header = new MessageHeader
                     {
-                        ["debug_session"] = debugSessionId
+                        MessageType = "iqsharp_debug_advance"
+                    },
+                    Content = new UnknownContent
+                    {
+                        Data = new Dictionary<string, object>
+                        {
+                            ["debug_session"] = debugSessionId
+                        }
                     }
+                };
+
+                foreach (int _ in Enumerable.Range(0, 1000))
+                {
+                    Thread.Sleep(millisecondsTimeout: 10);
+                    if (debugTask.IsCompleted)
+                        break;
+
+                    await debugMagic.HandleAdvanceMessage(debugAdvanceMessage);
                 }
-            };
 
-            foreach (int _ in Enumerable.Range(0, 1000))
-            {
-                Thread.Sleep(millisecondsTimeout: 10);
-                if (debugTask.IsCompleted)
-                    break;
+                // Verify that the command completes successfully
+                Assert.IsTrue(debugTask.IsCompleted);
+                Assert.AreEqual(System.Threading.Tasks.TaskStatus.RanToCompletion, debugTask.Status);
 
-                await debugMagic.HandleAdvanceMessage(debugAdvanceMessage);
+                // Ensure that expected messages were sent
+                Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_opstart", channel.iopubMessages[1].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages.Last().Header.MessageType);
+                Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
+                Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
+
+                // Verify debug status content
+                var debugStatusContent = channel.iopubMessages[1].Content as DebugStatusContent;
+                Assert.IsNotNull(debugStatusContent?.State);
+                Assert.AreEqual(debugSessionId, debugStatusContent?.DebugSession);
             }
-
-            // Verify that the command completes successfully
-            Assert.IsTrue(debugTask.IsCompleted);
-            Assert.AreEqual(System.Threading.Tasks.TaskStatus.RanToCompletion, debugTask.Status);
-
-            // Ensure that expected messages were sent
-            Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_opstart", channel.iopubMessages[1].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages.Last().Header.MessageType);
-            Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
-            Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
-
-            // Verify debug status content
-            var debugStatusContent = channel.iopubMessages[1].Content as DebugStatusContent;
-            Assert.IsNotNull(debugStatusContent?.State);
-            Assert.AreEqual(debugSessionId, debugStatusContent?.DebugSession);
         }
 
         [TestMethod]
         public async Task TestDebugMagicCancel()
         {
-            var engine = Init();
-            // Since Init guarantees that engine services have started, we
-            // assert non-nullness here.
-            Assert.IsNotNull(engine.SymbolsResolver);
-            await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
+            lock (debugTestLock)
+            {
+                var engine = Init();
+                // Since Init guarantees that engine services have started, we
+                // assert non-nullness here.
+                Assert.IsNotNull(engine.SymbolsResolver);
+                await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
 
-            var configSource = new ConfigurationSource(skipLoading: true);
-            // We asserted that SymbolsResolver is not null above, and can use
-            // the null-forgiving operator here as a result.
-            var debugMagic = new DebugMagic(engine.SymbolsResolver!, configSource, engine.ShellRouter, engine.ShellServer, null);
+                var configSource = new ConfigurationSource(skipLoading: true);
+                // We asserted that SymbolsResolver is not null above, and can use
+                // the null-forgiving operator here as a result.
+                var debugMagic = new DebugMagic(engine.SymbolsResolver!, configSource, engine.ShellRouter, engine.ShellServer, null);
 
-            // Start a debug session
-            var channel = new MockChannel();
-            var cts = new CancellationTokenSource();
-            var debugTask = debugMagic.RunAsync("SimpleDebugOperation", channel, cts.Token);
+                // Start a debug session
+                var channel = new MockChannel();
+                var cts = new CancellationTokenSource();
+                var debugTask = debugMagic.RunAsync("SimpleDebugOperation", channel, cts.Token);
 
-            // Cancel the session
-            cts.Cancel();
+                // Cancel the session
+                cts.Cancel();
 
-            // Ensure that the task throws an exception
-            Assert.ThrowsException<AggregateException>(() => debugTask.Wait());
+                // Ensure that the task throws an exception
+                Assert.ThrowsException<AggregateException>(() => debugTask.Wait());
 
-            // Ensure that expected messages were sent
-            Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
-            Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[1].Header.MessageType);
-            Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
-            Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
+                // Ensure that expected messages were sent
+                Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
+                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[1].Header.MessageType);
+                Assert.IsTrue(channel.msgs[0].Contains("Starting debug session"));
+                Assert.IsTrue(channel.msgs[1].Contains("Finished debug session"));
+            }
         }
 
         [TestMethod]
