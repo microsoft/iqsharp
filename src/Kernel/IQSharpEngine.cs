@@ -45,7 +45,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         internal IWorkspace? Workspace { get; private set; } = null;
 
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
-        internal Task Initialized => initializedSource.Task;
+
+        /// <inheritdoc />
+        public override Task Initialized => initializedSource.Task;
 
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
