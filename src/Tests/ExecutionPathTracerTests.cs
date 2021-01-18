@@ -85,7 +85,6 @@ namespace Tests.IQSharp
             {
                 Gate = "X",
                 IsControlled = true,
-                IsAdjoint = false,
                 Controls = controlId.Select(id => new QubitRegister(id)),
                 Targets = new List<Register>() { new QubitRegister(targetId) },
             };
