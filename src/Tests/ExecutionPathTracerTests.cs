@@ -66,13 +66,26 @@ namespace Tests.IQSharp
             }
         }
 
+        private Operation NormalizeAdjointness(Operation operation)
+        {
+            var alteredOperation = operation;
+            alteredOperation.IsAdjoint = false;
+            alteredOperation.Children = operation.Children?.Select(NormalizeAdjointness).ToImmutableList();
+            return alteredOperation;
+        }
+
+        // Sets `IsAdjoint` to `false` recursively for all operations in an execution path
+        protected ExecutionPath NormalizeAdjointness(ExecutionPath path) =>
+
+            new ExecutionPath(path.Qubits, path.Operations.Select(NormalizeAdjointness));
+
         // Helper functions for tests
-        public Operation ControlledX(int[] controlId, int targetId, bool isAdjoint = false) =>
+        public Operation ControlledX(int[] controlId, int targetId) =>
             new Operation()
             {
                 Gate = "X",
                 IsControlled = true,
-                IsAdjoint = isAdjoint,
+                IsAdjoint = false,
                 Controls = controlId.Select(id => new QubitRegister(id)),
                 Targets = new List<Register>() { new QubitRegister(targetId) },
             };
@@ -179,7 +192,10 @@ namespace Tests.IQSharp
         [TestMethod]
         public void SwapTest()
         {
-            var path = GetExecutionPath("SwapCirc");
+            // NOTE: we only normalize the IsAdjoint property here, because
+            //       self adjoint attribution is not propagated from the Q#
+            //       AST to C# code generation.
+            var path = NormalizeAdjointness(GetExecutionPath("SwapCirc"));
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0),
@@ -195,7 +211,7 @@ namespace Tests.IQSharp
                         new [] {
                             ControlledX(new int[] { 0 }, 1),
                             ControlledX(new int[] { 1 }, 0),
-                            ControlledX(new int[] { 0 }, 1, isAdjoint: true),
+                            ControlledX(new int[] { 0 }, 1),
                         }
                     )
                 },
