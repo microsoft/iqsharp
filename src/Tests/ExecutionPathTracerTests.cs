@@ -66,6 +66,19 @@ namespace Tests.IQSharp
             }
         }
 
+        private Operation NormalizeAdjointness(Operation operation)
+        {
+            var alteredOperation = operation;
+            alteredOperation.IsAdjoint = false;
+            alteredOperation.Children = operation.Children?.Select(NormalizeAdjointness).ToImmutableList();
+            return alteredOperation;
+        }
+
+        // Sets `IsAdjoint` to `false` recursively for all operations in an execution path
+        protected ExecutionPath NormalizeAdjointness(ExecutionPath path) =>
+
+            new ExecutionPath(path.Qubits, path.Operations.Select(NormalizeAdjointness));
+
         // Helper functions for tests
         public Operation ControlledX(int[] controlId, int targetId) =>
             new Operation()
@@ -178,7 +191,10 @@ namespace Tests.IQSharp
         [TestMethod]
         public void SwapTest()
         {
-            var path = GetExecutionPath("SwapCirc");
+            // NOTE: we only normalize the IsAdjoint property here, because
+            //       self adjoint attribution is not propagated from the Q#
+            //       AST to C# code generation.
+            var path = NormalizeAdjointness(GetExecutionPath("SwapCirc"));
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0),
