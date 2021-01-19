@@ -111,7 +111,7 @@ namespace Microsoft.Quantum.IQSharp
 
         public NugetPackages(
             IOptions<Settings> config,
-            ILogger<NugetPackages> logger
+            ILogger<NugetPackages>? logger
         )
         {
             this.Logger = new NuGetLogger(logger);
