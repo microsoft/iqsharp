@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.5.124273" />
+    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.5.124810" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />
   </ItemGroup>
 

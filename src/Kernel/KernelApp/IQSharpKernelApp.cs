@@ -63,7 +63,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         /// <param name="eventService">The event service where the EventSubPub lives</param>
         /// <returns>The typed EventPubSub for the KernelStarted event</returns>
-        public static EventPubSub<KernelStartedEvent, IQSharpKernelApp> OnKernelStarted(this IEventService eventService)
+        public static EventPubSub<KernelStartedEvent, IQSharpKernelApp>? OnKernelStarted(this IEventService eventService)
         {
             return eventService?.Events<KernelStartedEvent, IQSharpKernelApp>();
         }
@@ -73,7 +73,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         /// <param name="eventService">The event service where the EventSubPub lives</param>
         /// <returns>The typed EventPubSub for the KernelStopped event</returns>
-        public static EventPubSub<KernelStoppedEvent, IQSharpKernelApp> OnKernelStopped(this IEventService eventService)
+        public static EventPubSub<KernelStoppedEvent, IQSharpKernelApp>? OnKernelStopped(this IEventService eventService)
         {
             return eventService?.Events<KernelStoppedEvent, IQSharpKernelApp>();
         }

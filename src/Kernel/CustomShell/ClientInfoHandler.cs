@@ -17,34 +17,34 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     internal class ClientInfoContent : MessageContent
     {
         [JsonProperty("hosting_environment")]
-        public string HostingEnvironment { get; set; }
+        public string? HostingEnvironment { get; set; }
 
         [JsonProperty("iqsharp_version")]
-        public string IQSharpVersion { get; set; }
+        public string? IQSharpVersion { get; set; }
 
         [JsonProperty("user_agent")]
-        public string UserAgent { get; set; }
+        public string? UserAgent { get; set; }
 
         [JsonProperty("client_id")]
-        public string ClientId { get; set; }
+        public string? ClientId { get; set; }
 
         [JsonProperty("client_isnew")]
         public bool? ClientIsNew { get; set; }
 
         [JsonProperty("client_host")]
-        public string ClientHost { get; set; }
+        public string? ClientHost { get; set; }
 
         [JsonProperty("client_origin")]
-        public string ClientOrigin { get; set; }
+        public string? ClientOrigin { get; set; }
 
         [JsonProperty("client_first_origin")]
-        public string ClientFirstOrigin { get; set; }
+        public string? ClientFirstOrigin { get; set; }
 
         [JsonProperty("client_language")]
-        public string ClientLanguage { get; set; }
+        public string? ClientLanguage { get; set; }
 
         [JsonProperty("client_country")]
-        public string ClientCountry { get; set; }
+        public string? ClientCountry { get; set; }
 
         [JsonProperty("telemetry_opt_out")]
         public bool? TelemetryOptOut { get; set; }
@@ -69,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     internal class ClientInfoHandler : IShellHandler
     {
-        public string UserAgent { get; private set; }
+        public string? UserAgent { get; private set; }
         private readonly ILogger<ClientInfoHandler> logger;
         private readonly IMetadataController metadata;
         private readonly IShellServer shellServer;

@@ -22,18 +22,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public static T To<T>(this Message message)
             where T : MessageContent
         {
-            var content = (message.Content as UnknownContent);
-            var result = Activator.CreateInstance<T>();
-            foreach (var property in typeof(T).GetProperties().Where(p => p.CanWrite))
+            if (message.Content is UnknownContent content)
             {
-                var jsonPropertyAttribute = property.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
-                var propertyName = jsonPropertyAttribute?.PropertyName ?? property.Name;
-                if (content.Data.TryGetValue(propertyName, out var value))
+                var result = Activator.CreateInstance<T>();
+                foreach (var property in typeof(T).GetProperties().Where(p => p.CanWrite))
                 {
-                    property.SetValue(result, content.Data[propertyName]);
+                    var jsonPropertyAttribute = property.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
+                    var propertyName = jsonPropertyAttribute?.PropertyName ?? property.Name;
+                    if (content.Data.TryGetValue(propertyName, out var value))
+                    {
+                        property.SetValue(result, content.Data[propertyName]);
+                    }
                 }
+                return result;
             }
-            return result;
+            else if (message.Content is T decoded)
+            {
+                return decoded;
+            }
+            else
+            {
+                throw new Exception($"Attempted to convert a message with content type {message.Content.GetType()} to content type {typeof(T)}; can only convert from unknown content or subclasses of the desired content type.");
+            }
         }
     }
 }
