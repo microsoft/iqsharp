@@ -76,9 +76,13 @@ namespace Tests.IQSharp
             var environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
             Assert.AreEqual(AzureEnvironmentType.Production, environment.Type);
 
-            // Dogfood environment cannot be created in test because it requires a service call
+            // Dogfood environment
+            // NB: This used to intentionally throw an exception when mocked,
+            //     due to requiring a service call, but that service call has
+            //     been moved to ConnectAsync instead of Create.
             Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Dogfood.ToString());
-            Assert.ThrowsException<InvalidOperationException>(() => AzureEnvironment.Create("TEST_SUBSCRIPTION_ID"));
+            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
+            Assert.AreEqual(AzureEnvironmentType.Dogfood, environment.Type);
 
             // Canary environment
             Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Canary.ToString());
