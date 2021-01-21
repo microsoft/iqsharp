@@ -39,7 +39,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public ConnectMagic(IAzureClient azureClient)
+        public ConnectMagic(IExecutionEngine engine, IAzureClient azureClient)
             : base(
                 azureClient,
                 "azure.connect",
@@ -138,7 +138,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                })
+        {
+            if (engine is BaseEngine baseEngine)
+            {
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
+            }
+        }
 
         /// <summary>
         ///     Connects to an Azure workspace given a subscription ID, resource group name,
@@ -201,7 +208,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 workspaceName,
                 storageAccountConnectionString,
                 location,
-                refreshCredentials);
+                refreshCredentials,
+                cancellationToken);
         }
     }
 }

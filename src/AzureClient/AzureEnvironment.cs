@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum.Client;
 using Microsoft.Extensions.Logging;
@@ -86,7 +87,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string location,
-            bool refreshCredentials)
+            bool refreshCredentials,
+            CancellationToken? cancellationToken = null)
         {
             location = GetNormalizedLocation(location, channel);
 
@@ -95,7 +97,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 case AzureEnvironmentType.Mock:
                     channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to a real service.");
                     return new MockAzureWorkspace(workspaceName, location);
-                
+
                 case AzureEnvironmentType.Canary:
                     channel.Stdout($"AZURE_QUANTUM_ENV set to Canary. Connecting to location eastus2euap rather than specified location {location}.");
                     break;
@@ -146,7 +148,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     "Encrypted credential cache is unavailable. Cache will be stored in plaintext at {Path}. Error: {Message}",
                     Path.Combine(cacheDirectory, unencryptedCacheFileName),
                     e.Message);
-                
+
                 storageCreationProperties = new StorageCreationPropertiesBuilder(unencryptedCacheFileName, cacheDirectory, ClientId)
                     .WithMacKeyChain(
                         serviceName: "Microsoft.Quantum.IQSharp",
@@ -169,8 +171,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 try
                 {
                     var accounts = await msalApp.GetAccountsAsync();
-                    authenticationResult = await msalApp.AcquireTokenSilent(
-                        Scopes, accounts.FirstOrDefault()).WithAuthority(msalApp.Authority).ExecuteAsync();
+                    var authBuilder = msalApp.AcquireTokenSilent(
+                        Scopes, accounts.FirstOrDefault()).WithAuthority(msalApp.Authority);
+                    authenticationResult = await (cancellationToken == null
+                        ? authBuilder.ExecuteAsync()
+                        : authBuilder.ExecuteAsync(cancellationToken.Value));
                 }
                 catch (MsalUiRequiredException)
                 {
@@ -180,13 +185,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (shouldShowLoginPrompt)
             {
-                authenticationResult = await msalApp.AcquireTokenWithDeviceCode(
+                IUpdatableDisplay? updater = null;
+                var authBuilder = msalApp.AcquireTokenWithDeviceCode(
                     Scopes,
                     deviceCodeResult =>
                     {
-                        channel.Stdout(deviceCodeResult.Message);
+                        updater = channel.DisplayUpdatable(deviceCodeResult);
                         return Task.FromResult(0);
-                    }).WithAuthority(msalApp.Authority).ExecuteAsync();
+                    }).WithAuthority(msalApp.Authority);
+                authenticationResult = await (cancellationToken == null
+                    ? authBuilder.ExecuteAsync()
+                    : authBuilder.ExecuteAsync(cancellationToken.Value));
             }
 
             if (authenticationResult == null)
@@ -218,7 +227,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Type = AzureEnvironmentType.Production,
                 ClientId = "84ba0947-6c53-4dd2-9ca9-b3694761521b",      // QDK client ID
-                Authority = "https://login.microsoftonline.com/common",
+                Authority = "https://login.microsoftonline.com/common/",
                 Scopes = new List<string>() { "https://quantum.microsoft.com/Jobs.ReadWrite" },
                 SubscriptionId = subscriptionId,
             };

@@ -52,6 +52,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         return await Task.Run(() => magic(input, channel, cancellationToken));
                     }
+                    catch (TaskCanceledException tce)
+                    {
+                        // Rethrow so that the jupyter-core library can
+                        // properly handle the task cancellation.
+                        throw tce;
+                    }
                     catch (InvalidWorkspaceException ws)
                     {
                         foreach (var m in ws.Errors) channel.Stderr(m);
