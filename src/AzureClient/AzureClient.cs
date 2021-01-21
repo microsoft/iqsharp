@@ -72,6 +72,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
             }
         }
 
@@ -118,7 +120,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             bool refreshCredentials,
             CancellationToken? cancellationToken = null)
         {
-            var azureEnvironment = AzureEnvironment.Create(subscriptionId);
+            var azureEnvironment = AzureEnvironment.Create(subscriptionId, Logger);
             IAzureWorkspace? workspace = null;
             try
             {
