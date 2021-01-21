@@ -305,7 +305,14 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, string location, bool refreshCredentials, CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
+            string subscriptionId,
+            string resourceGroupName,
+            string workspaceName,
+            string storageAccountConnectionString,
+            string location,
+            bool refreshCredentials = false,
+            CancellationToken? cancellationToken = null)
         {
             LastAction = AzureClientAction.Connect;
             SubscriptionId = subscriptionId;
