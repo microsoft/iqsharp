@@ -11,6 +11,12 @@ import { defineQSharpMode } from "./syntax";
 import { Visualizer } from "./visualizer";
 import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
+declare global {
+    interface Window {
+        iqsharp: Kernel
+    }
+}
+
 class Kernel {
     hostingEnvironment: string | undefined;
     iqsharpVersion: string | undefined;
@@ -251,6 +257,12 @@ class Kernel {
         Telemetry.initAsync();
     }
 
+    addCopyListener(elementId: string, data: string) {
+        document.getElementById(elementId).onclick = async (ev: MouseEvent) => {
+            await navigator.clipboard.writeText(data);
+        };
+    }
+
     initExecutionPathVisualizer() {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
@@ -275,6 +287,6 @@ class Kernel {
 
 export function onload() {
     defineQSharpMode();
-    let kernel = new Kernel();
+    window.iqsharp = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }

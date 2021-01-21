@@ -138,7 +138,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                })
+        { }
 
         /// <summary>
         ///     Connects to an Azure workspace given a subscription ID, resource group name,
@@ -201,7 +202,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 workspaceName,
                 storageAccountConnectionString,
                 location,
-                refreshCredentials);
+                refreshCredentials,
+                cancellationToken);
         }
     }
 }

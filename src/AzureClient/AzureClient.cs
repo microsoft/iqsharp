@@ -72,6 +72,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new HistogramToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
             }
         }
 
@@ -82,9 +84,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false)
+            bool refreshCredentials = false,
+            CancellationToken? cancellationToken = null)
         {
-            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, refreshCredentials);
+            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, refreshCredentials, cancellationToken);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -114,13 +117,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string location,
-            bool refreshCredentials)
+            bool refreshCredentials,
+            CancellationToken? cancellationToken = null)
         {
-            var azureEnvironment = AzureEnvironment.Create(subscriptionId);
+            var azureEnvironment = AzureEnvironment.Create(subscriptionId, Logger);
             IAzureWorkspace? workspace = null;
             try
             {
-                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, location, refreshCredentials);
+                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, location, refreshCredentials, cancellationToken);
+            }
+            catch (TaskCanceledException tce)
+            {
+                throw tce;
             }
             catch (Exception e)
             {
@@ -148,7 +156,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        private async Task<ExecutionResult> RefreshConnectionAsync(IChannel channel)
+        private async Task<ExecutionResult> RefreshConnectionAsync(IChannel channel, CancellationToken? cancellationToken = null)
         {
             if (ActiveWorkspace == null)
             {
@@ -161,7 +169,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace.ResourceGroup ?? string.Empty,
                 ActiveWorkspace.Name ?? string.Empty,
                 ActiveWorkspace.Location ?? string.Empty,
-                refreshCredentials: false);
+                refreshCredentials: false,
+                cancellationToken: cancellationToken);
         }
 
         /// <inheritdoc/>

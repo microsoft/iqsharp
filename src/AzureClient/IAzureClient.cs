@@ -29,7 +29,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false);
+            bool refreshCredentials = false,
+            CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Gets the current connection status to an Azure Quantum workspace.
