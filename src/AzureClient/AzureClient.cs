@@ -520,7 +520,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (quotas.Count() == 0)
             {
-                channel.Stderr("No quota information found in current Azure Quantum workspace.");
+                channel.Stdout("No quota information found in current Azure Quantum workspace.");
             }
             
             return quotas.ToExecutionResult();
