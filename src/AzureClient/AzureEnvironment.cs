@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum.Client;
 using Microsoft.Extensions.Logging;
@@ -26,36 +27,59 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private string SubscriptionId { get; set; } = string.Empty;
         private string ClientId { get; set; } = string.Empty;
-        private string Authority { get; set; } = string.Empty;
+        private AadAuthorityAudience Audience { get; set; } = AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount;
         private List<string> Scopes { get; set; } = new List<string>();
         private Func<string?, Uri> BaseUriForLocation { get; set; } = (location) => new Uri($"https://{location}.quantum.azure.com/");
+        private string? ArmBaseUrl { get; set; } = null;
+        private ILogger? Logger { get; set; } = null;
 
-        private AzureEnvironment()
+        private Task<string?> Authority =>
+            string.IsNullOrEmpty(SubscriptionId) || string.IsNullOrEmpty(ArmBaseUrl)
+            ? Task.FromResult<string?>(null)
+            : SubscriptionAuthorityCache.TryGetValue(SubscriptionId, out var authority)
+              ? Task.FromResult<string?>(authority)
+              : GetAuthorityForSubscription(ArmBaseUrl, SubscriptionId, Logger)
+                    .ContinueWith<Task<string?>>(
+                        async (Task<string> authority) => await authority
+                    )
+                    .Unwrap();
+
+        
+        /// <summary>
+        ///     A map from subscription IDs to authorities used to log in to
+        ///     the tenant for each subscription. If a subscription ID is
+        ///     missing from this cache, it can be looked up using
+        ///     <see cref="GetAuthorityForSubscription(string, string)"/>.
+        /// </summary>
+        private static Dictionary<string, string> SubscriptionAuthorityCache = new Dictionary<string, string>();
+
+        private AzureEnvironment(ILogger? logger = null)
         {
+            Logger = logger;
         }
 
-        public static AzureEnvironment Create(string subscriptionId)
+        public static AzureEnvironment Create(string subscriptionId, ILogger? logger = null)
         {
             var azureEnvironmentName = System.Environment.GetEnvironmentVariable(EnvironmentVariableName);
 
-            if (Enum.TryParse(azureEnvironmentName, true, out AzureEnvironmentType environmentType))
-            {
-                switch (environmentType)
-                {
-                    case AzureEnvironmentType.Production:
-                        return Production(subscriptionId);
-                    case AzureEnvironmentType.Canary:
-                        return Canary(subscriptionId);
-                    case AzureEnvironmentType.Dogfood:
-                        return Dogfood(subscriptionId);
-                    case AzureEnvironmentType.Mock:
-                        return Mock();
-                    default:
-                        throw new InvalidOperationException("Unexpected EnvironmentType value.");
-                }
-            }
+            var environment = Enum.TryParse(azureEnvironmentName, true, out AzureEnvironmentType environmentType)
+            ? environmentType switch
+              {
+                  AzureEnvironmentType.Production =>
+                      Production(subscriptionId),
+                  AzureEnvironmentType.Canary =>
+                      Canary(subscriptionId),
+                  AzureEnvironmentType.Dogfood =>
+                      Dogfood(subscriptionId),
+                  AzureEnvironmentType.Mock =>
+                      Mock(),
+                  _ =>
+                      throw new InvalidOperationException("Unexpected EnvironmentType value.")
+              }
+            : Production(subscriptionId);
 
-            return Production(subscriptionId);
+            environment.Logger = logger;
+            return environment;
         }
 
         private string GetNormalizedLocation(string location, IChannel channel)
@@ -86,7 +110,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string location,
-            bool refreshCredentials)
+            bool refreshCredentials,
+            CancellationToken? cancellationToken = null)
         {
             location = GetNormalizedLocation(location, channel);
 
@@ -95,7 +120,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 case AzureEnvironmentType.Mock:
                     channel.Stdout("AZURE_QUANTUM_ENV set to Mock. Using mock Azure workspace rather than connecting to a real service.");
                     return new MockAzureWorkspace(workspaceName, location);
-                
+
                 case AzureEnvironmentType.Canary:
                     channel.Stdout($"AZURE_QUANTUM_ENV set to Canary. Connecting to location eastus2euap rather than specified location {location}.");
                     break;
@@ -146,7 +171,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     "Encrypted credential cache is unavailable. Cache will be stored in plaintext at {Path}. Error: {Message}",
                     Path.Combine(cacheDirectory, unencryptedCacheFileName),
                     e.Message);
-                
+
                 storageCreationProperties = new StorageCreationPropertiesBuilder(unencryptedCacheFileName, cacheDirectory, ClientId)
                     .WithMacKeyChain(
                         serviceName: "Microsoft.Quantum.IQSharp",
@@ -158,7 +183,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 cacheHelper.VerifyPersistence();
             }
 
-            var msalApp = PublicClientApplicationBuilder.Create(ClientId).WithAuthority(Authority).Build();
+            var msalApp = PublicClientApplicationBuilder.Create(ClientId).WithAuthority(await Authority).Build();
+            logger?.LogDebug("Using MSAL authority: {Authority}", msalApp.Authority);
             cacheHelper.RegisterCache(msalApp.UserTokenCache);
 
             // Perform the authentication
@@ -169,8 +195,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 try
                 {
                     var accounts = await msalApp.GetAccountsAsync();
-                    authenticationResult = await msalApp.AcquireTokenSilent(
-                        Scopes, accounts.FirstOrDefault()).WithAuthority(msalApp.Authority).ExecuteAsync();
+                    var authBuilder = msalApp.AcquireTokenSilent(
+                        Scopes, accounts.FirstOrDefault()).WithAuthority(msalApp.Authority);
+                    authenticationResult = await (cancellationToken == null
+                        ? authBuilder.ExecuteAsync()
+                        : authBuilder.ExecuteAsync(cancellationToken.Value));
                 }
                 catch (MsalUiRequiredException)
                 {
@@ -180,13 +209,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (shouldShowLoginPrompt)
             {
-                authenticationResult = await msalApp.AcquireTokenWithDeviceCode(
+                IUpdatableDisplay? updater = null;
+                var authBuilder = msalApp.AcquireTokenWithDeviceCode(
                     Scopes,
                     deviceCodeResult =>
                     {
-                        channel.Stdout(deviceCodeResult.Message);
+                        updater = channel.DisplayUpdatable(deviceCodeResult);
                         return Task.FromResult(0);
-                    }).WithAuthority(msalApp.Authority).ExecuteAsync();
+                    }).WithAuthority(msalApp.Authority);
+                authenticationResult = await (cancellationToken == null
+                    ? authBuilder.ExecuteAsync()
+                    : authBuilder.ExecuteAsync(cancellationToken.Value));
             }
 
             if (authenticationResult == null)
@@ -218,9 +251,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Type = AzureEnvironmentType.Production,
                 ClientId = "84ba0947-6c53-4dd2-9ca9-b3694761521b",      // QDK client ID
-                Authority = "https://login.microsoftonline.com/common",
                 Scopes = new List<string>() { "https://quantum.microsoft.com/Jobs.ReadWrite" },
                 SubscriptionId = subscriptionId,
+                ArmBaseUrl = "https://management.azure.com/"
             };
 
         private static AzureEnvironment Dogfood(string subscriptionId) =>
@@ -228,10 +261,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Type = AzureEnvironmentType.Dogfood,
                 ClientId = "46a998aa-43d0-4281-9cbb-5709a507ac36",      // QDK dogfood client ID
-                Authority = GetDogfoodAuthority(subscriptionId),
                 Scopes = new List<string>() { "api://dogfood.azure-quantum/Jobs.ReadWrite" },
                 BaseUriForLocation = (location) => new Uri($"https://{location}.quantum-test.azure.com/"),
                 SubscriptionId = subscriptionId,
+                ArmBaseUrl = "https://api-dogfood.resources.windows-int.net"
             };
 
         private static AzureEnvironment Canary(string subscriptionId)
@@ -245,17 +278,26 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private static AzureEnvironment Mock() =>
             new AzureEnvironment() { Type = AzureEnvironmentType.Mock };
 
-        private static string GetDogfoodAuthority(string subscriptionId)
+        private static async Task<string> GetAuthorityForSubscription(string armBaseUrl, string subscriptionId, ILogger? logger = null)
         {
+            // Start by checking our cache.
+            if (SubscriptionAuthorityCache.TryGetValue(subscriptionId, out var cachedAuthority))
+            {
+                logger?.LogInformation(
+                    "Found subscription ID {SubscriptionID} in cache, using authority {Authority}.",
+                    subscriptionId, cachedAuthority
+                );
+                return cachedAuthority;
+            }
+
             try
             {
-                var armBaseUrl = "https://api-dogfood.resources.windows-int.net";
                 var requestUrl = $"{armBaseUrl}/subscriptions/{subscriptionId}?api-version=2018-01-01";
 
                 WebResponse? response = null;
                 try
                 {
-                    response = WebRequest.Create(requestUrl).GetResponse();
+                    response = await WebRequest.Create(requestUrl).GetResponseAsync();
                 }
                 catch (WebException webException)
                 {
@@ -270,7 +312,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     if (parts[0] == "authorization_uri")
                     {
                         var quotedAuthority = parts[1];
-                        return quotedAuthority[1..^1];
+                        var authority = quotedAuthority[1..^1];
+                        logger?.LogInformation(
+                            "ARM reported authority for subscription ID {SubscriptionID}: {Authority}.",
+                            subscriptionId, authority
+                        );
+                        SubscriptionAuthorityCache[subscriptionId] = authority;
+                        return authority;
                     }
                 }
 
