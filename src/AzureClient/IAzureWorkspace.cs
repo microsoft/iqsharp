@@ -21,6 +21,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
         public Task<CloudJob?> GetJobAsync(string jobId);
         public Task<IEnumerable<CloudJob>?> ListJobsAsync();
+        public Task<IEnumerable<QuotaInfo>?> ListQuotasAsync();
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString);
         public AzureExecutionTarget? CreateExecutionTarget(string targetId);
     }

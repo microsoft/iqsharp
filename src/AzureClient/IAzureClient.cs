@@ -101,5 +101,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// comparison.
         /// </returns>
         public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter);
+
+        /// <summary>
+        /// Gets a list of all jobs in the current Azure Quantum workspace.
+        /// </summary>
+        /// <returns>
+        /// A list of all jobs in the current workspace, optionally filtered
+        /// to jobs with fields containing <c>filter</c> using a case-insensitive
+        /// comparison.
+        /// </returns>
+        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel);
     }
 }
