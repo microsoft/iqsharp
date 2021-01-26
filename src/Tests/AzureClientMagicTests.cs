@@ -263,6 +263,7 @@ namespace Tests.IQSharp
         GetJobList,
         GetJobStatus,
         GetJobResult,
+        GetQuotaList,
     }
 
     public class MockAzureClient : IAzureClient
@@ -345,6 +346,12 @@ namespace Tests.IQSharp
         public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
         {
             LastAction = AzureClientAction.GetJobResult;
+            return ExecuteStatus.Ok.ToExecutionResult();
+        }
+
+        public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel)
+        {
+            LastAction = AzureClientAction.GetQuotaList;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
