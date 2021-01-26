@@ -74,6 +74,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
+        public async Task<IEnumerable<QuotaInfo>?> ListQuotasAsync()
+        {
+            try
+            {
+                return await AzureQuantumWorkspace.ListQuotasAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, $"Failed to retrieve the quota information from the Azure Quantum workspace: {e.Message}");
+            }
+
+            return null;
+        }
+
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) =>
             QuantumMachineFactory.CreateMachine(AzureQuantumWorkspace, targetId, storageAccountConnectionString);
 
