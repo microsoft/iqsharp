@@ -502,6 +502,30 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return jobs.ToExecutionResult();
         }
 
+        public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel)
+        {
+            if (ActiveWorkspace == null)
+            {
+                channel.Stderr($"Please call {GetCommandDisplayName("connect")} before reading quota information.");
+                return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
+            }
+
+            var quotas = await ActiveWorkspace.ListQuotasAsync() ?? new List<QuotaInfo>();
+
+            if (quotas.Count() == 0)
+            {
+                channel.Stdout("No quota information found in current Azure Quantum workspace.");
+            }
+            
+            return quotas.ToExecutionResult();
+        }
+
         private string GetCommandDisplayName(string commandName) =>
             IsPythonUserAgent ? $"qsharp.azure.{commandName}()" : $"%azure.{commandName}";
     }
