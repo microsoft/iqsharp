@@ -74,10 +74,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var timeout = inputParameters.DecodeParameter<int>(ParameterNameTimeout, defaultValue: DefaultExecutionTimeoutInSeconds);
             var pollingInterval = inputParameters.DecodeParameter<int>(ParameterNamePollingInterval, defaultValue: DefaultExecutionPollingIntervalInSeconds);
 
-            // var decodedParameters = inputParameters.ToDictionary(
-            //     item => item.Key,
-            //     item => inputParameters.DecodeParameter<string>(item.Key));
-
             return new AzureSubmissionContext()
             {
                 FriendlyName = jobName,
