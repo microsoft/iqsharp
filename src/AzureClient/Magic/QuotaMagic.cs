@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public QuotaMagic(IAzureClient azureClient)
             : base(
                 azureClient,
-                "azure.jobs",
+                "azure.quotas",
                 new Microsoft.Jupyter.Core.Documentation
                 {
                     Summary = "Displays a list of quotas for the current Azure Quantum workspace.",
