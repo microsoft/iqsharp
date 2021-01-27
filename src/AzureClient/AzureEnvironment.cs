@@ -49,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     A map from subscription IDs to authorities used to log in to
         ///     the tenant for each subscription. If a subscription ID is
         ///     missing from this cache, it can be looked up using
-        ///     <see cref="GetAuthorityForSubscription(string, string)"/>.
+        ///     <see cref="GetAuthorityForSubscription(string, string, ILogger?)"/>.
         /// </summary>
         private static Dictionary<string, string> SubscriptionAuthorityCache = new Dictionary<string, string>();
 

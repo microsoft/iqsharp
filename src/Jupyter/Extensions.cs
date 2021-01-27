@@ -195,16 +195,46 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///      Retrieves and JSON-decodes the value for the given parameter name.
         /// </summary>
+        /// <typeparam name="T">
+        ///      The expected type of the decoded parameter.
+        /// </typeparam>
+        /// <param name="parameters">
+        ///     Dictionary from parameter names to JSON-encoded values.
+        /// </param>
+        /// <param name="parameterName">
+        ///     The name of the parameter to be decoded.
+        /// </param>
+        /// <param name="defaultValue">
+        ///      The default value to be returned if no parameter with the
+        ///      name <paramref name="parameterName"/> is present in the
+        ///      dictionary.
+        /// </param>
         public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default)
-        {
-            if (!parameters.TryGetValue(parameterName, out string parameterValue))
-            {
-                return defaultValue;
-            }
-            return JsonConvert.DeserializeObject<T>(parameterValue) ?? defaultValue;
-        }
+        where T: notnull =>
+            // NB: We can assert that this is not null here, since the where
+            //     clause ensures that T is not a nullable type, such that
+            //     defaultValue cannot be null. This is not tracked by the
+            //     return type of `object?`, such that we need to null-forgive.
+            (T)(parameters.DecodeParameter(parameterName, typeof(T), defaultValue)!);
 
-        public static object DecodeParameter(this Dictionary<string, string> parameters, string parameterName, Type type, object defaultValue = default)
+        /// <summary>
+        ///      Retrieves and JSON-decodes the value for the given parameter name.
+        /// </summary>
+        /// <param name="parameters">
+        ///     Dictionary from parameter names to JSON-encoded values.
+        /// </param>
+        /// <param name="parameterName">
+        ///     The name of the parameter to be decoded.
+        /// </param>
+        /// <param name="type">
+        ///      The expected type of the decoded parameter.
+        /// </param>
+        /// <param name="defaultValue">
+        ///      The default value to be returned if no parameter with the
+        ///      name <paramref name="parameterName"/> is present in the
+        ///      dictionary.
+        /// </param>
+        public static object? DecodeParameter(this Dictionary<string, string> parameters, string parameterName, Type type, object? defaultValue = default)
         {
             if (!parameters.TryGetValue(parameterName, out string parameterValue))
             {
