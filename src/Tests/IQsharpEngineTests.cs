@@ -470,7 +470,7 @@ namespace Tests.IQSharp
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            Assert.AreEqual(5, result?.Length);
+            Assert.AreEqual(6, result?.Length);
             Assert.AreEqual("HelloQ", result?[0]);
             Assert.AreEqual("Tests.qss.NoOp", result?[4]);
         }
