@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Linq;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -19,7 +19,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Given a given snippets collection, constructs a new magic command
         ///     that queries callables defined in that snippets collection.
         /// </summary>
-        public WhoMagic(ISnippets snippets) : base(
+        public WhoMagic(ISnippets snippets, ILogger<WhoMagic> logger) : base(
             "who",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -43,7 +43,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.Snippets = snippets;
         }

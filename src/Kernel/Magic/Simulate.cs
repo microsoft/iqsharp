@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -25,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
+        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ILogger<SimulateMagic> logger) : base(
             "simulate",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -60,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;

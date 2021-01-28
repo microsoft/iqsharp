@@ -6,6 +6,7 @@ using System.IO;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -31,7 +32,17 @@ namespace Tests.IQSharp
             services.Configure<Workspace.Settings>(config);
             services.Configure<NugetPackages.Settings>(config);
 
-            services.AddLogging();
+            services.AddLogging(builder =>
+            {
+                builder.AddProvider(
+                    new UnitTestLoggerProvider(
+                        new UnitTestLoggerConfiguration
+                        {
+                            LogLevel = LogLevel.Information
+                        }
+                    )
+                );
+            });
             services.AddTelemetry();
             services.AddIQSharp();
             services.AddIQSharpKernel();

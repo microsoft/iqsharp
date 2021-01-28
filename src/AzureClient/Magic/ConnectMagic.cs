@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -39,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public ConnectMagic(IAzureClient azureClient)
+        public ConnectMagic(IAzureClient azureClient, ILogger<ConnectMagic> logger)
             : base(
                 azureClient,
                 "azure.connect",
@@ -138,7 +139,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                },
+                logger)
         { }
 
         /// <summary>
