@@ -6,6 +6,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -23,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Constructs a new magic command that adds Q# project references to
         ///     the current IQ# session.
         /// </summary>
-        public ProjectMagic(IWorkspace workspace) : base(
+        public ProjectMagic(IWorkspace workspace, ILogger<ProjectMagic> logger) : base(
             "project",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -62,7 +63,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.Workspace = workspace;
         }
