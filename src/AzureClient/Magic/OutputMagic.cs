@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public OutputMagic(IAzureClient azureClient)
+        public OutputMagic(IAzureClient azureClient, ILogger<OutputMagic> logger)
             : base(
                 azureClient,
                 "azure.output",
@@ -73,7 +74,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                }, logger) {}
 
         /// <summary>
         ///     Displays the output of a given completed job ID, if provided,

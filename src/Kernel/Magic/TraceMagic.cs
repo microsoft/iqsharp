@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
@@ -82,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
+        public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ILogger<TraceMagic> logger) : base(
             "trace",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -127,7 +128,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;

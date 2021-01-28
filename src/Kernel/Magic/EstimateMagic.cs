@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -26,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     constructs a new magic command that performs resource estimation
         ///     on resolved operations.
         /// </summary>
-        public EstimateMagic(ISymbolResolver resolver) : base(
+        public EstimateMagic(ISymbolResolver resolver, ILogger<EstimateMagic> logger) : base(
             "estimate",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -82,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
         }

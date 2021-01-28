@@ -6,6 +6,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 // NB: The name `Documentation` can be ambiguous in this context,
@@ -38,8 +39,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">The <see cref="IAzureClient"/> object used to interact with Azure.</param>
         /// <param name="keyword">The name used to invoke the magic command.</param>
         /// <param name="docs">Documentation describing the usage of this magic command.</param>
-        public AzureClientMagicBase(IAzureClient azureClient, string keyword, JupyterDocumentation docs):
-            base(keyword, docs)
+        /// <param name="logger">Logger to be used for reporting issues from this magic command.</param>
+        public AzureClientMagicBase(IAzureClient azureClient, string keyword, JupyterDocumentation docs, ILogger logger):
+            base(keyword, docs, logger)
         {
             this.AzureClient = azureClient;
         }

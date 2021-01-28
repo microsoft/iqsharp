@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
@@ -23,16 +26,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public abstract class AbstractMagic : CancellableMagicSymbol
     {
+        private ILogger? Logger;
+
         /// <summary>
         ///     Constructs a new magic symbol given its name and documentation.
         /// </summary>
-        public AbstractMagic(string keyword, JupyterDocumentation docs)
+        public AbstractMagic(string keyword, JupyterDocumentation docs, ILogger? logger)
         {
             this.Name = $"%{keyword}";
             this.Documentation = docs;
 
             this.Kind = SymbolKind.Magic;
             this.ExecuteCancellable = this.SafeExecute(this.RunCancellable);
+
+            this.Logger = logger;
         }
 
         /// <summary>
@@ -70,6 +77,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     }
                     catch (Exception e)
                     {
+                        Logger?.LogWarning(e, "Unhandled exception in magic command {Magic}, printing as stderr.", this.Name);
                         channel.Stderr(e.Message);
                         return ExecuteStatus.Error.ToExecutionResult();
                     }
