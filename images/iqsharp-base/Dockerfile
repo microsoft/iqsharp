@@ -112,6 +112,10 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Get the az quantum extension
 RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
+# Assign the .azure folder back to the notebook user so that they
+# can run az commands.
+RUN chown -R ${USER}:${USER} /home/${USER}/.azure
+
 # Switch to the notebook user to finish the installation.
 USER ${USER}
 # Make sure that .NET Core is on the notebook users' path.
