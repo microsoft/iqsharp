@@ -31,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         ///     Constructs a new magic symbol given its name and documentation.
         /// </summary>
-        public AbstractMagic(string keyword, JupyterDocumentation docs, ILogger? logger)
+        public AbstractMagic(string keyword, JupyterDocumentation docs, ILogger? logger = null)
         {
             this.Name = $"%{keyword}";
             this.Documentation = docs;
