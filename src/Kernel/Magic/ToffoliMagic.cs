@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -21,7 +22,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ToffoliMagic(ISymbolResolver resolver) : base(
+        public ToffoliMagic(ISymbolResolver resolver, ILogger<ToffoliMagic> logger) : base(
             "toffoli",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -58,7 +59,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
         }

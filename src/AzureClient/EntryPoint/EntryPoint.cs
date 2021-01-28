@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Core;
 
@@ -54,7 +55,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 object? parameterValue = null;
                 try
                 {
-                    parameterValue = System.Convert.ChangeType(rawParameterValue, parameter.ParameterType);
+                    parameterValue = submissionContext.InputParameters.DecodeParameter(parameter.Name, type: parameter.ParameterType);
                 }
                 catch (Exception e)
                 {

@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
@@ -82,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource) : base(
+        public TraceMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ILogger<TraceMagic> logger) : base(
             "trace",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -127,7 +128,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
@@ -162,11 +163,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var depth = inputParameters.DecodeParameter<int>(
+            if (!inputParameters.TryDecodeParameter<int>(
                 ParameterNameDepth,
+                out var depth,
                 defaultValue: this.ConfigurationSource.TraceVisualizationDefaultDepth
-            );
-            if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
+            ))
+            {
+                channel.Stderr($"Expected {ParameterNameDepth} to be an integer, but got {inputParameters[ParameterNameDepth]}.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+
+            if (depth <= 0)
+            {
+                channel.Stderr($"Expected {ParameterNameDepth} to be >= 1, but got {depth}.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
 
             var tracer = new ExecutionPathTracer.ExecutionPathTracer();
 
