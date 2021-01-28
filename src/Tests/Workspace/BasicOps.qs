@@ -17,9 +17,9 @@ namespace Tests.qss {
         Message($"Hello from quantum world!"); 
     }
 
-    /// # Summary: 
-    ///     A more sophisticated program that shows how to 
-    ///     specify parameters, instantiate qubits, and return values.
+    /// # Summary:
+    /// A more sophisticated program that shows how to 
+    /// specify parameters, instantiate qubits, and return values.
     @EntryPoint()
     operation HelloAgain(count: Int, name: String) : Result[]
     {
@@ -35,6 +35,16 @@ namespace Tests.qss {
         }
 
         return r;
+    }
+
+    /// # Summary:
+    /// A more sophisticated program that shows how to 
+    /// specify parameters, instantiate qubits, and return values.
+    @EntryPoint()
+    operation SayHelloWithArray(names: String[]) : Unit {
+        for name in names {
+            Message($"Hello {name} again!"); 
+        }
     }
     
     operation CCNOTDriver(applyT : Bool) : Unit {

@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Constructs an instance of %lsopen given an instance of the
         ///     compiler service.
         /// </summary>
-        public LsOpenMagic(ICompilerService compiler) : base(
+        public LsOpenMagic(ICompilerService compiler, ILogger<LsOpenMagic> logger) : base(
             "lsopen",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -45,7 +45,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent()
                 }
-            })
+            }, logger)
         {
             this.Compiler = compiler;
         }
