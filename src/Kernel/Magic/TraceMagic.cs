@@ -163,11 +163,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var depth = inputParameters.DecodeParameter<int>(
+            if (!inputParameters.TryDecodeParameter<int>(
                 ParameterNameDepth,
+                out var depth,
                 defaultValue: this.ConfigurationSource.TraceVisualizationDefaultDepth
-            );
-            if (depth <= 0) throw new ArgumentOutOfRangeException($"Invalid depth: {depth}. Must be >= 1.");
+            ))
+            {
+                channel.Stderr($"Expected {ParameterNameDepth} to be an integer, but got {inputParameters[ParameterNameDepth]}.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+
+            if (depth <= 0)
+            {
+                channel.Stderr($"Expected {ParameterNameDepth} to be >= 1, but got {depth}.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
 
             var tracer = new ExecutionPathTracer.ExecutionPathTracer();
 

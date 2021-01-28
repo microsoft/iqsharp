@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
@@ -190,6 +191,38 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // out common indenting.
             var leftTrimRegex = new Regex(@$"^[ \t]{{{minWhitespace}}}", RegexOptions.Multiline);
             return leftTrimRegex.Replace(text, "");
+        }
+
+        /// <summary>
+        ///      Retrieves and JSON-decodes the value for the given parameter name.
+        /// </summary>
+        /// <typeparam name="T">
+        ///      The expected type of the decoded parameter.
+        /// </typeparam>
+        /// <param name="parameters">
+        ///     Dictionary from parameter names to JSON-encoded values.
+        /// </param>
+        /// <param name="parameterName">
+        ///     The name of the parameter to be decoded.
+        /// </param>
+        /// <param name="defaultValue">
+        ///      The default value to be returned if no parameter with the
+        ///      name <paramref name="parameterName"/> is present in the
+        ///      dictionary.
+        /// </param>
+        public static bool TryDecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, out T decoded, T defaultValue = default)
+        where T: struct
+        {
+            try
+            {
+                decoded = (T)(parameters.DecodeParameter(parameterName, typeof(T), defaultValue)!);
+                return true;
+            }
+            catch
+            {
+                decoded = default;
+                return false;
+            }
         }
 
         /// <summary>
