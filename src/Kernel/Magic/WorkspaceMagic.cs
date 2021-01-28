@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -22,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///      Given a workspace, constructs a new magic symbol to control
         ///      that workspace.
         /// </summary>
-        public WorkspaceMagic(IWorkspace workspace) : base(
+        public WorkspaceMagic(IWorkspace workspace, ILogger<WorkspaceMagic> logger) : base(
             "workspace", 
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -60,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.Workspace = workspace;
         }

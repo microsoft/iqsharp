@@ -127,7 +127,7 @@ def _test_workspace_job_execution():
         qsharp.azure.execute(op)
     assert exception_info.value.error_name == "JobSubmissionFailed"
 
-    histogram = qsharp.azure.execute(op, count=3, name="test", timeout=3, poll=0.5)
+    histogram = qsharp.azure.execute(op, count=3, name="test", timeout=3, poll=2)
     assert isinstance(histogram, dict)
 
     retrieved_histogram = qsharp.azure.output()

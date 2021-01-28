@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -24,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         ///     Constructs a new performance command.
         /// </summary>
-        public PerformanceMagic() : base(
+        public PerformanceMagic(ILogger<PerformanceMagic> logger) : base(
             "performance",
             new Microsoft.Jupyter.Core.Documentation {
                 Summary = "Reports current performance metrics for this kernel.",
@@ -53,7 +53,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
         }
 
