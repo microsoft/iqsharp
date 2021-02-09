@@ -75,7 +75,8 @@ namespace Tests.IQSharp
             await engine.Initialized;
             var configSource = new ConfigurationSource(skipLoading: true);
 
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
+                new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);
@@ -91,7 +92,7 @@ namespace Tests.IQSharp
             Assert.IsNotNull(engine.SymbolsResolver);
 
             var channel = new MockChannel();
-            var estimateMagic = new EstimateMagic(engine.SymbolsResolver!);
+            var estimateMagic = new EstimateMagic(engine.SymbolsResolver!, new UnitTestLogger<EstimateMagic>());
             var response = await estimateMagic.Execute(snippetName, channel);
             var result = response.Output as DataTable;
             PrintResult(response, channel);
@@ -114,9 +115,9 @@ namespace Tests.IQSharp
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
 
-            var wsMagic = new WorkspaceMagic(snippets!.Workspace);
-            var pkgMagic = new PackageMagic(snippets.GlobalReferences);
-            var traceMagic = new TraceMagic(engine.SymbolsResolver!, configSource);
+            var wsMagic = new WorkspaceMagic(snippets!.Workspace, new UnitTestLogger<WorkspaceMagic>());
+            var pkgMagic = new PackageMagic(snippets.GlobalReferences, new UnitTestLogger<PackageMagic>());
+            var traceMagic = new TraceMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<TraceMagic>());
 
             var channel = new MockChannel();
 
@@ -161,7 +162,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource);
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
@@ -255,7 +256,7 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Run with toffoli simulator:
-            var toffoliMagic = new ToffoliMagic(engine.SymbolsResolver!);
+            var toffoliMagic = new ToffoliMagic(engine.SymbolsResolver!, new UnitTestLogger<ToffoliMagic>());
             var response = await toffoliMagic.Execute("HelloQ", channel);
             var result = response.Output as Dictionary<string, double>;
             PrintResult(response, channel);
@@ -391,7 +392,7 @@ namespace Tests.IQSharp
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
 
-            var pkgMagic = new PackageMagic(snippets!.GlobalReferences);
+            var pkgMagic = new PackageMagic(snippets!.GlobalReferences, new UnitTestLogger<PackageMagic>());
             var references = ((References)pkgMagic.References);
             var packageCount = references.AutoLoadPackages.Count;
             var channel = new MockChannel();
@@ -428,7 +429,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
-            var pkgMagic = new PackageMagic(snippets!.GlobalReferences);
+            var pkgMagic = new PackageMagic(snippets!.GlobalReferences, new UnitTestLogger<PackageMagic>());
             var channel = new MockChannel();
 
             var response = await pkgMagic.Execute("microsoft.invalid.quantum", channel);
@@ -446,7 +447,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
-            var projectMagic = new ProjectMagic(snippets!.Workspace);
+            var projectMagic = new ProjectMagic(snippets!.Workspace, new UnitTestLogger<ProjectMagic>());
             var channel = new MockChannel();
 
             var response = await projectMagic.Execute("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj", channel);
@@ -462,7 +463,7 @@ namespace Tests.IQSharp
             await snippets.Workspace.Initialization;
             snippets.Compile(SNIPPETS.HelloQ);
 
-            var whoMagic = new WhoMagic(snippets);
+            var whoMagic = new WhoMagic(snippets, new UnitTestLogger<WhoMagic>());
             var channel = new MockChannel();
 
             // Check the workspace, it should be in error state:
@@ -470,7 +471,7 @@ namespace Tests.IQSharp
             var result = response.Output as string[];
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Ok, response.Status);
-            Assert.AreEqual(5, result?.Length);
+            Assert.AreEqual(6, result?.Length);
             Assert.AreEqual("HelloQ", result?[0]);
             Assert.AreEqual("Tests.qss.NoOp", result?[4]);
         }
@@ -482,8 +483,8 @@ namespace Tests.IQSharp
             var snippets = engine.Snippets as Snippets;
             Assert.IsNotNull(snippets);
 
-            var wsMagic = new WorkspaceMagic(snippets!.Workspace);
-            var pkgMagic = new PackageMagic(snippets!.GlobalReferences);
+            var wsMagic = new WorkspaceMagic(snippets!.Workspace, new UnitTestLogger<WorkspaceMagic>());
+            var pkgMagic = new PackageMagic(snippets!.GlobalReferences, new UnitTestLogger<PackageMagic>());
 
             var channel = new MockChannel();
             var result = new string[0];

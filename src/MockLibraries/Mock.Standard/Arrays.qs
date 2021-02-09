@@ -34,7 +34,7 @@ namespace Mock.Standard {
     operation ForEach<'T, 'U> (action : ('T => 'U), array : 'T[]) : 'U[] {
         mutable resultArray = new 'U[Length(array)];
 
-        for (idxElement in IndexRange(array)) {
+        for idxElement in IndexRange(array) {
             set resultArray w/= idxElement <- action(array[idxElement]);
         }
 
