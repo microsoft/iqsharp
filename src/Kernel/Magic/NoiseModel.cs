@@ -26,7 +26,7 @@ namespace Microsoft.Quantum.Experimental
         ///     Allows for querying noise models and for loading new noise models.
         /// </summary>
         public NoiseModelMagic(INoiseModelSource noiseModelSource, ILogger<NoiseModelMagic> logger) : base(
-            "noise_model",
+            "experimental.noise_model",
             new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "TODO",

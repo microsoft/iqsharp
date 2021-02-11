@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.Experimental
         ///     configuration options.
         /// </summary>
         public SimulateNoiseMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, INoiseModelSource noiseModelSource, ILogger<SimulateNoiseMagic> logger) : base(
-            "simulate_noise",
+            "experimental.simulate_noise",
             new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "TODO",
