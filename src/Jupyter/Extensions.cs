@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
+using NumSharp;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -275,5 +277,53 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
         }
+
+        internal static string AsLaTeXMatrixOfComplex(this NDArray array) =>
+            // NB: Assumes 𝑛 × 𝑛 × 2 array, where the trailing index is
+            //     [real, imag].
+            // TODO: Consolidate with logic at:
+            //       https://github.com/microsoft/QuantumLibraries/blob/505fc27383c9914c3e1f60fb63d0acfe60b11956/Visualization/src/DisplayableUnitaryEncoders.cs#L43
+            string.Join(
+                "\\\\\n",
+                Enumerable
+                    .Range(0, array.Shape[0])
+                    .Select(
+                        idxRow => string.Join(" & ",
+                            Enumerable
+                                .Range(0, array.Shape[1])
+                                .Select(
+                                    idxCol => $"{array[idxRow, idxCol, 0]} + {array[idxRow, idxCol, 1]} i"
+                                )
+                        )
+                    )
+            );
+
+        internal static IEnumerable<NDArray> IterateOverLeftmostIndex(this NDArray array)
+        {
+            foreach (var idx in Enumerable.Range(0, array.shape[0]))
+            {
+                yield return array[idx, Slice.Ellipsis];
+            }
+        }
+
+        internal static string AsTextMatrixOfComplex(this NDArray array, string rowSep = "\n") =>
+            // NB: Assumes 𝑛 × 𝑛 × 2 array, where the trailing index is
+            //     [real, imag].
+            // TODO: Consolidate with logic at:
+            //       https://github.com/microsoft/QuantumLibraries/blob/505fc27383c9914c3e1f60fb63d0acfe60b11956/Visualization/src/DisplayableUnitaryEncoders.cs#L43
+            "[" + rowSep + string.Join(
+                rowSep,
+                Enumerable
+                    .Range(0, array.Shape[0])
+                    .Select(
+                        idxRow => "[" + string.Join(", ",
+                            Enumerable
+                                .Range(0, array.Shape[1])
+                                .Select(
+                                    idxCol => $"{array[idxRow, idxCol, 0]} + {array[idxRow, idxCol, 1]} i"
+                                )
+                        ) + "]"
+                    )
+            ) + rowSep + "]";
     }
 }
