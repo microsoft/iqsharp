@@ -12,9 +12,9 @@ using Newtonsoft.Json.Linq;
 namespace Microsoft.Quantum.Experimental
 {
 
-    public interface NoiseModelSource : INoiseModelSource
+    public class NoiseModelSource : INoiseModelSource
     {
-        NoiseModel? NoiseModel { get; set; }
+        public NoiseModel NoiseModel { get; set; } = NoiseModel.Ideal;
     }
 
 }

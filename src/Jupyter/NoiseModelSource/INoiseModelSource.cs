@@ -14,7 +14,7 @@ namespace Microsoft.Quantum.Experimental
 
     public interface INoiseModelSource
     {
-        NoiseModel? NoiseModel { get; set; }
+        NoiseModel NoiseModel { get; set; }
     }
 
 }
