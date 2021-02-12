@@ -29,10 +29,42 @@ namespace Microsoft.Quantum.Experimental
             "experimental.noise_model",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "TODO",
-                Description = "TODO",
+                Summary = "Gets, sets, saves, or loads a noise model used in simulating quantum operations.",
+                Description = @"
+                    > **⚠ WARNING:** This magic command is **experimental**,
+                    > is not supported, and may be removed from future versions without notice.
+
+                    This magic command allows accessing or modifying the noise model used by
+                    the `%experimental.simulate_noise` magic command.
+                ".Dedent(),
                 Examples = new string[]
                 {
+                    @"
+                        Return the currently set noise model:
+                        ```
+                        In []: %experimental.noise_model
+                        ```
+                    ".Dedent(),
+                    @"
+                        Set the noise model to a noise model given as JSON:
+                        ```
+                        In []: %experimental.noise_model { ... }
+                        ```
+                    ".Dedent(),
+                    @"
+                        Save the current noise model to a JSON file named
+                        `noise-model.json`:
+                        ```
+                        In []: %experimental.noise_model --save noise-model.json
+                        ```
+                    ".Dedent(),
+                    @"
+                        Load the noise model stored in `noise-model.json`,
+                        making it the active noise model:
+                        ```
+                        In []: %experimental.noise_model --load noise-model.json
+                        ```
+                    ".Dedent()
                 }
             })
         {

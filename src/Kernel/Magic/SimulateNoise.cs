@@ -31,10 +31,41 @@ namespace Microsoft.Quantum.Experimental
             "experimental.simulate_noise",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "TODO",
-                Description = "TODO",
+                Summary = "Runs a given function or operation on the OpenSystemsSimulator target machine.",
+                Description = @"
+                    > **⚠ WARNING:** This magic command is **experimental**,
+                    > is not supported, and may be removed from future versions without notice.
+
+                    This magic command allows executing a given function or operation
+                    on the OpenSystemsSimulator target, simulating how that function or operation
+                    will perform when run on noisy quantum hardware.
+
+                    #### See also
+
+                    - [`%experimental.noise_model`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/experimental.noise_model)
+
+                    #### Required parameters
+
+                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                ".Dedent(),
                 Examples = new string[]
                 {
+                    @"
+                        Simulate a Q# operation defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %simulate MyOperation
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Simulate a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %simulate MyOperation a=5 b=10
+                        Out[]: <return value of the operation>
+                        ```
+                    ".Dedent(),
                 }
             })
         {
@@ -75,6 +106,8 @@ namespace Microsoft.Quantum.Experimental
             var qsim = new OpenSystemsSimulator();
             if (NoiseModelSource.NoiseModel != null)
             {
+                var json = JsonSerializer.Serialize(NoiseModelSource.NoiseModel);
+                Console.WriteLine(json);
                 qsim.NoiseModel = NoiseModelSource.NoiseModel;
             }
             Logger?.LogDebug("Simulating with noise model: {NoiseModel}", JsonSerializer.Serialize(NoiseModelSource.NoiseModel));
