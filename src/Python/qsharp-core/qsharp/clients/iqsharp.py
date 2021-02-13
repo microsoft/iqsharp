@@ -3,7 +3,7 @@
 ##
 # iqsharp.py: Client for the IQ# Jupyter kernel.
 ##
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
 
@@ -192,6 +192,24 @@ class IQSharpClient(object):
                     versions[component] = LooseVersion(version)
         self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
         return versions
+
+    ## Experimental Methods ##
+    # These methods expose experimental functionality that may be removed without
+    # warning. To communicate to users that these are not reliable, we mark
+    # these methods as private, and will re-export them in the
+    # qsharp.experimental submodule.
+
+    def _simulate_noise(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
+
+    def _get_noise_model(self) -> str:
+        return self._execute('%experimental.noise_model')
+
+    def _set_noise_model(self, op, json_data : str) -> None:
+        # We assume json_data is already serialized, so that we skip the support
+        # provided by _execute_magic and call directly.
+        return self._execute(f'%experimental.noise_model {json_data}')
+
 
     ## Internal-Use Methods ##
 
