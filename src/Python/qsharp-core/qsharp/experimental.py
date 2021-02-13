@@ -20,6 +20,7 @@
 
 ## IMPORTS ##
 
+import qsharp
 from qsharp.loader import QSharpCallable
 
 ## EXPORTS ##
@@ -160,4 +161,4 @@ def get_noise_model():
     return convert_to_qobjs(noise_model)
 
 def set_noise_model(noise_model):
-    qsharp.client._set_noise_model(json.dumps(convert_to_rust_style(noise_model))
+    qsharp.client._set_noise_model(json.dumps(convert_to_rust_style(noise_model)))
