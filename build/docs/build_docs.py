@@ -123,9 +123,9 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     metadata = {
         'title': f"{magic_name} (magic command)",
         'description': raw_summary.strip(),
-        'author': 'rmshaffer',
+        'author': 'anjbur',
         'uid': uid,
-        'ms.author': 'ryansha',
+        'ms.author': 'anburton',
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
         'ms.topic': 'managed-reference'
     }
