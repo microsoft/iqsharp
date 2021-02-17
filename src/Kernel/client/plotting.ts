@@ -30,7 +30,7 @@ export interface DisplayableState {
 export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
 
 export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: DisplayableState) {
-    fitChart(state);
+    fitChart(chart, state);
     switch (plotStyle) {
         case "amplitude-phase":
             updateWithAmplitudePhaseData(chart, state);
@@ -46,10 +46,9 @@ export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: Display
     }
 }
 
-function fitChart(state: DisplayableState) {
-    let innerChartWrapperDiv = document.getElementById("innerChartWrapper");
+function fitChart(chart: ChartJs, state: DisplayableState) {
     let chartWidth = state.amplitudes.length * 100;
-    innerChartWrapperDiv.style.width = `${chartWidth}px`;
+    chart.canvas.parentElement.style.width = `${chartWidth}px`;
 }
 
 function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {

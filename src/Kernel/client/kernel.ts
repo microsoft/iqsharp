@@ -70,7 +70,6 @@ class Kernel {
                         chartWrapperDiv.style.overflowX = "scroll";
                         let innerChartWrapperDiv = document.createElement("div");
                         innerChartWrapperDiv.style.height = "350px";
-                        innerChartWrapperDiv.id = "innerChartWrapper";
                         stateDiv.appendChild(chartWrapperDiv);
                         chartWrapperDiv.appendChild(innerChartWrapperDiv);
 
