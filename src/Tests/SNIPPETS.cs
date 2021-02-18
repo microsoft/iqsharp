@@ -158,6 +158,15 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string FailIfOne =
+ @"
+    operation FailIfOne() : Unit {
+        use q = Qubit();
+        if M(q) == One {
+            fail ""Expected measuring a freshly allocated qubit to return Zero, but returned One."";
+        }
+    }
+";
         public static string ApplyWithinBlock =
  @"
     /// # Summary

@@ -17,6 +17,7 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Microsoft.Quantum.Experimental;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -77,6 +78,31 @@ namespace Tests.IQSharp
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
                 new UnitTestLogger<SimulateMagic>());
+            var channel = new MockChannel();
+            var response = await simMagic.Execute(snippetName, channel);
+            PrintResult(response, channel);
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
+
+            return response.Output?.ToString();
+        }
+
+        public static async Task<string?> AssertNoisySimulate(IQSharpEngine engine, string snippetName, NoiseModel? noiseModel, params string[] messages)
+        {
+            await engine.Initialized;
+            var configSource = new ConfigurationSource(skipLoading: true);
+            var noiseModelSource = new NoiseModelSource();
+            if (noiseModel != null)
+            {
+                noiseModelSource.NoiseModel = noiseModel;
+            }
+
+            var simMagic = new SimulateNoiseMagic(
+                resolver: engine.SymbolsResolver!,
+                configurationSource: configSource,
+                logger: new UnitTestLogger<SimulateNoiseMagic>(),
+                noiseModelSource: noiseModelSource
+                );
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
             PrintResult(response, channel);
@@ -243,6 +269,47 @@ namespace Tests.IQSharp
 
             // Try running again:
             await AssertEstimate(engine, "HelloQ");
+        }
+
+        [TestMethod]
+        public async Task NoisySimulateWithTwoQubitOperation()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.HelloQ, "SimpleDebugOperation");
+
+            // Try running again:
+            // Note that noiseModel: null sets the noise model to be ideal.
+            await AssertNoisySimulate(engine, "SimpleDebugOperation", noiseModel: null);
+        }
+
+        [TestMethod]
+        public async Task NoisySimulateWithFailIfOne()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.HelloQ, "FailIfOne");
+
+            // Try running again:
+            // Note that noiseModel: null sets the noise model to be ideal.
+            await AssertNoisySimulate(engine, "FailIfOne", noiseModel: null);
+        }
+
+        [TestMethod]
+        public async Task NoisySimulateWithTrivialOperation()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+
+            // Try running again:
+            await AssertNoisySimulate(engine, "HelloQ", noiseModel: null);
         }
 
         [TestMethod]
