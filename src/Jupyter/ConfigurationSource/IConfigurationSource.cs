@@ -129,5 +129,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public TraceVisualizationStyle TraceVisualizationStyle =>
             GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
+
+        /// <summary>
+        ///     Specifies the number of qubits that the open systems simulator
+        ///     supports for use in running Q# programs.
+        /// </summary>
+        public uint OpenSystemsSimulatorCapacity =>
+            GetOptionOrDefault<uint>("opensim.nQubits", 3);
     }
 }

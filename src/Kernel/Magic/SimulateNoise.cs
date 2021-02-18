@@ -103,7 +103,7 @@ namespace Microsoft.Quantum.Experimental
             var symbol = SymbolResolver.Resolve(name) as dynamic; // FIXME: Should be IQSharpSymbol.
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var qsim = new OpenSystemsSimulator();
+            var qsim = new OpenSystemsSimulator(ConfigurationSource.OpenSystemsSimulatorCapacity);
             if (NoiseModelSource.NoiseModel != null)
             {
                 var json = JsonSerializer.Serialize(NoiseModelSource.NoiseModel);
