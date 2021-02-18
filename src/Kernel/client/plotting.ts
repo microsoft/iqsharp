@@ -30,6 +30,7 @@ export interface DisplayableState {
 export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
 
 export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: DisplayableState) {
+    fitChart(chart, state);
     switch (plotStyle) {
         case "amplitude-phase":
             updateWithAmplitudePhaseData(chart, state);
@@ -43,6 +44,11 @@ export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: Display
             updateWithRealImagData(chart, state);
             break;
     }
+}
+
+function fitChart(chart: ChartJs, state: DisplayableState) {
+    let chartWidth = state.amplitudes.length * 100;
+    chart.canvas.parentElement.style.width = `${chartWidth}px`;
 }
 
 function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
@@ -219,7 +225,8 @@ export function createNewCanvas(
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
-            responsive: true
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
 
