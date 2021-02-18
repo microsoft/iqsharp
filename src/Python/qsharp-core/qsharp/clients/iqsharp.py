@@ -205,7 +205,7 @@ class IQSharpClient(object):
     def _get_noise_model(self) -> str:
         return self._execute('%experimental.noise_model')
 
-    def _set_noise_model(self, op, json_data : str) -> None:
+    def _set_noise_model(self, json_data : str) -> None:
         # We assume json_data is already serialized, so that we skip the support
         # provided by _execute_magic and call directly.
         return self._execute(f'%experimental.noise_model {json_data}')
