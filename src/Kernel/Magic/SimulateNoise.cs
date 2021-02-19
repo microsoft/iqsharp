@@ -11,6 +11,7 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
@@ -27,7 +28,7 @@ namespace Microsoft.Quantum.Experimental
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateNoiseMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, INoiseModelSource noiseModelSource, ILogger<SimulateNoiseMagic> logger) : base(
+        public SimulateNoiseMagic(IExecutionEngine engine, ISymbolResolver resolver, IConfigurationSource configurationSource, INoiseModelSource noiseModelSource, ILogger<SimulateNoiseMagic> logger) : base(
             "experimental.simulate_noise",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -73,6 +74,11 @@ namespace Microsoft.Quantum.Experimental
             this.ConfigurationSource = configurationSource;
             this.Logger = logger;
             this.NoiseModelSource = noiseModelSource;
+
+            if (engine is IQSharpEngine iQSharpEngine)
+            {
+                iQSharpEngine.RegisterDisplayEncoder(new MixedStateToHtmlDisplayEncoder());
+            }
         }
 
         /// <summary>

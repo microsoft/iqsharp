@@ -98,6 +98,7 @@ namespace Tests.IQSharp
             }
 
             var simMagic = new SimulateNoiseMagic(
+                engine,
                 resolver: engine.SymbolsResolver!,
                 configurationSource: configSource,
                 logger: new UnitTestLogger<SimulateNoiseMagic>(),

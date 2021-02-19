@@ -14,6 +14,7 @@ using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Quantum.IQSharp.Kernel;
 
 namespace Microsoft.Quantum.Experimental
 {
@@ -25,7 +26,7 @@ namespace Microsoft.Quantum.Experimental
         /// <summary>
         ///     Allows for querying noise models and for loading new noise models.
         /// </summary>
-        public NoiseModelMagic(INoiseModelSource noiseModelSource, ILogger<NoiseModelMagic> logger) : base(
+        public NoiseModelMagic(IExecutionEngine engine, INoiseModelSource noiseModelSource, ILogger<NoiseModelMagic> logger) : base(
             "experimental.noise_model",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -69,6 +70,10 @@ namespace Microsoft.Quantum.Experimental
             })
         {
             this.NoiseModelSource = noiseModelSource;
+            if (engine is IQSharpEngine iQSharpEngine)
+            {
+                iQSharpEngine.RegisterDisplayEncoder(new NoiseModelToHtmlDisplayEncoder());
+            }
         }
 
         /// <inheritdoc />
