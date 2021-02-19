@@ -272,13 +272,14 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        [TestCategory("Experimental")]
         public async Task NoisySimulateWithTwoQubitOperation()
         {
             var engine = await Init();
             var channel = new MockChannel();
 
             // Compile it:
-            await AssertCompile(engine, SNIPPETS.HelloQ, "SimpleDebugOperation");
+            await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
 
             // Try running again:
             // Note that noiseModel: null sets the noise model to be ideal.
@@ -286,13 +287,14 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        [TestCategory("Experimental")]
         public async Task NoisySimulateWithFailIfOne()
         {
             var engine = await Init();
             var channel = new MockChannel();
 
             // Compile it:
-            await AssertCompile(engine, SNIPPETS.HelloQ, "FailIfOne");
+            await AssertCompile(engine, SNIPPETS.FailIfOne, "FailIfOne");
 
             // Try running again:
             // Note that noiseModel: null sets the noise model to be ideal.
@@ -300,6 +302,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        [TestCategory("Experimental")]
         public async Task NoisySimulateWithTrivialOperation()
         {
             var engine = await Init();
@@ -309,7 +312,7 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            await AssertNoisySimulate(engine, "HelloQ", noiseModel: null);
+            await AssertNoisySimulate(engine, "HelloQ", noiseModel: null, "Hello from quantum world!");
         }
 
         [TestMethod]
