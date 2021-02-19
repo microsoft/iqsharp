@@ -64,11 +64,41 @@ namespace Microsoft.Quantum.Experimental
                         <tr>
                             <th>{name}</th>
                             <td>
-                                $$
-                                    \left( \begin{{matrix}}
-                                        {channel?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
-                                    \end{{matrix}} \right)
-                                $$
+                                $${
+                                    // NB: We use a switch expression here to
+                                    //     pattern match on what representation
+                                    //     the given channel is expressed in.
+                                    //     In doing so, we use the {} pattern
+                                    //     to capture non-null channel data,
+                                    //     so that we are guaranteed that we
+                                    //     only try to display channels that
+                                    //     were successfully deserialized.
+                                    channel switch
+                                    {
+                                        UnitaryChannel { Data: {} data } =>
+                                            $@"
+                                                \left( \begin{{matrix}}
+                                                    {data.AsLaTeXMatrixOfComplex() ?? ""}
+                                                \end{{matrix}} \right)",
+                                        KrausDecompositionChannel { Data: {} data } =>
+                                            $@"
+                                                \left\{{{
+                                                    string.Join(", ",
+                                                        Enumerable
+                                                            .Range(0, data.Shape[0])
+                                                            .Select(idxKrausOperator =>
+                                                                $@"
+                                                                    \left( \begin{{matrix}}
+                                                                        {data[idxKrausOperator].AsLaTeXMatrixOfComplex()}
+                                                                    \end{{matrix}} \right)
+                                                                "
+                                                            )
+                                                    )
+                                                }\right\}}
+                                            ",
+                                        _ => ""
+                                    }
+                                }$$
                             </td>
                         </tr>
                 ";
@@ -79,7 +109,7 @@ namespace Microsoft.Quantum.Experimental
                     <table>
                         <caption>Noise model</caption>
                         <tr>
-                            <th>Initial state<th>
+                            <th>Initial state</th>
                             <td>
                                 $$
                                     \left( \begin{{matrix}}
