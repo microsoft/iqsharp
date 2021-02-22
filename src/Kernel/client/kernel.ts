@@ -65,7 +65,15 @@ class Kernel {
                 if (stateDivId != null) {
                     let stateDiv = document.getElementById(stateDivId);
                     if (stateDiv != null) {
-                        let { chart: chart } = createNewCanvas(stateDiv);
+                        // Create necessary elements so a large chart will scroll
+                        let chartWrapperDiv = document.createElement("div");
+                        chartWrapperDiv.style.overflowX = "scroll";
+                        let innerChartWrapperDiv = document.createElement("div");
+                        innerChartWrapperDiv.style.height = "350px";
+                        stateDiv.appendChild(chartWrapperDiv);
+                        chartWrapperDiv.appendChild(innerChartWrapperDiv);
+
+                        let { chart: chart } = createNewCanvas(innerChartWrapperDiv);
                         activeSessions.set(debugSession, {
                             chart: chart,
                             lastState: null,
