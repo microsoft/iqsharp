@@ -22,6 +22,7 @@
 
 import qsharp
 from qsharp.loader import QSharpCallable
+import json
 
 ## EXPORTS ##
 
