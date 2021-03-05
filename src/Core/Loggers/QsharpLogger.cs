@@ -25,6 +25,8 @@ namespace Microsoft.Quantum.IQSharp.Common
         public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.ErrorCode>();
         public List<QsCompiler.Diagnostics.WarningCode> WarningCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.WarningCode>();
 
+        private static readonly LSP.Range EmptyRange = new LSP.Range { Start = new LSP.Position(0, 0), End = new LSP.Position(0, 0) };
+
         public QSharpLogger(ILogger logger, int lineNrOffset = 0) :
             base(lineNrOffset : lineNrOffset)
         {
@@ -90,7 +92,8 @@ namespace Microsoft.Quantum.IQSharp.Common
             Log(new LSP.Diagnostic
             {
                 Severity = LSP.DiagnosticSeverity.Information,
-                Message = message
+                Message = message,
+                Range = EmptyRange
             });
         }
 
@@ -99,7 +102,8 @@ namespace Microsoft.Quantum.IQSharp.Common
             Log(new LSP.Diagnostic
             {
                 Severity = LSP.DiagnosticSeverity.Hint,
-                Message = message
+                Message = message,
+                Range = EmptyRange
             });
         }
 
@@ -109,7 +113,8 @@ namespace Microsoft.Quantum.IQSharp.Common
             {
                 Code = code,
                 Severity = LSP.DiagnosticSeverity.Warning,
-                Message = message
+                Message = message,
+                Range = EmptyRange
             });
         }
 
@@ -119,7 +124,8 @@ namespace Microsoft.Quantum.IQSharp.Common
             {
                 Code = code,
                 Severity = LSP.DiagnosticSeverity.Error,
-                Message = message
+                Message = message,
+                Range = EmptyRange
             });
         }
 
