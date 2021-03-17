@@ -108,7 +108,7 @@ class Kernel {
                 let state: DisplayableState = message.content.state;
                 let debugSession: string = message.content.debug_session;
                 activeSessions.get(debugSession).lastState = state;
-                update(debugSession, activeSessions.get(debugSession).plotStyle);;
+                update(debugSession, activeSessions.get(debugSession).plotStyle);
             }
         );
 
