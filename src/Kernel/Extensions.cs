@@ -28,13 +28,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Adds services required for the IQ# kernel to a given service
         ///     collection.
         /// </summary>
-        public static void AddIQSharpKernel(this IServiceCollection services)
+        public static T AddIQSharpKernel<T>(this T services)
+        where T: IServiceCollection
         {
             services.AddSingleton<ISymbolResolver, Kernel.SymbolResolver>();
             services.AddSingleton<IMagicSymbolResolver, Kernel.MagicSymbolResolver>();
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
             services.AddSingleton<INoiseModelSource, NoiseModelSource>();
+
+            return services;
         }
 
         internal static void RenderExecutionPath(this ExecutionPathTracer.ExecutionPathTracer tracer,
