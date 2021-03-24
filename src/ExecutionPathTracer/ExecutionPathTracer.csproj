@@ -13,7 +13,7 @@
     <Authors>Microsoft</Authors>
     <Description>Microsoft Quantum's Execution Path Tracer.</Description>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageReleaseNotes>See: https://docs.microsoft.com/en-us/quantum/relnotes/</PackageReleaseNotes>
+    <PackageReleaseNotes>See: https://docs.microsoft.com/azure/quantum/qdk-relnotes</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Microsoft/IQsharp/tree/main/src/ExecutionPathTracer</PackageProjectUrl>
     <PackageIcon>qdk-nuget-icon.png</PackageIcon>

@@ -32,7 +32,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     which performs a simulation of the given function or operation in which the state is always
                     a simple product state in the computational basis, and prints the resulting return value.
 
-                    See the [ToffoliSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/toffoli-simulator) to learn more.
+                    See the [ToffoliSimulator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/toffoli-simulator) to learn more.
 
                     #### Required parameters
 

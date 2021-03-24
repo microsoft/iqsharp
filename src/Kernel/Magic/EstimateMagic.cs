@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     - Depth (lower bound for the T-gate depth of the quantum circuit)
                     - Width (lower bound for the maximum number of qubits used for the computation)
 
-                    See the [ResourcesEstimator user guide](https://docs.microsoft.com/quantum/user-guide/machines/resources-estimator) to learn more.
+                    See the [ResourcesEstimator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/resources-estimator) to learn more.
 
                     #### Required parameters
 
