@@ -33,7 +33,7 @@ cd src/Kernel/
 npm install
 ```
 
-To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/main/iqsharp.sln) solution file.
+To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./iqsharp.sln) solution file.
 To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
 
 In either case, the IQ# kernel can be installed by using `dotnet run`:
@@ -118,4 +118,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-For more details, please see [CONTRIBUTING.md](./tree/main/CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/en-us/azure/quantum/contributing-overview).
+For more details, please see [CONTRIBUTING.md](./CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/en-us/azure/quantum/contributing-overview).
