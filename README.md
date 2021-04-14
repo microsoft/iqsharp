@@ -2,7 +2,7 @@
 
 Welcome to the Microsoft Quantum Development Kit!
 
-This repository contains the IQ# kernel for the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
+This repository contains the IQ# kernel for the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum/).
 This kernel provides Q# support for the Jupyter platform, as well as the backend used by the Python client for Q#.
 
 - **[src/Core/](./src/Core/)**: Core of the IQ# kernel.
@@ -14,12 +14,12 @@ This kernel provides Q# support for the Jupyter platform, as well as the backend
 
 ## New to Quantum? ##
 
-See the [introduction to quantum computing](https://docs.microsoft.com/quantum/concepts/) provided with the Quantum Development Kit.
+See the [introduction to quantum computing](https://docs.microsoft.com/azure/quantum/concepts-overview) provided with the Quantum Development Kit.
 
 ## Getting Started ##
 
-The Jupyter kernel provided in this repository is built using [.NET Core](https://docs.microsoft.com/dotnet/core/) (2.2 or later) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/quantum/).
-Please see the [getting started guide](https://docs.microsoft.com/quantum/install-guide) for how to get up and running.
+The Jupyter kernel provided in this repository is built using [.NET Core](https://docs.microsoft.com/dotnet/core/) (2.2 or later) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum).
+Please see the [getting started guide](https://docs.microsoft.com/azure/quantum/install-overview-qdk) for how to get up and running.
 
 You may also visit the [**microsoft/quantum**](https://github.com/microsoft/quantum) repository, which offers a wide variety
 of samples on how to use this kernel to run Q# in Jupyter Notebooks, or from Python.
@@ -33,7 +33,7 @@ cd src/Kernel/
 npm install
 ```
 
-To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./blob/main/iqsharp.sln) solution file.
+To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./iqsharp.sln) solution file.
 To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
 
 In either case, the IQ# kernel can be installed by using `dotnet run`:
@@ -90,7 +90,7 @@ In either case, you can also use a Quantum Development Kit version number (0.8 o
 ## Feedback ##
 
 If you have feedback about IQ#, please let us know by filing a [new issue](https://github.com/microsoft/iqsharp/issues/new)!
-If you have feedback about some other part of the Microsoft Quantum Development Kit, please see the [contribution guide](https://docs.microsoft.com/quantum/contributing/) for more information.
+If you have feedback about some other part of the Microsoft Quantum Development Kit, please see the [contribution guide](https://docs.microsoft.com/en-us/azure/quantum/contributing-overview) for more information.
 
 ## Legal and Licensing ##
 
@@ -118,4 +118,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-For more details, please see [CONTRIBUTING.md](./tree/main/CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/quantum/contributing/).
+For more details, please see [CONTRIBUTING.md](./CONTRIBUTING.md), or the [contribution guide](https://docs.microsoft.com/en-us/azure/quantum/contributing-overview).

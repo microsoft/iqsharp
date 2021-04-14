@@ -36,7 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     which performs a full-state simulation of the given function or operation
                     and prints the resulting return value.
 
-                    See the [QuantumSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/full-state-simulator) to learn more.
+                    See the [QuantumSimulator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/full-state-simulator) to learn more.
 
                     #### Required parameters
 
