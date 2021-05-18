@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -29,16 +29,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string Location { get; private set; } = string.Empty;
 
-        public List<ProviderStatus> Providers => new List<ProviderStatus>
-        {
-            new ProviderStatus(null, null,
-                ((Name == NameWithMockProviders)
-                        ? Enum.GetNames(typeof(AzureProvider))
-                            .Select(provider => $"{provider.ToLowerInvariant()}.mock")
-                            .ToArray()
-                        : MockTargetIds
-                ).Select(id => new TargetStatus(id)).ToList())
-        };
+        public List<ProviderStatus> Providers => new List<ProviderStatus>();
 
         public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
@@ -72,8 +63,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public void AddMockTargets(params string[] targetIds)
         {
-            var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
-            Providers.Add(new ProviderStatus(null, null, targets));
+            //var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
+            //Providers.Add(new ProviderStatus(null, null, targets));
         }
     }
 }

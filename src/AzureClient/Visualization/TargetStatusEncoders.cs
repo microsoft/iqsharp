@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,7 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Columns = new List<(string, Func<TargetStatus, string>)>
                 {
                     ("Target ID", target => target.Id ?? string.Empty),
-                    ("Current Availability", target => target.CurrentAvailability ?? string.Empty),
+                    ("Current Availability", target => target.CurrentAvailability?.ToString() ?? string.Empty),
                     ("Average Queue Time (Seconds)", target => target.AverageQueueTime?.ToString() ?? string.Empty),
                 },
                 Rows = targets.ToList()

@@ -7,25 +7,25 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.Runtime;
+using Azure.Quantum.Jobs;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class AzureWorkspace : IAzureWorkspace
     {
-        public string? Name => AzureQuantumClient?.WorkspaceName;
-        public string? SubscriptionId => AzureQuantumClient?.SubscriptionId;
-        public string? ResourceGroup => AzureQuantumClient?.ResourceGroupName;
+        public string? Name => AzureQuantumWorkspace?.WorkspaceName;
+        public string? SubscriptionId => AzureQuantumWorkspace?.SubscriptionId;
+        public string? ResourceGroup => AzureQuantumWorkspace?.ResourceGroupName;
         public string? Location { get; private set; }
 
-        private Azure.Quantum.IWorkspace AzureQuantumWorkspace { get; set; }
-        private QuantumClient AzureQuantumClient { get; set; }
+        private Azure.Quantum.Workspace AzureQuantumWorkspace { get; set; }
+        private QuantumJobClient AzureQuantumClient { get; set; }
         private ILogger<AzureWorkspace> Logger { get; } = new LoggerFactory().CreateLogger<AzureWorkspace>();
 
-        public AzureWorkspace(QuantumClient azureQuantumClient, Azure.Quantum.Workspace azureQuantumWorkspace, string location)
+        public AzureWorkspace(QuantumJobClient azureQuantumClient, Azure.Quantum.Workspace azureQuantumWorkspace, string location)
         {
             AzureQuantumClient = azureQuantumClient;
             AzureQuantumWorkspace = azureQuantumWorkspace;
@@ -36,7 +36,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             try
             {
-                return await AzureQuantumClient.Providers.GetStatusAsync();
+                var results = new List<ProviderStatus>();
+                var status = AzureQuantumClient.GetProviderStatusAsync();
+                await foreach(var s in status)
+                {
+                    results.Add(s);
+                }
+                return results;
             }
             catch (Exception e)
             {
