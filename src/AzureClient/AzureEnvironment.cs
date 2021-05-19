@@ -119,10 +119,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
 
             var azureQuantumClient = new QuantumJobClient(
-                azureQuantumWorkspace.SubscriptionId,
-                azureQuantumWorkspace.ResourceGroupName,
-                azureQuantumWorkspace.WorkspaceName,
-                BaseUriForLocation(location));
+                subscriptionId: azureQuantumWorkspace.SubscriptionId,
+                resourceGroupName: azureQuantumWorkspace.ResourceGroupName,
+                workspaceName: azureQuantumWorkspace.WorkspaceName,
+                location: location);
 
             return new AzureWorkspace(azureQuantumClient, azureQuantumWorkspace, location);
         }
