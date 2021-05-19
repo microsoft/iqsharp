@@ -21,6 +21,8 @@ RUN apt-get update && \
                        # Note that we install them here to minimize the number
                        # of layers.
                        libgomp1 \
+                       # Dependency for QIR
+                       libc6 \
                        # Not strictly needed, but Git is useful for several
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
