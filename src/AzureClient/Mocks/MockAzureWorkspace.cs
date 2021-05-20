@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Azure.Quantum.Jobs.Models;
 using Microsoft.Quantum.Runtime;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -43,9 +44,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => await Task.Run(() => Providers);
 
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => await Task.Run(() => Jobs);
+        public async IAsyncEnumerable<CloudJob> ListJobsAsync()
+        {
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+            foreach (var j in Jobs)
+            {
+                yield return j;
+            }
+        }
 
-        public async Task<IEnumerable<QuotaInfo>?> ListQuotasAsync() => await Task.Run(() => new List<QuotaInfo>());
+        public async IAsyncEnumerable<QuotaInfo> ListQuotasAsync()
+        {
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+
+            foreach (var q in Enumerable.Empty<QuotaInfo>())  // No quotas for Mock workspaces.
+            {
+                yield return q;
+            }
+        }
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
 

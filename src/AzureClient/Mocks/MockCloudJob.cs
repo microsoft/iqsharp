@@ -16,10 +16,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : base(
                 new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
                 new JobDetails(
-                    containerUri: null,
-                    inputDataFormat: null,
-                    providerId: null,
-                    target: null
+                    containerUri: string.Empty,
+                    inputDataFormat: string.Empty,
+                    providerId: string.Empty,
+                    target: string.Empty
                 ))
         {
         }

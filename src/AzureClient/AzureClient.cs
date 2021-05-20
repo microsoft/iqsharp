@@ -480,15 +480,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync() ?? new List<CloudJob>();
+            var jobs = new List<CloudJob>();
+            await foreach(var job in ActiveWorkspace.ListJobsAsync())
+            {
+                if (job.Matches(filter))
+                {
+                    jobs.Add(job);
+                }
+            }
+
             if (jobs.Count() == 0)
             {
-                channel.Stderr("No jobs found in current Azure Quantum workspace.");
-            }
-            else
-            {
-                jobs = jobs.Where(job => job.Matches(filter));
-                if (jobs.Count() == 0)
+                if (string.IsNullOrEmpty(filter))
+                {
+                    channel.Stderr("No jobs found in current Azure Quantum workspace.");
+                }
+                else
                 {
                     channel.Stderr($"No jobs matching \"{filter}\" found in current Azure Quantum workspace.");
                 }
@@ -497,6 +504,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return jobs.ToExecutionResult();
         }
 
+        /// <inheritdoc/>
         public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel)
         {
             if (ActiveWorkspace == null)
@@ -511,7 +519,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var quotas = await ActiveWorkspace.ListQuotasAsync() ?? new List<QuotaInfo>();
+            var quotas = new List<QuotaInfo>();
+            await foreach (var q in ActiveWorkspace.ListQuotasAsync())
+            {
+                quotas.Add(q);
+            }
 
             if (quotas.Count() == 0)
             {

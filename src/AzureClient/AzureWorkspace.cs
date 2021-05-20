@@ -66,32 +66,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync()
+        public async IAsyncEnumerable<CloudJob> ListJobsAsync()
         {
-            try
+            await foreach (var job in AzureQuantumWorkspace.ListJobsAsync())
             {
-                return await AzureQuantumWorkspace.ListJobsAsync();
+                yield return job;
             }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"Failed to retrieve the list of jobs from the Azure Quantum workspace: {e.Message}");
-            }
-
-            return null;
         }
 
-        public async Task<IEnumerable<QuotaInfo>?> ListQuotasAsync()
+        public async IAsyncEnumerable<QuotaInfo> ListQuotasAsync()
         {
-            try
+            await foreach(var quota in AzureQuantumWorkspace.ListQuotasAsync())
             {
-                return await AzureQuantumWorkspace.ListQuotasAsync();
+                yield return quota;
             }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"Failed to retrieve the quota information from the Azure Quantum workspace: {e.Message}");
-            }
-
-            return null;
         }
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) =>
