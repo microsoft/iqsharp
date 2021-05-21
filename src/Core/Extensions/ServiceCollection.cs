@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +10,8 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public static partial class Extensions
     {
-        public static void AddIQSharp(this IServiceCollection services)
+        public static T AddIQSharp<T>(this T services)
+        where T: IServiceCollection
         {
             services.AddSingleton<IEventService, EventService>();
             services.AddSingleton<ICompilerService, CompilerService>();
@@ -21,6 +22,8 @@ namespace Microsoft.Quantum.IQSharp
             services.AddSingleton<ISnippets, Snippets>();
             services.AddSingleton<PerformanceMonitor>();
             services.AddSingleton<IMetadataController, MetadataController>();
+
+            return services;
         }
     }
 }

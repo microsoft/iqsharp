@@ -174,7 +174,7 @@ namespace Tests.IQSharp
             // Run:
             var results = await AssertSimulate(controller, "DependsOnWorkspace", "Hello Foo again!") as QArray<Result>;
             Assert.IsNotNull(results);
-            Assert.AreEqual(5, results.Length);
+            Assert.AreEqual(5, results!.Length);
         }
 
         [TestMethod]

@@ -11,6 +11,12 @@ import { defineQSharpMode } from "./syntax";
 import { Visualizer } from "./visualizer";
 import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
 
+declare global {
+    interface Window {
+        iqsharp: Kernel
+    }
+}
+
 class Kernel {
     hostingEnvironment: string | undefined;
     iqsharpVersion: string | undefined;
@@ -59,7 +65,15 @@ class Kernel {
                 if (stateDivId != null) {
                     let stateDiv = document.getElementById(stateDivId);
                     if (stateDiv != null) {
-                        let { chart: chart } = createNewCanvas(stateDiv);
+                        // Create necessary elements so a large chart will scroll
+                        let chartWrapperDiv = document.createElement("div");
+                        chartWrapperDiv.style.overflowX = "scroll";
+                        let innerChartWrapperDiv = document.createElement("div");
+                        innerChartWrapperDiv.style.height = "350px";
+                        stateDiv.appendChild(chartWrapperDiv);
+                        chartWrapperDiv.appendChild(innerChartWrapperDiv);
+
+                        let { chart: chart } = createNewCanvas(innerChartWrapperDiv);
                         activeSessions.set(debugSession, {
                             chart: chart,
                             lastState: null,
@@ -94,7 +108,7 @@ class Kernel {
                 let state: DisplayableState = message.content.state;
                 let debugSession: string = message.content.debug_session;
                 activeSessions.get(debugSession).lastState = state;
-                update(debugSession, "amplitude-squared");
+                update(debugSession, activeSessions.get(debugSession).plotStyle);
             }
         );
 
@@ -251,6 +265,12 @@ class Kernel {
         Telemetry.initAsync();
     }
 
+    addCopyListener(elementId: string, data: string) {
+        document.getElementById(elementId).onclick = async (ev: MouseEvent) => {
+            await navigator.clipboard.writeText(data);
+        };
+    }
+
     initExecutionPathVisualizer() {
         IPython.notebook.kernel.register_iopub_handler(
             "render_execution_path",
@@ -275,6 +295,6 @@ class Kernel {
 
 export function onload() {
     defineQSharpMode();
-    let kernel = new Kernel();
+    window.iqsharp = new Kernel();
     console.log("Loaded IQ# kernel-specific extension!");
 }

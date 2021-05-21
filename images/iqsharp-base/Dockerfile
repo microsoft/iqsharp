@@ -21,6 +21,8 @@ RUN apt-get update && \
                        # Note that we install them here to minimize the number
                        # of layers.
                        libgomp1 \
+                       # Dependency for QIR
+                       libc6 \
                        # Not strictly needed, but Git is useful for several
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
@@ -112,6 +114,10 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Get the az quantum extension
 RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
+# Assign the .azure folder back to the notebook user so that they
+# can run az commands.
+RUN chown -R ${USER}:${USER} /home/${USER}/.azure
+
 # Switch to the notebook user to finish the installation.
 USER ${USER}
 # Make sure that .NET Core is on the notebook users' path.
@@ -120,7 +126,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.14.2011120240" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.15.2103133969" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \

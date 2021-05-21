@@ -29,7 +29,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false);
+            bool refreshCredentials = false,
+            CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Gets the current connection status to an Azure Quantum workspace.
@@ -100,5 +101,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// comparison.
         /// </returns>
         public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter);
+
+        /// <summary>
+        /// Gets a list of all jobs in the current Azure Quantum workspace.
+        /// </summary>
+        /// <returns>
+        /// A list of all jobs in the current workspace, optionally filtered
+        /// to jobs with fields containing <c>filter</c> using a case-insensitive
+        /// comparison.
+        /// </returns>
+        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel);
     }
 }

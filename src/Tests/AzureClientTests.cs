@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
@@ -76,9 +77,13 @@ namespace Tests.IQSharp
             var environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
             Assert.AreEqual(AzureEnvironmentType.Production, environment.Type);
 
-            // Dogfood environment cannot be created in test because it requires a service call
+            // Dogfood environment
+            // NB: This used to intentionally throw an exception when mocked,
+            //     due to requiring a service call, but that service call has
+            //     been moved to ConnectAsync instead of Create.
             Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Dogfood.ToString());
-            Assert.ThrowsException<InvalidOperationException>(() => AzureEnvironment.Create("TEST_SUBSCRIPTION_ID"));
+            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
+            Assert.AreEqual(AzureEnvironmentType.Dogfood, environment.Type);
 
             // Canary environment
             Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Canary.ToString());
@@ -240,7 +245,7 @@ namespace Tests.IQSharp
             ExpectError(AzureClientError.JobSubmissionFailed, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // specify input parameters and verify that the job was submitted
-            submissionContext.InputParameters = new Dictionary<string, string>() { ["count"] = "3", ["name"] = "testing" };
+            submissionContext.InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\"");
             var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             var retrievedJob = ExpectSuccess<CloudJob>(azureClient.GetJobStatusAsync(new MockChannel(), job.Id));
             Assert.AreEqual(job.Id, retrievedJob.Id);
@@ -269,7 +274,38 @@ namespace Tests.IQSharp
             var submissionContext = new AzureSubmissionContext()
             {
                 OperationName = "Tests.qss.HelloAgain",
-                InputParameters = new Dictionary<string, string>() { ["count"] = "3", ["name"] = "testing" },
+                InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\""),
+                ExecutionTimeout = 5,
+                ExecutionPollingInterval = 1,
+            };
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Assert.IsNotNull(histogram);
+        }
+
+        [TestMethod]
+        public void TestJobExecutionWithArrayInput()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+
+            // connect
+            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.IsFalse(targets.Any());
+
+            // add a target
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator" };
+
+            // set the active target
+            var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
+            Assert.AreEqual("ionq.simulator", target.Id);
+
+            // execute the job and verify that the results are retrieved successfully
+            var submissionContext = new AzureSubmissionContext()
+            {
+                OperationName = "Tests.qss.SayHelloWithArray",
+                InputParameters = AbstractMagic.ParseInputParameters("{\"names\": [\"foo\", \"bar\"]}"),
                 ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
