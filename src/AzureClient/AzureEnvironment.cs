@@ -11,6 +11,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Azure.Identity;
 using Azure.Quantum.Jobs;
 using Azure.Quantum.Jobs.Models;
 using Microsoft.Extensions.Logging;
@@ -111,20 +112,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Construct and return the AzureWorkspace object
-            var azureQuantumWorkspace = new Azure.Quantum.Workspace(
+            var ws = new Azure.Quantum.Workspace(
                 subscriptionId: SubscriptionId,
                 resourceGroupName: resourceGroupName,
                 workspaceName: workspaceName,
                 location: location);
 
+            // TODO: Use the client from the workspace
+            var azureQuantumClient = ws.Client;
 
-            var azureQuantumClient = new QuantumJobClient(
-                subscriptionId: azureQuantumWorkspace.SubscriptionId,
-                resourceGroupName: azureQuantumWorkspace.ResourceGroupName,
-                workspaceName: azureQuantumWorkspace.WorkspaceName,
-                location: location);
-
-            return new AzureWorkspace(azureQuantumClient, azureQuantumWorkspace, location);
+            return new AzureWorkspace(azureQuantumClient, ws, location);
         }
 
         private static AzureEnvironment Production(string subscriptionId) =>
