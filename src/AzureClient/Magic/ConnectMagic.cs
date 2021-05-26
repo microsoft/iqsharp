@@ -152,7 +152,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input);
             if (!inputParameters.Any())
             {
-                return await AzureClient.GetConnectionStatusAsync(channel);
+                return await AzureClient.GetConnectionStatusAsync(channel, cancellationToken);
             }
 
             var resourceId = inputParameters.DecodeParameter<string>(ParameterNameResourceId, defaultValue: string.Empty);

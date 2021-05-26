@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal class MockAzureWorkspace : IAzureWorkspace
+    internal class MockAzureWorkspace
     {
         public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
 

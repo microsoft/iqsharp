@@ -60,7 +60,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
-            return await AzureClient.GetQuotaListAsync(channel);
+            return await AzureClient.GetQuotaListAsync(channel, cancellationToken);
         }
     }
 }

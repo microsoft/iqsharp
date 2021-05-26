@@ -87,10 +87,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (inputParameters.ContainsKey(ParameterNameTargetId))
             {
                 string targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
-                return await AzureClient.SetActiveTargetAsync(channel, targetId);
+                return await AzureClient.SetActiveTargetAsync(channel, targetId, cancellationToken);
             }
 
-            return await AzureClient.GetActiveTargetAsync(channel);
+            return await AzureClient.GetActiveTargetAsync(channel, cancellationToken);
         }
     }
 }

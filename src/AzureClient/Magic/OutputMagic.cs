@@ -84,7 +84,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobResultAsync(channel, jobId);
+            return await AzureClient.GetJobResultAsync(channel, jobId, cancellationToken);
         }
     }
 }
