@@ -29,7 +29,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false,
             CancellationToken? cancellationToken = null);
 
         /// <summary>

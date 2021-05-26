@@ -4,7 +4,7 @@
 #nullable enable
 
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using System;
 using System.IO;
 
@@ -14,15 +14,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         public MockCloudJob(string? id = null)
             : base(
-                new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName"),
+                new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
                 new JobDetails(
-                    containerUri: null,
-                    inputDataFormat: null,
-                    providerId: null,
-                    target: null,
-                    id: id ?? Guid.NewGuid().ToString(),
-                    status: "Succeeded",
-                    outputDataUri: CreateMockOutputFileUri()
+                    containerUri: string.Empty,
+                    inputDataFormat: string.Empty,
+                    providerId: string.Empty,
+                    target: string.Empty
                 ))
         {
         }

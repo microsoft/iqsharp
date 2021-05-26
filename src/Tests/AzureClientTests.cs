@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;

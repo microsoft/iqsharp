@@ -314,7 +314,6 @@ namespace Tests.IQSharp
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false,
             CancellationToken? cancellationToken = null)
         {
             LastAction = AzureClientAction.Connect;
@@ -323,7 +322,6 @@ namespace Tests.IQSharp
             WorkspaceName = workspaceName;
             ConnectionString = storageAccountConnectionString;
             Location = location;
-            RefreshCredentials = refreshCredentials;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 

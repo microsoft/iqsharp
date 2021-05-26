@@ -8,8 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Quantum.Runtime;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -29,16 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string Location { get; private set; } = string.Empty;
 
-        public List<ProviderStatus> Providers => new List<ProviderStatus>
-        {
-            new ProviderStatus(null, null,
-                ((Name == NameWithMockProviders)
-                        ? Enum.GetNames(typeof(AzureProvider))
-                            .Select(provider => $"{provider.ToLowerInvariant()}.mock")
-                            .ToArray()
-                        : MockTargetIds
-                ).Select(id => new TargetStatus(id)).ToList())
-        };
+        public List<ProviderStatus> Providers => new List<ProviderStatus>();
 
         public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
@@ -52,9 +44,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => await Task.Run(() => Providers);
 
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => await Task.Run(() => Jobs);
+        public async IAsyncEnumerable<CloudJob> ListJobsAsync()
+        {
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+            foreach (var j in Jobs)
+            {
+                yield return j;
+            }
+        }
 
-        public async Task<IEnumerable<QuotaInfo>?> ListQuotasAsync() => await Task.Run(() => new List<QuotaInfo>());
+        public async IAsyncEnumerable<QuotaInfo> ListQuotasAsync()
+        {
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+
+            foreach (var q in Enumerable.Empty<QuotaInfo>())  // No quotas for Mock workspaces.
+            {
+                yield return q;
+            }
+        }
 
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
 
@@ -72,8 +79,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public void AddMockTargets(params string[] targetIds)
         {
-            var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
-            Providers.Add(new ProviderStatus(null, null, targets));
+            //var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
+            //Providers.Add(new ProviderStatus(null, null, targets));
         }
     }
 }

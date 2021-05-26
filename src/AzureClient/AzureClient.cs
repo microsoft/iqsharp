@@ -10,7 +10,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -84,10 +84,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false,
             CancellationToken? cancellationToken = null)
         {
-            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, refreshCredentials, cancellationToken);
+            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -116,15 +115,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
-            string location,
-            bool refreshCredentials,
-            CancellationToken? cancellationToken = null)
+            string location)
         {
             var azureEnvironment = AzureEnvironment.Create(subscriptionId, Logger);
             IAzureWorkspace? workspace = null;
             try
             {
-                workspace = await azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, location, refreshCredentials, cancellationToken);
+                workspace = azureEnvironment.GetAuthenticatedWorkspaceAsync(channel, Logger, resourceGroupName, workspaceName, location);
             }
             catch (TaskCanceledException tce)
             {
@@ -168,9 +165,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace.SubscriptionId ?? string.Empty,
                 ActiveWorkspace.ResourceGroup ?? string.Empty,
                 ActiveWorkspace.Name ?? string.Empty,
-                ActiveWorkspace.Location ?? string.Empty,
-                refreshCredentials: false,
-                cancellationToken: cancellationToken);
+                ActiveWorkspace.Location ?? string.Empty);
         }
 
         /// <inheritdoc/>
@@ -485,15 +480,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var jobs = await ActiveWorkspace.ListJobsAsync() ?? new List<CloudJob>();
+            var jobs = new List<CloudJob>();
+            await foreach(var job in ActiveWorkspace.ListJobsAsync())
+            {
+                if (job.Matches(filter))
+                {
+                    jobs.Add(job);
+                }
+            }
+
             if (jobs.Count() == 0)
             {
-                channel.Stderr("No jobs found in current Azure Quantum workspace.");
-            }
-            else
-            {
-                jobs = jobs.Where(job => job.Matches(filter));
-                if (jobs.Count() == 0)
+                if (string.IsNullOrEmpty(filter))
+                {
+                    channel.Stderr("No jobs found in current Azure Quantum workspace.");
+                }
+                else
                 {
                     channel.Stderr($"No jobs matching \"{filter}\" found in current Azure Quantum workspace.");
                 }
@@ -502,6 +504,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return jobs.ToExecutionResult();
         }
 
+        /// <inheritdoc/>
         public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel)
         {
             if (ActiveWorkspace == null)
@@ -516,7 +519,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var quotas = await ActiveWorkspace.ListQuotasAsync() ?? new List<QuotaInfo>();
+            var quotas = new List<QuotaInfo>();
+            await foreach (var q in ActiveWorkspace.ListQuotasAsync())
+            {
+                quotas.Add(q);
+            }
 
             if (quotas.Count() == 0)
             {

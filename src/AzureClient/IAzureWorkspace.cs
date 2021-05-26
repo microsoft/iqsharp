@@ -6,7 +6,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -20,8 +20,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public Task<IEnumerable<ProviderStatus>?> GetProvidersAsync();
         public Task<CloudJob?> GetJobAsync(string jobId);
-        public Task<IEnumerable<CloudJob>?> ListJobsAsync();
-        public Task<IEnumerable<QuotaInfo>?> ListQuotasAsync();
+        public IAsyncEnumerable<CloudJob> ListJobsAsync();
+        public IAsyncEnumerable<QuotaInfo> ListQuotasAsync();
         public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString);
         public AzureExecutionTarget? CreateExecutionTarget(string targetId);
     }

@@ -204,7 +204,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 workspaceName,
                 storageAccountConnectionString,
                 location,
-                refreshCredentials,
                 cancellationToken);
         }
     }
