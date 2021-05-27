@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.Quantum.Sdk/0.17.2105144485-alpha">
+<Project Sdk="Microsoft.Quantum.Sdk/0.17.2105144571-alpha">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
