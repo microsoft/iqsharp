@@ -9,21 +9,21 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Quantum;
+
 using Azure.Quantum.Jobs.Models;
+
+using Microsoft.Azure.Quantum;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Quantum.Runtime;
-using Azure.Identity;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
-        internal Azure.Quantum.Workspace? ActiveWorkspace { get; private set; } // TODO: Move to interface
+        internal Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
