@@ -148,7 +148,7 @@ def test_estimate():
 
 def test_trace():
     """
-    Verifies that resource estimation works.
+    Verifies the trace commands works.
     """
     from Microsoft.Quantum.SanityTests import HelloAgain
     r = HelloAgain.trace(count=1, name="trace test")
