@@ -100,6 +100,14 @@ class QSharpCallable(object):
     def estimate_resources(self, **kwargs) -> Dict[str, int]:
         return qsharp.client.estimate(self, **kwargs)
 
+    def trace(self, **kwargs) -> Any:
+        """
+        Returns a structure representing the set of gates and qubits
+        used to execute this operation.
+        """
+        return qsharp.client.trace(self, **kwargs)
+
+
 class QSharpModule(ModuleType):
     _qs_name : str
 
