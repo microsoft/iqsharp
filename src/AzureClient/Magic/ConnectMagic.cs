@@ -197,7 +197,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
             var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
-            var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,

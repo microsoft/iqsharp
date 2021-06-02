@@ -8,7 +8,7 @@ using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal enum AzureProvider { IonQ, Honeywell, QCI }
+    internal enum AzureProvider { IonQ, Honeywell, QCI, Mock }
 
     internal class AzureExecutionTarget
     {
@@ -26,10 +26,22 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public static bool IsValid(string targetId) => GetProvider(targetId) != null;
 
-        public static AzureExecutionTarget? Create(string targetId) =>
-            IsValid(targetId)
-            ? new AzureExecutionTarget() { TargetId = targetId }
-            : null;
+        public static AzureExecutionTarget? Create(string targetId)
+        {
+            var provider = GetProvider(targetId);
+
+            if (provider is null)
+            {
+                return null;
+            }
+
+            if (provider == AzureProvider.Mock)
+            {
+                return MockAzureExecutionTarget.CreateMock(targetId);
+            }
+
+            return new AzureExecutionTarget() { TargetId = targetId };
+        }
 
         /// <summary>
         ///     Gets the Azure Quantum provider corresponding to the given execution target.

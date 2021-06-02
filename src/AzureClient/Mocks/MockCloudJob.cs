@@ -12,6 +12,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockCloudJob : CloudJob
     {
+        private string _id;
+
         public MockCloudJob(string? id = null)
             : base(
                 new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
@@ -22,7 +24,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     target: string.Empty
                 ))
         {
+            _id = id ?? string.Empty;
         }
+
+        public override string Id => _id;
 
         private static string CreateMockOutputFileUri()
         {

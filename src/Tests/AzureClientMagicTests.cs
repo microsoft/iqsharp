@@ -54,7 +54,6 @@ namespace Tests.IQSharp
             // valid input with resource ID (and to verify case-insensitivity of resourceId parsing)
             connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -64,7 +63,6 @@ namespace Tests.IQSharp
             // valid input with implied resource ID key, without surrounding quotes
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -74,7 +72,6 @@ namespace Tests.IQSharp
             // valid input with implied resource ID key, with surrounding quotes
             connectMagic.Test($"\"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}\"");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -86,7 +83,6 @@ namespace Tests.IQSharp
                 @$"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}
                    storage={storageAccountConnectionString}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -101,7 +97,6 @@ namespace Tests.IQSharp
                    storage={storageAccountConnectionString}
                    location={location}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -116,7 +111,6 @@ namespace Tests.IQSharp
                    workspace  ={workspaceName}
                    storage = '{storageAccountConnectionString}'");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -129,15 +123,11 @@ namespace Tests.IQSharp
                    resourceGroup={resourceGroupName}
                    workspace={workspaceName}
                    storage={storageAccountConnectionString}");
-            Assert.IsTrue(azureClient.RefreshCredentials);
 
-            // forced login with implied resource ID before, after, and missing
+            // refresh parameter, which has been deprecated so has no effect:
             connectMagic.Test($"refresh /subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
-            Assert.IsTrue(azureClient.RefreshCredentials);
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName} refresh");
-            Assert.IsTrue(azureClient.RefreshCredentials);
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
-            Assert.IsFalse(azureClient.RefreshCredentials);
         }
 
         [TestMethod]
@@ -276,19 +266,18 @@ namespace Tests.IQSharp
         internal string WorkspaceName = string.Empty;
         internal string ConnectionString = string.Empty;
         internal string Location = string.Empty;
-        internal bool RefreshCredentials = false;
         internal string ActiveTargetId = string.Empty;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token)
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTargetId = targetId;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
-        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetActiveTarget;
             return ActiveTargetId.ToExecutionResult();
@@ -325,31 +314,31 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel)
+        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetConnectionStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobResult;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel)
+        public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetQuotaList;
             return ExecuteStatus.Ok.ToExecutionResult();

@@ -16,27 +16,13 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Extensions = Microsoft.Quantum.IQSharp.AzureClient.Extensions;
 
 namespace Tests.IQSharp
 {
     [TestClass]
     public class AzureClientTests
     {
-        private string originalEnvironmentName = string.Empty;
-
-        [TestInitialize]
-        public void SetMockEnvironment()
-        {
-            originalEnvironmentName = Environment.GetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName) ?? string.Empty;
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Mock.ToString());
-        }
-
-        [TestCleanup]
-        public void RestoreEnvironment()
-        {
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, originalEnvironmentName);
-        }
-
         private T ExpectSuccess<T>(Task<ExecutionResult> task)
         {
             var result = task.GetAwaiter().GetResult();
@@ -67,33 +53,6 @@ namespace Tests.IQSharp
                 workspaceName,
                 "TEST_CONNECTION_STRING",
                 locationName);
-        }
-
-        [TestMethod]
-        public void TestAzureEnvironment()
-        {
-            // Production environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Production.ToString());
-            var environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Production, environment.Type);
-
-            // Dogfood environment
-            // NB: This used to intentionally throw an exception when mocked,
-            //     due to requiring a service call, but that service call has
-            //     been moved to ConnectAsync instead of Create.
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Dogfood.ToString());
-            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Dogfood, environment.Type);
-
-            // Canary environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Canary.ToString());
-            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Canary, environment.Type);
-
-            // Mock environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Mock.ToString());
-            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Mock, environment.Type);
         }
 
         [TestMethod]

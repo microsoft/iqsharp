@@ -28,12 +28,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
         private IMetadataController MetadataController { get; }
+        private IAzureFactory AzureFactory { get; }
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string StorageConnectionString { get; set; } = string.Empty;
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
-        private IEnumerable<ProviderStatus>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
+        private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
+        private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Status.Targets);
         private IEnumerable<TargetStatus>? ValidExecutionTargets => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.Id));
         private string ValidExecutionTargetsDisplayText =>
             ValidExecutionTargets == null
@@ -48,6 +49,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="references">The references to use when compiling Q# code.</param>
         /// <param name="entryPointGenerator">The generator of entry points for Azure Quantum execution.</param>
         /// <param name="metadataController">The metadata controller to use when compiling Q# code.</param>
+        /// <param name="azureFactory">A Factory class to create instance of Azure Quantum classes.</param>
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
         public AzureClient(
@@ -55,12 +57,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IReferences references,
             IEntryPointGenerator entryPointGenerator,
             IMetadataController metadataController,
+            IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
             IEventService eventService)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
             MetadataController = metadataController;
+            AzureFactory = azureFactory;
             Logger = logger;
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
@@ -88,6 +92,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string location,
             CancellationToken? cancellationToken = null)
         {
+            if (location == null)
+            {
+                channel.Stdout("[WARN]: location parameter is missing. Will connect to a workspace in `westus`.");
+                location = "westus";
+            }
+
             var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
@@ -122,14 +132,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             try
             {
-                var workspace = new Azure.Quantum.Workspace(
+                var workspace = AzureFactory.CreateWorkspace(
                     subscriptionId: subscriptionId,
-                    resourceGroupName: resourceGroupName,
+                    resourceGroup: resourceGroupName,
                     workspaceName: workspaceName,
                     location: location);
 
-                var providers = new List<ProviderStatus>();
-                var status = workspace.Client.GetProviderStatusAsync(cancellationToken);
+                var providers = new List<ProviderStatusInfo>();
+                var status = workspace.ListProvidersStatusAsync(cancellationToken);
                 await foreach (var s in status)
                 {
                     providers.Add(s);
@@ -439,7 +449,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             var jobs = new List<CloudJob>();
-            await foreach(var job in ActiveWorkspace.ListJobsAsync(cancellationToken ?? CancellationToken.None))
+            await foreach (var job in ActiveWorkspace.ListJobsAsync(cancellationToken ?? CancellationToken.None))
             {
                 if (job.Matches(filter))
                 {
@@ -458,7 +468,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     channel.Stderr($"No jobs matching \"{filter}\" found in current Azure Quantum workspace.");
                 }
             }
-            
+
             return jobs.ToExecutionResult();
         }
 
@@ -481,7 +491,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 channel.Stdout("No quota information found in current Azure Quantum workspace.");
             }
-            
+
             return quotas.ToExecutionResult();
         }
 
