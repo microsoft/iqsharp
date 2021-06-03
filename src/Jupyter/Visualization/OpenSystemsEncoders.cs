@@ -141,7 +141,7 @@ namespace Microsoft.Quantum.Experimental
                                                     .Select(
                                                         process => $@"
                                                             \left( \begin{{matrix}}
-                                                                {process?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
+                                                                {(process as ArrayProcess)?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
                                                             \end{{matrix}} \right)
                                                         "
                                                     )
