@@ -59,7 +59,7 @@ namespace Microsoft.Quantum.Experimental
         /// <inheritdoc />
         public EncodedData? Encode(object displayable)
         {
-            string RowForChannel(string name, Channel? channel) =>
+            string RowForProcess(string name, Process? process) =>
                 $@"
                         <tr>
                             <th>{name}</th>
@@ -67,20 +67,21 @@ namespace Microsoft.Quantum.Experimental
                                 $${
                                     // NB: We use a switch expression here to
                                     //     pattern match on what representation
-                                    //     the given channel is expressed in.
+                                    //     the given process is expressed in.
                                     //     In doing so, we use the {} pattern
-                                    //     to capture non-null channel data,
+                                    //     to capture non-null process data,
                                     //     so that we are guaranteed that we
-                                    //     only try to display channels that
+                                    //     only try to display processs that
                                     //     were successfully deserialized.
-                                    channel switch
+                                    // TODO: Add other variants of process here.
+                                    process switch
                                     {
-                                        UnitaryChannel { Data: {} data } =>
+                                        UnitaryProcess { Data: {} data } =>
                                             $@"
                                                 \left( \begin{{matrix}}
                                                     {data.AsLaTeXMatrixOfComplex() ?? ""}
                                                 \end{{matrix}} \right)",
-                                        KrausDecompositionChannel { Data: {} data } =>
+                                        KrausDecompositionProcess { Data: {} data } =>
                                             $@"
                                                 \left\{{{
                                                     string.Join(", ",
@@ -118,16 +119,16 @@ namespace Microsoft.Quantum.Experimental
                                 $$
                             </td>
                         </tr>
-                        {RowForChannel("CNOT", noiseModel?.Cnot)}
-                        {RowForChannel("$I$", noiseModel?.I)}
-                        {RowForChannel("$X$", noiseModel?.X)}
-                        {RowForChannel("$Y$", noiseModel?.Y)}
-                        {RowForChannel("$Z$", noiseModel?.Z)}
-                        {RowForChannel("$H$", noiseModel?.H)}
-                        {RowForChannel("$S$", noiseModel?.S)}
-                        {RowForChannel("$S^{\\dagger}$", noiseModel?.SAdj)}
-                        {RowForChannel("$T$", noiseModel?.T)}
-                        {RowForChannel("$T^{\\dagger}$", noiseModel?.TAdj)}
+                        {RowForProcess("CNOT", noiseModel?.Cnot)}
+                        {RowForProcess("$I$", noiseModel?.I)}
+                        {RowForProcess("$X$", noiseModel?.X)}
+                        {RowForProcess("$Y$", noiseModel?.Y)}
+                        {RowForProcess("$Z$", noiseModel?.Z)}
+                        {RowForProcess("$H$", noiseModel?.H)}
+                        {RowForProcess("$S$", noiseModel?.S)}
+                        {RowForProcess("$S^{\\dagger}$", noiseModel?.SAdj)}
+                        {RowForProcess("$T$", noiseModel?.T)}
+                        {RowForProcess("$T^{\\dagger}$", noiseModel?.TAdj)}
                         <tr>
                             <th>$Z$-measurement effects</th>
                             <td>
@@ -135,11 +136,12 @@ namespace Microsoft.Quantum.Experimental
                                     \left\{{
                                         {
                                             string.Join(", ",
-                                                (noiseModel?.ZMeas?.Effects ?? new List<Channel>())
+                                                // TODO: visualize other kinds of effects here.
+                                                ((noiseModel?.ZMeas as EffectsInstrument)?.Effects ?? new List<Process>())
                                                     .Select(
-                                                        channel => $@"
+                                                        process => $@"
                                                             \left( \begin{{matrix}}
-                                                                {channel?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
+                                                                {process?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
                                                             \end{{matrix}} \right)
                                                         "
                                                     )
