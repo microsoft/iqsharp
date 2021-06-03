@@ -34,12 +34,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatus>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Status.Targets);
-        private IEnumerable<TargetStatus>? ValidExecutionTargets => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.Id));
+        private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
+        private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.TargetId));
         private string ValidExecutionTargetsDisplayText =>
             ValidExecutionTargets == null
             ? "(no execution targets available)"
-            : string.Join(", ", ValidExecutionTargets.Select(target => target.Id));
+            : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
 
         /// <summary>
         /// Creates an <see cref="AzureClient"/> object that provides methods for
@@ -322,7 +322,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
 
-            return Task.FromResult(AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult());
+            return Task.FromResult(AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult());
         }
 
         /// <inheritdoc/>
@@ -335,7 +335,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that this target is valid in the workspace.
-            if (!AvailableTargets.Any(target => targetId == target.Id))
+            if (!AvailableTargets.Any(target => targetId == target.TargetId))
             {
                 channel.Stderr($"Target {targetId} is not available in the current Azure Quantum workspace.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
@@ -359,7 +359,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel.Stdout($"Active target is now {ActiveTarget.TargetId}");
 
-            return AvailableTargets.First(target => target.Id == ActiveTarget.TargetId).ToExecutionResult();
+            return AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>

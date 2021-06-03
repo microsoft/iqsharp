@@ -75,27 +75,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             await Task.Factory.StartNew(() => Thread.Sleep(10));
 
-            foreach (var p in Enumerable.Empty<ProviderStatusInfo>()) // No quotas for Mock workspaces.
+            // Only the NameWithMockProviders workspace gets providers:
+            if (this.WorkspaceName == NameWithMockProviders)
             {
-                yield return p;
+                foreach (var p in Enum.GetNames(typeof(AzureProvider)))
+                {
+                    yield return new MockProviderStatus(this, "Mock");
+                }
             }
         }
 
         public Task<string> GetSasUriAsync(string containerName, string? blobName = null, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
-
-        public void AddMockJobs(params string[] jobIds)
-        {
-            foreach (var jobId in jobIds)
-            {
-                var mockJob = new MockCloudJob();
-                mockJob.Details.Id = jobId;
-                Jobs.Add(mockJob);
-            }
-        }
-
-        public void AddMockTargets(params string[] targetIds)
-        {
-        }
     }
 }

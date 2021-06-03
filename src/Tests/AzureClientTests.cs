@@ -159,14 +159,14 @@ namespace Tests.IQSharp
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
 
             // connect to mock workspace with all providers
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
             Assert.AreEqual(Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
 
             // set each target, which will load the corresponding package
             foreach (var target in targets)
             {
-                var returnedTarget = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), target.Id));
-                Assert.AreEqual(target.Id, returnedTarget.Id);
+                var returnedTarget = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), target.TargetId));
+                Assert.AreEqual(target.TargetId, returnedTarget.TargetId);
             }
         }
 
@@ -181,7 +181,7 @@ namespace Tests.IQSharp
             ExpectError(AzureClientError.NotConnected, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // no target yet
