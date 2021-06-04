@@ -105,7 +105,7 @@ def test_trace_magic():
     assert len(outputs) > 0
 
     # Verify expected text output
-    expected_trace = '|0\u27E9 q0 H H' # \u27E9 is mathematical right angle bracket
+    expected_trace = '|0\u27E9 q0 DoNothing' # \u27E9 is mathematical right angle bracket
     WebDriverWait(nb.browser, 60).until(
         lambda b: expected_trace == nb.get_cell_output(index=cell_index)[0].text
     )
