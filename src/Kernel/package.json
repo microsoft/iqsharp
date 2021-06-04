@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "@microsoft/quantum-viz.js": "^1.0.0",
+        "@microsoft/quantum-viz.js": "^1.0.1",
         "chart.js": "2.9.4",
         "lodash": "^4.17.21"
     },
