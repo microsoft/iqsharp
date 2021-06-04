@@ -1,13 +1,14 @@
 {
     "dependencies": {
+        "@microsoft/quantum-viz.js": "^1.0.0",
         "chart.js": "2.9.4",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
-        "@types/codemirror": "0.0.56",
         "@types/chart.js": "2.8.0",
+        "@types/codemirror": "0.0.56",
         "@types/jest": "^26.0.4",
-        "canvas": "^2.6.1",
+        "canvas": "^2.8.0",
         "jest": "^26.1.0",
         "ts-jest": "^26.1.2",
         "typescript": "^3.9.6"
