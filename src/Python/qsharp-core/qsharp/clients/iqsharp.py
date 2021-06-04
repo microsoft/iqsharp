@@ -178,6 +178,9 @@ class IQSharpClient(object):
             counts[row["Metric"]] = int(row["Sum"])
         return counts
 
+    def trace(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('trace', op, _quiet_ = True, **kwargs)
+
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """
         Returns a dictionary from components of the IQ# kernel to their
@@ -242,9 +245,11 @@ class IQSharpClient(object):
 
         def log_error(msg):
             errors.append(msg)
-
+        
         handlers = {
-            'execute_result': (lambda msg: results.append(msg))
+            'execute_result': (lambda msg: results.append(msg)),
+            'render_execution_path':  (lambda msg: results.append(msg)),
+            'display_data': lambda msg: ...
         }
         if not _quiet_:
             handlers['display_data'] = (
@@ -279,7 +284,9 @@ class IQSharpClient(object):
         if results:
             assert len(results) == 1
             content = results[0]['content']
-            if 'application/json' in content['data']:
+            if 'executionPath' in content:
+                obj = content['executionPath']
+            elif 'application/json' in content['data']:
                 obj = unmap_tuples(json.loads(content['data']['application/json']))
             else:
                 obj = None
