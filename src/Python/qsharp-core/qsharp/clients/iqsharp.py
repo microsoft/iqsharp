@@ -73,8 +73,13 @@ class IQSharpClient(object):
     kernel_client = None
     _busy : bool = False
 
-    def __init__(self):
-        self.kernel_manager = jupyter_client.KernelManager(kernel_name='iqsharp')
+class IQSharpClient(object):
+    kernel_manager = None
+    kernel_client = None
+    _busy : bool = False
+
+    def __init__(self, kernel_name: str = 'iqsharp'):
+        self.kernel_manager = jupyter_client.KernelManager(kernel_name=kernel_name)
 
     ## Server Lifecycle ##
 
