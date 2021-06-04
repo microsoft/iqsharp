@@ -83,8 +83,7 @@ def test_kernel_startup():
     nb.browser.execute_script("require('codemirror/addon/mode/simple')")
     nb.browser.execute_script("require('plotting')")
     nb.browser.execute_script("require('telemetry')")
-    nb.browser.execute_script("require('visualizer')")
-    nb.browser.execute_script("require('ExecutionPathVisualizer/index')")
+    nb.browser.execute_script("require('@microsoft/quantum-viz.js')")
     
     nb.browser.quit()
 
