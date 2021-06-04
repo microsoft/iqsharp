@@ -97,7 +97,22 @@ namespace Microsoft.Quantum.Experimental
                                                     )
                                                 }\right\}}
                                             ",
-                                        _ => ""
+                                        MixedPauliProcess { Operators: {} ops } => 
+                                            $@"
+                                                \text{{(mixed Pauli process) }}
+                                                \left\{{{
+                                                    string.Join(", ",
+                                                        ops.Select(
+                                                            item => $@"{item.Item1} {string.Join(
+                                                                "",
+                                                                item.Item2.Select(pauli => pauli.ToString())
+                                                            )}"
+                                                        )
+                                                    )
+                                                }\right\}}
+                                            ",
+                                        {} unknown => unknown.ToString(),
+                                        null => "<null>"
                                     }
                                 }$$
                             </td>
@@ -130,14 +145,14 @@ namespace Microsoft.Quantum.Experimental
                         {RowForProcess("$T$", noiseModel?.T)}
                         {RowForProcess("$T^{\\dagger}$", noiseModel?.TAdj)}
                         <tr>
-                            <th>$Z$-measurement effects</th>
-                            <td>
-                                $$
-                                    \left\{{
-                                        {
+                            <th>$Z$-measurement</th>
+                            <td>{
+                                noiseModel?.ZMeas switch
+                                {
+                                    EffectsInstrument { Effects: var effects } => $@"
+                                        $$\left\{{{
                                             string.Join(", ",
-                                                // TODO: visualize other kinds of effects here.
-                                                ((noiseModel?.ZMeas as EffectsInstrument)?.Effects ?? new List<Process>())
+                                                (effects ?? new List<Process>())
                                                     .Select(
                                                         process => $@"
                                                             \left( \begin{{matrix}}
@@ -146,10 +161,14 @@ namespace Microsoft.Quantum.Experimental
                                                         "
                                                     )
                                             )
-                                        }
-                                    \right\}}
-                                $$
-                            </td>
+                                        }\right\}}$$
+                                    ",
+                                    ZMeasurementInstrument { PrReadoutError: var prReadoutError } =>
+                                        $@"$Z$-basis measurement w/ error probability {prReadoutError}",
+                                    {} unknown => unknown.ToString(),
+                                    null => "<null>"
+                                }
+                            }</td>
                         </tr>
                     </table>
                 ".ToEncodedData();
