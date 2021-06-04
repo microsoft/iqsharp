@@ -35,6 +35,31 @@ __all__ = [
 ## FUNCTIONS ##
 
 def enable_noisy_simulation():
+    # Try to import optional packages used by noise modelling.
+    optional_dependencies = []
+    try:
+        import numpy as np
+        optional_dependencies.append(f"numpy:{np.__version__}")
+    except:
+        np = None
+
+    try:
+        import qutip as qt
+        optional_dependencies.append(f"qutip:{qt.__version__}")
+    except:
+        qt = None
+
+    # Tell the kernel to turn on experimental features.
+    try:
+        content = {
+            "feature_name": "noisy_simulation",
+            "optional_dependencies": optional_dependencies
+        }
+        msg = qsharp.client.kernel_client.session.msg('iqsharp_python_enable_experimental', content)
+        qsharp.client.kernel_client.shell_channel.send(msg)
+    except:
+        pass
+
     def simulate_noise(self, **kwargs):
         return qsharp.client._simulate_noise(self, **kwargs)
     QSharpCallable.simulate_noise = simulate_noise
