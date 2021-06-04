@@ -47,6 +47,12 @@ namespace Microsoft.Quantum.Experimental
                         ```
                     ".Dedent(),
                     @"
+                        Sets the noise model to a built-in named noise model:
+                        ```
+                        In []: %experimental.noise_model --load-by-name ideal_stabilizer
+                        ```
+                    ".Dedent(),
+                    @"
                         Set the noise model to a noise model given as JSON:
                         ```
                         In []: %experimental.noise_model { ... }
@@ -97,6 +103,18 @@ namespace Microsoft.Quantum.Experimental
             {
                 var filename = parts[1];
                 NoiseModelSource.NoiseModel = JsonSerializer.Deserialize<NoiseModel>(File.ReadAllText(filename));
+            }
+            else if (command.Trim() == "--load-by-name")
+            {
+                var name = parts[1];
+                if (NoiseModel.TryGetByName(name, out var noiseModel))
+                {
+                    NoiseModelSource.NoiseModel = noiseModel;
+                }
+                else
+                {
+                    return $"No built-in noise model with name {name}.".ToExecutionResult(ExecuteStatus.Error);
+                }
             }
             else if (input.Trim().StartsWith("{"))
             {

@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,7 +15,10 @@ namespace Microsoft.Quantum.Experimental
 
     public class NoiseModelSource : INoiseModelSource
     {
-        public NoiseModel NoiseModel { get; set; } = NoiseModel.Ideal;
+        public NoiseModel NoiseModel { get; set; } =
+            NoiseModel.TryGetByName("ideal", out var ideal)
+            ? ideal
+            : throw new Exception("Could not load ideal noise model.");
     }
 
 }
