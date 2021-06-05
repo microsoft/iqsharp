@@ -7,6 +7,11 @@
 # Licensed under the MIT License.
 ##
 
+"""
+This module allow for using experimental features of the Quantum Development Kit,
+including noisy simulators for Q# programs.
+"""
+
 ## DESIGN NOTES ##
 
 # The functions in this module may take dependencies on QuTiP and NumPy,
@@ -29,13 +34,26 @@ import json
 __all__ = [
     "enable_noisy_simulation",
     "get_noise_model",
-    "set_noise_model"
+    "set_noise_model",
+    "get_noise_model_by_name",
+    "set_noise_model_by_name"
 ]
 
-## FUNCTIONS ##
+## PUBLIC FUNCTIONS ##
 
 def enable_noisy_simulation():
-    # Try to import optional packages used by noise modelling.
+    """
+    Enables the `.simulate_noise` method to be used on Python objects
+    representing Q# operations, allowing for Q# programs to be simulated using
+    experimental simulators.
+
+    Noisy simulation is controlled by the :func:`~qsharp.experimental.get_noise_model`,
+    :func:`~qsharp.experimental.set_noise_model` and :func:`~qsharp.experimental.set_noise_model_by_name`
+    functions, and by the `opensim.nQubits` and `opensim.representation` keys
+    of the :any:`qsharp.config` object.
+    """
+
+    # Try to import optional packages used by noise modeling.
     optional_dependencies = []
     try:
         import numpy as np
@@ -60,9 +78,52 @@ def enable_noisy_simulation():
     except:
         pass
 
+    # Actually attach the new method to the type used for exposing Q# callables
+    # to Python.
     def simulate_noise(self, **kwargs):
         return qsharp.client._simulate_noise(self, **kwargs)
+
     QSharpCallable.simulate_noise = simulate_noise
+
+
+def get_noise_model():
+    """
+    Returns the current noise model used in simulating Q# programs with the
+    `.simulate_noise` method.
+    """
+    noise_model = convert_to_arrays(qsharp.client._get_noise_model())
+    # Convert {"Mixed": ...} and so forth to qobj.
+    return convert_to_qobjs(noise_model)
+
+def get_noise_model_by_name(name: str):
+    """
+    Returns the built-in noise model with a given name.
+
+    :param name: The name of the noise model to be returned (either `ideal`
+        or `ideal_stabilizer`).
+    """
+    noise_model = convert_to_arrays(qsharp.client._get_noise_model_by_name(name))
+    # Convert {"Mixed": ...} and so forth to qobj.
+    return convert_to_qobjs(noise_model)
+
+def set_noise_model(noise_model):
+    """
+    Sets the current noise model used in simulating Q# programs with the
+    `.simulate_noise` method.
+    """
+    qsharp.client._set_noise_model(json.dumps(convert_to_rust_style(noise_model)))
+
+def set_noise_model_by_name(name):
+    """
+    Sets the current noise model used in simulating Q# programs with the
+    `.simulate_noise` method to a built-in noise model, given by name.
+
+    :param name: The name of the noise model to be returned (either `ideal`
+        or `ideal_stabilizer`).
+    """
+    qsharp.client._set_noise_model_by_name(name)
+
+## PRIVATE FUNCTIONS ##
 
 def is_rust_style_array(json_obj):
     return (
@@ -180,11 +241,3 @@ def convert_to_rust_style(json_obj, expect_state=False):
 
         json_obj
     )
-
-def get_noise_model():
-    noise_model = convert_to_arrays(qsharp.client._get_noise_model())
-    # Convert {"Mixed": ...} and so forth to qobj.
-    return convert_to_qobjs(noise_model)
-
-def set_noise_model(noise_model):
-    qsharp.client._set_noise_model(json.dumps(convert_to_rust_style(noise_model)))

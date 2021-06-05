@@ -43,6 +43,7 @@ namespace Microsoft.Quantum.Experimental
 
                     #### See also
 
+                    - [`%config`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/config)
                     - [`%experimental.noise_model`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/experimental.noise_model)
 
                     #### Required parameters
@@ -50,6 +51,11 @@ namespace Microsoft.Quantum.Experimental
                     - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
                     or function name that has been defined either in the notebook or in a Q# file in the same folder.
                     - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+
+                    #### Remarks
+
+                    The behavior of this magic command can be controlled through the `%experimental.noise_model` magic command,
+                    and the `opensim.nQubits` and `opensim.representation` configuration settings.
                 ".Dedent(),
                 Examples = new string[]
                 {
@@ -109,7 +115,10 @@ namespace Microsoft.Quantum.Experimental
             var symbol = SymbolResolver.Resolve(name) as dynamic; // FIXME: Should be IQSharpSymbol.
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
-            var qsim = new OpenSystemsSimulator(ConfigurationSource.OpenSystemsSimulatorCapacity);
+            var qsim = new OpenSystemsSimulator(
+                ConfigurationSource.OpenSystemsSimulatorCapacity //,
+                // ConfigurationSource.OpenSystemsSimulatorRepresentation
+            );
             if (NoiseModelSource.NoiseModel != null)
             {
                 var json = JsonSerializer.Serialize(NoiseModelSource.NoiseModel);
