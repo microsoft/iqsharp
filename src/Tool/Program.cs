@@ -53,8 +53,6 @@ namespace Microsoft.Quantum.IQSharp
         {
             try
             {
-                System.Diagnostics.Debugger.Launch();
-
                 Configuration = new ConfigurationBuilder()
                     .AddJsonFile("appsettings.json")
                     .AddCommandLine(
