@@ -116,8 +116,8 @@ namespace Microsoft.Quantum.Experimental
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new OpenSystemsSimulator(
-                ConfigurationSource.OpenSystemsSimulatorCapacity //,
-                // ConfigurationSource.OpenSystemsSimulatorRepresentation
+                ConfigurationSource.OpenSystemsSimulatorCapacity,
+                ConfigurationSource.OpenSystemsSimulatorRepresentation
             );
             if (NoiseModelSource.NoiseModel != null)
             {

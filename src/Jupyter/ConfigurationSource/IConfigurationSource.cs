@@ -136,5 +136,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public uint OpenSystemsSimulatorCapacity =>
             GetOptionOrDefault<uint>("opensim.nQubits", 3);
+
+        /// <summary>
+        ///     Specifies the representation to use for the initial state
+        ///     when simulating Q# programs with experimental simulators.
+        /// </summary>
+        public string OpenSystemsSimulatorRepresentation =>
+            GetOptionOrDefault<string>("opensim.representation", "mixed");
     }
 }
