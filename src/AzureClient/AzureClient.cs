@@ -92,12 +92,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string location,
             CancellationToken? cancellationToken = null)
         {
-            if (location == null)
-            {
-                channel.Stdout("[WARN]: location parameter is missing. Will connect to a workspace in `westus`.");
-                location = "westus";
-            }
-
             var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
@@ -123,6 +117,29 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return ValidExecutionTargets.ToExecutionResult();
         }
 
+        private string GetNormalizedLocation(string location, IChannel channel)
+        {
+            // Default to "westus" if no location was specified.
+            var defaultLocation = "westus";
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                channel.Stdout($"[WARN]: location parameter is missing. Will try to connect to a workspace in region `{defaultLocation}`.");
+                location = defaultLocation;
+            }
+
+            // Convert user-provided location into names recognized by Azure resource manager.
+            // For example, a customer-provided value of "West US" should be converted to "westus".
+            var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
+            if (UriHostNameType.Unknown == Uri.CheckHostName(normalizedLocation))
+            {
+                // If provided location is invalid, "westus" is used.
+                normalizedLocation = defaultLocation;
+                channel.Stdout($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
+            }
+
+            return normalizedLocation;
+        }
+
         private async Task<ExecutionResult> ConnectToWorkspaceAsync(IChannel channel,
             string subscriptionId,
             string resourceGroupName,
@@ -130,6 +147,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string location,
             CancellationToken cancellationToken = default)
         {
+            location = GetNormalizedLocation(location, channel);
+
             try
             {
                 var workspace = AzureFactory.CreateWorkspace(
@@ -164,17 +183,38 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
+        private async Task<ExecutionResult> RefreshConnectionAsync(IChannel channel, CancellationToken? cancellationToken = null)
+        {
+            if (ActiveWorkspace == null)
+            {
+                return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            return await ConnectToWorkspaceAsync(
+                channel,
+                ActiveWorkspace.SubscriptionId ?? string.Empty,
+                ActiveWorkspace.ResourceGroupName ?? string.Empty,
+                ActiveWorkspace.WorkspaceName ?? string.Empty,
+                ActiveWorkspace.Location ?? string.Empty);
+        }
+
         /// <inheritdoc/>
-        public Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null || AvailableProviders == null)
             {
-                return Task.FromResult(AzureClientError.NotConnected.ToExecutionResult());
+                return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
             }
 
             channel.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
 
-            return Task.FromResult(ValidExecutionTargets.ToExecutionResult());
+            return ValidExecutionTargets.ToExecutionResult();
         }
 
         private async Task<ExecutionResult> SubmitOrExecuteJobAsync(
@@ -201,7 +241,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var machine = QuantumMachineFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
+            }
+
+            var machine =AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
@@ -304,25 +350,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             await SubmitOrExecuteJobAsync(channel, submissionContext, execute: true, cancellationToken ?? CancellationToken.None);
 
         /// <inheritdoc/>
-        public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? cancellationToken = default)
         {
             if (AvailableProviders == null)
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("connect")} before getting the execution target.");
-                return Task.FromResult(AzureClientError.NotConnected.ToExecutionResult());
+                return AzureClientError.NotConnected.ToExecutionResult();
             }
 
             if (ActiveTarget == null)
             {
                 channel.Stderr($"No execution target has been specified. To specify one, call {GetCommandDisplayName("target")} with the target ID.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
-                return Task.FromResult(AzureClientError.NoTarget.ToExecutionResult());
+                return AzureClientError.NoTarget.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
             }
 
             channel.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
 
-            return Task.FromResult(AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult());
+            return AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -332,6 +384,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("connect")} before setting an execution target.");
                 return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
             }
 
             // Validate that this target is valid in the workspace.
@@ -382,6 +440,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
+            }
+
             var job = await ActiveWorkspace.GetJobAsync(jobId, cancellationToken ?? CancellationToken.None);
             if (job == null)
             {
@@ -389,7 +453,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            if (!job.Succeeded || string.IsNullOrEmpty(job.Details.OutputDataUri))
+            if (!job.Succeeded || job.OutputDataUri == null)
             {
                 channel.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
@@ -397,7 +461,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var request = WebRequest.Create(job.Details.OutputDataUri);
+                var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = request.GetResponse().GetResponseStream();
                 return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
@@ -429,6 +493,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
+            }
+
             var job = await ActiveWorkspace.GetJobAsync(jobId);
             if (job == null)
             {
@@ -446,6 +516,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("connect")} before listing jobs.");
                 return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
             }
 
             var jobs = new List<CloudJob>();
@@ -479,6 +555,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("connect")} before reading quota information.");
                 return AzureClientError.NotConnected.ToExecutionResult();
+            }
+
+            var connectionResult = await RefreshConnectionAsync(channel);
+            if (connectionResult.Status != ExecuteStatus.Ok)
+            {
+                return connectionResult;
             }
 
             var quotas = new List<QuotaInfo>();

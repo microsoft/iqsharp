@@ -14,5 +14,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// Creates an instance of an Azure Quantum Workspace client
         /// </summary>
         Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location);
+
+        /// <summary>
+        /// Creates an instance of an Azure Quantum Machine
+        /// </summary>
+        Runtime.IQuantumMachine CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString);
     }
 }

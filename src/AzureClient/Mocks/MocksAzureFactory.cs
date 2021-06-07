@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 
+using Microsoft.Azure.Quantum;
+using Microsoft.Quantum.Runtime;
+
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <summary>
@@ -17,5 +20,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     resourceGroup: resourceGroup,
                     workspaceName: workspaceName,
                     location: location);
+
+        /// <inheritdoc />
+        public IQuantumMachine CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
+            new MockQuantumMachine(workspace as MockAzureWorkspace);
     }
 }

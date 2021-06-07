@@ -7,33 +7,46 @@ using Microsoft.Azure.Quantum;
 using Azure.Quantum.Jobs.Models;
 using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal class MockProviderStatus : ProviderStatusInfo
+    internal class MockCloudJob : CloudJob
     {
-        private class MockTargetStatus : TargetStatusInfo
-        {
-            public MockTargetStatus(string id) : base(null)
-            {
-                this.TargetId = id;
-            }
-
-            public override string TargetId { get; }
-        }
-
         private string _id;
+        private string? _outputFile;
 
-        public MockProviderStatus(global::Microsoft.Azure.Quantum.IWorkspace ws, string? id = null)
-            : base(ws, null)
+        public MockCloudJob(string? id = null)
+            : base(
+                new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
+                new JobDetails(
+                    containerUri: string.Empty,
+                    inputDataFormat: string.Empty,
+                    providerId: string.Empty,
+                    target: string.Empty
+                ))
         {
-            _id = id ?? string.Empty;
+            _id = id ?? Guid.NewGuid().ToString();
         }
 
-        public override string ProviderId => _id;
+        public override string Id => _id;
 
-        public override IEnumerable<TargetStatusInfo> Targets =>
-            new[] { new MockTargetStatus(_id.ToLower() + "." + "target") };
+        public override string Status => JobStatus.Succeeded.ToString();
+
+        public override Uri OutputDataUri
+        {
+            get
+            {
+                if (_outputFile == null)
+                {
+                    var path = Path.GetTempFileName();
+                    using var outputFile = new StreamWriter(path);
+                    outputFile.WriteLine(@"{'Histogram':['0',0.5,'1',0.5]}");
+
+                    _outputFile = path;
+                }
+
+                return new Uri(_outputFile);
+            }
+        }
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace Microsoft.Quantum.IQSharp.AzureClient
+﻿using Microsoft.Azure.Quantum;
+using Microsoft.Quantum.Runtime;
+
+namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <inheritdoc />
     public class AzureFactory : IAzureFactory
@@ -10,5 +13,9 @@
                     resourceGroupName: resourceGroup,
                     workspaceName: workspaceName,
                     location: location);
+
+        /// <inheritdoc />
+        public IQuantumMachine CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
+            QuantumMachineFactory.CreateMachine(workspace, targetName, storageConnectionString);
     }
 }

@@ -20,9 +20,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
 
-        public static string[] MockJobIds { get; set; } = Array.Empty<string>();
+        internal static string[] MockJobIds { get; set; } = Array.Empty<string>();
 
-        public static string[] MockTargetIds { get; set; } = Array.Empty<string>();
+        internal static HashSet<string> MockProviders { get; set; } = new HashSet<string>();
 
         public string WorkspaceName { get; private set; } = string.Empty;
 
@@ -42,6 +42,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ResourceGroupName = resourceGroup;
             WorkspaceName = workspaceName;
             Location = location;
+
+            // Automatically add all providers for the NameWithMockProviders workspace:
+            if (this.WorkspaceName == NameWithMockProviders)
+            {
+                AddProviders(Enum.GetNames(typeof(AzureProvider)));
+            }
         }
 
         public Task<CloudJob> SubmitJobAsync(CloudJob jobDefinition, CancellationToken cancellationToken = default) =>
@@ -75,17 +81,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             await Task.Factory.StartNew(() => Thread.Sleep(10));
 
-            // Only the NameWithMockProviders workspace gets providers:
-            if (this.WorkspaceName == NameWithMockProviders)
+            foreach (var p in MockProviders)
             {
-                foreach (var p in Enum.GetNames(typeof(AzureProvider)))
-                {
-                    yield return new MockProviderStatus(this, "Mock");
-                }
+                yield return new MockProviderStatus(this, p);
             }
         }
 
         public Task<string> GetSasUriAsync(string containerName, string? blobName = null, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
+
+        internal void AddProviders(params string[] providerIds)
+        {
+            foreach (var p in providerIds)
+            {
+                MockProviders.Add(p);
+            }
+        }
     }
 }
