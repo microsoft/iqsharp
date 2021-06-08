@@ -29,11 +29,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             new Dictionary<string, object?>()
             {
                 ["id"] = cloudJob.Id,
-                ["name"] = cloudJob.Details.Name,
-                ["status"] = cloudJob.Status,
+                ["name"] = cloudJob.Details.Name ?? string.Empty,
+                ["status"] = cloudJob.Status ?? string.Empty,
                 ["uri"] = cloudJob.Uri.ToString(),
-                ["provider"] = cloudJob.Details.ProviderId,
-                ["target"] = cloudJob.Details.Target,
+                ["provider"] = cloudJob.Details.ProviderId ?? string.Empty,
+                ["target"] = cloudJob.Details.Target ?? string.Empty,
                 ["creation_time"] = cloudJob.Details.CreationTime?.ToUniversalTime(),
                 ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime?.ToUniversalTime(),
                 ["end_execution_time"] = cloudJob.Details.EndExecutionTime?.ToUniversalTime(),
@@ -44,10 +44,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<CloudJob, string>)>
                 {
-                    ("Job Name", cloudJob => cloudJob.Details.Name),
+                    ("Job Name", cloudJob => cloudJob.Details.Name ?? cloudJob.Id),
                     ("Job ID", cloudJob => $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{cloudJob.Id}</a>"),
-                    ("Job Status", cloudJob => cloudJob.Status),
-                    ("Target", cloudJob => cloudJob.Details.Target),
+                    ("Job Status", cloudJob => cloudJob.Status ?? string.Empty),
+                    ("Target", cloudJob => cloudJob.Details.Target ?? string.Empty),
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
                     ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
