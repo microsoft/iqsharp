@@ -35,7 +35,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
-        private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(target => AzureExecutionTarget.IsValid(target.TargetId));
+        private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             ValidExecutionTargets == null
             ? "(no execution targets available)"
@@ -393,7 +393,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that this target is valid in the workspace.
-            if (!AvailableTargets.Any(target => targetId == target.TargetId))
+            var target = AvailableTargets.FirstOrDefault(t => targetId == t.TargetId);
+            if (target == null)
             {
                 channel.Stderr($"Target {targetId} is not available in the current Azure Quantum workspace.");
                 channel.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
@@ -401,7 +402,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that we know which package to load for this target.
-            var executionTarget = AzureExecutionTarget.Create(targetId);
+            var executionTarget = AzureExecutionTarget.Create(target);
             if (executionTarget == null)
             {
                 channel.Stderr($"Target {targetId} does not support executing Q# jobs.");

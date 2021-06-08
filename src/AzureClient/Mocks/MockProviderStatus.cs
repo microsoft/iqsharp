@@ -3,26 +3,14 @@
 
 #nullable enable
 
-using Microsoft.Azure.Quantum;
-using Azure.Quantum.Jobs.Models;
-using System;
-using System.IO;
 using System.Collections.Generic;
+
+using Microsoft.Azure.Quantum;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockProviderStatus : ProviderStatusInfo
     {
-        private class MockTargetStatus : TargetStatusInfo
-        {
-            public MockTargetStatus(string id) : base()
-            {
-                this.TargetId = id;
-            }
-
-            public override string TargetId { get; }
-        }
-
         private string _id;
 
         public MockProviderStatus(global::Microsoft.Azure.Quantum.IWorkspace ws, string? id = null)
