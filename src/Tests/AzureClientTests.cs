@@ -237,7 +237,7 @@ namespace Tests.IQSharp
             {
                 OperationName = "Tests.qss.HelloAgain",
                 InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\""),
-                ExecutionTimeout = 120,
+                ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
             var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
