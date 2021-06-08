@@ -296,16 +296,11 @@ class IQSharpClient(object):
         if results:
             assert len(results) == 1
             content = results[0]['content']
-<<<<<<< HEAD
             qsharp_data = self._get_qsharp_data(content)
-            if qsharp_data:
-                obj = unmap_tuples(json.loads(qsharp_data))
-=======
             if 'executionPath' in content:
                 obj = content['executionPath']
-            elif 'application/json' in content['data']:
-                obj = unmap_tuples(json.loads(content['data']['application/json']))
->>>>>>> f66be679f6ef0e4e8b644b001fe43cd1609276f3
+            elif qsharp_data:
+                obj = unmap_tuples(json.loads(qsharp_data))
             else:
                 obj = None
             return (obj, content) if return_full_result else obj
