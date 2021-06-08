@@ -459,6 +459,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 channel.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
             }
+            else if (job.Failed)
+            {
+                channel.Stderr($"Job ID {jobId} failed or was cancelled with the message: {job.Details.ErrorData.Message}");
+                return AzureClientError.JobFailedOrCancelled.ToExecutionResult();
+            }
 
             try
             {
