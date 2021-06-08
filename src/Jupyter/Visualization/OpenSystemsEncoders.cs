@@ -9,9 +9,25 @@ using System.Text.Json;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using System.Collections.Generic;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
+using System;
 
 namespace Microsoft.Quantum.Experimental
 {
+    /// <summary>
+    ///     Represents different styles for displaying the Q# execution path
+    ///     visualization as HTML.
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StabilizerStateVisualizationStyle
+    {
+        MatrixWithDestabilizers,
+        MatrixWithoutDestabilizers,
+        DenseGroupPresentation,
+        SparseGroupPresentation
+    }
+
     // TODO: add display encoders for other formats.
     public class MixedStateToHtmlDisplayEncoder : IResultEncoder
     {
@@ -42,6 +58,114 @@ namespace Microsoft.Quantum.Experimental
                                 \right)
                                 $$
                             </td>
+                        </tr>
+                    </table>
+                "
+                .ToEncodedData();
+            }
+            else return null;
+        }
+    }
+
+    public class StabilizerStateToHtmlDisplayEncoder : IResultEncoder
+    {
+        private readonly IConfigurationSource config;
+
+        /// <inheritdoc />
+        public string MimeType => MimeTypes.Html;
+
+        public StabilizerStateToHtmlDisplayEncoder(IConfigurationSource config)
+        {
+            this.config = config;
+        }
+
+        /// <inheritdoc />
+        public EncodedData? Encode(object displayable)
+        {
+            if (displayable is StabilizerState { NQubits: var nQubits, Data: {} data })
+            {
+                var repeatedCs = new String('c', nQubits);
+                var colspec = $"{repeatedCs}|{repeatedCs}|c";
+                return $@"
+                    <table>
+                        <caption>Stabilizer state</caption>
+                        <tr>
+                            <th># of qubits</th>
+                            <td>{nQubits}</td>
+                        </tr>
+
+                        <tr>
+                            <th>State data</th>
+                            <td>{
+                                config.ExperimentalSimulatorStabilizerStateVisualizationStyle switch
+                                {
+                                    StabilizerStateVisualizationStyle.MatrixWithDestabilizers =>
+                                        $@"$$\left(\begin{{array}}{{{colspec}}}{
+                                            string.Join(
+                                                "\\\\\n",
+                                                Enumerable
+                                                    .Range(0, data.Shape[0])
+                                                    .Select(
+                                                        idxRow => 
+                                                            (
+                                                                idxRow == nQubits
+                                                                ? "\\hline\n"
+                                                                : ""
+                                                            ) + string.Join(" & ",
+                                                                Enumerable.Range(0, data.Shape[1])
+                                                                .Select(
+                                                                    idxCol => data[idxRow, idxCol] ? "1" : "0"
+                                                                )
+                                                        )
+                                                    )
+                                            )
+                                        }\end{{array}}\right)$$",
+                                    StabilizerStateVisualizationStyle.MatrixWithoutDestabilizers =>
+                                        $@"$$\left(\begin{{array}}{{{colspec}}}{
+                                            string.Join(
+                                                "\\\\\n",
+                                                Enumerable
+                                                    .Range(nQubits, data.Shape[0] / 2)
+                                                    .Select(
+                                                        idxRow => string.Join(" & ",
+                                                            Enumerable.Range(0, data.Shape[1])
+                                                            .Select(
+                                                                idxCol => data[idxRow, idxCol] ? "1" : "0"
+                                                            )
+                                                        )
+                                                    )
+                                            )
+                                        }\end{{array}}\right)$$",
+                                    StabilizerStateVisualizationStyle.DenseGroupPresentation =>
+                                        $@"$$\left\langle {
+                                            string.Join(
+                                                ", ",
+                                                Enumerable
+                                                    .Range(nQubits, data.Shape[0] / 2)
+                                                    .Select(
+                                                        idxRow => string.Join("",
+                                                            Enumerable.Range(0, nQubits)
+                                                                .Select(idxQubit =>
+                                                                {
+                                                                    (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
+                                                                    return (x, z) switch
+                                                                    {
+                                                                        (false, false) => "𝟙",
+                                                                        (true, false) => "X",
+                                                                        (false, true) => "Z",
+                                                                        (true, true) => "Y"
+                                                                    };
+                                                                })
+                                                            )
+                                                    )
+                                            )
+                                        } \right\rangle$$",
+                                        // "(dense group presentation not yet implemented)",
+                                    StabilizerStateVisualizationStyle.SparseGroupPresentation =>
+                                        "(sparse group presentation not yet implemented)",
+                                    var unknown => throw new Exception($"Invalid visualization style {unknown}.")
+                                }
+                            }</td>
                         </tr>
                     </table>
                 "

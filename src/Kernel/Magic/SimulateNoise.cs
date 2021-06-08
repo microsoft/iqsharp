@@ -84,6 +84,7 @@ namespace Microsoft.Quantum.Experimental
             if (engine is IQSharpEngine iQSharpEngine)
             {
                 iQSharpEngine.RegisterDisplayEncoder(new MixedStateToHtmlDisplayEncoder());
+                iQSharpEngine.RegisterDisplayEncoder(new StabilizerStateToHtmlDisplayEncoder(configurationSource));
             }
         }
 
@@ -116,8 +117,8 @@ namespace Microsoft.Quantum.Experimental
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new OpenSystemsSimulator(
-                ConfigurationSource.OpenSystemsSimulatorCapacity,
-                ConfigurationSource.OpenSystemsSimulatorRepresentation
+                ConfigurationSource.ExperimentalSimulatorCapacity,
+                ConfigurationSource.ExperimentalSimulatorRepresentation
             );
             if (NoiseModelSource.NoiseModel != null)
             {

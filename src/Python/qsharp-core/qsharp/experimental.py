@@ -25,6 +25,7 @@ including noisy simulators for Q# programs.
 
 ## IMPORTS ##
 
+from typing import FrozenSet
 import qsharp
 from qsharp.loader import QSharpCallable
 import json
@@ -125,6 +126,8 @@ def set_noise_model_by_name(name):
 
 ## PRIVATE FUNCTIONS ##
 
+literal_keys = frozenset(['ChpDecomposition'])
+
 def is_rust_style_array(json_obj):
     return (
         isinstance(json_obj, dict) and
@@ -134,25 +137,34 @@ def is_rust_style_array(json_obj):
         json_obj['v'] == 1
     )
 
-def rust_style_array_as_array(json_obj):
+def rust_style_array_as_array(json_obj, as_complex : bool = True):
     import numpy as np
-    arr = np.array(json_obj['data']).reshape(json_obj['dim'] + [2]).astype(complex)
-    return arr[..., 0] + 1j * arr[..., 1]
+    dims = json_obj['dim'] + [2] if as_complex else json_obj['dim']
+    arr = np.array(json_obj['data']).reshape(dims)
+    if as_complex:
+        arr = arr.astype(complex)
+        return arr[..., 0] + 1j * arr[..., 1]
+    else:
+        return arr
 
-def convert_to_arrays(json_obj):
+def convert_to_arrays(json_obj, as_complex : bool = True):
     return (
         # Add on a trailing index of length 2.
-        rust_style_array_as_array(json_obj)
+        rust_style_array_as_array(json_obj, as_complex=as_complex)
         if is_rust_style_array(json_obj) else
         {
             key:
-                convert_to_arrays(value)
+                value
+                if key in literal_keys else
+
+                convert_to_arrays(value, as_complex=key != 'table')
                 if isinstance(value, dict) else
 
                 [convert_to_arrays(element) for element in value]
                 if isinstance(value, list) else
 
                 value
+
             for key, value in json_obj.items()
         }
     )
@@ -176,6 +188,9 @@ def convert_to_qobjs(json_obj):
 
         {
             key:
+                value
+                if key in literal_keys else
+
                 # Recurse if needed...
                 convert_to_qobjs(value)
                 if isinstance(value, dict) else
