@@ -205,7 +205,7 @@ class IQSharpClient(object):
             # for the JSON-encoded data in the execution result.
             return message_content["data"]["application/x-qsharp-data"]
         if "application/json" in message_content["data"]:
-            # For back-compat with older versions of IQ# <= 0.14.2011120240
+            # For back-compat with older versions of IQ# <= 0.17.2105.144881
             # that used the application/json MIME type for the JSON data.
             return message_content["data"]["application/json"]
         return None
@@ -296,13 +296,14 @@ class IQSharpClient(object):
         if results:
             assert len(results) == 1
             content = results[0]['content']
-            qsharp_data = self._get_qsharp_data(content)
             if 'executionPath' in content:
                 obj = content['executionPath']
-            elif qsharp_data:
-                obj = unmap_tuples(json.loads(qsharp_data))
             else:
-                obj = None
+                qsharp_data = self._get_qsharp_data(content)
+                if qsharp_data:
+                    obj = unmap_tuples(json.loads(qsharp_data))
+                else:
+                    obj = None
             return (obj, content) if return_full_result else obj
         else:
             return None
