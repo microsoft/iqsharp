@@ -145,6 +145,22 @@ def test_estimate():
     assert r['BorrowedWidth'] == 0
 
 
+
+def test_trace():
+    """
+    Verifies the trace commands works.
+    """
+    from Microsoft.Quantum.SanityTests import HelloAgain
+    r = HelloAgain.trace(count=1, name="trace test")
+    print(r)
+    assert len(r['qubits']) == 1
+    assert len(r['operations']) == 1
+    assert len(r['operations'][0]['children']) == 2
+    assert r['operations'][0]['gate'] == 'HelloAgain'
+    assert r['operations'][0]['children'][0]['gate'] == 'M'
+    assert r['operations'][0]['children'][1]['gate'] == 'Reset'
+
+
 def test_simple_compile():
     """
     Verifies that compile works

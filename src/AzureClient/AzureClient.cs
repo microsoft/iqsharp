@@ -414,10 +414,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            if (!job.Succeeded || string.IsNullOrEmpty(job.Details.OutputDataUri))
+            if (job.InProgress)
             {
                 channel.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
+            }
+            else if (job.Failed)
+            {
+                channel.Stderr($"Job ID {jobId} failed or was cancelled with the message: {job.Details.ErrorData.Message}");
+                return AzureClientError.JobFailedOrCancelled.ToExecutionResult();
             }
 
             try

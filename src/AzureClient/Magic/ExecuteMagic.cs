@@ -69,6 +69,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - {AzureClientError.JobSubmissionFailed.ToMarkdown()}
                         - {AzureClientError.JobNotCompleted.ToMarkdown()}
                         - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
+                        - {AzureClientError.JobFailedOrCancelled.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {

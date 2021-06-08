@@ -89,5 +89,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         [Description(Resources.AzureClientErrorWorkspaceNotFound)]
         WorkspaceNotFound,
+
+        /// <summary>
+        /// The Azure Quantum job failed or was cancelled.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobFailedOrCancelled)]
+        JobFailedOrCancelled,
     }
 }
