@@ -110,10 +110,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
-            // For back-compat with older versions of qsharp.py <= 0.14.2011.120240
+            // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
             var userAgentVersion = metadataController.GetUserAgentVersion();
-            var jsonMimeType = userAgentVersion == null || userAgentVersion > new Version(0, 14, 2011, 120240)
+            var jsonMimeType = userAgentVersion == null || userAgentVersion > new Version(0, 17, 2105, 144881)
                 ? "application/x-qsharp-data"
                 : "application/json";
             RegisterJsonEncoder(jsonMimeType,
