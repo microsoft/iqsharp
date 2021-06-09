@@ -136,6 +136,7 @@ namespace Microsoft.Quantum.Experimental
                                                     )
                                             )
                                         }\end{{array}}\right)$$",
+                                    // FIXME: include phases in each!
                                     StabilizerStateVisualizationStyle.DenseGroupPresentation =>
                                         $@"$$\left\langle {
                                             string.Join(
@@ -143,20 +144,22 @@ namespace Microsoft.Quantum.Experimental
                                                 Enumerable
                                                     .Range(nQubits, data.Shape[0] / 2)
                                                     .Select(
-                                                        idxRow => string.Join("",
-                                                            Enumerable.Range(0, nQubits)
-                                                                .Select(idxQubit =>
-                                                                {
-                                                                    (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
-                                                                    return (x, z) switch
+                                                        idxRow =>
+                                                            (data[idxRow, ~1] ? "-" : "") +
+                                                            string.Join("",
+                                                                Enumerable.Range(0, nQubits)
+                                                                    .Select(idxQubit =>
                                                                     {
-                                                                        (false, false) => "𝟙",
-                                                                        (true, false) => "X",
-                                                                        (false, true) => "Z",
-                                                                        (true, true) => "Y"
-                                                                    };
-                                                                })
-                                                            )
+                                                                        (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
+                                                                        return (x, z) switch
+                                                                        {
+                                                                            (false, false) => "𝟙",
+                                                                            (true, false) => "X",
+                                                                            (false, true) => "Z",
+                                                                            (true, true) => "Y"
+                                                                        };
+                                                                    })
+                                                                )
                                                     )
                                             )
                                         } \right\rangle$$",
@@ -167,20 +170,22 @@ namespace Microsoft.Quantum.Experimental
                                                 Enumerable
                                                     .Range(nQubits, data.Shape[0] / 2)
                                                     .Select(
-                                                        idxRow => string.Join("",
-                                                            Enumerable.Range(0, nQubits)
-                                                                .Select(idxQubit =>
-                                                                {
-                                                                    (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
-                                                                    return (x, z) switch
+                                                        idxRow => 
+                                                            (data[idxRow, ~1] ? "-" : "") +
+                                                            string.Join("",
+                                                                Enumerable.Range(0, nQubits)
+                                                                    .Select(idxQubit =>
                                                                     {
-                                                                        (false, false) => "",
-                                                                        (true, false) => $"X_{{{idxQubit}}}",
-                                                                        (false, true) => $"Z_{{{idxQubit}}}",
-                                                                        (true, true) => $"Y_{{{idxQubit}}}"
-                                                                    };
-                                                                })
-                                                            )
+                                                                        (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
+                                                                        return (x, z) switch
+                                                                        {
+                                                                            (false, false) => "",
+                                                                            (true, false) => $"X_{{{idxQubit}}}",
+                                                                            (false, true) => $"Z_{{{idxQubit}}}",
+                                                                            (true, true) => $"Y_{{{idxQubit}}}"
+                                                                        };
+                                                                    })
+                                                                )
                                                     )
                                             )
                                         } \right\rangle$$",
