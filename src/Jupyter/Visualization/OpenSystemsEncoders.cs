@@ -160,9 +160,30 @@ namespace Microsoft.Quantum.Experimental
                                                     )
                                             )
                                         } \right\rangle$$",
-                                        // "(dense group presentation not yet implemented)",
                                     StabilizerStateVisualizationStyle.SparseGroupPresentation =>
-                                        "(sparse group presentation not yet implemented)",
+                                        $@"$$\left\langle {
+                                            string.Join(
+                                                ", ",
+                                                Enumerable
+                                                    .Range(nQubits, data.Shape[0] / 2)
+                                                    .Select(
+                                                        idxRow => string.Join("",
+                                                            Enumerable.Range(0, nQubits)
+                                                                .Select(idxQubit =>
+                                                                {
+                                                                    (bool x, bool z) = (data[idxRow, idxQubit], data[idxRow, nQubits + idxQubit]);
+                                                                    return (x, z) switch
+                                                                    {
+                                                                        (false, false) => "",
+                                                                        (true, false) => $"X_{{{idxQubit}}}",
+                                                                        (false, true) => $"Z_{{{idxQubit}}}",
+                                                                        (true, true) => $"Y_{{{idxQubit}}}"
+                                                                    };
+                                                                })
+                                                            )
+                                                    )
+                                            )
+                                        } \right\rangle$$",
                                     var unknown => throw new Exception($"Invalid visualization style {unknown}.")
                                 }
                             }</td>
