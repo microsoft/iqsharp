@@ -49,8 +49,7 @@ namespace Microsoft.Quantum.Experimental
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel)
         {
-            // TODO: call OpenSystemsSimulator.BuildInfo once that is enabled.
-            return new Dictionary<string, object>().ToExecutionResult();
+            return OpenSystemsSimulator.BuildInfo.ToExecutionResult();
         }
     }
 }
