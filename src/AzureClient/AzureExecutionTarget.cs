@@ -4,16 +4,23 @@
 #nullable enable
 
 using System;
+
+using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal enum AzureProvider { IonQ, Honeywell, QCI }
+    internal enum AzureProvider { IonQ, Honeywell, QCI, Mock }
 
     internal class AzureExecutionTarget
     {
-        public string TargetId { get; protected set; } = string.Empty;
-        
+        protected AzureExecutionTarget(string? targetId)
+        {
+            this.TargetId = targetId ?? string.Empty;
+        }
+
+        public string? TargetId { get; }
+
         public virtual string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
 
         public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
@@ -24,12 +31,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             _                       => RuntimeCapability.FullComputation
         };
 
-        public static bool IsValid(string targetId) => GetProvider(targetId) != null;
+        /// <summary>
+        /// Returns true, if the provider for the given target is a known provider 
+        /// capable of running Q# applications.
+        public static bool IsValid(TargetStatusInfo target) => GetProvider(target?.TargetId) != null;
 
-        public static AzureExecutionTarget? Create(string targetId) =>
-            IsValid(targetId)
-            ? new AzureExecutionTarget() { TargetId = targetId }
-            : null;
+        /// <summary>
+        /// It creates the AzureExecutionTarget instance for the given TargetStatusInfo. If the TargetStatusInfo
+        /// is from a Mock, then it returns a Mock AzureExecutionTarget, otherwise it creates the instance 
+        /// based on the corresponding target id.
+        /// </summary>
+        public static AzureExecutionTarget? Create(TargetStatusInfo target) => target is MockTargetStatus
+            ? MockAzureExecutionTarget.CreateMock(target)
+            : Create(target?.TargetId);
+
+
+        /// <summary>
+        /// It creates the AzureExecutionTarget instance for the given targetId.
+        /// </summary>
+        public static AzureExecutionTarget? Create(string? targetId) => GetProvider(targetId) is null
+            ? null
+            : new AzureExecutionTarget(targetId);
+
 
         /// <summary>
         ///     Gets the Azure Quantum provider corresponding to the given execution target.
@@ -40,8 +63,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "honeywell.qpu".
         /// </remarks>
-        protected static AzureProvider? GetProvider(string targetId)
+        protected static AzureProvider? GetProvider(string? targetId)
         {
+            if (targetId == null)
+            {
+                return null;
+            }
+
             var parts = targetId.Split('.', 2);
             if (Enum.TryParse(parts[0], true, out AzureProvider provider))
             {

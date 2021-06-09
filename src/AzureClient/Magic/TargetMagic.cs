@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="logger">Logger instance for messages.</param>
         public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger)
             : base(
                 azureClient,
@@ -87,10 +88,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (inputParameters.ContainsKey(ParameterNameTargetId))
             {
                 string targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
-                return await AzureClient.SetActiveTargetAsync(channel, targetId);
+                return await AzureClient.SetActiveTargetAsync(channel, targetId, cancellationToken);
             }
 
-            return await AzureClient.GetActiveTargetAsync(channel);
+            return await AzureClient.GetActiveTargetAsync(channel, cancellationToken);
         }
     }
 }

@@ -24,6 +24,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="logger">Logger instance for messages.</param>
         public ExecuteMagic(IAzureClient azureClient, ILogger<ExecuteMagic> logger)
             : base(
                 azureClient,

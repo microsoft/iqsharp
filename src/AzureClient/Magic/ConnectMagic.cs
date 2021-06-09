@@ -40,6 +40,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="logger">Logger instance for messages.</param>
         public ConnectMagic(IAzureClient azureClient, ILogger<ConnectMagic> logger)
             : base(
                 azureClient,
@@ -152,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input);
             if (!inputParameters.Any())
             {
-                return await AzureClient.GetConnectionStatusAsync(channel);
+                return await AzureClient.GetConnectionStatusAsync(channel, cancellationToken);
             }
 
             var resourceId = inputParameters.DecodeParameter<string>(ParameterNameResourceId, defaultValue: string.Empty);
@@ -196,7 +197,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
             var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
-            var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,

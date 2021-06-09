@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="logger">Logger instance for messages.</param>
         public StatusMagic(IAzureClient azureClient, ILogger<StatusMagic> logger)
             : base(
                 azureClient,
@@ -81,7 +82,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobStatusAsync(channel, jobId);
+            return await AzureClient.GetJobStatusAsync(channel, jobId, cancellationToken);
         }
     }
 }

@@ -205,6 +205,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <param name="parameterName">
         ///     The name of the parameter to be decoded.
         /// </param>
+        /// <param name="decoded">
+        ///     The returned value of the parameter once it has been decoded.
+        /// </param>
         /// <param name="defaultValue">
         ///      The default value to be returned if no parameter with the
         ///      name <paramref name="parameterName"/> is present in the
