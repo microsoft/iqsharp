@@ -145,7 +145,7 @@ namespace Microsoft.Quantum.Experimental
                                                     .Range(nQubits, data.Shape[0] / 2)
                                                     .Select(
                                                         idxRow =>
-                                                            (data[idxRow, ~1] ? "-" : "") +
+                                                            (data[idxRow, 2 * nQubits] == true ? "-" : "") +
                                                             string.Join("",
                                                                 Enumerable.Range(0, nQubits)
                                                                     .Select(idxQubit =>
@@ -171,7 +171,7 @@ namespace Microsoft.Quantum.Experimental
                                                     .Range(nQubits, data.Shape[0] / 2)
                                                     .Select(
                                                         idxRow => 
-                                                            (data[idxRow, ~1] ? "-" : "") +
+                                                            (data[idxRow, 2 * nQubits] == true ? "-" : "") +
                                                             string.Join("",
                                                                 Enumerable.Range(0, nQubits)
                                                                     .Select(idxQubit =>
