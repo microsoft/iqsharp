@@ -25,10 +25,15 @@ including noisy simulators for Q# programs.
 
 ## IMPORTS ##
 
-from typing import FrozenSet
+from typing import Any, FrozenSet, List, Tuple
 import qsharp
 from qsharp.loader import QSharpCallable
 import json
+import dataclasses
+
+from typing import Any, Union
+
+from qsharp.types import Pauli
 
 ## EXPORTS ##
 
@@ -37,7 +42,20 @@ __all__ = [
     "get_noise_model",
     "set_noise_model",
     "get_noise_model_by_name",
-    "set_noise_model_by_name"
+    "set_noise_model_by_name",
+
+    # SequenceProcess process data model
+    "SequenceProcess",
+
+    # Mixed pauli data model
+    "MixedPauli",
+
+    # CHP decomposition data model
+    "ChpDecompositionProcess",
+    "Hadamard",
+    "Cnot",
+    "Phase",
+    "AdjointPhase"
 ]
 
 ## PUBLIC FUNCTIONS ##
@@ -53,6 +71,8 @@ def enable_noisy_simulation():
     functions, and by the `opensim.nQubits` and `opensim.representation` keys
     of the :any:`qsharp.config` object.
     """
+    # Prevent Python from thinking that qsharp is a local variable.
+    import qsharp
 
     # Try to import optional packages used by noise modeling.
     optional_dependencies = []
@@ -86,6 +106,22 @@ def enable_noisy_simulation():
 
     QSharpCallable.simulate_noise = simulate_noise
 
+    # Register the experimental feature with qsharp.component_versions so that
+    # it shows up in notebooks nicely.
+    version = {'simulators': qsharp.client._execute('%experimental.build_info')}
+    if qsharp._experimental_versions is not None:
+        qsharp._experimental_versions.update(version)
+    else:
+        qsharp._experimental_versions = version
+
+    # Finally, if we're in IPython, expose experimental magic commands to
+    # the notebook interface.
+    try:
+        if __IPYTHON__:
+            import qsharp.ipython_magic
+            qsharp.ipython_magic.register_experimental_magics()
+    except NameError:
+        pass
 
 def get_noise_model():
     """
@@ -112,7 +148,8 @@ def set_noise_model(noise_model):
     Sets the current noise model used in simulating Q# programs with the
     `.simulate_noise` method.
     """
-    qsharp.client._set_noise_model(json.dumps(convert_to_rust_style(noise_model)))
+    json_data = dumps(convert_to_rust_style(noise_model))
+    qsharp.client._set_noise_model(json_data)
 
 def set_noise_model_by_name(name):
     """
@@ -124,9 +161,124 @@ def set_noise_model_by_name(name):
     """
     qsharp.client._set_noise_model_by_name(name)
 
+## PUBLIC DATA MODEL ##
+
+@dataclasses.dataclass
+class SequenceProcess():
+    n_qubits: int
+    processes: List[Any]
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': {
+                "Sequence": list(map(_as_jobj, self.processes))
+            }
+        }
+
+@dataclasses.dataclass
+class Hadamard():
+    idx_target: int
+
+    def _as_jobj(self):
+        return {
+            'Hadamard': self.idx_target
+        }
+
+@dataclasses.dataclass
+class Phase():
+    idx_target: int
+
+    def _as_jobj(self):
+        return {
+            'Phase': self.idx_target
+        }
+
+@dataclasses.dataclass
+class AdjointPhase():
+    idx_target: int
+
+    def _as_jobj(self):
+        return {
+            'AdjointPhase': self.idx_target
+        }
+
+@dataclasses.dataclass
+class Cnot():
+    idx_control: int
+    idx_target: int
+
+    def _as_jobj(self):
+        return {
+            'Cnot': [self.idx_control, self.idx_target]
+        }
+
+@dataclasses.dataclass
+class ChpDecompositionProcess():
+    n_qubits: int
+    operations: List[Union[Hadamard, Cnot, Phase, AdjointPhase]]
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': {
+                'ChpDecomposition': list(map(_as_jobj, self.operations))
+            }
+        }
+
+@dataclasses.dataclass
+class MixedPauliProcess():
+    n_qubits: int
+    operators: List[Tuple[float, Union[List[qsharp.Pauli]], str]]
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': {
+                'MixedPauli': [
+                    [
+                        pr,
+                        [
+                            str(qsharp.Pauli[p] if isinstance(p, str) else qsharp.Pauli(p))
+                            for p in ops
+                        ]
+                    ]
+                    for (pr, ops) in self.operators
+                ]
+            }
+        }
+
 ## PRIVATE FUNCTIONS ##
 
 literal_keys = frozenset(['ChpDecomposition'])
+
+def _as_jobj(o, default=lambda x: x):
+    import numpy as np
+    if isinstance(o, np.ndarray):
+        # Use Rust-style arrays.
+        return {
+            'v': 1,
+            'dim': list(o.shape),
+            'data': o.reshape((-1, )).tolist()
+        }
+    elif hasattr(o, '_as_jobj'):
+        return o._as_jobj()
+
+    return default(o)
+
+class NoiseModelEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        return _as_jobj(o, super().default)
+
+def dumps(obj: Any) -> str:
+    """
+    Wraps json.dumps with a custom JSONEncoder class to cover types used in
+    noise model serialization.
+    """
+    return json.dumps(
+        obj=obj,
+        cls=NoiseModelEncoder
+    )
 
 def is_rust_style_array(json_obj):
     return (
