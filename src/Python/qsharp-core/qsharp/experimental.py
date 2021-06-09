@@ -239,7 +239,7 @@ class MixedPauliProcess():
                     [
                         pr,
                         [
-                            str(qsharp.Pauli[p] if isinstance(p, str) else qsharp.Pauli(p))
+                            (qsharp.Pauli[p] if isinstance(p, str) else qsharp.Pauli(p)).name
                             for p in ops
                         ]
                     ]
