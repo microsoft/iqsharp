@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -27,7 +29,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameWorkspaceName = "workspace";
         private const string ParameterNameResourceId = "resourceId";
         private const string ParameterNameLocation = "location";
-        
+        private const string ParameterNameCredential = "credential";
+
         // A valid resource ID looks like:
         // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
         private readonly static Regex ResourceIdRegex = new Regex(
@@ -79,6 +82,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - `{ParameterNameLocation}=<string>`: The Azure region where the Azure Quantum workspace is provisioned.
                         This may be specified as a region name such as `""East US""` or a location name such as `""eastus""`.
                         If no valid value is specified, defaults to `""westus""`.
+                        - `{ParameterNameCredential}=<CredentialType>`: The type of credentials to use to authenticate with Azure.
+                        NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme),
+                        based on this parameter we will create an instance of a Credential Class.
+                        Possible options are:
+                          * [Default](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential):
+                             Provides a simplified authentication experience to quickly start developing applications run in the Azure cloud.
+                          * [Environment](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.environmentcredential):
+                             Authenticates a service principal or user via credential information specified in environment variables.
+                          * [ManagedIdentity](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.managedidentitycredential):
+                             Authenticates the managed identity of an azure resource.
+                          * [CLI](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.azureclicredential):
+                             Authenticate in a development environment with the Azure CLI.
+                          * [SharedToken](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.sharedtokencachecredential):
+                             Authenticate using tokens in the local cache shared between Microsoft applications.
+                          * [VisualStudio](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.visualstudiocredential):
+                             Authenticate using data from Visual Studio.
+                          * [VisualStudioCode](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.visualstudiocodecredential):
+                             Authenticate in a development environment with Visual Studio Code.
+                          * [Interactive](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.interactivebrowsercredential):
+                             A TokenCredential implementation which opens a new browser window to interactively authenticate a user,
+                             and obtain an access token.
+                        If not provided, we'll use `Default` credentials.
                         
                         #### Possible errors
 
@@ -197,6 +222,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
             var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
+            var credentialType = inputParameters.DecodeParameter<CredentialType>(ParameterNameCredential, defaultValue: CredentialType.Default);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,
@@ -204,6 +230,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 workspaceName,
                 storageAccountConnectionString,
                 location,
+                credentialType,
                 cancellationToken);
         }
     }

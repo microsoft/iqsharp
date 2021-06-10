@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using Azure.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -13,7 +12,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Creates an instance of an Azure Quantum Workspace client
         /// </summary>
-        Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location);
+        Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, TokenCredential credential);
 
         /// <summary>
         /// Creates an instance of an Azure Quantum Machine

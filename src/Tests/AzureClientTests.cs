@@ -8,15 +8,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Azure.Quantum;
-using Azure.Quantum.Jobs.Models;
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Extensions = Microsoft.Quantum.IQSharp.AzureClient.Extensions;
 
 namespace Tests.IQSharp
 {
@@ -54,7 +53,8 @@ namespace Tests.IQSharp
                 "TEST_RESOURCE_GROUP_NAME",
                 workspaceName,
                 "TEST_CONNECTION_STRING",
-                locationName);
+                locationName,
+                CredentialType.Environment);
         }
 
         [TestMethod]
@@ -168,7 +168,7 @@ namespace Tests.IQSharp
             // set each target, which will load the corresponding package
             foreach (var target in targets)
             {
-                var returnedTarget = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), target.TargetId));
+                var returnedTarget = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), target.TargetId ?? string.Empty));
                 Assert.AreEqual(target.TargetId, returnedTarget.TargetId);
             }
         }

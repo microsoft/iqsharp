@@ -10,9 +10,10 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Azure.Quantum.Jobs.Models;
+using Azure.Core;
 
 using Microsoft.Azure.Quantum;
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -24,6 +25,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class AzureClient : IAzureClient
     {
         internal Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
+        private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
@@ -90,9 +92,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
+            Azure.Quantum.Authentication.CredentialType credentialType,
             CancellationToken? cancellationToken = null)
         {
-            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location);
+            var credential = CredentialFactory.CreateCredential(credentialType);
+
+            var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, credential);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -102,6 +107,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
+
+            Credential = credential;
 
             StorageConnectionString = storageAccountConnectionString;
             ActiveTarget = null;
@@ -145,6 +152,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroupName,
             string workspaceName,
             string location,
+            TokenCredential? credential,
             CancellationToken cancellationToken = default)
         {
             location = GetNormalizedLocation(location, channel);
@@ -155,7 +163,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     subscriptionId: subscriptionId,
                     resourceGroup: resourceGroupName,
                     workspaceName: workspaceName,
-                    location: location);
+                    location: location,
+                    credential: credential);
 
                 var providers = new List<ProviderStatusInfo>();
                 var status = workspace.ListProvidersStatusAsync(cancellationToken);
@@ -195,7 +204,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace.SubscriptionId ?? string.Empty,
                 ActiveWorkspace.ResourceGroupName ?? string.Empty,
                 ActiveWorkspace.WorkspaceName ?? string.Empty,
-                ActiveWorkspace.Location ?? string.Empty);
+                ActiveWorkspace.Location ?? string.Empty,
+                Credential);
         }
 
         /// <inheritdoc/>

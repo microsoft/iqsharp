@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public MockCloudJob(string? id = null)
             : base(
-                new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
+                new MockAzureWorkspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
                 new JobDetails(
                     containerUri: string.Empty,
                     inputDataFormat: string.Empty,
