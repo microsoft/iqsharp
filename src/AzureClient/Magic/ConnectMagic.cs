@@ -83,8 +83,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         This may be specified as a region name such as `""East US""` or a location name such as `""eastus""`.
                         If no valid value is specified, defaults to `""westus""`.
                         - `{ParameterNameCredential}=<CredentialType>`: The type of credentials to use to authenticate with Azure.
-                        NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme),
-                        based on this parameter we will create an instance of a Credential Class.
+                        NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme), 
+                        based on this parameter we will create an instance of a Credential Class. 
                         Possible options are:
                           * [Default](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential):
                              Provides a simplified authentication experience to quickly start developing applications run in the Azure cloud.
