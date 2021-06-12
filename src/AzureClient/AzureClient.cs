@@ -95,7 +95,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Azure.Quantum.Authentication.CredentialType credentialType,
             CancellationToken? cancellationToken = null)
         {
-            var credential = CredentialFactory.CreateCredential(credentialType);
+            var credential = CredentialFactory.CreateCredential(credentialType, subscriptionId);
 
             var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, credential);
             if (connectionResult.Status != ExecuteStatus.Ok)
@@ -239,7 +239,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            if (ActiveTarget == null)
+            if (ActiveTarget?.TargetId == null)
             {
                 channel.Stderr($"Please call {GetCommandDisplayName("target")} before submitting a job.");
                 return AzureClientError.NoTarget.ToExecutionResult();

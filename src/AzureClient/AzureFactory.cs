@@ -1,4 +1,9 @@
-﻿using Azure.Core;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+#nullable enable
+
+using Azure.Core;
 
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.Runtime;
@@ -18,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     credential: credential);
 
         /// <inheritdoc />
-        public IQuantumMachine CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
+        public IQuantumMachine? CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
             QuantumMachineFactory.CreateMachine(workspace, targetName, storageConnectionString);
     }
 }
