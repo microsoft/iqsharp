@@ -32,7 +32,7 @@ with open('./qsharp/version.py', 'w') as f:
 # Licensed under the MIT License.
 ##
 __version__ = "{version}"
-_user_agent_extra = "{"(conda)" if is_conda else ""}"
+_user_agent_extra = "{"(conda)" if is_conda else ""}[{version}]"
 ''')
 
 ## DESCRIPTION ##
