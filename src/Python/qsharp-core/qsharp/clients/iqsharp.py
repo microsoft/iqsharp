@@ -3,10 +3,11 @@
 ##
 # iqsharp.py: Client for the IQ# Jupyter kernel.
 ##
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
 
+## IMPORTS ##
 
 import subprocess
 import time
@@ -73,8 +74,13 @@ class IQSharpClient(object):
     kernel_client = None
     _busy : bool = False
 
-    def __init__(self):
-        self.kernel_manager = jupyter_client.KernelManager(kernel_name='iqsharp')
+class IQSharpClient(object):
+    kernel_manager = None
+    kernel_client = None
+    _busy : bool = False
+
+    def __init__(self, kernel_name: str = 'iqsharp'):
+        self.kernel_manager = jupyter_client.KernelManager(kernel_name=kernel_name)
 
     ## Server Lifecycle ##
 
@@ -195,6 +201,30 @@ class IQSharpClient(object):
                     versions[component] = LooseVersion(version)
         self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
         return versions
+
+    ## Experimental Methods ##
+    # These methods expose experimental functionality that may be removed without
+    # warning. To communicate to users that these are not reliable, we mark
+    # these methods as private, and will re-export them in the
+    # qsharp.experimental submodule.
+
+    def _simulate_noise(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
+
+    def _get_noise_model(self) -> str:
+        return self._execute(f'%experimental.noise_model')
+
+    def _get_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%experimental.noise_model --get-by-name {name}')
+
+    def _set_noise_model(self, json_data : str) -> None:
+        # We assume json_data is already serialized, so that we skip the support
+        # provided by _execute_magic and call directly.
+        return self._execute(f'%experimental.noise_model {json_data}')
+
+    def _set_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%experimental.noise_model --load-by-name {name}')
+
 
     ## Internal-Use Methods ##
 

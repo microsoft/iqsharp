@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Quantum.Experimental;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -129,5 +130,25 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public TraceVisualizationStyle TraceVisualizationStyle =>
             GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
+
+        /// <summary>
+        ///     Specifies the number of qubits that the experimental simulators
+        ///     support for use in running Q# programs.
+        /// </summary>
+        public uint ExperimentalSimulatorCapacity =>
+            GetOptionOrDefault<uint>("experimental.simulators.nQubits", 3);
+
+        /// <summary>
+        ///     Specifies the representation to use for the initial state
+        ///     when simulating Q# programs with experimental simulators.
+        /// </summary>
+        public string ExperimentalSimulatorRepresentation =>
+            GetOptionOrDefault<string>("experimental.simulators.representation", "mixed");
+
+        /// <summary>
+        ///     Specifies the format used in dumping stabilizer states.
+        /// <summary>
+        public StabilizerStateVisualizationStyle ExperimentalSimulatorStabilizerStateVisualizationStyle =>
+            GetOptionOrDefault<StabilizerStateVisualizationStyle>("experimental.simulators.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
     }
 }
