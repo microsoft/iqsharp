@@ -246,7 +246,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
             if (!parameters.TryGetValue(parameterName, out string parameterValue))
             {
-                return defaultValue;
+                return defaultValue!;
             }
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
         }

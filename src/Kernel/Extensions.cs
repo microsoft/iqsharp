@@ -3,10 +3,12 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -70,6 +72,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     )
                 }
             );
+        }
+
+        private readonly static Regex UserAgentVersionRegex = new Regex(@"\[(.*)\]");
+
+        internal static Version? GetUserAgentVersion(this IMetadataController? metadataController)
+        {
+            var userAgent = metadataController?.UserAgent;
+            if (string.IsNullOrWhiteSpace(userAgent))
+                return null;
+
+            var match = UserAgentVersionRegex.Match(userAgent);
+            if (match == null || !match.Success)
+                return null;
+
+            if (!Version.TryParse(match.Groups[1].Value, out Version version))
+                return null;
+
+            // return null for development versions that start with 0.0
+            if (version.Major == 0 && version.Minor == 0)
+                return null;
+
+            return version;
         }
         
         internal static IEnumerable<QsDeclarationAttribute> GetAttributesByName(

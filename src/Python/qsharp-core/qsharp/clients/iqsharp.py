@@ -38,9 +38,9 @@ except:
 ## VERSION REPORTING ##
 
 try:
-    from qsharp.version import user_agent_extra
+    from qsharp.version import _user_agent_extra
 except ImportError:
-    user_agent_extra = ""
+    _user_agent_extra = ""
 
 ## LOGGING ##
 
@@ -86,7 +86,7 @@ class IQSharpClient(object):
 
     def start(self):
         logger.info("Starting IQ# kernel...")
-        self.kernel_manager.start_kernel(extra_arguments=["--user-agent", f"qsharp.py{user_agent_extra}"])
+        self.kernel_manager.start_kernel(extra_arguments=["--user-agent", f"qsharp.py{_user_agent_extra}"])
         self.kernel_client = self.kernel_manager.client()
         atexit.register(self.stop)
 
@@ -196,7 +196,7 @@ class IQSharpClient(object):
         def capture(msg):
             # We expect a display_data with the version table.
             if msg["msg_type"] == "display_data":
-                data = unmap_tuples(json.loads(msg["content"]["data"]["application/json"]))
+                data = unmap_tuples(json.loads(self._get_qsharp_data(msg["content"])))
                 for component, version in data["rows"]:
                     versions[component] = LooseVersion(version)
         self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
@@ -227,6 +227,18 @@ class IQSharpClient(object):
 
 
     ## Internal-Use Methods ##
+
+    @staticmethod
+    def _get_qsharp_data(message_content):
+        if "application/x-qsharp-data" in message_content["data"]:
+            # Current versions of IQ# use application/x-qsharp-data
+            # for the JSON-encoded data in the execution result.
+            return message_content["data"]["application/x-qsharp-data"]
+        if "application/json" in message_content["data"]:
+            # For back-compat with older versions of IQ# <= 0.17.2105.144881
+            # that used the application/json MIME type for the JSON data.
+            return message_content["data"]["application/json"]
+        return None
 
     def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
         return self._execute(
@@ -316,10 +328,12 @@ class IQSharpClient(object):
             content = results[0]['content']
             if 'executionPath' in content:
                 obj = content['executionPath']
-            elif 'application/json' in content['data']:
-                obj = unmap_tuples(json.loads(content['data']['application/json']))
             else:
-                obj = None
+                qsharp_data = self._get_qsharp_data(content)
+                if qsharp_data:
+                    obj = unmap_tuples(json.loads(qsharp_data))
+                else:
+                    obj = None
             return (obj, content) if return_full_result else obj
         else:
             return None
