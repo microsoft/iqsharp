@@ -137,28 +137,26 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     foreach (var t in magicTypes)
                     {
-                        object? symbol = null;
                         try
                         {
-                            symbol = ActivatorUtilities.CreateInstance(services, t);
+                            var symbol = ActivatorUtilities.CreateInstance(services, t);
+                            if (symbol is MagicSymbol magic)
+                            {
+                                allMagic.Add(magic);
+                                this.logger.LogInformation($"Found MagicSymbols {magic.Name} ({t.FullName})");
+                            }
+                            else if (symbol is {})
+                            {
+                                throw new Exception($"Unable to create magic symbol of type {t}; service activator returned an object of type {symbol.GetType()}, which is not a subtype of MagicSymbol.");
+                            }
+                            else if (symbol == null)
+                            {
+                                throw new Exception($"Unable to create magic symbol of type {t}; service activator returned null.");
+                            }
                         }
                         catch (Exception e)
                         {
                             this.logger.LogWarning(e, $"Unable to create instance of MagicSymbol {t.FullName}; service activator threw an exception of type {e.GetType()}. Magic will not be enabled.\nMessage: {e.Message}");
-                        }
-
-                        if (symbol is MagicSymbol magic)
-                        {
-                            allMagic.Add(magic);
-                            this.logger.LogInformation($"Found MagicSymbols {magic.Name} ({t.FullName})");
-                        }
-                        else if (symbol is {})
-                        {
-                            throw new Exception($"Unable to create magic symbol of type {t}; service activator returned an object of type {symbol.GetType()}, which is not a subtype of MagicSymbol.");
-                        }
-                        else if (symbol == null)
-                        {
-                            throw new Exception($"Unable to create magic symbol of type {t}; service activator returned null.");
                         }
                     }
                 }
