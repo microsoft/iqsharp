@@ -113,9 +113,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
             var userAgentVersion = metadataController.GetUserAgentVersion();
-            var jsonMimeType = userAgentVersion == null || userAgentVersion > new Version(0, 17, 2105, 144881)
-                ? "application/x-qsharp-data"
-                : "application/json";
+            logger.LogInformation($"userAgentVersion: {userAgentVersion}");
+            var jsonMimeType = metadataController?.UserAgent?.StartsWith("qsharp.py") == true
+                ? userAgentVersion != null && userAgentVersion > new Version(0, 17, 2105, 144881)
+                    ? "application/x-qsharp-data"
+                    : "application/json"
+                : "application/x-qsharp-data";
+
             RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
