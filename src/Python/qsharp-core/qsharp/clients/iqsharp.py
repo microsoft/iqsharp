@@ -193,7 +193,7 @@ class IQSharpClient(object):
                 data = unmap_tuples(json.loads(self._get_qsharp_data(msg["content"])))
                 for component, version in data["rows"]:
                     versions[component] = LooseVersion(version)
-        self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
+        self._execute("%version", display_data_handler=capture, _quiet_=True, **kwargs)
         return versions
 
     ## Internal-Use Methods ##
@@ -242,7 +242,7 @@ class IQSharpClient(object):
             else:
                 fallback_hook(msg)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, _quiet_ : bool = False, **kwargs):
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _quiet_ : bool = False, **kwargs):
 
         logger.debug(f"sending:\n{input}")
 
@@ -261,7 +261,7 @@ class IQSharpClient(object):
         handlers = {
             'execute_result': (lambda msg: results.append(msg)),
             'render_execution_path':  (lambda msg: results.append(msg)),
-            'display_data': lambda msg: ...
+            'display_data': display_data_handler
         }
         if not _quiet_:
             handlers['display_data'] = (
