@@ -34,6 +34,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Returns true, if the provider for the given target is a known provider 
         /// capable of running Q# applications.
+        /// </summary>
         public static bool IsValid(TargetStatusInfo target) => GetProvider(target?.TargetId) != null;
 
         /// <summary>

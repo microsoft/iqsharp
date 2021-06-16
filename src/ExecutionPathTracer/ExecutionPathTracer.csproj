@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.17.2106145994-alpha" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.17.2106146936-beta" />
   </ItemGroup>
 
 </Project>

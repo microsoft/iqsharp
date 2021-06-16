@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 
-using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.Runtime;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -14,7 +14,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class MocksAzureFactory : IAzureFactory
     {
         /// <inheritdoc />
-        public Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location) =>
+        public Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, TokenCredential credential) =>
              new MockAzureWorkspace(
                     subscriptionId: subscriptionId,
                     resourceGroup: resourceGroup,

@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
@@ -277,6 +276,19 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 return defaultValue;
             }
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
+        }
+
+        /// <summary>
+        /// Makes the channel to start capturing the Console Output.
+        /// Returns the current TextWriter in the Console so callers can set it back.
+        /// </summary>
+        /// <param name="channel">The channel to redirect console output to.</param>
+        /// <returns>The current System.Console.Out</returns>
+        public static System.IO.TextWriter? CaptureConsole(this IChannel channel)
+        {
+            var current = System.Console.Out;
+            System.Console.SetOut(new ChannelWriter(channel));
+            return current;
         }
     }
 }

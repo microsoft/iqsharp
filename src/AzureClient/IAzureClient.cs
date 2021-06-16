@@ -29,6 +29,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
+            Azure.Quantum.Authentication.CredentialType credentialType,
             CancellationToken? cancellationToken = null);
 
         /// <summary>
