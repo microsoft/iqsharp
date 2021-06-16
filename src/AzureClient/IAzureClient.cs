@@ -3,20 +3,84 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// List of arguments for the event that is triggered when the user tries 
+    /// to connect to an Azure Quantum Workspace
+    /// </summary>
+    public class ConnectedToWorkspaceEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Default contructor.
+        /// </summary>
+        /// <param name="status">The status of the connection after calling Connect</param>
+        /// <param name="error">If an error happen, the error code.</param>
+        /// <param name="location">Location of the workspace connecting to.</param>
+        /// <param name="useCustomStorage">True if the user provides a custom storage connection.</param>
+        /// <param name="credentialType">The type of credentials used to authenticate with Azure.</param>
+        /// <param name="duration">How long the action took.</param>
+        public ConnectedToWorkspaceEventArgs(ExecuteStatus status, AzureClientError? error, string location, bool useCustomStorage, CredentialType credentialType, TimeSpan duration)
+        {
+            this.Status = status;
+            this.Error = error;
+            this.Location =location;
+            this.UseCustomStorage = useCustomStorage;
+            this.CredentialType = credentialType;
+            this.Duration = duration;
+        }
+
+        /// <summary>
+        /// The connection status. Can be "success" or "error"
+        /// </summary>
+        public ExecuteStatus Status { get; }
+
+        /// <summary>
+        /// If an error happened during connection, the error code.
+        /// </summary>
+        public AzureClientError? Error { get; }
+
+        /// <summary>
+        /// The Region (location) we tried to connect.
+        /// </summary>
+        public string Location { get; }
+
+        /// <summary>
+        /// True if the user provides a custom storage connection.
+        /// </summary>
+        public bool UseCustomStorage { get; }
+
+        /// <summary>
+        /// The type of credentials used to authenticate with Azure.
+        /// </summary>
+        public CredentialType CredentialType { get; }
+
+        /// <summary>
+        /// The total time it took to connect.
+        /// </summary>
+        public TimeSpan Duration { get; }
+    }
+
     /// <summary>
     /// This service is capable of connecting to Azure Quantum workspaces
     /// and submitting jobs.
     /// </summary>
     public interface IAzureClient
     {
+        /// <summary>
+        /// This event is triggered when a user connects to an Azure Quantum Workspace.
+        /// </summary>
+        event EventHandler<ConnectedToWorkspaceEventArgs> ConnectedToWorkspace;
+
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.
         /// </summary>
@@ -29,7 +93,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            Azure.Quantum.Authentication.CredentialType credentialType,
+            CredentialType credentialType,
             CancellationToken? cancellationToken = null);
 
         /// <summary>
