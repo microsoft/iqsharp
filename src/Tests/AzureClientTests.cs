@@ -326,10 +326,10 @@ namespace Tests.IQSharp
             var services = Startup.CreateServiceProvider("Workspace");
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
 
-            ConnectedToWorkspaceEventArgs? lastArgs = null;
+            ConnectToWorkspaceEventArgs? lastArgs = null;
 
             // connect
-            azureClient.ConnectedToWorkspace += (object? sender, ConnectedToWorkspaceEventArgs e) =>
+            azureClient.ConnectToWorkspace += (object? sender, ConnectToWorkspaceEventArgs e) =>
             {
                 lastArgs = e;
             };

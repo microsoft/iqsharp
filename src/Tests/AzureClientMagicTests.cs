@@ -279,7 +279,7 @@ namespace Tests.IQSharp
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
-        public event EventHandler<ConnectedToWorkspaceEventArgs>? ConnectedToWorkspace;
+        public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token)
@@ -325,7 +325,7 @@ namespace Tests.IQSharp
             Location = location;
             CredentialType = credentialType;
 
-            ConnectedToWorkspace?.Invoke(this, new ConnectedToWorkspaceEventArgs(ExecuteStatus.Ok, null, location, storageAccountConnectionString != null, credentialType, TimeSpan.FromMilliseconds(1)));
+            ConnectToWorkspace?.Invoke(this, new ConnectToWorkspaceEventArgs(ExecuteStatus.Ok, null, location, storageAccountConnectionString != null, credentialType, TimeSpan.FromMilliseconds(1)));
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 

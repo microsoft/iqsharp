@@ -18,7 +18,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// List of arguments for the event that is triggered when the user tries 
     /// to connect to an Azure Quantum Workspace
     /// </summary>
-    public class ConnectedToWorkspaceEventArgs : EventArgs
+    public class ConnectToWorkspaceEventArgs : EventArgs
     {
         /// <summary>
         /// Default contructor.
@@ -29,7 +29,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="useCustomStorage">True if the user provides a custom storage connection.</param>
         /// <param name="credentialType">The type of credentials used to authenticate with Azure.</param>
         /// <param name="duration">How long the action took.</param>
-        public ConnectedToWorkspaceEventArgs(ExecuteStatus status, AzureClientError? error, string location, bool useCustomStorage, CredentialType credentialType, TimeSpan duration)
+        public ConnectToWorkspaceEventArgs(ExecuteStatus status, AzureClientError? error, string location, bool useCustomStorage, CredentialType credentialType, TimeSpan duration)
         {
             this.Status = status;
             this.Error = error;
@@ -79,7 +79,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// This event is triggered when a user connects to an Azure Quantum Workspace.
         /// </summary>
-        event EventHandler<ConnectedToWorkspaceEventArgs> ConnectedToWorkspace;
+        event EventHandler<ConnectToWorkspaceEventArgs> ConnectToWorkspace;
 
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.

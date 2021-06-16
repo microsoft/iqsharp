@@ -88,7 +88,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public event EventHandler<ConnectedToWorkspaceEventArgs>? ConnectedToWorkspace;
+        public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
         /// <inheritdoc/>
         public async Task<ExecutionResult> ConnectAsync(IChannel channel,
@@ -155,7 +155,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 AzureClientError? error = result?.Output as AzureClientError?;
                 bool useCustomStorage = !string.IsNullOrWhiteSpace(StorageConnectionString);
                 
-                ConnectedToWorkspace?.Invoke(this, new ConnectedToWorkspaceEventArgs(status, error, location, useCustomStorage, credentialType, duration.Elapsed));
+                ConnectToWorkspace?.Invoke(this, new ConnectToWorkspaceEventArgs(status, error, location, useCustomStorage, credentialType, duration.Elapsed));
             }
         }
 
