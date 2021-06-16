@@ -5,11 +5,10 @@ import { IPython } from "./ipython";
 declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
-import type * as ChartJs from "chart.js";
+import { Chart } from "chart.js";
 import { DisplayableState, addToolbarButton as addToolbarButton, attachDumpMachineToolbar, createNewCanvas, createToolbarContainer, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
-import { Visualizer } from "./visualizer";
-import { Circuit, StyleConfig, STYLES } from "./ExecutionPathVisualizer";
+import { draw, Circuit, StyleConfig, STYLES } from "@microsoft/quantum-viz.js";
 
 declare global {
     interface Window {
@@ -40,7 +39,7 @@ class Kernel {
 
     setupDebugSessionHandlers() {
         let activeSessions = new Map<string, {
-            chart: ChartJs,
+            chart: Chart,
             lastState: DisplayableState | null,
             plotStyle: PlotStyle
         }>();
@@ -284,10 +283,11 @@ class Kernel {
                 
                 // Get styles
                 const userStyleConfig: StyleConfig = STYLES[style] || {};
-    
-                // Visualize execution path
-                const visualizer = new Visualizer(id, userStyleConfig);
-                visualizer.visualize(executionPath, renderDepth);
+
+                const container = document.getElementById(id);
+                if (container != null) {
+                    draw(executionPath, container, userStyleConfig);
+                }
             }
         );
     }

@@ -125,8 +125,6 @@ if ($Env:ENABLE_PYTHON -eq "false") {
     Test-Python '../src/Python/qsharp-core' '../src/Python/qsharp-core/qsharp/tests'
 }
 
-Test-JavaScript '../src/Kernel'
-
 if (-not $all_ok) 
 {
     throw "At least one project failed to compile. Check the logs."

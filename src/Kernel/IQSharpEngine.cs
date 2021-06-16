@@ -33,6 +33,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
+        private readonly IMetadataController metadataController;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
@@ -60,7 +61,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IServiceProvider services,
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
-            IShellRouter shellRouter
+            IShellRouter shellRouter,
+            IMetadataController metadataController
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -68,6 +70,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.configurationSource = configurationSource;
             this.services = services;
             this.logger = logger;
+            this.metadataController = metadataController;
         }
 
         /// <inheritdoc />
@@ -107,7 +110,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
-            RegisterJsonEncoder(
+            // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
+            // that expected the application/json MIME type for the JSON data.
+            var userAgentVersion = metadataController.GetUserAgentVersion();
+            var jsonMimeType = userAgentVersion == null || userAgentVersion > new Version(0, 17, 2105, 144881)
+                ? "application/x-qsharp-data"
+                : "application/json";
+            RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
                 .ToArray());
