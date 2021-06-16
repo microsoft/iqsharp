@@ -261,7 +261,7 @@ class IQSharpClient(object):
         handlers = {
             'execute_result': (lambda msg: results.append(msg)),
             'render_execution_path':  (lambda msg: results.append(msg)),
-            'display_data': display_data_handler
+            'display_data': display_data_handler if display_data_handler is not None else lambda msg: ...
         }
         if not _quiet_:
             handlers['display_data'] = (
