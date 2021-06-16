@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -87,6 +88,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
+        public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
+
+        /// <inheritdoc/>
         public async Task<ExecutionResult> ConnectAsync(IChannel channel,
             string subscriptionId,
             string resourceGroupName,
@@ -97,44 +101,62 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             CancellationToken? cancellationToken = null)
         {
 
-            // Capture the console output, specifically for the case the user is trying to use DeviceCode credentials
-            // so they can get the message for auth.
-            var currentOut = channel?.CaptureConsole();            
+            var duration = Stopwatch.StartNew();
+            ExecutionResult? result = null;
+
             try
             {
-                var credential = CredentialFactory.CreateCredential(credentialType, subscriptionId);
-                
-                var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, credential);
-                if (connectionResult.Status != ExecuteStatus.Ok)
+                // Capture the console output, specifically for the case the user is trying to use DeviceCode credentials
+                // so they can get the message for auth.
+                var currentOut = channel?.CaptureConsole();
+                try
                 {
-                    return connectionResult;
+                    var credential = CredentialFactory.CreateCredential(credentialType, subscriptionId);
+
+                    var connectionResult = await ConnectToWorkspaceAsync(channel, subscriptionId, resourceGroupName, workspaceName, location, credential);
+                    if (connectionResult.Status != ExecuteStatus.Ok)
+                    {
+                        result = connectionResult;
+                        return result.Value;
+                    }
+
+                    if (ActiveWorkspace == null)
+                    {
+                        result = AzureClientError.WorkspaceNotFound.ToExecutionResult();
+                        return result.Value;
+                    }
+
+                    Credential = credential;
+                }
+                finally
+                {
+                    System.Console.SetOut(currentOut);
                 }
 
-                if (ActiveWorkspace == null)
+                StorageConnectionString = storageAccountConnectionString;
+                ActiveTarget = null;
+                MostRecentJobId = string.Empty;
+
+                channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
+
+                if (ValidExecutionTargets.Count() == 0)
                 {
-                    return AzureClientError.WorkspaceNotFound.ToExecutionResult();
+                    channel?.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
                 }
 
-                Credential = credential;
+                result = ValidExecutionTargets.ToExecutionResult();
+                return result.Value;
             }
             finally
             {
-                System.Console.SetOut(currentOut);
+                duration.Stop();
+
+                ExecuteStatus status = result?.Status ?? ExecuteStatus.Error;
+                AzureClientError? error = result?.Output as AzureClientError?;
+                bool useCustomStorage = !string.IsNullOrWhiteSpace(StorageConnectionString);
+                
+                ConnectToWorkspace?.Invoke(this, new ConnectToWorkspaceEventArgs(status, error, location, useCustomStorage, credentialType, duration.Elapsed));
             }
-
-
-            StorageConnectionString = storageAccountConnectionString;
-            ActiveTarget = null;
-            MostRecentJobId = string.Empty;
-
-            channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
-
-            if (ValidExecutionTargets.Count() == 0)
-            {
-                channel?.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
-            }
-
-            return ValidExecutionTargets.ToExecutionResult();
         }
 
         private string GetNormalizedLocation(string location, IChannel? channel)
@@ -445,7 +467,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -503,7 +525,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {

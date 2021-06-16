@@ -319,5 +319,51 @@ namespace Tests.IQSharp
             _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
             Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
         }
+
+        [TestMethod]
+        public void TestConnectedEvent()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+
+            ConnectToWorkspaceEventArgs? lastArgs = null;
+
+            // connect
+            azureClient.ConnectToWorkspace += (object? sender, ConnectToWorkspaceEventArgs e) =>
+            {
+                lastArgs = e;
+            };
+
+            ExpectError(AzureClientError.WorkspaceNotFound, azureClient.ConnectAsync(
+                new MockChannel(),
+                "TEST_SUBSCRIPTION_ID",
+                "TEST_RESOURCE_GROUP_NAME",
+                MockAzureWorkspace.NameForInvalidWorkspace,
+                string.Empty,
+                "TEST_LOCATION",
+                CredentialType.Default));
+
+            Assert.IsNotNull(lastArgs);
+            if (lastArgs != null)
+            {
+                Assert.AreEqual(ExecuteStatus.Error, lastArgs.Status);
+                Assert.AreEqual(AzureClientError.WorkspaceNotFound, lastArgs.Error);
+                Assert.AreEqual(CredentialType.Default, lastArgs.CredentialType);
+                Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
+                Assert.AreEqual(false, lastArgs.UseCustomStorage);
+            }
+
+            lastArgs = null;
+            _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "TEST_LOCATION"));
+            Assert.IsNotNull(lastArgs);
+            if (lastArgs != null)
+            {
+                Assert.AreEqual(ExecuteStatus.Ok, lastArgs.Status);
+                Assert.AreEqual(null, lastArgs.Error);
+                Assert.AreEqual(CredentialType.Environment, lastArgs.CredentialType);
+                Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
+                Assert.AreEqual(true, lastArgs.UseCustomStorage);
+            }
+        }
     }
 }

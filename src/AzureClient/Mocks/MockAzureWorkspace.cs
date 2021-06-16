@@ -20,6 +20,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
 
+        public const string NameForInvalidWorkspace = "WorkspaceNameForInvalidWorkspace";
+
         internal static string[] MockJobIds { get; set; } = Array.Empty<string>();
 
         internal static HashSet<string> MockProviders { get; set; } = new HashSet<string>();
@@ -60,6 +62,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async IAsyncEnumerable<CloudJob> ListJobsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
             await Task.Factory.StartNew(() => Thread.Sleep(10));
             foreach (var j in Jobs)
             {
@@ -69,6 +76,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async IAsyncEnumerable<QuotaInfo> ListQuotasAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
             await Task.Factory.StartNew(() => Thread.Sleep(10));
 
             foreach (var q in Enumerable.Empty<QuotaInfo>())  // No quotas for Mock workspaces.
@@ -79,6 +91,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public async IAsyncEnumerable<ProviderStatusInfo> ListProvidersStatusAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
             await Task.Factory.StartNew(() => Thread.Sleep(10));
 
             foreach (var p in MockProviders)
