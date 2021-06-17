@@ -38,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public static bool IsValid(TargetStatusInfo target) => GetProvider(target?.TargetId) != null;
 
         /// <summary>
-        /// It creates the AzureExecutionTarget instance for the given TargetStatusInfo. If the TargetStatusInfo
+        /// It creates the <see cref="AzureExecutionTarget" /> instance for the given TargetStatusInfo. If the TargetStatusInfo
         /// is from a Mock, then it returns a Mock AzureExecutionTarget, otherwise it creates the instance 
         /// based on the corresponding target id.
         /// </summary>

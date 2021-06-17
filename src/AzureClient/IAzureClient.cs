@@ -46,11 +46,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <summary>
         /// If an error happened during connection, the error code.
+        /// Otherwise, <c>null</c>.
         /// </summary>
         public AzureClientError? Error { get; }
 
         /// <summary>
-        /// The Region (location) we tried to connect.
+        /// The region (location) we tried to connect to.
         /// </summary>
         public string Location { get; }
 
