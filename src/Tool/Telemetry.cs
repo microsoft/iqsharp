@@ -16,6 +16,7 @@ using Microsoft.Quantum.Simulation.Simulators;
 using static Microsoft.Jupyter.Core.BaseEngine;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using System.Collections.Generic;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -49,6 +50,20 @@ namespace Microsoft.Quantum.IQSharp
                 TelemetryLogger.LogEvent("KernelStopped".AsTelemetryEvent());
                 LogManager.UploadNow();
                 LogManager.Teardown();
+            };
+
+            eventService.Events<ExperimentalFeatureEnabledEvent, ExperimentalFeatureContent>().On += (content) =>
+            {
+                var evt = "ExperimentalFeatureEnabled".AsTelemetryEvent();
+                evt.SetProperty(
+                    "FeatureName".WithTelemetryNamespace(),
+                    content.FeatureName
+                );
+                evt.SetProperty(
+                    "OptionalDependencies".WithTelemetryNamespace(),
+                    string.Join(",", content.OptionalDependencies ?? new List<string>())
+                );
+                TelemetryLogger.LogEvent(evt);
             };
 
             eventService.OnServiceInitialized<IMetadataController>().On += (metadataController) =>
