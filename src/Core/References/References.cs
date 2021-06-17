@@ -185,7 +185,16 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) =>
-            Assemblies.FirstOrDefault(a => a.Assembly.FullName == name.FullName)?.Assembly;
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) 
+        {
+            bool Compare(AssemblyInfo a) =>
+                // If the Assembly requested doesn't include version, then check only for the simple name
+                // of the assembly, otherwise check for the full name (including PublicKey)
+                (name.Version == null)
+                    ? a.Assembly.GetName().Name == name.Name
+                    : a.Assembly.FullName == name.FullName;
+            
+            return Assemblies.FirstOrDefault(Compare)?.Assembly;
+        }
     }
 }

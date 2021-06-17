@@ -15,6 +15,7 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.Simulation.Simulators;
 using static Microsoft.Jupyter.Core.BaseEngine;
 using Microsoft.Quantum.IQSharp.Kernel;
+using Microsoft.Quantum.IQSharp.AzureClient;
 using System.Collections.Generic;
 
 namespace Microsoft.Quantum.IQSharp
@@ -99,6 +100,8 @@ namespace Microsoft.Quantum.IQSharp
                     engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                 }
             };
+            eventService.OnServiceInitialized<IAzureClient>().On += (azureClient) =>
+                azureClient.ConnectToWorkspace += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
         }
 
         public Applications.Events.ILogger TelemetryLogger { get; private set; }
@@ -244,9 +247,21 @@ namespace Microsoft.Quantum.IQSharp
 
             return evt;
         }
+
+        public static EventProperties AsTelemetryEvent(this ConnectToWorkspaceEventArgs info)
+        {
+            var evt = new EventProperties() { Name = "ConnectToWorkspace".WithTelemetryNamespace() };
+
+            evt.SetProperty("Status".WithTelemetryNamespace(), info.Status.ToString());
+            evt.SetProperty("Error".WithTelemetryNamespace(), info.Error?.ToString());
+            evt.SetProperty("Location".WithTelemetryNamespace(), info.Location);
+            evt.SetProperty("UseCustomStorage".WithTelemetryNamespace(), info.UseCustomStorage);
+            evt.SetProperty("CredentialType".WithTelemetryNamespace(), info.CredentialType.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+
+            return evt;
+        }
     }
-
-
 }
 
 #endif

@@ -180,6 +180,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <param name="parameterName">
         ///     The name of the parameter to be decoded.
         /// </param>
+        /// <param name="decoded">
+        ///     The returned value of the parameter once it has been decoded.
+        /// </param>
         /// <param name="defaultValue">
         ///      The default value to be returned if no parameter with the
         ///      name <paramref name="parameterName"/> is present in the
@@ -249,6 +252,19 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 return defaultValue!;
             }
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
+        }
+
+        /// <summary>
+        /// Makes the channel to start capturing the Console Output.
+        /// Returns the current TextWriter in the Console so callers can set it back.
+        /// </summary>
+        /// <param name="channel">The channel to redirect console output to.</param>
+        /// <returns>The current System.Console.Out</returns>
+        public static System.IO.TextWriter? CaptureConsole(this IChannel channel)
+        {
+            var current = System.Console.Out;
+            System.Console.SetOut(new ChannelWriter(channel));
+            return current;
         }
 
         internal static string AsLaTeXMatrixOfComplex(this NDArray array) =>

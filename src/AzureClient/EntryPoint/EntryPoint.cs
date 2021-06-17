@@ -52,18 +52,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }
 
                 string rawParameterValue = submissionContext.InputParameters[parameter.Name];
-                object? parameterValue = null;
                 try
                 {
-                    parameterValue = submissionContext.InputParameters.DecodeParameter(parameter.Name, type: parameter.ParameterType);
+                    var parameterValue = submissionContext.InputParameters.DecodeParameter(parameter.Name, type: parameter.ParameterType);
+
+                    if (parameterValue != null)
+                    {
+                        parameterTypes.Add(parameter.ParameterType);
+                        parameterValues.Add(parameterValue);
+                    }
                 }
                 catch (Exception e)
                 {
                     throw new ArgumentException($"The value {rawParameterValue} provided for parameter {parameter.Name} could not be converted to the expected type: {e.Message}");
                 }
-
-                parameterTypes.Add(parameter.ParameterType);
-                parameterValues.Add(parameterValue);
             }
 
             var entryPointInput = parameterValues.Count switch
