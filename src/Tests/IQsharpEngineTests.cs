@@ -17,6 +17,7 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Microsoft.Quantum.Experimental;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -24,6 +25,12 @@ using Newtonsoft.Json;
 
 namespace Tests.IQSharp
 {
+    internal static class TestExtensions
+    {
+        internal static void AssertIsOk(this ExecutionResult response) =>
+            Assert.AreEqual(ExecuteStatus.Ok, response.Status, $"Response was not marked as Ok.\n\tActual status: {response.Status}\n\tResponse output: {response.Output}");
+    }
+
     [TestClass]
     public class IQSharpEngineTests
     {
@@ -86,6 +93,32 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
+        public static async Task<string?> AssertNoisySimulate(IQSharpEngine engine, string snippetName, NoiseModel? noiseModel, params string[] messages)
+        {
+            await engine.Initialized;
+            var configSource = new ConfigurationSource(skipLoading: true);
+            var noiseModelSource = new NoiseModelSource();
+            if (noiseModel != null)
+            {
+                noiseModelSource.NoiseModel = noiseModel;
+            }
+
+            var simMagic = new SimulateNoiseMagic(
+                engine,
+                resolver: engine.SymbolsResolver!,
+                configurationSource: configSource,
+                logger: new UnitTestLogger<SimulateNoiseMagic>(),
+                noiseModelSource: noiseModelSource
+                );
+            var channel = new MockChannel();
+            var response = await simMagic.Execute(snippetName, channel);
+            PrintResult(response, channel);
+            response.AssertIsOk();
+            CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
+
+            return response.Output?.ToString();
+        }
+
         public static async Task<string?> AssertEstimate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             await engine.Initialized;
@@ -96,7 +129,7 @@ namespace Tests.IQSharp
             var response = await estimateMagic.Execute(snippetName, channel);
             var result = response.Output as DataTable;
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.IsNotNull(result);
             Assert.AreEqual(9, result?.Rows.Count);
             var keys = result?.Rows.Cast<DataRow>().Select(row => row.ItemArray[0]).ToList();
@@ -124,16 +157,16 @@ namespace Tests.IQSharp
             // Add dependencies:
             var response = await pkgMagic.Execute("mock.standard", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
 
             // Reload workspace:
             response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
 
             response = await traceMagic.Execute(name, channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
 
             var message = channel.iopubMessages.ElementAtOrDefault(0);
             Assert.IsNotNull(message);
@@ -246,6 +279,50 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        [TestCategory("Experimental")]
+        public async Task NoisySimulateWithTwoQubitOperation()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.SimpleDebugOperation, "SimpleDebugOperation");
+
+            // Try running again:
+            // Note that noiseModel: null sets the noise model to be ideal.
+            await AssertNoisySimulate(engine, "SimpleDebugOperation", noiseModel: null);
+        }
+
+        [TestMethod]
+        [TestCategory("Experimental")]
+        public async Task NoisySimulateWithFailIfOne()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.FailIfOne, "FailIfOne");
+
+            // Try running again:
+            // Note that noiseModel: null sets the noise model to be ideal.
+            await AssertNoisySimulate(engine, "FailIfOne", noiseModel: null);
+        }
+
+        [TestMethod]
+        [TestCategory("Experimental")]
+        public async Task NoisySimulateWithTrivialOperation()
+        {
+            var engine = await Init();
+            var channel = new MockChannel();
+
+            // Compile it:
+            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
+
+            // Try running again:
+            await AssertNoisySimulate(engine, "HelloQ", noiseModel: null, "Hello from quantum world!");
+        }
+
+        [TestMethod]
         public async Task Toffoli()
         {
             var engine = await Init();
@@ -260,7 +337,7 @@ namespace Tests.IQSharp
             var response = await toffoliMagic.Execute("HelloQ", channel);
             var result = response.Output as Dictionary<string, double>;
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.AreEqual(1, channel.msgs.Count);
             Assert.AreEqual(ChannelWithNewLines.Format("Hello from quantum world!"), channel.msgs[0]);
         }
@@ -351,7 +428,7 @@ namespace Tests.IQSharp
                 var channel = new MockChannel();
                 var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
                 PrintResult(response, channel);
-                Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+                response.AssertIsOk();
                 Assert.AreEqual(3, channel.msgs.Count);
                 Assert.AreEqual(0, channel.errors.Count);
                 Assert.AreEqual("ThreeWarnings",
@@ -363,7 +440,7 @@ namespace Tests.IQSharp
                 var channel = new MockChannel();
                 var response = await engine.ExecuteMundane(SNIPPETS.OneWarning, channel);
                 PrintResult(response, channel);
-                Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+                response.AssertIsOk();
                 Assert.AreEqual(1, channel.msgs.Count);
                 Assert.AreEqual(0, channel.errors.Count);
                 Assert.AreEqual("OneWarning",
@@ -399,7 +476,7 @@ namespace Tests.IQSharp
             var response = await pkgMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.AreEqual(packageCount, result?.Length);
             Assert.AreEqual("Microsoft.Quantum.Standard::0.0.0", result?[0]);
@@ -414,7 +491,7 @@ namespace Tests.IQSharp
             response = await pkgMagic.Execute("mock.chemistry", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.IsNotNull(result);
             Assert.AreEqual(packageCount + 1, result?.Length);
@@ -451,7 +528,7 @@ namespace Tests.IQSharp
             var channel = new MockChannel();
 
             var response = await projectMagic.Execute("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj", channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             var loadedProjectFiles = response.Output as string[];
             Assert.AreEqual(3, loadedProjectFiles?.Length);
         }
@@ -470,7 +547,7 @@ namespace Tests.IQSharp
             var response = await whoMagic.Execute("", channel);
             var result = response.Output as string[];
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.AreEqual(6, result?.Length);
             Assert.AreEqual("HelloQ", result?[0]);
             Assert.AreEqual("Tests.qss.NoOp", result?[4]);
@@ -507,20 +584,20 @@ namespace Tests.IQSharp
             // Add dependencies:
             response = await pkgMagic.Execute("mock.chemistry", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             response = await pkgMagic.Execute("mock.research", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
 
             // Reload workspace:
             response = await wsMagic.Execute("reload", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
 
             response = await wsMagic.Execute("", channel);
             result = response.Output as string[];
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
             Assert.AreEqual(2, result?.Length);
 
             // Compilation must work:
@@ -534,7 +611,7 @@ namespace Tests.IQSharp
             // Check that everything still works:
             response = await wsMagic.Execute("", channel);
             PrintResult(response, channel);
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status);
+            response.AssertIsOk();
         }
 
         [TestMethod]
