@@ -73,15 +73,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - `{ParameterNameResourceGroupName}=<string>`: The Azure resource group name for the Azure Quantum workspace.
                         - `{ParameterNameWorkspaceName}=<string>`: The name of the Azure Quantum workspace.
                         
-                        #### Optional parameters
-
-                        - `{ParameterNameRefresh}`: Bypasses any saved or cached credentials when connecting to Azure.
-                        - `{ParameterNameStorageAccountConnectionString}=<string>`: The connection string to the Azure storage
-                        account. Required if the specified Azure Quantum workspace was not linked to a storage
-                        account at workspace creation time.
                         - `{ParameterNameLocation}=<string>`: The Azure region where the Azure Quantum workspace is provisioned.
                         This may be specified as a region name such as `""East US""` or a location name such as `""eastus""`.
                         If no valid value is specified, defaults to `""westus""`.
+
+                        #### Optional parameters
+
+                        - `{ParameterNameStorageAccountConnectionString}=<string>`: The connection string to the Azure storage
+                        account. Required if the specified Azure Quantum workspace was not linked to a storage
+                        account at workspace creation time.
                         - `{ParameterNameCredential}=<CredentialType>`: The type of credentials to use to authenticate with Azure.
                         NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/dotnet/api/overview/azure/identity-readme), 
                         based on this parameter we will create an instance of a Credential Class. 
@@ -113,7 +113,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         $@"
-                            Connect to an Azure Quantum workspace using its resource ID:
+                            Connect to an Azure Quantum workspace using its resource ID to the 'West Us' region:
                             ```
                             In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
@@ -133,25 +133,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
 
                         $@"
-                            Connect to an Azure Quantum workspace using individual subscription ID, resource group name, and workspace name parameters:
+                            Connect to an Azure Quantum workspace using individual subscription ID, resource group name, using a browser to prompt for user credentials with Azure:
                             ```
                             In []: %azure.connect {ParameterNameSubscriptionId}=""SUBSCRIPTION_ID""
                                                   {ParameterNameResourceGroupName}=""RESOURCE_GROUP_NAME""
                                                   {ParameterNameWorkspaceName}=""WORKSPACE_NAME""
-                                                  {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
+                                                  {ParameterNameCredential}=""interactive""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
-                                    <list of Q# execution targets available in the Azure Quantum workspace>
-                            ```
-                        ".Dedent(),
-
-                        $@"
-                            Connect to an Azure Quantum workspace and force a credential prompt using
-                            the `{ParameterNameRefresh}` option:
-                            ```
-                            In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
-                            Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
-                                    and enter the code [login code] to authenticate.
-                                    Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),

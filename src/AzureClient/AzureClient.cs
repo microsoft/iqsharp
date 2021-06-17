@@ -165,7 +165,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var defaultLocation = "westus";
             if (string.IsNullOrWhiteSpace(location))
             {
-                channel?.Stdout($"[WARN]: location parameter is missing. Will try to connect to a workspace in region `{defaultLocation}`.");
+                channel?.Stderr($"[WARN]: location parameter is missing. Will try to connect to a workspace in region `{defaultLocation}`.");
                 location = defaultLocation;
             }
 
@@ -176,7 +176,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 // If provided location is invalid, "westus" is used.
                 normalizedLocation = defaultLocation;
-                channel?.Stdout($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
+                channel?.Stderr($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
             }
 
             return normalizedLocation;
@@ -219,8 +219,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (Exception e)
             {
-                channel?.Stderr($"The Azure Quantum workspace {workspaceName} in location {location} could not be reached. " +
-                    "Please check the provided parameters and try again.");
+                var msg = $"The Azure Quantum workspace {workspaceName} in location {location} could not be reached.";
+                Logger.LogError(e, msg);
+                channel?.Stderr($"{msg} Please check the provided parameters and try again.\nError details: {e.Message}");
                 channel?.Stderr($"Error details: {e.Message}");
 
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
@@ -337,7 +338,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (ArgumentException e)
             {
-                channel?.Stderr($"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.");
+                var msg = $"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.";
+                Logger.LogError(e, msg);
+
+                channel?.Stderr(msg);
                 channel?.Stderr(e.Message);
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }

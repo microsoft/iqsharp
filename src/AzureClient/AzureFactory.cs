@@ -14,8 +14,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class AzureFactory : IAzureFactory
     {
         /// <inheritdoc />
-        public Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, TokenCredential credential) =>
-             new Azure.Quantum.Workspace(
+        public Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, 
+            string resourceGroup, 
+            string workspaceName, 
+            string location, 
+            TokenCredential credential) =>
+                new Azure.Quantum.Workspace(
                     subscriptionId: subscriptionId,
                     resourceGroupName: resourceGroup,
                     workspaceName: workspaceName,
