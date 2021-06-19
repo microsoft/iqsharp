@@ -29,7 +29,12 @@ RUN apt-get update && \
                        # given what we have already installed.
                        git \
                        # Used to retrieve node version information.
-                       curl && \
+                       curl \
+                       # Used to support PyGObject dependency of
+                       # msal_extensions package
+                       python3-gi \
+                       python3-gi-cairo \
+                       gir1.2-secret-1 && \
     # Upgrade optional dependencies brought in by the previous step.
     apt-get -y upgrade libidn2-0 && \
     # We clean the apt cache at the end of each apt command so that the caches
