@@ -129,7 +129,8 @@ RUN chown -R ${USER}:${USER} /home/${USER}/.azure
 USER ${USER}
 # Make sure that .NET Core is on the notebook users' path.
 ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
-    DOTNET_ROOT=${HOME}/dotnet
+    DOTNET_ROOT=${HOME}/dotnet \
+    PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages/
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
