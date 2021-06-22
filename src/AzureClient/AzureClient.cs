@@ -221,8 +221,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 var msg = $"The Azure Quantum workspace {workspaceName} in location {location} could not be reached.";
                 Logger.LogError(e, msg);
-                channel?.Stderr($"{msg} Please check the provided parameters and try again.\nError details: {e.Message}");
-                channel?.Stderr($"Error details: {e.Message}");
+                channel?.Stderr($"{msg} Please check the provided parameters and try again.");
+                channel?.Stderr($"Error details:\n\n{e.Message}");
 
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
