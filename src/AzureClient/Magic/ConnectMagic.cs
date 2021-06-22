@@ -86,8 +86,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/dotnet/api/overview/azure/identity-readme), 
                         based on this parameter we will create an instance of a Credential Class. 
                         Possible options are:
-                          * [Default](https://docs.microsoft.com/dotnet/api/azure.identity.defaultazurecredential):
-                             Provides a simplified authentication experience to quickly start developing applications run in the Azure cloud.
                           * [Environment](https://docs.microsoft.com/dotnet/api/azure.identity.environmentcredential):
                              Authenticates a service principal or user via credential information specified in environment variables.
                           * [ManagedIdentity](https://docs.microsoft.com/dotnet/api/azure.identity.managedidentitycredential):
@@ -101,9 +99,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                           * [VisualStudioCode](https://docs.microsoft.com/dotnet/api/azure.identity.visualstudiocodecredential):
                              Authenticate in a development environment with Visual Studio Code.
                           * [Interactive](https://docs.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential):
-                             A TokenCredential implementation which opens a new browser window to interactively authenticate a user,
+                             Opens a new browser window to interactively authenticate a user 
                              and obtain an access token.
-                        If not provided, we'll use `Default` credentials.
+                          * [DeviceCode](https://docs.microsoft.com/dotnet/api/azure.identity.devicecodecredential):
+                             Authenticates a user using the device code flow to obtain an access token.
+                        If not provided, it will try each credential type in order and pick the first one that can
+                        succesfully authenticate with Azure.
                         
                         #### Possible errors
 
