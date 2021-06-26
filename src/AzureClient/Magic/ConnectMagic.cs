@@ -31,6 +31,26 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameLocation = "location";
         private const string ParameterNameCredential = "credential";
 
+        /// <summary>
+        /// Name of the environment variable for the default value of SubscriptionId
+        /// </summary>
+        public const string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
+
+        /// <summary>
+        /// Name of the environment variable for the default value of Resource Group
+        /// </summary>
+        public const string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
+
+        /// <summary>
+        /// Name of the environment variable for the default value of Location
+        /// </summary>
+        public const string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
+
+        /// <summary>
+        /// Name of the environment variable for the default value of Workspace
+        /// </summary>
+        public const string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
+
         // A valid resource ID looks like:
         // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
         private readonly static Regex ResourceIdRegex = new Regex(
@@ -195,9 +215,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             else
             {
                 // look for each of the parameters individually
-                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: string.Empty);
-                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: string.Empty);
-                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: string.Empty);
+                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentSubscriptionId));
+                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentResourceGroup));
+                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentWorkspaceName));
             }
 
             if (string.IsNullOrWhiteSpace(subscriptionId) ||
@@ -209,8 +229,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
+            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentLocation) ?? string.Empty);
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
-            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
             var credentialType = inputParameters.DecodeParameter<CredentialType>(ParameterNameCredential, defaultValue: CredentialType.Default);
             return await AzureClient.ConnectAsync(
                 channel,

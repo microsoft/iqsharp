@@ -106,6 +106,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(location, azureClient.Location);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
             Assert.AreEqual(CredentialType.Interactive, azureClient.CredentialType);
 
@@ -132,10 +133,53 @@ namespace Tests.IQSharp
                    resourceGroup={resourceGroupName}
                    workspace={workspaceName}
                    storage={storageAccountConnectionString}");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+            Assert.AreEqual(string.Empty, azureClient.Location);
+            Assert.AreEqual(CredentialType.Default, azureClient.CredentialType);
 
             connectMagic.Test($"refresh /subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName} refresh");
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
+        }
+
+        [TestMethod]
+        public void TestConnectMagicFromEnvironment()
+        {
+            var azureClient = new MockAzureClient();
+            var logger = new UnitTestLogger<ConnectMagic>();
+            var connectMagic = new ConnectMagic(azureClient, logger);
+
+            // no input
+            connectMagic.Test(string.Empty);
+            Assert.AreEqual(AzureClientAction.GetConnectionStatus, azureClient.LastAction);
+
+            // Missing environment variables
+            connectMagic.Test($"credential=ENVIRONMENT", ExecuteStatus.Error);
+
+            // Pick up environment variables
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentSubscriptionId, subscriptionId);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentResourceGroup, resourceGroupName);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentWorkspaceName, workspaceName);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentLocation, location);
+
+            connectMagic.Test("credential=ENVIRONMENT");
+            Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
+            Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
+            Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
+            Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
+            Assert.AreEqual(string.Empty, azureClient.ConnectionString);
+            Assert.AreEqual(CredentialType.Environment, azureClient.CredentialType);
+            Assert.AreEqual(location, azureClient.Location);
+
+            // Reset env variables:
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentSubscriptionId, string.Empty);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentResourceGroup, string.Empty);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentWorkspaceName, string.Empty);
+            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentLocation, string.Empty);
         }
 
         [TestMethod]
