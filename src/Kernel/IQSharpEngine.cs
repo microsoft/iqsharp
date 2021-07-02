@@ -120,6 +120,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     : "application/json"
                 : "application/x-qsharp-data";
 
+            // Register JSON encoders, and make sure that Newtonsoft.Json
+            // doesn't throw exceptions on reference loops.
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
             RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
