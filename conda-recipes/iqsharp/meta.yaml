@@ -36,6 +36,7 @@ test:
     - jupyter_client<5.3.3
     - pyzmq==19.0.2
     - pip
+    - qutip
 
   source_files:
     - src/conda-recipes/iqsharp/test.ps1

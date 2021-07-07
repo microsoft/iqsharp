@@ -24,7 +24,7 @@ function Test-CondaPackage {
     }
 
     process {
-        conda-build (Resolve-Path $Path) --test 2>&1 | ForEach-Object { "$_" };
+        conda-build (Resolve-Path $Path) --test -c conda-forge 2>&1 | ForEach-Object { "$_" };
         if ($LASTEXITCODE -ne 0) {
             Write-Host "##vso[task.logissue type=error;]conda-build --test failed for $Path.";
             $script:AllOk = $false;
