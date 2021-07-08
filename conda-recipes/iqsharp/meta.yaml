@@ -26,15 +26,12 @@ requirements:
   run:
     - python
     - jupyter_client
-    - pyzmq<20.0.0       # due to incompatibility of IQ# with pyzmq>=20.0.0
-    - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
   requires:
-    - notebook=6.0.1
+    - notebook>=6.0.1
     - python>=3.6
-    - jupyter_client<5.3.3
-    - pyzmq==19.0.2
+    - jupyter_client
     - pip
     - qutip
 
