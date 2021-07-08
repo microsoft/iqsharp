@@ -26,7 +26,7 @@ def register_magics():
             local_ns[callables._name] = callables
         else:
             for qs_callable in callables:
-                local_ns[qs_callable.name] = qs_callable
+                local_ns[qs_callable._name] = qs_callable
 
 def register_experimental_magics():
     import qsharp.experimental as exp
