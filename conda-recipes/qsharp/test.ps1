@@ -12,9 +12,9 @@ Push-Location (Resolve-Path $PSScriptRoot)
     #     isn't copied into the built package.
     #     Instead, we enable only those tests we know are relocatable.
     $modulePath = (Resolve-Path (Join-Path (python -c "import qsharp; print(qsharp.__file__)") ".."));
-    pytest `
-        --junitxml=junit/unit-test-results.xml `
-        "$(Join-Path $modulePath "tests/test_iqsharp.py")::TestCaptureDiagnostics"
+    $cmd = "pytest --junitxml=junit/unit-test-results.xml $(Join-Path $modulePath "tests/test_iqsharp.py")::TestCaptureDiagnostics";
+    Write-Host "##[debug]Running integration tests with command: $cmd"
+    Invoke-Expression $cmd;
 
     # Check for success.
     if  ($LastExitCode -ne 0) {
