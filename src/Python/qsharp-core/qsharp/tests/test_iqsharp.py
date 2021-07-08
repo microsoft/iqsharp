@@ -31,7 +31,7 @@ try:
 except ImportError:
     qt = None
 
-skip_if_no_qutip = pytest.mark.skipif(qt is None, "Test requires QuTiP.")
+skip_if_no_qutip = pytest.mark.skipif(qt is None, reason="Test requires QuTiP.")
 
 ## TESTS ##
 
