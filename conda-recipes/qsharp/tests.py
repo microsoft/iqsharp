@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 import qsharp
@@ -16,4 +16,3 @@ def test_simple_compile():
 """)
     r = op.simulate()
     assert r == qsharp.Result.One
-    
