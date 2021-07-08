@@ -14,7 +14,7 @@ Push-Location (Resolve-Path $PSScriptRoot)
     $modulePath = (Resolve-Path (Join-Path (python -c "import qsharp; print(qsharp.__file__)") ".."));
     pytest `
         --junitxml=junit/unit-test-results.xml `
-        "$(Join-Path modulePath "tests/test_iqsharp.py")::TestCaptureDiagnostics"
+        "$(Join-Path $modulePath "tests/test_iqsharp.py")::TestCaptureDiagnostics"
 
     # Check for success.
     if  ($LastExitCode -ne 0) {
