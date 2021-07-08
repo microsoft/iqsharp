@@ -319,7 +319,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (CompilationErrorsException e)
             {
-                channel?.Stderr($"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
+                e.Log(channel, Logger, $"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
                 foreach (var message in e.Errors) channel?.Stderr(message);
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }

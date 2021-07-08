@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -87,5 +88,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             (job.Id != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
             (job.Details.Name != null && job.Details.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
             (job.Details.Target != null && job.Details.Target.Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+        internal static void Log(this Exception ex, IChannel? channel, ILogger? logger, string msg = "")
+        {
+            logger?.LogError(ex, msg);
+            channel?.Stderr(msg);
+            channel?.Stderr(ex.Message);
+        }
     }
 }
