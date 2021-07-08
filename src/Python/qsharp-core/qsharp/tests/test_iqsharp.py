@@ -263,7 +263,7 @@ def test_projects(tmp_path):
     assert 1 == len(qsharp.projects._client.get_projects())
 
 class TestCaptureDiagnostics:
-    def test_basic_capture():
+    def test_basic_capture(self):
         dump_plus = qsharp.compile("""
             open Microsoft.Quantum.Diagnostics;
 
@@ -295,7 +295,7 @@ class TestCaptureDiagnostics:
 
 
     @skip_if_no_qutip
-    def test_capture_diagnostics_as_qobj():
+    def test_capture_diagnostics_as_qobj(self):
         dump_plus = qsharp.compile("""
             open Microsoft.Quantum.Diagnostics;
 
@@ -322,7 +322,7 @@ class TestCaptureDiagnostics:
 
 
     @skip_if_no_qutip
-    def test_capture_experimental_diagnostics_as_qobj():
+    def test_capture_experimental_diagnostics_as_qobj(self):
         dump_plus = qsharp.compile("""
             open Microsoft.Quantum.Diagnostics;
 
