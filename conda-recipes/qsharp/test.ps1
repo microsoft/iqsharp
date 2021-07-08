@@ -11,8 +11,8 @@ Push-Location (Resolve-Path $PSScriptRoot)
     # NB: We disable most tests for now, since many of the tests require Q# code that
     #     isn't copied into the built package.
     #     Instead, we enable only those tests we know are relocatable.
-    $modulePath = (Resolve-Path (Join-Path (python -c "import qsharp; print(qsharp.__file__)") ".."));
-    $cmd = "pytest --junitxml=junit/unit-test-results.xml $(Join-Path $modulePath "tests/test_iqsharp.py")::TestCaptureDiagnostics";
+    $testPath = Join-Path $Env:SRC_DIR "src/Python/qsharp-core/qsharp/tests/test_iqsharp.py";
+    $cmd = "pytest --junitxml=junit/unit-test-results.xml `"${testPath}::TestCaptureDiagnostics`"";
     Write-Host "##[debug]Running integration tests with command: $cmd"
     Invoke-Expression $cmd;
 
