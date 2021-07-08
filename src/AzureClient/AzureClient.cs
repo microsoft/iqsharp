@@ -42,7 +42,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
-            ? "(no Q# execution targets available)"
+            ? "(no quantum computing execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 if (ValidExecutionTargets.Count() == 0)
                 {
-                    channel?.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
+                    channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
                 }
 
                 result = ValidExecutionTargets.ToExecutionResult();
