@@ -1,0 +1,47 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Integrating Rust into QDK builds, part II",
+  "steps": [
+    {
+      "file": "src/Kernel/Magic/NoiseModel.cs",
+      "description": "Now that we've built the Rust simulator library into a DLL that can be used from C#, and have included that in a NuGet package, that package can be used from IQ#.\r\n\r\nFor example, we can configure noise models with the new `%experimental.noise_model` magic command.",
+      "line": 20
+    },
+    {
+      "file": "src/Kernel/Magic/NoiseModel.cs",
+      "description": "We can use the same serialization and deserialization logic to convert JSON noise models sent by IQ# users into appropriate C# classes, which then can be sent through to the Rust simulator library.",
+      "line": 94
+    },
+    {
+      "file": "src/Python/qsharp-core/qsharp/clients/iqsharp.py",
+      "description": "We can call that new magic command from Python, similar to how other magic commands are used to interoperate between Python and the C#-based Q# runtime.",
+      "line": 211
+    },
+    {
+      "file": "src/Python/qsharp-core/qsharp/experimental.py",
+      "description": "In particular, that allows users to get and set noise models from Python, using standard quantum computing packages like QuTiP.",
+      "line": 163,
+      "selection": {
+        "start": {
+          "line": 164,
+          "character": 19
+        },
+        "end": {
+          "line": 164,
+          "character": 35
+        }
+      }
+    },
+    {
+      "file": "src/Kernel/Magic/SimulateNoise.cs",
+      "description": "The actual execution of programs against the `opensim` library can be done with the new `%experimental.simulate_noise` magic command.",
+      "line": 31
+    },
+    {
+      "file": "src/Kernel/Magic/SimulateNoise.cs",
+      "description": "This magic command creates a new simulator, sets its noise model based to whatever was sent in the last `%experimental.noise_model` command, and then runs the given operation in much the same way as `%simulate`.",
+      "line": 106
+    }
+  ],
+  "ref": "cgranade/experimental/opensim"
+}

@@ -26,6 +26,13 @@ print ( qsharp.component_versions() )
 def session_setup():
     set_environment_variables()
 
+try:
+    import qutip as qt
+except ImportError:
+    qt = None
+
+skip_if_no_qutip = pytest.mark.skipif(qt is None, "Test requires QuTiP.")
+
 ## TESTS ##
 
 def test_simulate():
@@ -286,6 +293,7 @@ def test_capture_diagnostics():
     assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
 
 
+@skip_if_no_qutip
 def test_capture_diagnostics_as_qobj():
     dump_plus = qsharp.compile("""
         open Microsoft.Quantum.Diagnostics;
@@ -312,6 +320,7 @@ def test_capture_diagnostics_as_qobj():
     assert (expected - captured[0]).norm() <= 1e-8
 
 
+@skip_if_no_qutip
 def test_capture_experimental_diagnostics_as_qobj():
     dump_plus = qsharp.compile("""
         open Microsoft.Quantum.Diagnostics;
