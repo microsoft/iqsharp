@@ -41,8 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
-            ValidExecutionTargets == null
-            ? "(no execution targets available)"
+            (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
+            ? "(no quantum computing execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 if (ValidExecutionTargets.Count() == 0)
                 {
-                    channel?.Stderr($"No valid Q# execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
+                    channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
                 }
 
                 result = ValidExecutionTargets.ToExecutionResult();
@@ -319,7 +319,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (CompilationErrorsException e)
             {
-                channel?.Stderr($"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
+                e.Log(channel, Logger, $"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
                 foreach (var message in e.Errors) channel?.Stderr(message);
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }
