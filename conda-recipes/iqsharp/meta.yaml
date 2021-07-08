@@ -29,9 +29,9 @@ requirements:
 
 test:
   requires:
-    - notebook>=6.0.1
-    - python>=3.6
-    - jupyter_client
+    - python # Don't specify a version, as we'll let that get inherited from
+             # the version that the package is built against.
+    - notebook
     - pip
     - qutip
 
@@ -49,8 +49,8 @@ about:
   license: MIT
   summary: Microsoft's IQ# kernel providing Q# support for the Jupyter platform.
   description: |
-    For details on how to get started with Jupyter and Q#, please see the guide at https://docs.microsoft.com/azure/quantum/install-jupyter-qkd.
+    For details on how to get started with Jupyter and Q#, please see the guide at https://docs.microsoft.com/azure/quantum/install-jupyter-qdk.
     You can also try our Quantum Computing Fundamentals learning path (https://aka.ms/learnqc) to get familiar with the basic concepts
     of quantum computing, build quantum programs, and identify the kind of problems that can be solved.
   dev_url: https://github.com/microsoft/iqsharp
-  doc_url: https://docs.microsoft.com/azure/quantum/install-jupyter-qkd
+  doc_url: https://docs.microsoft.com/azure/quantum/install-jupyter-qdk
