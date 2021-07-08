@@ -36,9 +36,9 @@ namespace Tests.IQSharp
         {
             var complex = new Complex((12.0, 1.4));
             var token = JToken.Parse(JsonConvert.SerializeObject(complex, JsonConverters.TupleConverters));
-            Assert.AreEqual(typeof(Complex).FullName, token["@type"].Value<string>());
-            Assert.AreEqual(12, token["Item1"].Value<double>());
-            Assert.AreEqual(1.4, token["Item2"].Value<double>());
+            Assert.AreEqual(typeof(Complex).FullName, token?["@type"]?.Value<string>());
+            Assert.AreEqual(12, token?["Item1"]?.Value<double>());
+            Assert.AreEqual(1.4, token?["Item2"]?.Value<double>());
         }
 
         [TestMethod]
@@ -62,13 +62,13 @@ namespace Tests.IQSharp
             var jsonData = JsonConvert.SerializeObject(testValue, JsonConverters.TupleConverters);
             System.Console.WriteLine(jsonData);
             var token = JToken.Parse(jsonData);
-            Assert.AreEqual(typeof(QubitState).FullName, token["@type"].Value<string>());
-            Assert.AreEqual(typeof(Complex).FullName, token["Item1"]["@type"].Value<string>());
-            Assert.AreEqual(0.1, token["Item1"]["Item1"].Value<double>());
-            Assert.AreEqual(0.2, token["Item1"]["Item2"].Value<double>());
-            Assert.AreEqual(typeof(Complex).FullName, token["Item2"]["@type"].Value<string>());
-            Assert.AreEqual(0.3, token["Item2"]["Item1"].Value<double>());
-            Assert.AreEqual(0.4, token["Item2"]["Item2"].Value<double>());
+            Assert.AreEqual(typeof(QubitState).FullName, token?["@type"]?.Value<string>());
+            Assert.AreEqual(typeof(Complex).FullName, token?["Item1"]?["@type"]?.Value<string>());
+            Assert.AreEqual(0.1, token?["Item1"]?["Item1"]?.Value<double>());
+            Assert.AreEqual(0.2, token?["Item1"]?["Item2"]?.Value<double>());
+            Assert.AreEqual(typeof(Complex).FullName, token?["Item2"]?["@type"]?.Value<string>());
+            Assert.AreEqual(0.3, token?["Item2"]?["Item1"]?.Value<double>());
+            Assert.AreEqual(0.4, token?["Item2"]?["Item2"]?.Value<double>());
         }
 
         [TestMethod]

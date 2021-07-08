@@ -13,6 +13,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using Microsoft.Azure.Quantum.Authentication;
 
 namespace Tests.IQSharp
 {
@@ -41,7 +42,8 @@ namespace Tests.IQSharp
         public void TestConnectMagic()
         {
             var azureClient = new MockAzureClient();
-            var connectMagic = new ConnectMagic(azureClient);
+            var logger = new UnitTestLogger<ConnectMagic>();
+            var connectMagic = new ConnectMagic(azureClient, logger);
 
             // no input
             connectMagic.Test(string.Empty);
@@ -53,7 +55,6 @@ namespace Tests.IQSharp
             // valid input with resource ID (and to verify case-insensitivity of resourceId parsing)
             connectMagic.Test($"resourceId=/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
@@ -63,34 +64,35 @@ namespace Tests.IQSharp
             // valid input with implied resource ID key, without surrounding quotes
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
             Assert.AreEqual(string.Empty, azureClient.Location);
+            Assert.AreEqual(CredentialType.Default, azureClient.CredentialType);
 
             // valid input with implied resource ID key, with surrounding quotes
             connectMagic.Test($"\"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}\"");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(string.Empty, azureClient.ConnectionString);
             Assert.AreEqual(string.Empty, azureClient.Location);
+            Assert.AreEqual(CredentialType.Default, azureClient.CredentialType);
 
             // valid input with resource ID and storage account connection string
             connectMagic.Test(
                 @$"resourceId=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}
-                   storage={storageAccountConnectionString}");
+                   storage={storageAccountConnectionString}
+                   credential=cli");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
             Assert.AreEqual(string.Empty, azureClient.Location);
+            Assert.AreEqual(CredentialType.CLI, azureClient.CredentialType);
 
             // valid input with individual parameters
             connectMagic.Test(
@@ -98,14 +100,15 @@ namespace Tests.IQSharp
                    resourceGroup={resourceGroupName}
                    workspace={workspaceName}
                    storage={storageAccountConnectionString}
-                   location={location}");
+                   location={location}
+                   credential=interactive");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
-            Assert.AreEqual(location, azureClient.Location);
+            Assert.AreEqual(CredentialType.Interactive, azureClient.CredentialType);
+
 
             // valid input with extra whitespace and quotes
             connectMagic.Test(
@@ -113,30 +116,26 @@ namespace Tests.IQSharp
                    subscription   =   {subscriptionId}
                    resourceGroup=  ""{resourceGroupName}""
                    workspace  ={workspaceName}
+                   credential=ENVIRONMENT
                    storage = '{storageAccountConnectionString}'");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
-            Assert.IsFalse(azureClient.RefreshCredentials);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
             Assert.AreEqual(resourceGroupName, azureClient.ResourceGroupName);
             Assert.AreEqual(workspaceName, azureClient.WorkspaceName);
             Assert.AreEqual(storageAccountConnectionString, azureClient.ConnectionString);
+            Assert.AreEqual(CredentialType.Environment, azureClient.CredentialType);
             Assert.AreEqual(location, azureClient.Location);
 
-            // valid input with forced login
+            // refresh parameter, which has been deprecated so has no effect:
             connectMagic.Test(
                 @$"refresh subscription={subscriptionId}
                    resourceGroup={resourceGroupName}
                    workspace={workspaceName}
                    storage={storageAccountConnectionString}");
-            Assert.IsTrue(azureClient.RefreshCredentials);
 
-            // forced login with implied resource ID before, after, and missing
             connectMagic.Test($"refresh /subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
-            Assert.IsTrue(azureClient.RefreshCredentials);
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName} refresh");
-            Assert.IsTrue(azureClient.RefreshCredentials);
             connectMagic.Test($"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}");
-            Assert.IsFalse(azureClient.RefreshCredentials);
         }
 
         [TestMethod]
@@ -144,19 +143,19 @@ namespace Tests.IQSharp
         {
             // no arguments - should print job status of most recent job
             var azureClient = new MockAzureClient();
-            var statusMagic = new StatusMagic(azureClient);
+            var statusMagic = new StatusMagic(azureClient, new UnitTestLogger<StatusMagic>());
             statusMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobStatus, azureClient.LastAction);
 
             // single argument - should print job status
             azureClient = new MockAzureClient();
-            statusMagic = new StatusMagic(azureClient);
+            statusMagic = new StatusMagic(azureClient, new UnitTestLogger<StatusMagic>());
             statusMagic.Test($"{jobId}");
             Assert.AreEqual(AzureClientAction.GetJobStatus, azureClient.LastAction);
 
             // single argument with quotes - should print job status
             azureClient = new MockAzureClient();
-            statusMagic = new StatusMagic(azureClient);
+            statusMagic = new StatusMagic(azureClient, new UnitTestLogger<StatusMagic>());
             statusMagic.Test($"\"{jobId}\"");
             Assert.AreEqual(AzureClientAction.GetJobStatus, azureClient.LastAction);
         }
@@ -166,7 +165,7 @@ namespace Tests.IQSharp
         {
             // no arguments
             var azureClient = new MockAzureClient();
-            var submitMagic = new SubmitMagic(azureClient);
+            var submitMagic = new SubmitMagic(azureClient, new UnitTestLogger<SubmitMagic>());
             submitMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.SubmitJob, azureClient.LastAction);
 
@@ -181,7 +180,8 @@ namespace Tests.IQSharp
         {
             // no arguments
             var azureClient = new MockAzureClient();
-            var executeMagic = new ExecuteMagic(azureClient);
+            var logger = new UnitTestLogger<ExecuteMagic>();
+            var executeMagic = new ExecuteMagic(azureClient, logger);
             executeMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.ExecuteJob, azureClient.LastAction);
 
@@ -196,19 +196,19 @@ namespace Tests.IQSharp
         {
             // no arguments - should print job result of most recent job
             var azureClient = new MockAzureClient();
-            var outputMagic = new OutputMagic(azureClient);
+            var outputMagic = new OutputMagic(azureClient, new UnitTestLogger<OutputMagic>());
             outputMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobResult, azureClient.LastAction);
 
             // single argument - should print job result
             azureClient = new MockAzureClient();
-            outputMagic = new OutputMagic(azureClient);
+            outputMagic = new OutputMagic(azureClient, new UnitTestLogger<OutputMagic>());
             outputMagic.Test($"{jobId}");
             Assert.AreEqual(AzureClientAction.GetJobResult, azureClient.LastAction);
 
             // single argument with quotes - should print job result
             azureClient = new MockAzureClient();
-            outputMagic = new OutputMagic(azureClient);
+            outputMagic = new OutputMagic(azureClient, new UnitTestLogger<OutputMagic>());
             outputMagic.Test($"'{jobId}'");
             Assert.AreEqual(AzureClientAction.GetJobResult, azureClient.LastAction);
         }
@@ -218,13 +218,13 @@ namespace Tests.IQSharp
         {
             // no arguments - should print job status of all jobs
             var azureClient = new MockAzureClient();
-            var jobsMagic = new JobsMagic(azureClient);
+            var jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
             jobsMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
 
             // with arguments - should still print job status
             azureClient = new MockAzureClient();
-            jobsMagic = new JobsMagic(azureClient);
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
             jobsMagic.Test($"{jobId}");
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
         }
@@ -234,18 +234,18 @@ namespace Tests.IQSharp
         {
             // single argument - should set active target
             var azureClient = new MockAzureClient();
-            var targetMagic = new TargetMagic(azureClient);
+            var targetMagic = new TargetMagic(azureClient, new UnitTestLogger<TargetMagic>());
             targetMagic.Test(targetId);
             Assert.AreEqual(AzureClientAction.SetActiveTarget, azureClient.LastAction);
 
             // single argument with quotes - should set active target
-            targetMagic = new TargetMagic(azureClient);
+            targetMagic = new TargetMagic(azureClient, new UnitTestLogger<TargetMagic>());
             targetMagic.Test($"\"{targetId}\"");
             Assert.AreEqual(AzureClientAction.SetActiveTarget, azureClient.LastAction);
 
             // no arguments - should print active target
             azureClient = new MockAzureClient();
-            targetMagic = new TargetMagic(azureClient);
+            targetMagic = new TargetMagic(azureClient, new UnitTestLogger<TargetMagic>());
             targetMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetActiveTarget, azureClient.LastAction);
         }
@@ -263,6 +263,7 @@ namespace Tests.IQSharp
         GetJobList,
         GetJobStatus,
         GetJobResult,
+        GetQuotaList,
     }
 
     public class MockAzureClient : IAzureClient
@@ -273,19 +274,21 @@ namespace Tests.IQSharp
         internal string WorkspaceName = string.Empty;
         internal string ConnectionString = string.Empty;
         internal string Location = string.Empty;
-        internal bool RefreshCredentials = false;
         internal string ActiveTargetId = string.Empty;
+        internal CredentialType CredentialType = CredentialType.Default;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
+        public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token)
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTargetId = targetId;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
-        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel)
+        public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetActiveTarget;
             return ActiveTargetId.ToExecutionResult();
@@ -305,7 +308,14 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel, string subscriptionId, string resourceGroupName, string workspaceName, string storageAccountConnectionString, string location, bool refreshCredentials)
+        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
+            string subscriptionId,
+            string resourceGroupName,
+            string workspaceName,
+            string storageAccountConnectionString,
+            string location,
+            CredentialType credentialType,
+            CancellationToken? cancellationToken = null)
         {
             LastAction = AzureClientAction.Connect;
             SubscriptionId = subscriptionId;
@@ -313,31 +323,39 @@ namespace Tests.IQSharp
             WorkspaceName = workspaceName;
             ConnectionString = storageAccountConnectionString;
             Location = location;
-            RefreshCredentials = refreshCredentials;
+            CredentialType = credentialType;
+
+            ConnectToWorkspace?.Invoke(this, new ConnectToWorkspaceEventArgs(ExecuteStatus.Ok, null, location, storageAccountConnectionString != null, credentialType, TimeSpan.FromMilliseconds(1)));
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel)
+        public async Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetConnectionStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobStatus;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetJobResult;
+            return ExecuteStatus.Ok.ToExecutionResult();
+        }
+
+        public async Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token)
+        {
+            LastAction = AzureClientAction.GetQuotaList;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

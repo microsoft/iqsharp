@@ -32,7 +32,7 @@ with open('./qsharp/version.py', 'w') as f:
 # Licensed under the MIT License.
 ##
 __version__ = "{version}"
-_user_agent_extra = "{"(conda)" if is_conda else ""}"
+_user_agent_extra = "{"(conda)" if is_conda else ""}[{version}]"
 ''')
 
 ## DESCRIPTION ##
@@ -61,6 +61,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'jupyter_client'
+        'jupyter_client',
+        'pyzmq<20.0.0'     # due to incompatibility of IQ# with pyzmq>=20.0.0
     ]
 )

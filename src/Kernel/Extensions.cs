@@ -3,13 +3,16 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
@@ -27,12 +30,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Adds services required for the IQ# kernel to a given service
         ///     collection.
         /// </summary>
-        public static void AddIQSharpKernel(this IServiceCollection services)
+        public static T AddIQSharpKernel<T>(this T services)
+        where T: IServiceCollection
         {
             services.AddSingleton<ISymbolResolver, Kernel.SymbolResolver>();
             services.AddSingleton<IMagicSymbolResolver, Kernel.MagicSymbolResolver>();
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
+            services.AddSingleton<INoiseModelSource, NoiseModelSource>();
+
+            return services;
         }
 
         internal static void RenderExecutionPath(this ExecutionPathTracer.ExecutionPathTracer tracer,
@@ -65,6 +72,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     )
                 }
             );
+        }
+
+        private readonly static Regex UserAgentVersionRegex = new Regex(@"\[(.*)\]");
+
+        internal static Version? GetUserAgentVersion(this IMetadataController? metadataController)
+        {
+            var userAgent = metadataController?.UserAgent;
+            if (string.IsNullOrWhiteSpace(userAgent))
+                return null;
+
+            var match = UserAgentVersionRegex.Match(userAgent);
+            if (match == null || !match.Success)
+                return null;
+
+            if (!Version.TryParse(match.Groups[1].Value, out Version version))
+                return null;
+
+            // return null for development versions that start with 0.0
+            if (version.Major == 0 && version.Minor == 0)
+                return null;
+
+            return version;
         }
         
         internal static IEnumerable<QsDeclarationAttribute> GetAttributesByName(

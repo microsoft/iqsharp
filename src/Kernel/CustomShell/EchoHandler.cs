@@ -13,7 +13,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     internal class EchoReplyContent : MessageContent
     {
         [JsonProperty("value")]
-        public string Value { get; set; }
+        public string Value { get; set; } = "";
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public async Task HandleAsync(Message message)
         {
             // Find out the thing we need to echo back.
-            var value = (message.Content as UnknownContent).Data["value"] as string;
+            var value = (message.Content as UnknownContent)?.Data?["value"] as string ?? "";
             // Send the echo both as an output and as a reply so that clients
             // can test both kinds of callbacks.
             await Task.Run(() =>

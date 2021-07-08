@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public JobsMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public JobsMagic(IAzureClient azureClient, ILogger<JobsMagic> logger)
             : base(
                 azureClient,
                 "azure.jobs",
@@ -69,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                }, logger) {}
 
         /// <summary>
         ///     Lists all jobs in the active workspace, optionally filtered by a provided parameter.
@@ -78,7 +80,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
             var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
-            return await AzureClient.GetJobListAsync(channel, filter);
+            return await AzureClient.GetJobListAsync(channel, filter, cancellationToken);
         }
     }
 }

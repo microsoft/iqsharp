@@ -35,8 +35,7 @@ namespace Mock.Standard {
     /// - Microsoft.Quantum.Canon.ApplyToEachCA
     operation ApplyToEach<'T> (singleElementOperation : ('T => Unit), register : 'T[]) : Unit
     {
-        for (idxQubit in IndexRange(register))
-        {
+        for idxQubit in IndexRange(register) {
             singleElementOperation(register[idxQubit]);
         }
     }

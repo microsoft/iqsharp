@@ -8,70 +8,111 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Quantum.Runtime;
+using System.Threading;
+using System.Runtime.CompilerServices;
+using Azure.Quantum.Jobs;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal class MockAzureWorkspace : IAzureWorkspace
+    internal class MockAzureWorkspace : Microsoft.Azure.Quantum.IWorkspace
     {
         public const string NameWithMockProviders = "WorkspaceNameWithMockProviders";
 
-        public static string[] MockJobIds { get; set; } = Array.Empty<string>();
+        public const string NameForInvalidWorkspace = "WorkspaceNameForInvalidWorkspace";
 
-        public static string[] MockTargetIds { get; set; } = Array.Empty<string>();
+        internal static string[] MockJobIds { get; set; } = Array.Empty<string>();
 
-        public string Name { get; private set; } = string.Empty;
+        internal static HashSet<string> MockProviders { get; set; } = new HashSet<string>();
+
+        public string WorkspaceName { get; private set; } = string.Empty;
 
         public string SubscriptionId { get; private set; } = string.Empty;
 
-        public string ResourceGroup { get; private set; } = string.Empty;
+        public string ResourceGroupName { get; private set; } = string.Empty;
 
         public string Location { get; private set; } = string.Empty;
 
-        public List<ProviderStatus> Providers => new List<ProviderStatus>
-        {
-            new ProviderStatus(null, null,
-                ((Name == NameWithMockProviders)
-                        ? Enum.GetNames(typeof(AzureProvider))
-                            .Select(provider => $"{provider.ToLowerInvariant()}.mock")
-                            .ToArray()
-                        : MockTargetIds
-                ).Select(id => new TargetStatus(id)).ToList())
-        };
-
         public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
-        public MockAzureWorkspace(string workspaceName, string location)
+        public QuantumJobClient Client => throw new NotImplementedException();
+
+        public MockAzureWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location)
         {
-            Name = workspaceName;
+            SubscriptionId = subscriptionId;
+            ResourceGroupName = resourceGroup;
+            WorkspaceName = workspaceName;
             Location = location;
-        }
 
-        public async Task<CloudJob?> GetJobAsync(string jobId) => await Task.Run(() => Jobs.FirstOrDefault(job => job.Id == jobId));
-
-        public async Task<IEnumerable<ProviderStatus>?> GetProvidersAsync() => await Task.Run(() => Providers);
-
-        public async Task<IEnumerable<CloudJob>?> ListJobsAsync() => await Task.Run(() => Jobs);
-
-        public IQuantumMachine? CreateQuantumMachine(string targetId, string storageAccountConnectionString) => new MockQuantumMachine(this);
-
-        public AzureExecutionTarget? CreateExecutionTarget(string targetId) => MockAzureExecutionTarget.CreateMock(targetId);
-
-        public void AddMockJobs(params string[] jobIds)
-        {
-            foreach (var jobId in jobIds)
+            // Automatically add all providers for the NameWithMockProviders workspace:
+            if (this.WorkspaceName == NameWithMockProviders)
             {
-                var mockJob = new MockCloudJob();
-                mockJob.Details.Id = jobId;
-                Jobs.Add(mockJob);
+                AddProviders(Enum.GetNames(typeof(AzureProvider)));
             }
         }
 
-        public void AddMockTargets(params string[] targetIds)
+        public Task<CloudJob> SubmitJobAsync(CloudJob jobDefinition, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<CloudJob> CancelJobAsync(string jobId, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public async Task<CloudJob?> GetJobAsync(string jobId, CancellationToken cancellationToken = default) => await Task.Run(() => Jobs.FirstOrDefault(job => job.Id == jobId));
+
+        public async IAsyncEnumerable<CloudJob> ListJobsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var targets = targetIds.Select(id => new TargetStatus(id)).ToList();
-            Providers.Add(new ProviderStatus(null, null, targets));
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+            foreach (var j in Jobs)
+            {
+                yield return j;
+            }
+        }
+
+        public async IAsyncEnumerable<QuotaInfo> ListQuotasAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+
+            foreach (var q in Enumerable.Empty<QuotaInfo>())  // No quotas for Mock workspaces.
+            {
+                yield return q;
+            }
+        }
+
+        public async IAsyncEnumerable<ProviderStatusInfo> ListProvidersStatusAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            if (WorkspaceName == NameForInvalidWorkspace)
+            {
+                throw new ArgumentException("Calling an Invalid Workspace");
+            }
+
+            await Task.Factory.StartNew(() => Thread.Sleep(10));
+
+            foreach (var p in MockProviders)
+            {
+                yield return new MockProviderStatus(this, p);
+            }
+        }
+
+        public Task<string> GetSasUriAsync(string containerName, string? blobName = null, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        internal void AddProviders(params string[] providerIds)
+        {
+            foreach (var p in providerIds)
+            {
+                MockProviders.Add(p);
+            }
         }
     }
 }

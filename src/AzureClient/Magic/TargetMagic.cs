@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public TargetMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger)
             : base(
                 azureClient,
                 "azure.target",
@@ -73,7 +75,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                },
+                logger)
         { }
 
         /// <summary>
@@ -85,10 +88,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (inputParameters.ContainsKey(ParameterNameTargetId))
             {
                 string targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
-                return await AzureClient.SetActiveTargetAsync(channel, targetId);
+                return await AzureClient.SetActiveTargetAsync(channel, targetId, cancellationToken);
             }
 
-            return await AzureClient.GetActiveTargetAsync(channel);
+            return await AzureClient.GetActiveTargetAsync(channel, cancellationToken);
         }
     }
 }

@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -22,7 +23,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public SubmitMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public SubmitMagic(IAzureClient azureClient, ILogger<SubmitMagic> logger)
             : base(
                 azureClient,
                 "azure.submit",
@@ -90,7 +92,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                },
+                logger)
         { }
 
         /// <summary>

@@ -45,7 +45,7 @@ __all__ = [
 
 ## FUNCTIONS ##
 
-def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
+def compile(code : str) -> Union[None, QSharpCallable, List[QSharpCallable]]:
     """
     Given a string containing Q# source code, compiles it into the current
     workspace and returns one or more Q# callable objects that can be used to
@@ -55,6 +55,10 @@ def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
     :returns: A list of callables compiled from `code`, or a callable if exactly
         one callable is found.
     """
+    compiled = client.compile(code)
+    if compiled is None:
+        return None
+
     ops = [
         QSharpCallable(op, "snippets")
         for op in client.compile(code)
@@ -115,6 +119,9 @@ def component_versions() -> Dict[str, LooseVersion]:
     versions = client.component_versions()
     # Add in the qsharp Python package itself.
     versions["qsharp"] = LooseVersion(__version__)
+    # If any experimental features are enabled, report them here.
+    if _experimental_versions is not None:
+        versions['experimental'] = _experimental_versions
     return versions
 
 
@@ -124,10 +131,20 @@ client = _start_client()
 config = Config(client)
 packages = Packages(client)
 projects = Projects(client)
+_experimental_versions = None
 
 # Make sure that we're last on the meta_path so that actual modules are loaded
 # first.
 sys.meta_path.append(QSharpModuleFinder())
+
+# If using IPython, forward some useful IQ# magic commands as IPython magic
+# commands and define a couple new magic commands for IPython.
+try:
+    if __IPYTHON__:
+        import qsharp.ipython_magic
+        qsharp.ipython_magic.register_magics()
+except NameError:
+    pass
 
 # Needed to recognize PEP 420 packages as subpackages.
 import pkg_resources

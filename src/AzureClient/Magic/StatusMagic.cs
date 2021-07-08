@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public StatusMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public StatusMagic(IAzureClient azureClient, ILogger<StatusMagic> logger)
             : base(
                 azureClient,
                 "azure.status",
@@ -69,7 +71,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                },
+                logger) {}
 
         /// <summary>
         ///     Displays the status corresponding to a given job ID, if provided,
@@ -79,7 +82,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobStatusAsync(channel, jobId);
+            return await AzureClient.GetJobStatusAsync(channel, jobId, cancellationToken);
         }
     }
 }

@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -29,6 +30,25 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class IQSharpEngine : BaseEngine
     {
         private readonly PerformanceMonitor performanceMonitor;
+        private readonly IConfigurationSource configurationSource;
+        private readonly IServiceProvider services;
+        private readonly ILogger<IQSharpEngine> logger;
+        private readonly IMetadataController metadataController;
+
+        // NB: These properties may be null if the engine has not fully started
+        //     up yet.
+        internal ISnippets? Snippets { get; private set; } = null;
+
+        internal ISymbolResolver? SymbolsResolver { get; private set; } = null;
+
+        internal IMagicSymbolResolver? MagicResolver { get; private set; } = null;
+
+        internal IWorkspace? Workspace { get; private set; } = null;
+
+        private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
+
+        /// <inheritdoc />
+        public override Task Initialized => initializedSource.Task;
 
         /// <summary>
         /// The main constructor. It expects an `ISnippets` instance that takes care
@@ -42,19 +62,43 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IEventService eventService,
-            IMagicSymbolResolver magicSymbolResolver,
-            IReferences references
+            IMetadataController metadataController
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
             performanceMonitor.Start();
+            this.configurationSource = configurationSource;
+            this.services = services;
+            this.logger = logger;
+            this.metadataController = metadataController;
+        }
 
+        /// <inheritdoc />
+        public override void Start()
+        {
+            base.Start();
+
+            // Before anything else, make sure to start the right background
+            // thread on the Q# compilation loader to initialize serializers
+            // and deserializers. Since that runs in the background, starting
+            // the engine should not be blocked, and other services can
+            // continue to initialize while the Q# compilation loader works.
+            //
+            // For more details, see:
+            //     https://github.com/microsoft/qsharp-compiler/pull/727
+            //     https://github.com/microsoft/qsharp-compiler/pull/810
+            logger.LogDebug("Loading serialization and deserialziation protocols.");
+            Protocols.Initialize();
+
+            logger.LogDebug("Getting services required to start IQ# engine.");
             this.Snippets = services.GetService<ISnippets>();
             this.SymbolsResolver = services.GetService<ISymbolResolver>();
-            this.MagicResolver = magicSymbolResolver;
+            this.MagicResolver = services.GetService<IMagicSymbolResolver>();
             this.Workspace = services.GetService<IWorkspace>();
+            var references = services.GetService<IReferences>();
+            var eventService = services.GetService<IEventService>();
 
+            logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
             RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
             RegisterDisplayEncoder(new TaskStatusToTextEncoder());
@@ -66,18 +110,36 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
 
-            RegisterJsonEncoder(
+            // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
+            // that expected the application/json MIME type for the JSON data.
+            var userAgentVersion = metadataController.GetUserAgentVersion();
+            logger.LogInformation($"userAgentVersion: {userAgentVersion}");
+            var jsonMimeType = metadataController?.UserAgent?.StartsWith("qsharp.py") == true
+                ? userAgentVersion != null && userAgentVersion > new Version(0, 17, 2105, 144881)
+                    ? "application/x-qsharp-data"
+                    : "application/json"
+                : "application/x-qsharp-data";
+
+            // Register JSON encoders, and make sure that Newtonsoft.Json
+            // doesn't throw exceptions on reference loops.
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+            RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
                 .ToArray());
 
+            logger.LogDebug("Registering IQ# symbol resolvers.");
             RegisterSymbolResolver(this.SymbolsResolver);
             RegisterSymbolResolver(this.MagicResolver);
 
+            logger.LogDebug("Loading known assemblies and registering package loading.");
             RegisterPackageLoadedEvent(services, logger, references);
 
             // Handle new shell messages.
-            shellRouter.RegisterHandlers<IQSharpEngine>();
+            ShellRouter.RegisterHandlers<IQSharpEngine>();
 
             // Report performance after completing startup.
             performanceMonitor.Report();
@@ -86,8 +148,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Process.GetCurrentProcess().Id
             );
 
-
             eventService?.TriggerServiceInitialized<IExecutionEngine>(this);
+
+            var initializedSuccessfully = initializedSource.TrySetResult(true);
+            #if DEBUG
+                Debug.Assert(initializedSuccessfully, "Was unable to complete initialization task.");
+            #endif
         }
 
         /// <summary>
@@ -108,14 +174,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // Register new display encoders when packages load.
             references.PackageLoaded += (sender, args) =>
             {
-                logger.LogDebug("Scanning for display encoders after loading {Package}.", args.PackageId);
+                logger.LogDebug("Scanning for display encoders and magic symbols after loading {Package}.", args.PackageId);
                 foreach (var assembly in references.Assemblies
                                                    .Select(asm => asm.Assembly)
                                                    .Where(asm => !knownAssemblies.Contains(asm.GetName()))
                 )
                 {
                     // Look for display encoders in the new assembly.
-                    logger.LogDebug("Found new assembly {Name}, looking for display encoders.", assembly.FullName);
+                    logger.LogDebug("Found new assembly {Name}, looking for display encoders and magic symbols.", assembly.FullName);
+                    // Use the magic resolver to find magic symbols in the new assembly;
+                    // it will cache the results for the next magic resolution.
+                    this.MagicResolver?.FindMagic(new AssemblyInfo(assembly));
 
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();
@@ -167,14 +236,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
-        internal ISnippets Snippets { get; }
-
-        internal ISymbolResolver SymbolsResolver { get; }
-
-        internal ISymbolResolver MagicResolver { get; }
-
-        internal IWorkspace Workspace { get; }
-
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
@@ -188,9 +249,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 try
                 {
-                    await Workspace.Initialization;
+                    await this.Initialized;
+                    // Once the engine is initialized, we know that Workspace
+                    // and Snippets are both not-null.
+                    var workspace = this.Workspace!;
+                    var snippets = this.Snippets!;
 
-                    var code = Snippets.Compile(input);
+                    await workspace.Initialization;
+
+                    var code = snippets.Compile(input);
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
 

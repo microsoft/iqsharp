@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Newtonsoft.Json;
@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Constructs a magic command that sets or queries configuration
         ///     options using a given configuration source.
         /// </summary>
-        public ConfigMagic(IConfigurationSource configurationSource) : base(
+        public ConfigMagic(IConfigurationSource configurationSource, ILogger<ConfigMagic> logger) : base(
             "config",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -140,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         directory is loaded.
                     ".Dedent()
                 }
-            })
+            }, logger)
         {
             this.ConfigurationSource = configurationSource;
         }

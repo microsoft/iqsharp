@@ -1,6 +1,7 @@
 import os
 import pytest
 import time
+import sys
 
 from notebook.notebookapp import list_running_servers
 from notebook.tests.selenium.test_interrupt import interrupt_from_menu
@@ -17,7 +18,8 @@ def setup_module():
     if not hasattr(os, "uname"):
         os.uname = lambda: ["Windows"]
 
-    remaining_time = 180
+    total_wait_time = 180
+    remaining_time = total_wait_time
     iteration_time = 5
     print("Waiting for notebook server to start...")
     while not list(list_running_servers()) and remaining_time > 0:
@@ -25,14 +27,25 @@ def setup_module():
         remaining_time -= iteration_time
 
     if not list(list_running_servers()):
-        raise Exception(f"Notebook server did not start in {remaining_time} seconds")
+        raise Exception(f"Notebook server did not start in {total_wait_time} seconds")
 
 def create_notebook():
     '''
     Returns a new IQ# notebook in a Firefox web driver
     '''
+    driver = None
+    max_retries = 5
+    for _ in range(max_retries):
+        try:
+            driver = Firefox()
+            break
+        except:
+            print(f"Exception creating Firefox driver, retrying. Exception info: {sys.exc_info()}")
+
+    if not driver:
+        raise Exception(f"Failed to create Firefox driver in {max_retries} tries")
+
     server = list(list_running_servers())[0]
-    driver = Firefox()
     driver.get('{url}?token={token}'.format(**server))
     return Notebook.new_notebook(driver, kernel_name='kernel-iqsharp')
 
@@ -45,9 +58,9 @@ def get_sample_operation():
     # closing braces from the string that we enter.
     return '''
         operation DoNothing() : Unit {
-            using (q = Qubit()) {
-                H(q);
-                H(q);
+            use q = Qubit();
+            H(q);
+            H(q);
     '''
     
 def test_kernel_startup():
@@ -70,8 +83,7 @@ def test_kernel_startup():
     nb.browser.execute_script("require('codemirror/addon/mode/simple')")
     nb.browser.execute_script("require('plotting')")
     nb.browser.execute_script("require('telemetry')")
-    nb.browser.execute_script("require('visualizer')")
-    nb.browser.execute_script("require('ExecutionPathVisualizer/index')")
+    nb.browser.execute_script("require('@microsoft/quantum-viz.js')")
     
     nb.browser.quit()
 

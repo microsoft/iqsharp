@@ -90,7 +90,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;

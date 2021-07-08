@@ -123,11 +123,11 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
     metadata = {
         'title': f"{magic_name} (magic command)",
         'description': raw_summary.strip(),
-        'author': 'rmshaffer',
+        'author': 'anjbur',
         'uid': uid,
-        'ms.author': 'ryansha',
+        'ms.author': 'anburton',
         'ms.date': datetime.date.today().strftime("%m/%d/%Y"),
-        'ms.topic': 'article'
+        'ms.topic': 'managed-reference'
     }
     
     header = f"# `{magic_name}`"
@@ -181,11 +181,17 @@ def format_as_document(magic, uid_base : str) -> MagicReferenceDocument:
 def format_toc(all_magics : Dict[str, MagicReferenceDocument]) -> str:
     toc_content = [
         {
+            'href': "index.md",
+            'name': "IQ# magic commands"
+        }
+    ]
+    toc_content.extend([
+        {
             'href': f"{doc.safe_name}.md",
             'name': f"{doc.name} magic command"
         }
         for magic_name, doc in sorted(all_magics.items(), key=lambda item: item[0])
-    ]
+    ])
     
     as_yaml = StringIO()
     yaml.dump(toc_content, as_yaml)

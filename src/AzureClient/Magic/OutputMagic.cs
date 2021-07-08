@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public OutputMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public OutputMagic(IAzureClient azureClient, ILogger<OutputMagic> logger)
             : base(
                 azureClient,
                 "azure.output",
@@ -54,6 +56,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - {AzureClientError.JobNotFound.ToMarkdown()}
                         - {AzureClientError.JobNotCompleted.ToMarkdown()}
                         - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
+                        - {AzureClientError.JobFailedOrCancelled.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
@@ -73,7 +76,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                }, logger) {}
 
         /// <summary>
         ///     Displays the output of a given completed job ID, if provided,
@@ -83,7 +86,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
             string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobResultAsync(channel, jobId);
+            return await AzureClient.GetJobResultAsync(channel, jobId, cancellationToken);
         }
     }
 }

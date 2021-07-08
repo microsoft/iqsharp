@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -14,31 +15,24 @@ namespace Microsoft.Quantum.IQSharp.Common
     /// </summary>
     public class NuGetLogger : NuGet.Common.LoggerBase
     {
-        private ILogger _logger { get; set; }
+        private ILogger? _logger { get; set; }
         public List<NuGet.Common.ILogMessage> Logs { get; private set; }
 
-        public NuGetLogger(ILogger logger)
+        public NuGetLogger(ILogger? logger)
         {
             _logger = logger;
             this.Logs = new List<NuGet.Common.ILogMessage>();
         }
 
-        public static LogLevel MapLevel(NuGet.Common.LogLevel original)
-        {
-            switch (original)
+        public static LogLevel MapLevel(NuGet.Common.LogLevel original) =>
+            original switch
             {
-                case NuGet.Common.LogLevel.Error:
-                    return LogLevel.Error;
-                case NuGet.Common.LogLevel.Warning:
-                    return LogLevel.Warning;
-                case NuGet.Common.LogLevel.Information:
-                    return LogLevel.Information;
-                case NuGet.Common.LogLevel.Debug:
-                    return LogLevel.Debug;
-                default:
-                    return LogLevel.Trace;
-            }
-        }
+                NuGet.Common.LogLevel.Error => LogLevel.Error,
+                NuGet.Common.LogLevel.Warning => LogLevel.Warning,
+                NuGet.Common.LogLevel.Information => LogLevel.Information,
+                NuGet.Common.LogLevel.Debug => LogLevel.Debug,
+                _ => LogLevel.Trace
+            };
 
         public override void Log(NuGet.Common.ILogMessage m)
         {
