@@ -262,91 +262,92 @@ def test_projects(tmp_path):
     qsharp.projects.add(str(temp_project_path))
     assert 1 == len(qsharp.projects._client.get_projects())
 
-def test_capture_diagnostics():
-    dump_plus = qsharp.compile("""
-        open Microsoft.Quantum.Diagnostics;
+class TestCaptureDiagnostics:
+    def test_basic_capture():
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
 
-        operation DumpPlus() : Unit {
-            use qs = Qubit[2];
-            within {
-                H(qs[0]);
-                H(qs[1]);
-            } apply {
-                DumpMachine();
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
             }
-        }
-    """)
+        """)
 
-    with qsharp.capture_diagnostics(as_qobj=False) as captured:
-        dump_plus.simulate()
+        with qsharp.capture_diagnostics(as_qobj=False) as captured:
+            dump_plus.simulate()
 
-    assert 1 == len(captured)
-    expected = """
-        {
-            "diagnostic_kind": "state-vector",
-            "qubit_ids": [0, 1],
-            "n_qubits": 2,
-            "amplitudes": [{"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}]
-        }
-    """
-    del captured[0]['div_id']
-    assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
-
-
-@skip_if_no_qutip
-def test_capture_diagnostics_as_qobj():
-    dump_plus = qsharp.compile("""
-        open Microsoft.Quantum.Diagnostics;
-
-        operation DumpPlus() : Unit {
-            use qs = Qubit[2];
-            within {
-                H(qs[0]);
-                H(qs[1]);
-            } apply {
-                DumpMachine();
+        assert 1 == len(captured)
+        expected = """
+            {
+                "diagnostic_kind": "state-vector",
+                "qubit_ids": [0, 1],
+                "n_qubits": 2,
+                "amplitudes": [{"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}]
             }
-        }
-    """)
-
-    with qsharp.capture_diagnostics(as_qobj=True) as captured:
-        dump_plus.simulate()
-
-    assert 1 == len(captured)
-    assert abs(1.0 - captured[0].norm()) <= 1e-8
-
-    import qutip as qt
-    expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
-    assert (expected - captured[0]).norm() <= 1e-8
+        """
+        del captured[0]['div_id']
+        assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
 
 
-@skip_if_no_qutip
-def test_capture_experimental_diagnostics_as_qobj():
-    dump_plus = qsharp.compile("""
-        open Microsoft.Quantum.Diagnostics;
+    @skip_if_no_qutip
+    def test_capture_diagnostics_as_qobj():
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
 
-        operation DumpPlus() : Unit {
-            use qs = Qubit[2];
-            within {
-                H(qs[0]);
-                H(qs[1]);
-            } apply {
-                DumpMachine();
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
             }
-        }
-    """)
+        """)
 
-    qsharp.experimental.set_noise_model_by_name('ideal')
-    qsharp.config['experimental.simulators.nQubits'] = 2
-    qsharp.config['experimental.simulators.representation'] = 'mixed'
+        with qsharp.capture_diagnostics(as_qobj=True) as captured:
+            dump_plus.simulate()
 
-    with qsharp.capture_diagnostics(as_qobj=True) as captured:
-        dump_plus.simulate_noise()
+        assert 1 == len(captured)
+        assert abs(1.0 - captured[0].norm()) <= 1e-8
 
-    assert 1 == len(captured)
-    assert abs(1.0 - captured[0].tr()) <= 1e-8
+        import qutip as qt
+        expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
+        assert (expected - captured[0]).norm() <= 1e-8
 
-    import qutip as qt
-    expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
-    expected = expected * expected.dag()
-    assert (expected - captured[0]).norm() <= 1e-8
+
+    @skip_if_no_qutip
+    def test_capture_experimental_diagnostics_as_qobj():
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
+
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        """)
+
+        qsharp.experimental.set_noise_model_by_name('ideal')
+        qsharp.config['experimental.simulators.nQubits'] = 2
+        qsharp.config['experimental.simulators.representation'] = 'mixed'
+
+        with qsharp.capture_diagnostics(as_qobj=True) as captured:
+            dump_plus.simulate_noise()
+
+        assert 1 == len(captured)
+        assert abs(1.0 - captured[0].tr()) <= 1e-8
+
+        import qutip as qt
+        expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
+        expected = expected * expected.dag()
+        assert (expected - captured[0]).norm() <= 1e-8
