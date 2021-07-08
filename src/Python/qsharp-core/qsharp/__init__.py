@@ -45,7 +45,7 @@ __all__ = [
 
 ## FUNCTIONS ##
 
-def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
+def compile(code : str) -> Union[None, QSharpCallable, List[QSharpCallable]]:
     """
     Given a string containing Q# source code, compiles it into the current
     workspace and returns one or more Q# callable objects that can be used to
@@ -55,6 +55,10 @@ def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
     :returns: A list of callables compiled from `code`, or a callable if exactly
         one callable is found.
     """
+    compiled = client.compile(code)
+    if compiled is None:
+        return None
+
     ops = [
         QSharpCallable(op, "snippets")
         for op in client.compile(code)
