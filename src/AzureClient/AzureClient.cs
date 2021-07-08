@@ -41,8 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
-            ValidExecutionTargets == null
-            ? "(no execution targets available)"
+            (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
+            ? "(no Q# execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
 
         /// <summary>
