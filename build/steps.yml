@@ -13,7 +13,7 @@ steps:
   displayName: 'Use conda environment w/ Python 3.'
 
 - pwsh: |
-    conda install -c conda-forge qutip
+    conda install --yes -c conda-forge qutip
   displayName: "Add QuTiP to conda environment."
 
 - task: UseDotNet@2
