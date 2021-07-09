@@ -7,9 +7,7 @@ $Env:IQSHARP_PACKAGE_SOURCE = "$Env:NUGET_OUTDIR"
 $Env:IQSHARP_LOG_LEVEL = "Debug"
 
 Push-Location (Resolve-Path $PSScriptRoot)
-    $report = Join-Path (Resolve-Path .) "conda-integration-test-results.md";
-    pytest --md $report -v --log-level=Debug tests.py
-    Write-Host "##vso[task.uploadsummary]$report"
+    pytest -v --log-level=Debug tests.py
 
     # Check for success.
     if  ($LastExitCode -ne 0) {
