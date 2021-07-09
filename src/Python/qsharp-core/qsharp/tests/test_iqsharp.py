@@ -9,10 +9,13 @@
 
 ## IMPORTS ##
 
+import json
 import numpy as np
 import os
 import pytest
 import qsharp
+import qsharp.experimental
+qsharp.experimental.enable_noisy_simulation()
 from .utils import set_environment_variables
 
 print ( qsharp.component_versions() )
@@ -23,8 +26,27 @@ print ( qsharp.component_versions() )
 def session_setup():
     set_environment_variables()
 
+try:
+    import qutip as qt
+except ImportError:
+    qt = None
+
+skip_if_no_qutip = pytest.mark.skipif(qt is None, reason="Test requires QuTiP.")
+
+# If we can't import Microsoft as a Python package, then that means that
+# the Q# workspace isn't present — probably because the qsharp-core package
+# has been installed, since `Operations.qs` isn't part of the package data.
+try:
+    import Microsoft.Quantum.SanityTests
+    workspace_present = True
+except ImportError:
+    workspace_present = False
+
+skip_if_no_workspace = pytest.mark.skipif(not workspace_present, reason="Local Q# workspace not available in installed package.")
+
 ## TESTS ##
 
+@skip_if_no_workspace
 def test_simulate():
     """
     Checks that a simple simulate works correctly, both using callable() and 
@@ -49,7 +71,7 @@ def test_toffoli_simulate():
     """)
     assert foo.toffoli_simulate() == 1
 
-
+@skip_if_no_workspace
 def test_tuples():
     """
     Checks that tuples are correctly encoded both ways.
@@ -58,7 +80,7 @@ def test_tuples():
     r = IndexIntoTuple.simulate(count=2, tuples=[(0, "Zero"), (1, "One"), (0, "Two"), (0, "Three")])
     assert r == (0, "Two")
 
-
+@skip_if_no_workspace
 def test_numpy_types():
     """
     Checks that numpy types are correctly encoded.
@@ -74,7 +96,7 @@ def test_numpy_types():
     r = IndexIntoTuple.simulate(count=1, tuples=tuples_array)
     assert r == (1, "One")
 
-
+@skip_if_no_workspace
 def test_result():
     """
     Checks that Result-type arguments are handled correctly.
@@ -94,7 +116,7 @@ def test_result():
     r = EchoResult.simulate(input=0.2)
     assert r == qsharp.Result.Zero
 
-
+@skip_if_no_workspace
 def test_long_tuple():
     """
     Checks that a 10-tuple argument and return value are handled correctly.
@@ -111,7 +133,7 @@ def test_long_tuple():
     r = EchoTenTuple.simulate(tenTuple=ten_tuple)
     assert r == ten_tuple
 
-
+@skip_if_no_workspace
 def test_paulis():
     """
     Checks that Pauli-type and arrays of Pauli-type arguments are handled correctly.
@@ -133,7 +155,7 @@ def test_paulis():
     assert r[0] == [qsharp.Pauli.X, qsharp.Pauli.Z, qsharp.Pauli.Z]
     assert r[1] == qsharp.Pauli.Z
 
-
+@skip_if_no_workspace
 def test_estimate():
     """
     Verifies that resource estimation works.
@@ -144,8 +166,7 @@ def test_estimate():
     assert r['QubitClifford'] == 1
     assert r['BorrowedWidth'] == 0
 
-
-
+@skip_if_no_workspace
 def test_trace():
     """
     Verifies the trace commands works.
@@ -251,3 +272,93 @@ def test_projects(tmp_path):
 
     qsharp.projects.add(str(temp_project_path))
     assert 1 == len(qsharp.projects._client.get_projects())
+
+class TestCaptureDiagnostics:
+    def test_basic_capture(self):
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
+
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        """)
+
+        with qsharp.capture_diagnostics(as_qobj=False) as captured:
+            dump_plus.simulate()
+
+        assert 1 == len(captured)
+        expected = """
+            {
+                "diagnostic_kind": "state-vector",
+                "qubit_ids": [0, 1],
+                "n_qubits": 2,
+                "amplitudes": [{"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}]
+            }
+        """
+        del captured[0]['div_id']
+        assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
+
+
+    @skip_if_no_qutip
+    def test_capture_diagnostics_as_qobj(self):
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
+
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        """)
+
+        with qsharp.capture_diagnostics(as_qobj=True) as captured:
+            dump_plus.simulate()
+
+        assert 1 == len(captured)
+        assert abs(1.0 - captured[0].norm()) <= 1e-8
+
+        import qutip as qt
+        expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
+        assert (expected - captured[0]).norm() <= 1e-8
+
+
+    @skip_if_no_qutip
+    def test_capture_experimental_diagnostics_as_qobj(self):
+        dump_plus = qsharp.compile("""
+            open Microsoft.Quantum.Diagnostics;
+
+            operation DumpPlus() : Unit {
+                use qs = Qubit[2];
+                within {
+                    H(qs[0]);
+                    H(qs[1]);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        """)
+
+        qsharp.experimental.set_noise_model_by_name('ideal')
+        qsharp.config['experimental.simulators.nQubits'] = 2
+        qsharp.config['experimental.simulators.representation'] = 'mixed'
+
+        with qsharp.capture_diagnostics(as_qobj=True) as captured:
+            dump_plus.simulate_noise()
+
+        assert 1 == len(captured)
+        assert abs(1.0 - captured[0].tr()) <= 1e-8
+
+        import qutip as qt
+        expected = qt.Qobj([[1], [1], [1], [1]], dims=[[2, 2], [1, 1]]).unit()
+        expected = expected * expected.dag()
+        assert (expected - captured[0]).norm() <= 1e-8

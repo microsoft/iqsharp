@@ -14,7 +14,8 @@
 ## IMPORTS ##
 
 import sys
-from typing import List, Dict, Union
+from contextlib import contextmanager
+from typing import Any, List, Dict, Union
 from collections import defaultdict
 from distutils.version import LooseVersion
 
@@ -124,6 +125,73 @@ def component_versions() -> Dict[str, LooseVersion]:
         versions['experimental'] = _experimental_versions
     return versions
 
+@contextmanager
+def capture_diagnostics(passthrough: bool = False, as_qobj: bool = False) -> List[Any]:
+    """
+    Returns a context manager that captures diagnostics output from running Q#
+    programs into a list.
+
+    For example, to capture `DumpMachine` calls from a Q# operation run on the
+    full-state simulator:
+
+    .. code-block:: qsharp
+
+        namespace Sample {
+            open Microsoft.Quantum.Intrinsic;
+            open Microsoft.Quantum.Diagnostics;
+
+            operation RunMain() : Unit {
+                use q = Qubit();
+                within {
+                    H(q);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        }
+
+    .. code-block:: python
+
+        import qsharp
+        from Sample import RunMain
+
+        with qsharp.capture_diagnostics() as diagnostics:
+            RunMain.simulate()
+
+        print(len(diagnostics)) # will print 1
+
+    :param passthrough: If `True`, captured diagnostics will also be displayed
+        as normal. By default, diagnostic outputs captured by this context
+        manager will not be displayed.
+    :param as_qobj: If `True`, this context manager will attempt to convert
+        captured diagnostics representing quantum states and operations into
+        QuTiP objects. This option requires that QuTiP is installed and
+        can be imported.
+    """
+    # Before proceeding, check that if we were asked to convert to qobj data
+    # that we can actually import qutip.
+    if as_qobj:
+        try:
+            # We don't actually need QuTiP here, but are only importing to capture
+            # exceptions as early as possible so as to provide actionable error
+            # messages to the user.
+            import qutip as _
+        except ImportError as ex:
+            raise ImportError("as_qobj was set to `True`, but cannot convert captured diagnostics to QObj since QuTiP failed to import.") from ex
+
+        from qsharp.qobj import convert_diagnostic_to_qobj
+
+    processed_data = []
+    with client.capture_diagnostics(passthrough=passthrough) as data:
+        yield processed_data
+
+        # Apply any postprocessing needed here and append to processed_data.
+        for diagnostic in data:
+            if as_qobj:
+                converted = convert_diagnostic_to_qobj(diagnostic)
+                if converted is not None:
+                    diagnostic = converted
+            processed_data.append(diagnostic)
 
 ## STARTUP ##
 
