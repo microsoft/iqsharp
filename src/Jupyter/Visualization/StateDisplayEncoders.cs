@@ -120,6 +120,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             );
 
         /// <summary>
+        ///     Metadata to be used when serializing to JSON, allowing code
+        ///     in other languages to determine what representation is used
+        ///     for this state.
+        /// </summary>
+        [JsonProperty("diagnostic_kind")]
+        private string DiagnosticKind => "state-vector";
+
+        /// <summary>
         ///     ID for an HTML element where the vertical measurement probability histogram
         ///     will be displayed.
         /// </summary>

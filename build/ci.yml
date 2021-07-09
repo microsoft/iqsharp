@@ -18,7 +18,7 @@ schedules:
 
 variables:
   Build.Major: 0
-  Build.Minor: 14
+  Build.Minor: 18
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
 
