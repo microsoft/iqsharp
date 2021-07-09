@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
+using NumSharp;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
@@ -167,33 +169,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         /// <summary>
-        ///      Removes common indents from each line in a string,
-        ///      similarly to Python's <c>textwrap.dedent()</c> function.
-        /// </summary>
-        public static string Dedent(this string text)
-        {
-            // First, start by finding the length of common indents,
-            // disregarding lines that are only whitespace.
-            var leadingWhitespaceRegex = new Regex(@"^[ \t]*");
-            var minWhitespace = int.MaxValue;
-            foreach (var line in text.Split("\n"))
-            {
-                if (!string.IsNullOrWhiteSpace(line))
-                {
-                    var match = leadingWhitespaceRegex.Match(line);
-                    minWhitespace = match.Success
-                                ? System.Math.Min(minWhitespace, match.Value.Length)
-                                : minWhitespace = 0;
-                }
-            }
-
-            // We can use that to build a new regex that strips
-            // out common indenting.
-            var leftTrimRegex = new Regex(@$"^[ \t]{{{minWhitespace}}}", RegexOptions.Multiline);
-            return leftTrimRegex.Replace(text, "");
-        }
-
-        /// <summary>
         ///      Retrieves and JSON-decodes the value for the given parameter name.
         /// </summary>
         /// <typeparam name="T">
@@ -204,6 +179,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </param>
         /// <param name="parameterName">
         ///     The name of the parameter to be decoded.
+        /// </param>
+        /// <param name="decoded">
+        ///     The returned value of the parameter once it has been decoded.
         /// </param>
         /// <param name="defaultValue">
         ///      The default value to be returned if no parameter with the
@@ -275,5 +253,66 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             }
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
         }
+
+        /// <summary>
+        /// Makes the channel to start capturing the Console Output.
+        /// Returns the current TextWriter in the Console so callers can set it back.
+        /// </summary>
+        /// <param name="channel">The channel to redirect console output to.</param>
+        /// <returns>The current System.Console.Out</returns>
+        public static System.IO.TextWriter? CaptureConsole(this IChannel channel)
+        {
+            var current = System.Console.Out;
+            System.Console.SetOut(new ChannelWriter(channel));
+            return current;
+        }
+
+        internal static string AsLaTeXMatrixOfComplex(this NDArray array) =>
+            // NB: Assumes 𝑛 × 𝑛 × 2 array, where the trailing index is
+            //     [real, imag].
+            // TODO: Consolidate with logic at:
+            //       https://github.com/microsoft/QuantumLibraries/blob/505fc27383c9914c3e1f60fb63d0acfe60b11956/Visualization/src/DisplayableUnitaryEncoders.cs#L43
+            string.Join(
+                "\\\\\n",
+                Enumerable
+                    .Range(0, array.Shape[0])
+                    .Select(
+                        idxRow => string.Join(" & ",
+                            Enumerable
+                                .Range(0, array.Shape[1])
+                                .Select(
+                                    idxCol => $"{array[idxRow, idxCol, 0]} + {array[idxRow, idxCol, 1]} i"
+                                )
+                        )
+                    )
+            );
+
+        internal static IEnumerable<NDArray> IterateOverLeftmostIndex(this NDArray array)
+        {
+            foreach (var idx in Enumerable.Range(0, array.shape[0]))
+            {
+                yield return array[idx, Slice.Ellipsis];
+            }
+        }
+
+        internal static string AsTextMatrixOfComplex(this NDArray array, string rowSep = "\n") =>
+            // NB: Assumes 𝑛 × 𝑛 × 2 array, where the trailing index is
+            //     [real, imag].
+            // TODO: Consolidate with logic at:
+            //       https://github.com/microsoft/QuantumLibraries/blob/505fc27383c9914c3e1f60fb63d0acfe60b11956/Visualization/src/DisplayableUnitaryEncoders.cs#L43
+            "[" + rowSep + string.Join(
+                rowSep,
+                Enumerable
+                    .Range(0, array.Shape[0])
+                    .Select(
+                        idxRow => "[" + string.Join(", ",
+                            Enumerable
+                                .Range(0, array.Shape[1])
+                                .Select(
+                                    idxCol => $"{array[idxRow, idxCol, 0]} + {array[idxRow, idxCol, 1]} i"
+                                )
+                        ) + "]"
+                    )
+            ) + rowSep + "]";
     }
 }

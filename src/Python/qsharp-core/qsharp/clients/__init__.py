@@ -27,8 +27,11 @@ def _start_client():
     client_name =  os.getenv("QSHARP_PY_CLIENT", "iqsharp")
 
     if client_name == "iqsharp":
+        # Allow users to override what kernel is used, making it easier to
+        # test kernels side-by-side.
+        kernel_name =  os.getenv("QSHARP_PY_IQSHARP_KERNEL_NAME", "iqsharp")
         import qsharp.clients.iqsharp
-        client = qsharp.clients.iqsharp.IQSharpClient()
+        client = qsharp.clients.iqsharp.IQSharpClient(kernel_name=kernel_name)
     elif client_name == "mock":
         import qsharp.clients.mock
         client = qsharp.clients.mock.MockClient()

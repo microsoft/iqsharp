@@ -3,20 +3,85 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// List of arguments for the event that is triggered when the user tries 
+    /// to connect to an Azure Quantum Workspace
+    /// </summary>
+    public class ConnectToWorkspaceEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Default contructor.
+        /// </summary>
+        /// <param name="status">The status of the connection after calling Connect</param>
+        /// <param name="error">If an error happen, the error code.</param>
+        /// <param name="location">Location of the workspace connecting to.</param>
+        /// <param name="useCustomStorage">True if the user provides a custom storage connection.</param>
+        /// <param name="credentialType">The type of credentials used to authenticate with Azure.</param>
+        /// <param name="duration">How long the action took.</param>
+        public ConnectToWorkspaceEventArgs(ExecuteStatus status, AzureClientError? error, string location, bool useCustomStorage, CredentialType credentialType, TimeSpan duration)
+        {
+            this.Status = status;
+            this.Error = error;
+            this.Location =location;
+            this.UseCustomStorage = useCustomStorage;
+            this.CredentialType = credentialType;
+            this.Duration = duration;
+        }
+
+        /// <summary>
+        /// The connection status. Can be "success" or "error"
+        /// </summary>
+        public ExecuteStatus Status { get; }
+
+        /// <summary>
+        /// If an error happened during connection, the error code.
+        /// Otherwise, <c>null</c>.
+        /// </summary>
+        public AzureClientError? Error { get; }
+
+        /// <summary>
+        /// The region (location) we tried to connect to.
+        /// </summary>
+        public string Location { get; }
+
+        /// <summary>
+        /// True if the user provides a custom storage connection.
+        /// </summary>
+        public bool UseCustomStorage { get; }
+
+        /// <summary>
+        /// The type of credentials used to authenticate with Azure.
+        /// </summary>
+        public CredentialType CredentialType { get; }
+
+        /// <summary>
+        /// The total time it took to connect.
+        /// </summary>
+        public TimeSpan Duration { get; }
+    }
+
     /// <summary>
     /// This service is capable of connecting to Azure Quantum workspaces
     /// and submitting jobs.
     /// </summary>
     public interface IAzureClient
     {
+        /// <summary>
+        /// This event is triggered when a user connects to an Azure Quantum Workspace.
+        /// </summary>
+        event EventHandler<ConnectToWorkspaceEventArgs> ConnectToWorkspace;
+
         /// <summary>
         /// Connects to the specified Azure Quantum workspace, first logging into Azure if necessary.
         /// </summary>
@@ -29,7 +94,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string workspaceName,
             string storageAccountConnectionString,
             string location,
-            bool refreshCredentials = false,
+            CredentialType credentialType,
             CancellationToken? cancellationToken = null);
 
         /// <summary>
@@ -39,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The list of execution targets available in the Azure Quantum workspace,
         /// or an error if the Azure Quantum workspace connection has not yet been created.
         /// </returns>
-        public Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel);
+        public Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? token);
 
         /// <summary>
         /// Submits the specified Q# operation as a job to the currently active target.
@@ -64,7 +129,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Success if the target is valid, or an error if the target cannot be set.
         /// </returns>
-        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId);
+        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token);
 
         /// <summary>
         /// Gets the currently specified target for job submission.
@@ -72,7 +137,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// The target ID.
         /// </returns>
-        public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel);
+        public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token);
 
         /// <summary>
         /// Gets the result of a specified job.
@@ -81,7 +146,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job result corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId);
+        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? token);
 
         /// <summary>
         /// Gets the status of a specified job.
@@ -90,7 +155,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job status corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId);
+        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? token);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.
@@ -100,7 +165,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter);
+        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.
@@ -110,6 +175,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel);
+        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token);
     }
 }

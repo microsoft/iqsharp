@@ -25,6 +25,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="logger">Logger instance for messages.</param>
         public QuotaMagic(IAzureClient azureClient, ILogger<QuotaMagic> logger)
             : base(
                 azureClient,
@@ -60,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
-            return await AzureClient.GetQuotaListAsync(channel);
+            return await AzureClient.GetQuotaListAsync(channel, cancellationToken);
         }
     }
 }

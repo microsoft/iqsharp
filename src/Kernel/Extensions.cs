@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
@@ -36,6 +37,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             services.AddSingleton<IMagicSymbolResolver, Kernel.MagicSymbolResolver>();
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
+            services.AddSingleton<INoiseModelSource, NoiseModelSource>();
 
             return services;
         }
