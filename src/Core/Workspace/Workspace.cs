@@ -21,6 +21,15 @@ using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    /// <summary>
+    ///     An event that is fired when the workspace is not just initialized
+    ///     (that is, available for dependency injection), but is also ready
+    ///     to be used (that is, all initialization tasks from the constructor
+    ///     have also finished).
+    /// </summary>
+    public class WorkspaceReadyEvent : Event<IWorkspace>
+    {
+    }
 
     /// <summary>
     /// A Workspace represents a folder in the host with .qs files
@@ -203,13 +212,15 @@ namespace Microsoft.Quantum.IQSharp
                         }
                     }
 
-                    eventService?.TriggerServiceInitialized<IWorkspace>(this);
+                    eventService?.Trigger<WorkspaceReadyEvent, IWorkspace>(this);
                 }
                 finally
                 {
                     initialized.Set();
                 }
             });
+
+            eventService?.TriggerServiceInitialized<IWorkspace>(this);
         }
 
         private void ResolveProjectReferences()
