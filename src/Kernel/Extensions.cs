@@ -9,7 +9,10 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Experimental;
@@ -160,5 +163,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 attribute => attribute.Item1.TryAsStringLiteral(out var value) ? value : null,
                 attribute => attribute.Item2.TryAsStringLiteral(out var value) ? value : null
             );
+
+        internal static Task<T> GetRequiredServiceInBackground<T>(this IServiceProvider services, ILogger? logger = null)
+        {
+            var eventService = services.GetRequiredService<IEventService>();
+            eventService.OnServiceInitialized<T>().On += (service) =>
+            {
+                logger?.LogInformation(
+                    "Service {Service} initialized {Time} after startup.",
+                    typeof(T),
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                );
+            };
+            return Task.Run(() => services.GetRequiredService<T>());
+        }
     }
+
 }
