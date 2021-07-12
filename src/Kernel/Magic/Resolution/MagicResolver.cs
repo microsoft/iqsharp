@@ -136,7 +136,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         .Where(t =>
                         {
                             if (!t.IsClass && t.IsAbstract) { return false; }
-                            return t.IsSubclassOf(typeof(MagicSymbol));
+                            var matched = t.IsSubclassOf(typeof(MagicSymbol));
+
+                            // This logging statement is expensive, so we only run it when we need to for debugging.
+                            #if DEBUG
+                            this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
+                            #endif
+
+                            return matched;
                         });
 
                     foreach (var t in magicTypes)
