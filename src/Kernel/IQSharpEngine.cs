@@ -23,6 +23,14 @@ using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    public class CompletionEventArgs
+    {
+        public int NCompletions { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+    public class CompletionEvent : Event<CompletionEventArgs>
+    {
+    }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
@@ -34,6 +42,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
+        private readonly IEventService eventService;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
@@ -60,7 +69,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IMetadataController metadataController
+            IMetadataController metadataController,
+            IEventService eventService
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -69,6 +79,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.logger = logger;
             this.metadataController = metadataController;
+            this.eventService = eventService;
         }
 
         /// <inheritdoc />
@@ -94,7 +105,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.MagicResolver = services.GetService<IMagicSymbolResolver>();
             this.Workspace = services.GetService<IWorkspace>();
             var references = services.GetService<IReferences>();
-            var eventService = services.GetService<IEventService>();
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
@@ -152,6 +162,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             #if DEBUG
                 Debug.Assert(initializedSuccessfully, "Was unable to complete initialization task.");
             #endif
+        }
+
+        /// <inheritdoc />
+        public override async Task<CompletionResult?> Complete(string code, int cursorPos)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var completions = await base.Complete(code, cursorPos);
+            stopwatch.Stop();
+            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs
+            {
+                NCompletions = completions?.Matches?.Count ?? 0,
+                Duration = stopwatch.Elapsed
+            });
+            return completions;
         }
 
         /// <summary>
