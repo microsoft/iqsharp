@@ -34,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
             TelemetryLogger = CreateLogManager(config);
-            InitTelemetryLogger(TelemetryLogger, config);            
+            InitTelemetryLogger(TelemetryLogger, config);
             TelemetryLogger.LogEvent(
                 "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
             );

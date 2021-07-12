@@ -102,6 +102,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             return null;
         }
 
+        IEnumerable<ISymbol> ISymbolResolver.MaybeResolvePrefix(string symbolPrefix) =>
+            FindAllMagicSymbols()
+            .Where(symbol => symbol.Name.StartsWith(symbolPrefix))
+            .OrderBy(symbol => symbol.Name);
+
         /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindMagic(AssemblyInfo assm)
         {

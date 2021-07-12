@@ -41,8 +41,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver? SymbolsResolver { get; private set; } = null;
 
-        internal IMagicSymbolResolver? MagicResolver { get; private set; } = null;
-
         internal IWorkspace? Workspace { get; private set; } = null;
 
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
@@ -184,7 +182,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders and magic symbols.", assembly.FullName);
                     // Use the magic resolver to find magic symbols in the new assembly;
                     // it will cache the results for the next magic resolution.
-                    this.MagicResolver?.FindMagic(new AssemblyInfo(assembly));
+                    (this.MagicResolver as IMagicSymbolResolver)?.FindMagic(new AssemblyInfo(assembly));
 
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();
