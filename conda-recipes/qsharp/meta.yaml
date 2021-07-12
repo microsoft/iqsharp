@@ -38,6 +38,11 @@ test:
     - src/conda-recipes/qsharp/tests.py
 
   commands:
+    # NB: We install QuTiP this way to avoid turning on conda-forge when building
+    #     the test environment, as that introduces a lot of potential
+    #     conflicts. In particular, we want defaults to take priority over
+    #     conda-forge.
+    - conda install --yes -c conda-forge qutip
     - powershell -NoProfile src/conda-recipes/qsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/qsharp/test.ps1 # [not win]
 
