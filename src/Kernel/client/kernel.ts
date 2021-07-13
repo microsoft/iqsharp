@@ -165,34 +165,15 @@ class Kernel {
     }
 
     requestEcho() {
-        // Try sending something for the kernel to echo back in order to test
-        // communicates with the kernel. Note that iqsharp_echo_request will get
-        // two responses: an output over iopub, and a reply over shell. We thus
-        // subscribe both callbacks in order to make sure that both work
-        // correctly.
         let value = "hello!";
-        // The output callback is registered with the kernel object itself,
-        // since outputs aren't a reply to any particular message.
-        IPython.notebook.kernel.register_iopub_handler(
-            "iqsharp_echo_output",
-            message => {
-                console.log("Got echo output:", message);
-            }
-        );
-        // By contrast, callbacks for replies are associated with the message
-        // itself, since we don't want the callback to pick up echo replies that
-        // are replies to other messages.
-        IPython.notebook.kernel.send_shell_message(
-            "iqsharp_echo_request",
-            { value: value },
-            {
-                shell: {
-                    reply: (message) => {
-                        console.log("Got echo reply:", message);
-                    }
-                }
-            }
-        );
+        let comm = IPython.notebook.kernel.comm_manager.new_comm("iqsharp_echo");
+        comm.on_msg((message) => {
+            console.log("Got echo output via comms:", message);
+        });
+        comm.on_close((message) => {
+            console.log("Echo comm closed:", message);
+        })
+        comm.send(value);
     }
 
     getOriginQueryString() {

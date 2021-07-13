@@ -27,6 +27,16 @@ export interface Events {
     on(event: string, callback: (any) => void);
 }
 
+export interface CommSession {
+    send(data: any): string;
+    on_msg(callback: (message: any) => void): void;
+    on_close(callback: (message: any) => void): void;
+}
+
+export interface CommManager {
+    new_comm(target_name: string, data?: any): CommSession;
+}
+
 export interface Kernel {
     events: Events;
 
@@ -34,4 +44,5 @@ export interface Kernel {
     execute(code: string, callbacks: ShellCallbacks | undefined, options: {silent?: boolean, user_expressions?: object, allow_stdin?: boolean} | undefined): string;
     register_iopub_handler(msg_type: string, callback: (message: Message) => void);
     send_shell_message(msg_type: string, content: object, callbacks?: ShellCallbacks, metadata?: object, buffers?: Array<any>) : string;
+    comm_manager: CommManager;
 }

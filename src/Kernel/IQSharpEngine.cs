@@ -34,6 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
+        private readonly ICommsRouter commsRouter = null;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
@@ -62,7 +63,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IMetadataController metadataController
+            IMetadataController metadataController,
+            ICommsRouter commsRouter
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -71,6 +73,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.logger = logger;
             this.metadataController = metadataController;
+            this.commsRouter = commsRouter;
         }
 
         /// <inheritdoc />
@@ -140,6 +143,28 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             // Handle new shell messages.
             ShellRouter.RegisterHandlers<IQSharpEngine>();
+
+            // Handle a simple comm session handler for echo messages.
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += (session) =>
+            {
+                session.OnMessage += async (content) =>
+                {
+                    if (content.RawData.TryAs<string>(out var data))
+                    {
+                        await session.SendMessage(data);
+                    }
+                    await session.Close();
+                };
+            };
+            var session = commsRouter.OpenSession("iqsharp_echo", null).Result;
+            session.OnMessage += async (content) =>
+            {
+                if (content.RawData.TryAs<string>(out var data))
+                {
+                    await session.SendMessage(data);
+                }
+                await session.Close();
+            };
 
             // Report performance after completing startup.
             performanceMonitor.Report();
