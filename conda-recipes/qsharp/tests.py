@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
+os.environ["QSHARP_PY_ISCONDA"] = "True"
+
 from importlib import import_module
 from attr import attr
 import qsharp
