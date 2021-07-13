@@ -50,7 +50,7 @@ Push-Location $TargetDirectory
 
     # Build up an install command to execute.
     & "./$BaseName" --version;
-    $InstallCmd = "./$BaseName install --path-to-tool $(Resolve-Path $PathToTool) --sys-prefix";
+    $InstallCmd = "./$BaseName install --path-to-tool $(Resolve-Path $PathToTool) --sys-prefix --user-agent-extra `"(iqsharp:conda)`"";
     Write-Host "$ $InstallCmd";
     Invoke-Expression $InstallCmd;
 Pop-Location

@@ -33,7 +33,7 @@ with open('./qsharp/version.py', 'w') as f:
 ##
 __version__ = "{version}"
 is_conda = {is_conda}
-_user_agent_extra = "{"(conda)" if is_conda else ""}[{version}]"
+_user_agent_extra = "{"(qsharp:conda)" if is_conda else ""}[{version}]"
 ''')
 
 ## DESCRIPTION ##
