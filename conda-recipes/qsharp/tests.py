@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 
 import os
+
+import pytest
 os.environ["QSHARP_PY_ISCONDA"] = "True"
 
 from importlib import import_module
@@ -21,6 +23,15 @@ def test_simple_compile():
 """)
     r = op.simulate()
     assert r == qsharp.Result.One
+
+def test_user_agent_extra():
+    """
+    Verifies that the extra information sent with the user agent for this
+    package correctly marks that the package was installed with conda.
+    """
+    import qsharp.version
+    assert getattr(qsharp.version, "is_conda", False)
+    assert qsharp.version._user_agent_extra == f"(conda)[{qsharp.__version__}]"
 
 # Forward tests from the unit testing modules.
 def _forward_tests(module_name) -> None:
