@@ -97,7 +97,9 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
     cat ${HOME}/.nuget/NuGet/NuGet.Config
 # Add Python and NuGet packages from the build context
 ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
-ADD wheels/*.whl ${LOCAL_PACKAGES}/wheels/
+# When adding wheels, use *-any.whl to make sure that platform-specific wheels
+# are not incorrectly added to the Docker image.
+ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
 # Give the notebook user ownership over the packages and config copied from
 # the context.
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
@@ -126,7 +128,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.15.2103133969" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.18.2106148499-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \

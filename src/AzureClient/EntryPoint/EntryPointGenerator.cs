@@ -131,7 +131,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = Compiler.BuildSnippets(
-                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"), executionTarget, runtimeCapability);
+                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");

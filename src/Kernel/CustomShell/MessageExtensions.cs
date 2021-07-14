@@ -3,6 +3,7 @@
 
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 
@@ -29,9 +30,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 {
                     var jsonPropertyAttribute = property.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
                     var propertyName = jsonPropertyAttribute?.PropertyName ?? property.Name;
+                    var propertyType = property.PropertyType;
                     if (content.Data.TryGetValue(propertyName, out var value))
                     {
-                        property.SetValue(result, content.Data[propertyName]);
+                        var data = content.Data[propertyName];
+                        // If the unknown content's data is a JToken, that
+                        // indicates that we need to further deserialize it.
+                        if (data is JToken tokenData)
+                        {
+                            property.SetValue(result, tokenData.ToObject(propertyType));
+                        }
+                        else
+                        {
+                            property.SetValue(result, data);
+                        }
                     }
                 }
                 return result;
