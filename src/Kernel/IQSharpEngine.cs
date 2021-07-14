@@ -156,15 +156,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     await session.Close();
                 };
             };
-            var session = commsRouter.OpenSession("iqsharp_echo", null).Result;
-            session.OnMessage += async (content) =>
-            {
-                if (content.RawData.TryAs<string>(out var data))
-                {
-                    await session.SendMessage(data);
-                }
-                await session.Close();
-            };
 
             // Report performance after completing startup.
             performanceMonitor.Report();
