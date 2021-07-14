@@ -10,6 +10,13 @@ namespace Microsoft.Quantum.IQSharp
     public class ClientInformation
     {
         /// <summary>
+        ///      A string passed by the client containing additional information
+        ///      that should be appended to the user agent (e.g.: packaging
+        ///      metadata).
+        /// </summary>
+        public string UserAgentExtra { get; set; }
+
+        /// <summary>
         ///      A string passed by the client representing the name of the client.
         /// </summary>
         public string UserAgent { get; set; }
