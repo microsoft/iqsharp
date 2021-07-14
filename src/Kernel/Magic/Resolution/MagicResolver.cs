@@ -156,7 +156,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         }
                         catch (Exception e)
                         {
-                            this.logger.LogWarning($"Unable to create instance of MagicSymbol {t.FullName}. Magic will not be enabled.\nMessage:{e.Message}");
+                            this.logger.LogWarning(e, $"Unable to create instance of MagicSymbol {t.FullName}; service activator threw an exception of type {e.GetType()}. Magic will not be enabled.\nMessage: {e.Message}");
                         }
                     }
                 }
