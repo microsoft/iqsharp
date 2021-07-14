@@ -14,6 +14,7 @@ using System.IO;
 using Newtonsoft.Json.Converters;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Diagnostics.CodeAnalysis;
+using Experimental = Microsoft.Quantum.Experimental;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -31,7 +32,13 @@ namespace Microsoft.Quantum.IQSharp
                 new QTupleConverter(),
                 new QVoidConverter(),
                 new UDTConverter(),
-                new ResultConverter()
+                new ResultConverter(),
+
+                // Make sure to use the base type for each open systems / CHP
+                // state, since these are effectively a discriminated union.
+                new DelegatedConverter<Experimental.PureState, Experimental.State>(new Experimental.StateConverter()),
+                new DelegatedConverter<Experimental.MixedState, Experimental.State>(new Experimental.StateConverter()),
+                new DelegatedConverter<Experimental.StabilizerState, Experimental.State>(new Experimental.StateConverter())
             }.ToImmutableList();
             otherConverters = ImmutableList.Create<JsonConverter>(
                 new ResourcesEstimatorConverter()
@@ -197,6 +204,36 @@ namespace Microsoft.Quantum.IQSharp
             // See https://github.com/JamesNK/Newtonsoft.Json/issues/386#issuecomment-421161191
             // for why this works to pass through.
             var token = JToken.FromObject(value.GetValue(), serializer);
+            token.WriteTo(writer);
+        }
+    }
+
+    /// <summary>
+    ///     Delegates JSON conversion from Newtonsoft.Json to a converter
+    ///     for System.Text.Json.
+    /// </summary>
+    internal class DelegatedConverter<TTarget, TDelegated> : JsonConverter<TTarget>
+    where TTarget: class, TDelegated
+    {
+        private readonly System.Text.Json.Serialization.JsonConverter<TDelegated> converter;
+        private readonly System.Text.Json.JsonSerializerOptions options = new System.Text.Json.JsonSerializerOptions();
+        public DelegatedConverter(System.Text.Json.Serialization.JsonConverter<TDelegated> converter)
+        {
+            this.converter = converter;
+            this.options.Converters.Add(converter);
+        }
+
+        public override TTarget ReadJson(JsonReader reader, Type objectType, [AllowNull] TTarget existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            var asJson = JToken.ReadFrom(reader).ToString();
+            var delegated = System.Text.Json.JsonSerializer.Deserialize<TDelegated>(asJson, options);
+            return (TTarget) delegated;
+        }
+
+        public override void WriteJson(JsonWriter writer, [AllowNull] TTarget value, JsonSerializer serializer)
+        {
+            var asJson = System.Text.Json.JsonSerializer.Serialize<TDelegated>(value, options);
+            var token = JToken.Parse(asJson);
             token.WriteTo(writer);
         }
     }

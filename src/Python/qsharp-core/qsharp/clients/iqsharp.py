@@ -9,6 +9,7 @@
 
 ## IMPORTS ##
 
+from contextlib import contextmanager
 import subprocess
 import time
 import http.client
@@ -22,7 +23,7 @@ import jupyter_client
 from functools import partial
 from io import StringIO
 from collections import defaultdict
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Optional
 from pathlib import Path
 from distutils.version import LooseVersion
 
@@ -78,6 +79,8 @@ class IQSharpClient(object):
     kernel_manager = None
     kernel_client = None
     _busy : bool = False
+
+    display_data_callback: Optional[Callable[[Any], bool]] = None
 
     def __init__(self, kernel_name: str = 'iqsharp'):
         self.kernel_manager = jupyter_client.KernelManager(kernel_name=kernel_name)
@@ -202,6 +205,30 @@ class IQSharpClient(object):
         self._execute("%version", display_data_handler=capture, _quiet_=True, **kwargs)
         return versions
 
+    @contextmanager
+    def capture_diagnostics(self, passthrough: bool) -> List[Any]:
+        captured_data = []
+        def callback(msg):
+            msg_data = (
+                # Check both the old and new MIME types used by the IQ#
+                # kernel.
+                json.loads(msg['content']['data'].get('application/json', "null")) or
+                json.loads(msg['content']['data'].get('application/x-qsharp-data', "null"))
+            )
+            if msg_data is not None:
+                captured_data.append(msg_data)
+                return passthrough
+            else:
+                # No JSON found found, so just fall back.
+                return True
+
+        old_callback = self.display_data_callback
+        self.display_data_callback = callback
+        try:
+            yield captured_data
+        finally:
+            self.display_data_callback = old_callback
+
     ## Experimental Methods ##
     # These methods expose experimental functionality that may be removed without
     # warning. To communicate to users that these are not reliable, we mark
@@ -287,16 +314,33 @@ class IQSharpClient(object):
 
         def log_error(msg):
             errors.append(msg)
-        
+
+        # Set up handlers for various kinds of messages, making sure to
+        # fallback through to output_hook as appropriate, so that the IPython
+        # package can send display data through to Jupyter clients.
         handlers = {
             'execute_result': (lambda msg: results.append(msg)),
             'render_execution_path':  (lambda msg: results.append(msg)),
             'display_data': display_data_handler if display_data_handler is not None else lambda msg: ...
         }
+
+        # Pass display data through to IPython if we're not in quiet mode.
         if not _quiet_:
             handlers['display_data'] = (
                 lambda msg: display_raw(msg['content']['data'])
             )
+
+        # Finish setting up handlers by allowing the display_data_callback
+        # to intercept display data first, only sending messages through to
+        # other handlers if it returns True.
+        if self.display_data_callback is not None:
+            inner_handler = handlers['display_data']
+
+            def filter_display_data(msg):
+                if self.display_data_callback(msg):
+                    return inner_handler(msg)
+
+            handlers['display_data'] = filter_display_data
 
         _output_hook = partial(
             self._handle_message,
