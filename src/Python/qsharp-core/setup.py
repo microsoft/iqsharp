@@ -21,18 +21,18 @@ import os
 # variables, we'll default to 0.0.0.1 as a development version.
 
 version = os.environ.get('PYTHON_VERSION', '0.0.0.1')
-is_conda = bool(os.environ.get('CONDA_BUILD', False))
 
 with open('./qsharp/version.py', 'w') as f:
     f.write(f'''# Auto-generated file, do not edit.
 ##
 # version.py: Specifies the version of the qsharp package.
 ##
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
 __version__ = "{version}"
-_user_agent_extra = "{"(conda)" if is_conda else ""}[{version}]"
+is_conda = False
+_user_agent_extra = "[{version}]"
 ''')
 
 ## DESCRIPTION ##
