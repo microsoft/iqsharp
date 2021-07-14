@@ -44,6 +44,11 @@ except ImportError:
 
 skip_if_no_workspace = pytest.mark.skipif(not workspace_present, reason="Local Q# workspace not available in installed package.")
 
+# Finally, not all tests work well from within conda build environments, so
+# we disable those tests here.
+is_conda = getattr(qsharp.__version__, "is_conda", False) or os.environ.get("QSHARP_PY_ISCONDA", "False").lower() == "true"
+skip_if_conda = pytest.mark.skipif(is_conda, reason="Test is not supported from conda-build.")
+
 ## TESTS ##
 
 @skip_if_no_workspace
@@ -234,7 +239,7 @@ def test_config():
     assert qsharp.config["dump.truncateSmallAmplitudes"] == True
     assert qsharp.config["dump.truncationThreshold"] == 1e-6
 
-
+@skip_if_conda
 def test_packages():
     """
     Verifies default package command
