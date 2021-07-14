@@ -232,8 +232,8 @@ class Kernel {
 
         Telemetry.origin = this.getOriginQueryString();
         Telemetry.clientInfoAvailable.on((clientInfo: ClientInfo) => {
-            IPython.notebook.kernel.send_shell_message(
-                "iqsharp_clientinfo_request",
+            IPython.notebook.kernel.comm_manager.new_comm(
+                "iqsharp_clientinfo",
                 {
                     "client_country": clientInfo.CountryCode,
                     "client_id": clientInfo.Id,

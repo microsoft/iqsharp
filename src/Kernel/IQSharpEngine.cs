@@ -145,7 +145,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             ShellRouter.RegisterHandlers<IQSharpEngine>();
 
             // Handle a simple comm session handler for echo messages.
-            commsRouter.SessionOpenEvent("iqsharp_echo").On += (session) =>
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += async (session, data) =>
             {
                 session.OnMessage += async (content) =>
                 {
