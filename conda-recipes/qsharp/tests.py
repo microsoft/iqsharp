@@ -31,7 +31,7 @@ def test_user_agent_extra():
     """
     import qsharp.version
     assert getattr(qsharp.version, "is_conda", False)
-    assert qsharp.version._user_agent_extra == f"(conda)[{qsharp.__version__}]"
+    assert qsharp.version._user_agent_extra == f"[{qsharp.__version__}](qsharp:conda)"
 
 # Forward tests from the unit testing modules.
 def _forward_tests(module_name) -> None:
