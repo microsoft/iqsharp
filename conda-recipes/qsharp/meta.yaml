@@ -22,13 +22,8 @@ requirements:
     - iqsharp={{ version }}
 
 build:
-  script_env:
-  - QSHARP_PY_ISCONDA=True
-  - PYTHON_VERSION={{ version }}
-
   script: |
-    powershell -NoProfile src/conda-recipes/qsharp/build.ps1 # [win]
-    pwsh src/conda-recipes/qsharp/build.ps1 # [not win]
+    pwsh -NoProfile src/conda-recipes/qsharp/build.ps1 -Version {{ version }}
 
 test:
   requires:

@@ -1,13 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+param(
+    [string]
+    $Version
+)
 
-Push-Location src/drops/wheels
-    Get-ChildItem *.whl `
-    | ForEach-Object { pip install --no-index --find-links . --prefix $Env:PREFIX $_.Name }
-Pop-Location
-
-
-# Rewrite the version.py file in qsharp-core, adding conda metadata.
 $versionPyContents = @"
 # Auto-generated file, do not edit.
 ##
@@ -16,9 +13,26 @@ $versionPyContents = @"
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-__version__ = "$Env:PYTHON_VERSION"
+__version__ = "$Version"
 is_conda = True
-_user_agent_extra = "[$Env:PYTHON_VERSION](qsharp:conda)"
+_user_agent_extra = "[$Version](qsharp:conda)"
 "@;
-$versionPyPath = python -c "import qsharp.version; print(qsharp.version.__file__)";
-Set-Content -Path $versionPyPath -Value $versionPyContents -Encoding utf8NoBOM;
+
+Push-Location src/drops/wheels
+    # Patch the qsharp-core wheel to add version info.
+    Get-ChildItem qsharp-core-*.whl `
+        | ForEach-Object {
+            Write-Host "##[debug]Patching wheel at $_.";
+            wheel unpack $_ --dest unpacked
+            $versionPyPath = Get-Item (Join-Path "." "unpacked" "qsharp_core-$Version" "qsharp" "version.py");
+            Write-Host "Setting contents of ${versionPyPath}:`n$versionPyContents";
+            Set-Content -Path $versionPyPath -Value $versionPyContents -Encoding utf8NoBOM;
+            wheel pack (Join-Path "." "unpacked" "qsharp_core-$Version");
+        }
+
+    # Install all the wheels, including the wheel we patched above.
+    Get-ChildItem *.whl `
+        | ForEach-Object {
+            pip install --verbose --verbose --no-index --find-links . --prefix $Env:PREFIX $_.Name
+        }
+Pop-Location
