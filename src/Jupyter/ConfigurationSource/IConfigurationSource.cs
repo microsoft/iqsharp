@@ -76,21 +76,48 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return defaultValue;
         }
 
-        private bool GetOptionOrDefault(string optionName, bool defaultValue) =>
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for boolean options.
+        /// </summary>
+        public bool GetOptionOrDefault(string optionName, bool defaultValue) =>
             GetOptionOrDefault(optionName, defaultValue, bool.Parse);
 
-        private int GetOptionOrDefault(string optionName, int defaultValue) =>
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for int options.
+        /// </summary>
+        public int GetOptionOrDefault(string optionName, int defaultValue) =>
             GetOptionOrDefault(optionName, defaultValue, int.Parse);
 
-        private string GetOptionOrDefault(string optionName, string defaultValue) =>
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for uint options.
+        /// </summary>
+        public uint GetOptionOrDefault(string optionName, uint defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, uint.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for double options.
+        /// </summary>
+        public double GetOptionOrDefault(string optionName, double defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, double.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for string options.
+        /// </summary>
+        public string GetOptionOrDefault(string optionName, string defaultValue) =>
             GetOptionOrDefault(optionName, defaultValue, e => e);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for enum options.
+        /// </summary>
+        public TEnum GetOptionOrDefault<TEnum>(string optionName, TEnum defaultValue) where TEnum : struct =>
+            GetOptionOrDefault(optionName, defaultValue, Enum.Parse<TEnum>);
 
         /// <summary>
         ///     The labeling convention to be used when labeling computational
         ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
         public BasisStateLabelingConvention BasisStateLabelingConvention =>
-            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian, Enum.Parse<BasisStateLabelingConvention>);
+            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
 
         /// <summary>
         ///     Whether small amplitudes should be truncated when dumping
@@ -116,7 +143,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     option to show None. 
         /// </summary>
         public PhaseDisplayStyle PhaseDisplayStyle =>
-            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly, Enum.Parse<PhaseDisplayStyle>);
+            GetOptionOrDefault("dump.phaseDisplayStyle", PhaseDisplayStyle.ArrowOnly);
 
         /// <summary>
         ///     Allows for options to view measurement as horizontal histograms for each
@@ -124,7 +151,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     a decimal, progress bar, both, or None. 
         /// </summary>
         public MeasurementDisplayStyle MeasurementDisplayStyle =>
-            GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarAndNumber, Enum.Parse<MeasurementDisplayStyle>);
+            GetOptionOrDefault("dump.measurementDisplayStyle", MeasurementDisplayStyle.BarAndNumber);
 
         /// <summary>
         ///     Allows for options to change measurement probability precision when viewing
@@ -158,14 +185,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     using the <c>%trace</c> command.
         /// </summary>
         public TraceVisualizationStyle TraceVisualizationStyle =>
-            GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default, Enum.Parse<TraceVisualizationStyle>);
+            GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
 
         /// <summary>
         ///     Specifies the number of qubits that the experimental simulators
         ///     support for use in running Q# programs.
         /// </summary>
         public uint ExperimentalSimulatorCapacity =>
-            GetOptionOrDefault<uint>("experimental.simulators.nQubits", 3, uint.Parse);
+            GetOptionOrDefault<uint>("experimental.simulators.nQubits", 3);
 
         /// <summary>
         ///     Specifies the representation to use for the initial state
@@ -178,6 +205,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Specifies the format used in dumping stabilizer states.
         /// <summary>
         public StabilizerStateVisualizationStyle ExperimentalSimulatorStabilizerStateVisualizationStyle =>
-            GetOptionOrDefault<StabilizerStateVisualizationStyle>("experimental.simulators.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers, Enum.Parse<StabilizerStateVisualizationStyle>);
+            GetOptionOrDefault("experimental.simulators.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
     }
 }
