@@ -20,7 +20,7 @@ _user_agent_extra = "[$Version](qsharp:conda)"
 
 Push-Location src/drops/wheels
     # Patch the qsharp-core wheel to add version info.
-    Get-ChildItem qsharp-core-*.whl `
+    Get-ChildItem qsharp_core-*.whl `
         | ForEach-Object {
             Write-Host "##[debug]Patching wheel at $_.";
             wheel unpack $_ --dest unpacked
