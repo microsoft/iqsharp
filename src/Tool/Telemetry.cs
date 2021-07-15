@@ -141,7 +141,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var evt = "CodeCompletion".AsTelemetryEvent();
                 evt.SetProperty("NCompletions".WithTelemetryNamespace(), args.NCompletions);
-                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration);
+                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString());
                 TelemetryLogger.LogEvent(evt);
             };
         }
