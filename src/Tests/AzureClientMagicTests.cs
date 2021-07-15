@@ -39,6 +39,11 @@ namespace Tests.IQSharp
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
 
+        private readonly string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
+        private readonly string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
+        private readonly string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
+        private readonly string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
+
         [TestMethod]
         public void TestConnectMagic()
         {
@@ -164,10 +169,10 @@ namespace Tests.IQSharp
             connectMagic.Test($"credential=ENVIRONMENT", ExecuteStatus.Error);
 
             // Pick up environment variables
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentSubscriptionId, subscriptionId);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentResourceGroup, resourceGroupName);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentWorkspaceName, workspaceName);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentLocation, location);
+            System.Environment.SetEnvironmentVariable(EnvironmentSubscriptionId, subscriptionId);
+            System.Environment.SetEnvironmentVariable(EnvironmentResourceGroup, resourceGroupName);
+            System.Environment.SetEnvironmentVariable(EnvironmentWorkspaceName, workspaceName);
+            System.Environment.SetEnvironmentVariable(EnvironmentLocation, location);
 
             connectMagic.Test("credential=ENVIRONMENT");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
@@ -179,10 +184,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(location, azureClient.Location);
 
             // Reset env variables:
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentSubscriptionId, string.Empty);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentResourceGroup, string.Empty);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentWorkspaceName, string.Empty);
-            System.Environment.SetEnvironmentVariable(ConnectMagic.EnvironmentLocation, string.Empty);
+            System.Environment.SetEnvironmentVariable(EnvironmentSubscriptionId, string.Empty);
+            System.Environment.SetEnvironmentVariable(EnvironmentResourceGroup, string.Empty);
+            System.Environment.SetEnvironmentVariable(EnvironmentWorkspaceName, string.Empty);
+            System.Environment.SetEnvironmentVariable(EnvironmentLocation, string.Empty);
         }
 
         [TestMethod]

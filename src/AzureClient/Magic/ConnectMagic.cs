@@ -33,25 +33,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private IConfigurationSource? config { get; }
 
-        /// <summary>
-        /// Name of the environment variable for the default value of SubscriptionId
-        /// </summary>
-        public const string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
-
-        /// <summary>
-        /// Name of the environment variable for the default value of Resource Group
-        /// </summary>
-        public const string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
-
-        /// <summary>
-        /// Name of the environment variable for the default value of Location
-        /// </summary>
-        public const string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
-
-        /// <summary>
-        /// Name of the environment variable for the default value of Workspace
-        /// </summary>
-        public const string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
 
         // A valid resource ID looks like:
         // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
