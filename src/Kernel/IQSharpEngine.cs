@@ -100,9 +100,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         }
 
         /// <inheritdoc />
-        public override void Start()
+        public override void Start() =>
+            this.StartAsync().Wait();
+
+        private async Task StartAsync()
         {
             base.Start();
+            var eventService = services.GetRequiredService<IEventService>();
+            eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
+            {
+                logger?.LogInformation(
+                    "Workspace ready {Time} after startup.",
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                );
+            };
 
             // Before anything else, make sure to start the right background
             // thread on the Q# compilation loader to initialize serializers
@@ -117,12 +128,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             Protocols.Initialize();
 
             logger.LogDebug("Getting services required to start IQ# engine.");
-            this.Snippets = services.GetService<ISnippets>();
-            this.SymbolsResolver = services.GetService<ISymbolResolver>();
-            this.MagicResolver = services.GetService<IMagicSymbolResolver>();
-            this.Workspace = services.GetService<IWorkspace>();
-            var references = services.GetService<IReferences>();
-            var eventService = services.GetService<IEventService>();
+            var serviceTasks = new
+            {
+                Snippets = services.GetRequiredServiceInBackground<ISnippets>(logger),
+                SymbolsResolver = services.GetRequiredServiceInBackground<ISymbolResolver>(logger),
+                MagicResolver = services.GetRequiredServiceInBackground<IMagicSymbolResolver>(logger),
+                Workspace = services.GetRequiredServiceInBackground<IWorkspace>(logger),
+                References = services.GetRequiredServiceInBackground<IReferences>(logger)
+            };
+
+            this.Snippets = await serviceTasks.Snippets;
+            this.SymbolsResolver = await serviceTasks.SymbolsResolver;
+            this.MagicResolver = await serviceTasks.MagicResolver;
+            this.Workspace = await serviceTasks.Workspace;
+            var references = await serviceTasks.References;
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
