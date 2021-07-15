@@ -144,7 +144,7 @@ namespace Tests.IQSharp
         public static async Task<string?> AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             await engine.Initialized;
-            var configSource = new ConfigurationSource(skipLoading: true);
+            var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
                 new UnitTestLogger<SimulateMagic>());

@@ -36,9 +36,9 @@ namespace Microsoft.Quantum.IQSharp
         /// <typeparam name="TService">The type (usually the interface) of the service</typeparam>
         /// <param name="eventService">The event service where the EventSubPub lives</param>
         /// <returns>The typed EventPubSub for the ServiceInitialized event</returns>
-        public static EventPubSub<ServiceInitializedEvent<TService>,TService> OnServiceInitialized<TService>(this IEventService eventService)
+        public static EventPubSub<ServiceInitializedEvent<TService>, TService> OnServiceInitialized<TService>(this IEventService eventService)
         {
-            return eventService?.Events<ServiceInitializedEvent<TService>,TService>();
+            return eventService?.Events<ServiceInitializedEvent<TService>, TService>();
         }
     }
 }

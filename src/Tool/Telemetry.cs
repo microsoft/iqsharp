@@ -24,12 +24,25 @@ namespace Microsoft.Quantum.IQSharp
     {
         private const string TOKEN = "55aee962ee9445f3a86af864fc0fa766-48882422-3439-40de-8030-228042bd9089-7794";
 
+        private void OnServiceInitialized<T>()
+        {
+            EventService.OnServiceInitialized<T>().On += (service) =>
+            {
+                var evt = "ServiceInitialized"
+                    .AsTelemetryEvent()
+                    .WithTimeSinceStart();
+                evt.SetProperty("Service", $"{typeof(T).Namespace}.{typeof(T).Name}");
+                TelemetryLogger.LogEvent(evt);
+            };
+        }
+
         public TelemetryService(
             ILogger<TelemetryService> logger,
             IEventService eventService)
         {
             var config = Program.Configuration;
             Logger = logger;
+            EventService = eventService;
             Logger.LogInformation("Starting Telemetry.");
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
@@ -51,6 +64,28 @@ namespace Microsoft.Quantum.IQSharp
                 LogManager.UploadNow();
                 LogManager.Teardown();
             };
+
+            // Send telemetry that identifies how long after startup each
+            // service is ready.
+            this.OnServiceInitialized<ISnippets>();
+            this.OnServiceInitialized<ISymbolResolver>();
+            this.OnServiceInitialized<IMagicSymbolResolver>();
+            this.OnServiceInitialized<IWorkspace>();
+            eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
+            {
+                var evt = "WorkspaceReady"
+                    .AsTelemetryEvent()
+                    .WithTimeSinceStart();
+                TelemetryLogger.LogEvent(evt);
+            };
+            this.OnServiceInitialized<IReferences>();
+            this.OnServiceInitialized<IConfigurationSource>();
+            this.OnServiceInitialized<IMetadataController>();
+            this.OnServiceInitialized<INugetPackages>();
+            this.OnServiceInitialized<IAzureClient>();
+            this.OnServiceInitialized<IEntryPointGenerator>();
+            this.OnServiceInitialized<IExecutionEngine>();
+            this.OnServiceInitialized<ICompilerService>();
 
             eventService.Events<ExperimentalFeatureEnabledEvent, ExperimentalFeatureContent>().On += (content) =>
             {
@@ -113,6 +148,7 @@ namespace Microsoft.Quantum.IQSharp
 
         public Applications.Events.ILogger TelemetryLogger { get; private set; }
         public ILogger<TelemetryService> Logger { get; }
+        public IEventService EventService { get; }
 
         public virtual Applications.Events.ILogger CreateLogManager(IConfiguration config)
         {
