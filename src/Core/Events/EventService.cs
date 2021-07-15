@@ -78,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp
         public void Trigger<TEvent, TArgs>(TEvent @event)
             where TEvent : Event<TArgs>
         {
-            Logger.LogInformation($"Event Triggered for '{typeof(TEvent).Name}'");
+            Logger.LogInformation($"Event Triggered for '{typeof(TEvent)}'");
             if (_Subscribers.TryGetValue(typeof(TEvent), out var subscribersList))
             {
                 object[] subscribers;
@@ -148,6 +148,7 @@ namespace Microsoft.Quantum.IQSharp
         public EventService(ILogger<EventService> logger)
         {
             EventPubSub = new EventPubSub(logger);
+            this?.TriggerServiceInitialized<IEventService>(this);
         }
 
         /// <summary>

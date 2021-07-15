@@ -70,7 +70,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             MetadataController = metadataController;
             AzureFactory = azureFactory;
             Logger = logger;
-            eventService?.TriggerServiceInitialized<IAzureClient>(this);
 
             if (engine is BaseEngine baseEngine)
             {
@@ -85,6 +84,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
             }
+
+            eventService?.TriggerServiceInitialized<IAzureClient>(this);
         }
 
         /// <inheritdoc/>
