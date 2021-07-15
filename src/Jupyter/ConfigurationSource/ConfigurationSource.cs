@@ -23,7 +23,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public IDictionary<string, JToken> Configuration => _Configuration;
         private readonly IDictionary<string, JToken> _Configuration;
 
-        private string ConfigPath =>
+        /// <summary>
+        /// The path of the file use to persist configuration into disk.
+        /// </summary>
+        public static string ConfigPath =>
             Path.Join(Directory.GetCurrentDirectory(), ".iqsharp-config.json");
 
         /// <summary>
