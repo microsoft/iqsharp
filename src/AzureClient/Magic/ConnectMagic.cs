@@ -31,6 +31,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameLocation = "location";
         private const string ParameterNameCredential = "credential";
 
+        private IConfigurationSource? config { get; }
+
         /// <summary>
         /// Name of the environment variable for the default value of SubscriptionId
         /// </summary>
@@ -63,8 +65,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
+        /// <param name="config">Configuration Settings.</param>
         /// <param name="logger">Logger instance for messages.</param>
-        public ConnectMagic(IAzureClient azureClient, ILogger<ConnectMagic> logger)
+        public ConnectMagic(IAzureClient azureClient, IConfigurationSource config, ILogger<ConnectMagic> logger)
             : base(
                 azureClient,
                 "azure.connect",
@@ -176,7 +179,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     },
                 },
                 logger)
-        { }
+        {
+            this.config = config;
+        }
 
         /// <summary>
         ///     Connects to an Azure workspace given a subscription ID, resource group name,
@@ -215,9 +220,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             else
             {
                 // look for each of the parameters individually
-                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentSubscriptionId));
-                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentResourceGroup));
-                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentWorkspaceName));
+                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: config?.SubscriptionId ?? string.Empty);
+                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: config?.WorkspaceRG ?? string.Empty);
+                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: config?.WorkspaceName ?? string.Empty);
             }
 
             if (string.IsNullOrWhiteSpace(subscriptionId) ||
@@ -229,7 +234,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
-            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: System.Environment.GetEnvironmentVariable(EnvironmentLocation) ?? string.Empty);
+            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: config?.WorkspaceLocation ?? string.Empty);
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
             var credentialType = inputParameters.DecodeParameter<CredentialType>(ParameterNameCredential, defaultValue: CredentialType.Default);
             return await AzureClient.ConnectAsync(

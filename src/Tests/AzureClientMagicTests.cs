@@ -14,6 +14,7 @@ using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using Microsoft.Azure.Quantum.Authentication;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Tests.IQSharp
 {
@@ -43,7 +44,8 @@ namespace Tests.IQSharp
         {
             var azureClient = new MockAzureClient();
             var logger = new UnitTestLogger<ConnectMagic>();
-            var connectMagic = new ConnectMagic(azureClient, logger);
+            var config = new ConfigurationSource(skipLoading: true);
+            var connectMagic = new ConnectMagic(azureClient, config, logger);
 
             // no input
             connectMagic.Test(string.Empty);
@@ -151,7 +153,8 @@ namespace Tests.IQSharp
         {
             var azureClient = new MockAzureClient();
             var logger = new UnitTestLogger<ConnectMagic>();
-            var connectMagic = new ConnectMagic(azureClient, logger);
+            var config = new ConfigurationSource(skipLoading: true);
+            var connectMagic = new ConnectMagic(azureClient, config, logger);
 
             // no input
             connectMagic.Test(string.Empty);
