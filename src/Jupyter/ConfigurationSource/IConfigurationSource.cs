@@ -208,25 +208,25 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("experimental.simulators.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
         /// <summary>
-        ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns null if not configured.
+        ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string SubscriptionId =>
             GetOptionOrDefault("azurequantum.subscription.id", string.Empty);
 
         /// <summary>
-        ///     Default Workspace's Resource Group to use when connecting to Azure Quantum. Returns null if not configured.
+        ///     Default Workspace's Resource Group to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceRG =>
             GetOptionOrDefault("azurequantum.workspace.rg", string.Empty);
 
         /// <summary>
-        ///     Default Workspace's location to use when connecting to Azure Quantum. Returns null if not configured.
+        ///     Default Workspace's location to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceLocation =>
             GetOptionOrDefault("azurequantum.workspace.location", string.Empty);
 
         /// <summary>
-        ///     Default Workspace's name to use when connecting to Azure Quantum. Returns null if not configured.
+        ///     Default Workspace's name to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceName =>
             GetOptionOrDefault("azurequantum.workspace.name", string.Empty);
