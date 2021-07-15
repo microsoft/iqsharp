@@ -9,6 +9,7 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler;
+using System.IO;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -25,18 +26,19 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Constructor for non Q# compiled assemblies.
         /// </summary>
-        public AssemblyInfo(Assembly assembly) : this(assembly, location: null, syntaxTree: null)
+        public AssemblyInfo(Assembly assembly) : this(assembly, location: null, syntaxTree: null, qirBitcode: null)
         {
         }
 
         /// <summary>
         /// Constructor for Q# compiled assemblies.
         /// </summary>
-        public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree)
+        public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree, Stream qirBitcode)
         {
             Assembly = assembly;
             Location = location ?? assembly?.Location;
             SyntaxTree = syntaxTree;
+            QirBitcode = qirBitcode;
             _operations = new Lazy<OperationInfo[]>(InitOperations);
         }
 
@@ -54,6 +56,8 @@ namespace Microsoft.Quantum.IQSharp
         /// For Q#-based assemblies, the corresponding SyntaxTree.
         /// </summary>
         public QsNamespace[] SyntaxTree { get; }
+
+        public Stream QirBitcode { get; }
 
         /// <summary>
         /// For Q#-based assemblies, the corresponding operations found in the SyntaxTree.

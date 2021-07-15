@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Quantum.Runtime;
@@ -24,5 +25,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="submissionContext">The <see cref="AzureSubmissionContext"/> object representing the submission context for the job.</param>
         /// <returns>The details of the submitted job.</returns>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext);
+
+        public Stream QirStream { get; }
     }
 }

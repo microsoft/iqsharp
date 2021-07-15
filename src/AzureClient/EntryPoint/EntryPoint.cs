@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -20,6 +21,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type InputType { get; }
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
+        public Stream? QirStream { get; }
 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
@@ -31,12 +33,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="outputType">Specifies the output parameter type for the
         /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo)
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream qirStream)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
             OutputType = outputType;
             OperationInfo = operationInfo;
+            QirStream = qirStream;
         }
 
         /// <inheritdoc/>

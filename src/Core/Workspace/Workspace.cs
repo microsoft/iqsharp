@@ -331,7 +331,7 @@ namespace Microsoft.Quantum.IQSharp
                     Logger?.LogDebug($"Loading cache assembly: {project.CacheDllPath}.");
                     var data = File.ReadAllBytes(project.CacheDllPath);
                     var assm = System.Reflection.Assembly.Load(data);
-                    project.AssemblyInfo = new AssemblyInfo(assm, project.CacheDllPath, null);
+                    project.AssemblyInfo = new AssemblyInfo(assm, project.CacheDllPath, null, null);
                 }
 
                 ErrorMessages = new string[0];
@@ -499,7 +499,7 @@ namespace Microsoft.Quantum.IQSharp
                             logger.LogError(
                                 "IQS003",
                                 $"Error compiling project {project.ProjectFile}: {e.Message}");
-                            project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                            project.AssemblyInfo = new AssemblyInfo(null);
                         }
 
                         ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
@@ -509,7 +509,7 @@ namespace Microsoft.Quantum.IQSharp
                     else
                     {
                         Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
-                        project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        project.AssemblyInfo = new AssemblyInfo(null);
                     }
 
                     if (!string.IsNullOrWhiteSpace(project.ProjectFile))

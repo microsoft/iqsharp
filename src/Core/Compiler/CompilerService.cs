@@ -249,6 +249,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 // Only create the serialization if we are compiling for an execution target:
                 List<ResourceDescription>? manifestResources = null;
+                Stream? qirStream = null;
                 if (!string.IsNullOrEmpty(executionTarget))
                 {
                     // Generate the assembly from the C# compilation:
@@ -261,10 +262,18 @@ namespace Microsoft.Quantum.IQSharp
                         return null;
                     }
 
+                    qirStream = new MemoryStream();
+                    // FIXME: get the qir stream ... -> the problem is: where do we get the llvm runtime libs from??
+
                     manifestResources = new List<ResourceDescription>() {
                         new ResourceDescription(
                             resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
-                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                            dataProvider: () => serializedCompilation,
+                            isPublic: true
+                        ),
+                        new ResourceDescription(
+                            resourceName: DotnetCoreDll.ResourceNameQsDataQirV1,
+                            dataProvider: () => qirStream,
                             isPublic: true
                         )
                     };
@@ -302,7 +311,8 @@ namespace Microsoft.Quantum.IQSharp
                         logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
                     }
 
-                    return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray());
+                    qirStream?.Seek(0, SeekOrigin.Begin);
+                    return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray(), qirStream);
                 }
             }
             catch (Exception e)
