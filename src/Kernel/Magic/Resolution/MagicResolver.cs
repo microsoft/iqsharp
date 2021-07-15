@@ -35,7 +35,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     services to search assembly references for subclasses of
         ///     <see cref="Microsoft.Jupyter.Core.MagicSymbol" />.
         /// </summary>
-        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger)
+        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger, IEventService eventService)
         {
             this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
             this.logger = logger;
@@ -48,6 +48,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.references = services.GetService<IReferences>();
             this.workspace = services.GetService<IWorkspace>();
+
+            eventService?.TriggerServiceInitialized<IMagicSymbolResolver>(this);
         }
 
 

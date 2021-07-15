@@ -34,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     configuration options from the file <c>.iqsharp-config.json</c>,
         ///     if that file exists.
         /// </summary>
-        public ConfigurationSource(bool skipLoading = false)
+        public ConfigurationSource(IEventService? eventService = null, bool skipLoading = false)
         {
             // Try loading configuration from a JSON file in the current working
             // directory.
@@ -55,6 +55,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 _Configuration = new Dictionary<string, JToken>();
             }
+
+            eventService?.TriggerServiceInitialized<IConfigurationSource>(this);
         }
 
         /// <summary>
