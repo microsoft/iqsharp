@@ -278,8 +278,8 @@ namespace Microsoft.Quantum.IQSharp
                         generator.Apply();
 
                         // write generated QIR to disk
-                        var tempFileName = Path.GetTempFileName();
-                        var bcFile = CompilationLoader.GeneratedFile(tempFileName, Path.GetFullPath(tempFileName), ".bc", "");
+                        var tempPath = Path.GetTempPath();
+                        var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".ll", "");
                         generator.Emit(bcFile, emitBitcode: false);
                         qirStream = File.OpenRead(bcFile);
 

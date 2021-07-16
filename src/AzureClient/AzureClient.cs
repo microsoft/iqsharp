@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -332,7 +333,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     return AzureClientError.InvalidTarget.ToExecutionResult();
                 }
 
-                channel?.Stdout(entryPoint.QirStream.ToString());
+                var reader = new StreamReader(entryPoint.QirStream);
+                channel?.Stdout(reader.ReadToEnd());
                 var job = await submitter.SubmitAsync(entryPoint.QirStream, submissionContext.OperationName, new List<Runtime.Argument>(), Runtime.Submitters.SubmissionOptions.Default);
             }
             else
