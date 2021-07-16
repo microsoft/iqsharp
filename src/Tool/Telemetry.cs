@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 #if TELEMETRY
@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
             Logger.LogDebug($"DeviceId: {GetDeviceId()}.");
 
             TelemetryLogger = CreateLogManager(config);
-            InitTelemetryLogger(TelemetryLogger, config);            
+            InitTelemetryLogger(TelemetryLogger, config);
             TelemetryLogger.LogEvent(
                 "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
             );
@@ -137,6 +137,13 @@ namespace Microsoft.Quantum.IQSharp
             };
             eventService.OnServiceInitialized<IAzureClient>().On += (azureClient) =>
                 azureClient.ConnectToWorkspace += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+            eventService.Events<CompletionEvent, CompletionEventArgs>().On += (args) =>
+            {
+                var evt = "CodeCompletion".AsTelemetryEvent();
+                evt.SetProperty("NCompletions".WithTelemetryNamespace(), args.NCompletions);
+                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString());
+                TelemetryLogger.LogEvent(evt);
+            };
         }
 
         public Applications.Events.ILogger TelemetryLogger { get; private set; }

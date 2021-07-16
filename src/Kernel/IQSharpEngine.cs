@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -23,6 +23,14 @@ using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    public class CompletionEventArgs
+    {
+        public int NCompletions { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+    public class CompletionEvent : Event<CompletionEventArgs>
+    {
+    }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
@@ -34,14 +42,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
+        private readonly IEventService eventService;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
         internal ISnippets? Snippets { get; private set; } = null;
 
         internal ISymbolResolver? SymbolsResolver { get; private set; } = null;
-
-        internal IMagicSymbolResolver? MagicResolver { get; private set; } = null;
 
         internal IWorkspace? Workspace { get; private set; } = null;
 
@@ -88,7 +95,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IConfigurationSource configurationSource,
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IMetadataController metadataController
+            IMetadataController metadataController,
+            IEventService eventService
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -97,6 +105,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.logger = logger;
             this.metadataController = metadataController;
+            this.eventService = eventService;
         }
 
         /// <inheritdoc />
@@ -201,6 +210,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             #endif
         }
 
+        /// <inheritdoc />
+        public override async Task<CompletionResult?> Complete(string code, int cursorPos)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var completions = await base.Complete(code, cursorPos);
+            stopwatch.Stop();
+            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs
+            {
+                NCompletions = completions?.Matches?.Count ?? 0,
+                Duration = stopwatch.Elapsed
+            });
+            return completions;
+        }
+
         /// <summary>
         ///     Registers an event handler that searches newly loaded packages
         ///     for extensions to this engine (in particular, for result encoders).
@@ -230,7 +254,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders and magic symbols.", assembly.FullName);
                     // Use the magic resolver to find magic symbols in the new assembly;
                     // it will cache the results for the next magic resolution.
-                    this.MagicResolver?.FindMagic(new AssemblyInfo(assembly));
+                    (this.MagicResolver as IMagicSymbolResolver)?.FindMagic(new AssemblyInfo(assembly));
 
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();
