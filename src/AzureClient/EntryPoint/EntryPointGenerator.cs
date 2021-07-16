@@ -25,7 +25,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IWorkspace Workspace { get; }
         private ISnippets Snippets { get; }
         public IReferences References { get; }
-        public Stream QirStream { get; }
         public AssemblyInfo[] WorkspaceAssemblies { get; set; } = Array.Empty<AssemblyInfo>();
         public AssemblyInfo? SnippetsAssemblyInfo { get; set; }
         public AssemblyInfo? EntryPointAssemblyInfo { get; set; }
@@ -35,7 +34,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IWorkspace workspace,
             ISnippets snippets,
             IReferences references,
-            Stream qirStream,
             ILogger<EntryPointGenerator> logger,
             IEventService eventService)
         {
@@ -43,7 +41,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Workspace = workspace;
             Snippets = snippets;
             References = references;
-            QirStream = qirStream;
             Logger = logger;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
