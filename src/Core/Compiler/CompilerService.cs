@@ -26,6 +26,8 @@ using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
+using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
+using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 
@@ -136,7 +138,8 @@ namespace Microsoft.Quantum.IQSharp
                 LoadReferencesBasedOnGeneratedCsharp = string.IsNullOrEmpty(executionTarget), // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
-                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
+                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation,
+                PrepareQirGeneration = executionTarget?.StartsWith("microsoft.simulator") ?? false
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -273,13 +276,17 @@ namespace Microsoft.Quantum.IQSharp
 
                     if (qsCompilation.EntryPoints.Any())
                     {
-                        using var generationContext = new GenerationContext(qsCompilation.Namespaces, isLibrary: false);
-                        var generator = new Generator(qsCompilation, generationContext);
+                        var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
+                        transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
+                        transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
+                        var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
+
+                        using var generator = new Generator(transformed);
                         generator.Apply();
 
                         // write generated QIR to disk
                         var tempPath = Path.GetTempPath();
-                        var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".ll", "");
+                        var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
                         generator.Emit(bcFile, emitBitcode: false);
                         qirStream = File.OpenRead(bcFile);
 
