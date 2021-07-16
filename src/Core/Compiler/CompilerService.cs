@@ -19,6 +19,7 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
+using Microsoft.Quantum.QsCompiler.QIR;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
@@ -262,21 +263,35 @@ namespace Microsoft.Quantum.IQSharp
                         return null;
                     }
 
-                    qirStream = new MemoryStream();
-                    // FIXME: get the qir stream ... -> the problem is: where do we get the llvm runtime libs from??
-
                     manifestResources = new List<ResourceDescription>() {
                         new ResourceDescription(
                             resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
                             dataProvider: () => serializedCompilation,
                             isPublic: true
-                        ),
-                        new ResourceDescription(
-                            resourceName: DotnetCoreDll.ResourceNameQsDataQirV1,
-                            dataProvider: () => qirStream,
-                            isPublic: true
                         )
                     };
+
+                    if (qsCompilation.EntryPoints.Any())
+                    {
+                        using var generationContext = new GenerationContext(qsCompilation.Namespaces, isLibrary: false);
+                        var generator = new Generator(qsCompilation, generationContext);
+                        generator.Apply();
+
+                        // write generated QIR to disk
+                        var tempFileName = Path.GetTempFileName();
+                        var bcFile = CompilationLoader.GeneratedFile(tempFileName, Path.GetFullPath(tempFileName), ".bc", "");
+                        generator.Emit(bcFile, emitBitcode: false);
+                        qirStream = File.OpenRead(bcFile);
+
+                        //manifestResources.Add(
+                        //    new ResourceDescription(
+                        //        resourceName: DotnetCoreDll.ResourceNameQsDataQirV1,
+                        //        dataProvider: () => qirStream,
+                        //        isPublic: true
+                        //    )
+                        //);
+                    }
+
                 }
 
                 using var ms = new MemoryStream();

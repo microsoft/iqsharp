@@ -332,6 +332,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     return AzureClientError.InvalidTarget.ToExecutionResult();
                 }
 
+                channel?.Stdout(entryPoint.QirStream.ToString());
                 var job = await submitter.SubmitAsync(entryPoint.QirStream, submissionContext.OperationName, new List<Runtime.Argument>(), Runtime.Submitters.SubmissionOptions.Default);
             }
             else
