@@ -266,7 +266,7 @@ namespace Microsoft.Quantum.IQSharp
                     manifestResources = new List<ResourceDescription>() {
                         new ResourceDescription(
                             resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
-                            dataProvider: () => serializedCompilation,
+                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
                             isPublic: true
                         )
                     };
