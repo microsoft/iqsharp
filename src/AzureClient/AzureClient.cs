@@ -333,18 +333,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     return AzureClientError.InvalidTarget.ToExecutionResult();
                 }
 
-                var reader = new StreamReader(entryPoint.QirStream);
-                channel?.Stdout(reader.ReadToEnd());
+                //var reader = new StreamReader(entryPoint.QirStream);
+                //channel?.Stdout(reader.ReadToEnd());
 
-                //var job = await submitter.SubmitAsync(
-                //    entryPoint.QirStream, 
-                //    submissionContext.OperationName, 
-                //    new List<Runtime.Argument>(), 
-                //    Runtime.Submitters.SubmissionOptions.Default.With(friendlyName: submissionContext.OperationName, shots: 1));
-                //channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
-                //channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
-                //channel?.Stdout($"   Job ID: {job.Id}");
-                //MostRecentJobId = job.Id;
+                var job = await submitter.SubmitAsync(
+                    entryPoint.QirStream, 
+                    submissionContext.OperationName, 
+                    new List<Runtime.Argument>(), 
+                    Runtime.Submitters.SubmissionOptions.Default.With(friendlyName: submissionContext.OperationName, shots: 1));
+                channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
+                channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
+                channel?.Stdout($"   Job ID: {job.Id}");
+                MostRecentJobId = job.Id;
             }
             else
             {

@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp
 {
     public class CompilerMetadata
     {
-        internal static readonly bool LoadFromCsharp = true; // todo: we should make this properly configurable
+        internal static readonly bool LoadFromCsharp = false; // todo: we should make this properly configurable
 
         private IEnumerable<String> Paths { get; }
 
@@ -97,8 +97,12 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private static QsReferences QsInit(IEnumerable<string> paths)
         {
-            var loaded = new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources: false));
-            return loaded;
+            var headers = ProjectManager.LoadReferencedAssembliesInParallel(
+                paths,
+                ignoreDllResources: false);
+
+            var references = new QsReferences(headers);
+            return references;
         }
 
         public CompilerMetadata WithAssemblies(params AssemblyInfo[] assemblies)

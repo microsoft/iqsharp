@@ -212,7 +212,8 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
+        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
+            string dllName, bool compileAsExecutable, string? executionTarget,
             RuntimeCapability? runtimeCapability = null)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
@@ -254,7 +255,7 @@ namespace Microsoft.Quantum.IQSharp
                 // Only create the serialization if we are compiling for an execution target:
                 List<ResourceDescription>? manifestResources = null;
                 Stream? qirStream = null;
-                if (!string.IsNullOrEmpty(executionTarget))
+                if (string.IsNullOrEmpty(executionTarget))
                 {
                     // Generate the assembly from the C# compilation:
                     var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
@@ -274,31 +275,31 @@ namespace Microsoft.Quantum.IQSharp
                         )
                     };
 
-                    if (qsCompilation.EntryPoints.Any())
-                    {
-                        var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
-                        transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
-                        transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
-                        var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
 
-                        using var generator = new Generator(transformed);
-                        generator.Apply();
+                }
+                else if (qsCompilation.EntryPoints.Any())
+                {
+                    var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
+                    transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
+                    transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
+                    var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
 
-                        // write generated QIR to disk
-                        var tempPath = Path.GetTempPath();
-                        var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
-                        generator.Emit(bcFile, emitBitcode: false);
-                        qirStream = File.OpenRead(bcFile);
+                    using var generator = new Generator(transformed);
+                    generator.Apply();
 
-                        //manifestResources.Add(
-                        //    new ResourceDescription(
-                        //        resourceName: DotnetCoreDll.QirResource,
-                        //        dataProvider: () => qirStream,
-                        //        isPublic: true
-                        //    )
-                        //);
-                    }
+                    // write generated QIR to disk
+                    var tempPath = Path.GetTempPath();
+                    var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
+                    generator.Emit(bcFile, emitBitcode: true);
+                    qirStream = File.OpenRead(bcFile);
 
+                    //manifestResources.Add(
+                    //    new ResourceDescription(
+                    //        resourceName: DotnetCoreDll.QirResource,
+                    //        dataProvider: () => qirStream,
+                    //        isPublic: true
+                    //    )
+                    //);
                 }
 
                 using var ms = new MemoryStream();
