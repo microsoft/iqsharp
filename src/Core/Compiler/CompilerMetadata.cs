@@ -95,8 +95,11 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Calculates Q# metadata needed for all the Assemblies and their dependencies.
         /// </summary>
-        private static QsReferences QsInit(IEnumerable<string> paths) =>
-            new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources:CompilerMetadata.LoadFromCsharp));
+        private static QsReferences QsInit(IEnumerable<string> paths)
+        {
+            var loaded = new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources: false));
+            return loaded;
+        }
 
         public CompilerMetadata WithAssemblies(params AssemblyInfo[] assemblies)
         {
