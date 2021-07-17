@@ -324,7 +324,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (this.ActiveTarget.TargetId.StartsWith(MicrosoftSimulator))
             {
-                channel?.Stdout("Preparing to submit to Microsoft simulator...");
                 var submitter = SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString);
                 if (submitter == null)
                 {
@@ -335,13 +334,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 //var reader = new StreamReader(entryPoint.QirStream);
                 //channel?.Stdout(reader.ReadToEnd());
+                //entryPoint.QirStream.Seek(0, SeekOrigin.Begin);
 
                 var job = await submitter.SubmitAsync(
                     entryPoint.QirStream, 
-                    submissionContext.OperationName, 
+                    $"ENTRYPOINT__{submissionContext.OperationName}", 
                     new List<Runtime.Argument>(), 
                     Runtime.Submitters.SubmissionOptions.Default.With(friendlyName: submissionContext.OperationName, shots: 1));
-                channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
+                channel?.Stdout($"Job successfully submitted.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
                 channel?.Stdout($"   Job ID: {job.Id}");
                 MostRecentJobId = job.Id;
@@ -551,7 +551,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = request.GetResponse().GetResponseStream();
-                return responseStream.ToHistogram(Logger).ToExecutionResult();
+                return responseStream.ToHistogram(
+                    Logger, 
+                    isSimulatorOutput: this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+                .ToExecutionResult();
             }
             catch (Exception e)
             {

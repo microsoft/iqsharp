@@ -20,9 +20,35 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal static class HistogramExtensions
     {
-        internal static Histogram ToHistogram(this Stream stream, ILogger? logger = null)
+        internal static Histogram ToHistogram(this Stream stream, ILogger? logger = null, bool isSimulatorOutput = false)
         {
             var output = new StreamReader(stream).ReadToEnd();
+            if (isSimulatorOutput)
+            {
+                // This routine seems to be using what I think may be an older format
+                // (the az quantum cli had handling for both):  {"Histogram":["0",0.5,"1",0.5]}
+                output = "{ \"Histogram\" : [ \"" + output.Trim() + "\", 1.0 ] }";
+
+                // TODO: Make this more general. The corresponding implementation from the az quantum cli is:
+                //
+                //      if job.target.startswith("microsoft.simulator"):
+                //      
+                //          lines = [line.strip() for line in json_file.readlines()]
+                //          result_start_line = len(lines) - 1
+                //          if lines[-1].endswith('"'):
+                //              while not lines[result_start_line].startswith('"'):
+                //                  result_start_line -= 1
+                //      
+                //          print('\n'.join(lines[:result_start_line]))
+                //          result = ' '.join(lines[result_start_line:])[1:-1]  # seems the cleanest version to display
+                //          print("_" * len(result) + "\n")
+                //      
+                //          json_string = "{ \"histogram\" : { \"" + result + "\" : 1 } }"
+                //          data = json.loads(json_string)
+                //      else:
+                //          data = json.load(json_file)
+            }
+
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
 
             var histogram = new Histogram();
