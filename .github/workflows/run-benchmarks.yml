@@ -5,7 +5,7 @@ on:
     branches:
       - main
       # Allow testing the GitHub workflow during the PR.
-      - cgranade/run-benchmarks
+      - cgranade/benchmark
 
 jobs:
   run-benchmarks:
