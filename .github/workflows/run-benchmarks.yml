@@ -1,0 +1,22 @@
+name: Sync QDK repos
+
+on:
+  push:
+    branches:
+      - main
+      # Allow testing the GitHub workflow during the PR.
+      - cgranade/run-benchmarks
+
+jobs:
+  run-benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          dotnet run -c Release
+        shell: pwsh
+        working-directory: src/Benchmarks
+      - uses: actions/upload-artifact@v2
+        with:
+          name: benchmark-results
+          path: src/Benchmarks/BenchmarkDotNet.Artifacts/results
