@@ -1,4 +1,4 @@
-name: Sync QDK repos
+name: Run benchmarks
 
 on:
   push:
@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          ./build.ps1
+        shell: PowerShell
+        name: Build IQ#
       - run: |
           dotnet run -c Release
         shell: pwsh
