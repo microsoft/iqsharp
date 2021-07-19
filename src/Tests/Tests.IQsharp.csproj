@@ -40,6 +40,7 @@
     <ProjectReference Include="..\MockLibraries\Mock.Standard\Mock.Standard.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
+    <ProjectReference Include="..\MockServices\MockServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>

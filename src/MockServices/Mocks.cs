@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -13,11 +13,21 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
+using Microsoft.Quantum.Simulation.Core;
 
 namespace Tests.IQSharp
 {
+    public class Complex : UDTBase<(double, double)>
+    {
+        public Complex((double, double) data) : base(data) { }
+    }
+
+    public class QubitState : UDTBase<(Complex, Complex)>
+    {
+        public QubitState((Complex, Complex) data) : base(data) { }
+    }
+
     public class MockKernelOptions : IOptions<KernelContext>
     {
         public KernelContext Value => new KernelContext();
@@ -131,10 +141,11 @@ namespace Tests.IQSharp
 
     public class MockOperationResolver : IOperationResolver
     {
-        public OperationInfo Resolve(string input)
-        {
-            return new OperationInfo(null, null);
-        }
+        // NB: We ignore the nullability error here since this mock explicitly
+        //     violates the nullability contract. This should only ever return
+        //     invalid values, since it shouldn't be called — it's only needed
+        //     to make other mock services compile.
+        public OperationInfo Resolve(string input) => null!;
     }
 
     public class MockNugetPackages : INugetPackages

@@ -18,16 +18,6 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.IQSharp
 {
-    public class Complex : UDTBase<(double, double)>
-    {
-        public Complex((double, double) data) : base(data) { }
-    }
-
-    public class QubitState : UDTBase<(Complex, Complex)>
-    {
-        public QubitState((Complex, Complex) data) : base(data) { }
-    }
-
     [TestClass]
     public class SerializationTests
     {

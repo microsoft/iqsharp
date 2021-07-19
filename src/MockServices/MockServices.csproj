@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jupyter\Jupyter.csproj" />
+    <ProjectReference Include="..\Kernel\Kernel.csproj" />
+    <ProjectReference Include="..\MockLibraries\Mock.Chemistry\Mock.Chemistry.csproj" />
+    <ProjectReference Include="..\MockLibraries\Mock.Standard\Mock.Standard.csproj" />
+  </ItemGroup>
+
+</Project>
