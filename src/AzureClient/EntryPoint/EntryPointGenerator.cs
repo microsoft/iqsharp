@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (!workspaceAssemblies.Any() || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling workspace.");
-                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                    throw new CompilationErrorsException(logger);
                 }
 
                 WorkspaceAssemblies = workspaceAssemblies.ToArray();
@@ -135,7 +135,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
-                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                    throw new CompilationErrorsException(logger);
                 }
 
                 compilerMetadata = compilerMetadata.WithAssemblies(SnippetsAssemblyInfo);
@@ -154,7 +154,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (EntryPointAssemblyInfo == null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
-                throw new CompilationErrorsException(logger.Errors.ToArray());
+                throw new CompilationErrorsException(logger);
             }
 
             if (EntryPointAssemblyInfo.Operations.Count() <= 1)
