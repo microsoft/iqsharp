@@ -163,24 +163,34 @@ namespace Tests.IQSharp
 
         internal class AssemblyAssert
         {
-            internal Assembly Assembly;
+            internal AssemblyInfo AssemblyInfo;
         }
 
-        internal static AssemblyAssert Assembly(this Assert assert, Assembly assembly) =>
+        internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo info) =>
             new AssemblyAssert
             {
-                Assembly = assembly
+                AssemblyInfo = info
             };
-
-        internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo info) =>
-            assert.Assembly(info.Assembly);
 
         internal static T HasResource<T>(this T assert, string resourceName)
         where T: AssemblyAssert
         {
             Assert.IsTrue(
-                assert.Assembly.GetManifestResourceNames().Contains(resourceName),
-                $"Assembly {assert.Assembly} did not contain a resource with name {resourceName}."
+                assert.AssemblyInfo.Assembly.GetManifestResourceNames().Contains(resourceName),
+                $"Assembly {assert.AssemblyInfo.Assembly.GetName()} did not contain a resource with name {resourceName}."
+            );
+            return assert;
+        }
+
+        internal static T HasOperation<T>(this T assert, string namespaceName, string name)
+        where T: AssemblyAssert
+        {
+            Assert.IsTrue(
+                assert.AssemblyInfo.Operations.Any(opInfo =>
+                    opInfo.Header.QualifiedName.Namespace == namespaceName &&
+                    opInfo.Header.QualifiedName.Name == name
+                ),
+                $"Assembly {assert.AssemblyInfo.Assembly.GetName()} did not contain an operation with name {namespaceName}.{name}."
             );
             return assert;
         }
