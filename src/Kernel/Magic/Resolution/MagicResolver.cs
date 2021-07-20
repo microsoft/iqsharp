@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,8 @@ using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -24,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class MagicSymbolResolver : IMagicSymbolResolver
     {
         private AssemblyInfo[] kernelAssemblies;
-        private Dictionary<AssemblyInfo, MagicSymbol[]> cache;
+        private Dictionary<AssemblyName, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
         private IWorkspace workspace;
@@ -35,9 +38,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     services to search assembly references for subclasses of
         ///     <see cref="Microsoft.Jupyter.Core.MagicSymbol" />.
         /// </summary>
-        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger)
+        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger, IEventService eventService)
         {
-            this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
+            this.cache = new Dictionary<AssemblyName, MagicSymbol[]>();
             this.logger = logger;
 
             this.kernelAssemblies = new[]
@@ -48,6 +51,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.references = services.GetService<IReferences>();
             this.workspace = services.GetService<IWorkspace>();
+
+            eventService?.TriggerServiceInitialized<IMagicSymbolResolver>(this);
         }
 
 
@@ -102,19 +107,32 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             return null;
         }
 
+        IEnumerable<ISymbol> ISymbolResolver.MaybeResolvePrefix(string symbolPrefix) =>
+            FindAllMagicSymbols()
+            .Where(symbol => symbol.Name.StartsWith(symbolPrefix))
+            .OrderBy(symbol => symbol.Name);
+
         /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindMagic(AssemblyInfo assm)
         {
             var result = new MagicSymbol[0];
+            // If the assembly cannot possibly contain magic symbols, skip it
+            // here.
+            if (IQSharpEngine.MundaneAssemblies.Contains(assm.Assembly.GetName().Name))
+            {
+                return result;
+            }
 
             lock (cache)
             {
-                if (cache.TryGetValue(assm, out result))
+                if (cache.TryGetValue(assm.Assembly.GetName(), out result))
                 {
                     return result;
                 }
 
                 this.logger.LogInformation($"Looking for MagicSymbols in {assm.Assembly.FullName}");
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
 
                 // If types from an assembly cannot be loaded, log a warning and continue.
                 var allMagic = new List<MagicSymbol>();
@@ -169,8 +187,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     );
                 }
 
+                logger.LogInformation("Took {Elapsed} to scan {Assembly} for magic symbols.", stopwatch.Elapsed, assm.Assembly.FullName);
                 result = allMagic.ToArray();
-                cache[assm] = result;
+                cache[assm.Assembly.GetName()] = result;
             }
 
             return result;
@@ -178,6 +197,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindAllMagicSymbols() =>
-            RelevantAssemblies().SelectMany(FindMagic);
+            RelevantAssemblies()
+            .AsParallel()
+            .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
+            .SelectMany(FindMagic);
     }
 }

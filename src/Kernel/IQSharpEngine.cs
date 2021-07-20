@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -23,6 +23,14 @@ using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    public class CompletionEventArgs
+    {
+        public int NCompletions { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+    public class CompletionEvent : Event<CompletionEventArgs>
+    {
+    }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
@@ -35,6 +43,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
         private readonly ICommsRouter commsRouter = null;
+        private readonly IEventService eventService;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
@@ -42,11 +51,35 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver? SymbolsResolver { get; private set; } = null;
 
-        internal IMagicSymbolResolver? MagicResolver { get; private set; } = null;
-
         internal IWorkspace? Workspace { get; private set; } = null;
 
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
+
+        /// <summary>
+        ///     The simple names of those assemblies which do not need to be
+        ///     searched for display encoders or magic commands.
+        /// </summary>
+        internal static readonly IImmutableSet<string> MundaneAssemblies =
+            new string[]
+            {
+                // These assemblies are classical libraries used by IQ#, and
+                // do not contain any quantum code.
+                "NumSharp.Core",
+                "Newtonsoft.Json",
+
+                // These assemblies are part of the Quantum Development Kit
+                // built before IQ# (in dependency ordering), and thus cannot
+                // contain types relevant to IQ#. While it doesn't hurt to scan
+                // these assemblies, we can leave them out for performance.
+                "Microsoft.Quantum.QSharp.Core",
+                "Microsoft.Quantum.QSharp.Foundation",
+                "Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime",
+                "Microsoft.Quantum.Targets.Interfaces",
+                "Microsoft.Quantum.Simulators",
+                "Microsoft.Quantum.Simulation.Common",
+                "Microsoft.Quantum.Runtime.Core",
+            }
+            .ToImmutableHashSet();
 
         /// <inheritdoc />
         public override Task Initialized => initializedSource.Task;
@@ -64,7 +97,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             PerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IMetadataController metadataController,
-            ICommsRouter commsRouter
+            ICommsRouter commsRouter,
+            IEventService eventService
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
@@ -74,12 +108,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.logger = logger;
             this.metadataController = metadataController;
             this.commsRouter = commsRouter;
+            this.eventService = eventService;
         }
 
         /// <inheritdoc />
-        public override void Start()
+        public override void Start() =>
+            this.StartAsync().Wait();
+
+        private async Task StartAsync()
         {
             base.Start();
+            var eventService = services.GetRequiredService<IEventService>();
+            eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
+            {
+                logger?.LogInformation(
+                    "Workspace ready {Time} after startup.",
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                );
+            };
 
             // Before anything else, make sure to start the right background
             // thread on the Q# compilation loader to initialize serializers
@@ -94,12 +140,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             Protocols.Initialize();
 
             logger.LogDebug("Getting services required to start IQ# engine.");
-            this.Snippets = services.GetService<ISnippets>();
-            this.SymbolsResolver = services.GetService<ISymbolResolver>();
-            this.MagicResolver = services.GetService<IMagicSymbolResolver>();
-            this.Workspace = services.GetService<IWorkspace>();
-            var references = services.GetService<IReferences>();
-            var eventService = services.GetService<IEventService>();
+            var serviceTasks = new
+            {
+                Snippets = services.GetRequiredServiceInBackground<ISnippets>(logger),
+                SymbolsResolver = services.GetRequiredServiceInBackground<ISymbolResolver>(logger),
+                MagicResolver = services.GetRequiredServiceInBackground<IMagicSymbolResolver>(logger),
+                Workspace = services.GetRequiredServiceInBackground<IWorkspace>(logger),
+                References = services.GetRequiredServiceInBackground<IReferences>(logger)
+            };
+
+            this.Snippets = await serviceTasks.Snippets;
+            this.SymbolsResolver = await serviceTasks.SymbolsResolver;
+            this.MagicResolver = await serviceTasks.MagicResolver;
+            this.Workspace = await serviceTasks.Workspace;
+            var references = await serviceTasks.References;
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
@@ -172,6 +226,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             #endif
         }
 
+        /// <inheritdoc />
+        public override async Task<CompletionResult?> Complete(string code, int cursorPos)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var completions = await base.Complete(code, cursorPos);
+            stopwatch.Stop();
+            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs
+            {
+                NCompletions = completions?.Matches?.Count ?? 0,
+                Duration = stopwatch.Elapsed
+            });
+            return completions;
+        }
+
         /// <summary>
         ///     Registers an event handler that searches newly loaded packages
         ///     for extensions to this engine (in particular, for result encoders).
@@ -194,13 +263,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 foreach (var assembly in references.Assemblies
                                                    .Select(asm => asm.Assembly)
                                                    .Where(asm => !knownAssemblies.Contains(asm.GetName()))
+                                                   .Where(asm => !MundaneAssemblies.Contains(asm.GetName().Name))
                 )
                 {
                     // Look for display encoders in the new assembly.
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders and magic symbols.", assembly.FullName);
                     // Use the magic resolver to find magic symbols in the new assembly;
                     // it will cache the results for the next magic resolution.
-                    this.MagicResolver?.FindMagic(new AssemblyInfo(assembly));
+                    (this.MagicResolver as IMagicSymbolResolver)?.FindMagic(new AssemblyInfo(assembly));
 
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();

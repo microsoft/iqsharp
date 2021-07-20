@@ -27,14 +27,78 @@ namespace Tests.IQSharp
 {
     internal static class TestExtensions
     {
+        internal class InputAssert : UsingEngineAssert
+        {
+            internal string Code;
+            internal int? CursorPos;
+        }
+
+        internal class UsingEngineAssert
+        {
+            internal IQSharpEngine Engine;
+        }
+
         internal static void AssertIsOk(this ExecutionResult response) =>
             Assert.AreEqual(ExecuteStatus.Ok, response.Status, $"Response was not marked as Ok.\n\tActual status: {response.Status}\n\tResponse output: {response.Output}");
+
+
+        internal async static Task<InputAssert> Input<T>(this Task<T> assert, string code, int? cursorPos = null)
+        where T: UsingEngineAssert =>
+            (await assert).Input(code, cursorPos);
+
+        internal static InputAssert Input(this UsingEngineAssert assert, string code, int? cursorPos = null) =>
+            new InputAssert
+            {
+                Code = code,
+                CursorPos = cursorPos,
+                Engine = assert.Engine
+            };
+
+        internal static UsingEngineAssert UsingEngine(this Assert _, IQSharpEngine engine) =>
+            new UsingEngineAssert
+            {
+                Engine = engine
+            };
+
+        internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert) =>
+            assert.UsingEngine(await IQSharpEngineTests.Init());
+
+        internal static async Task<T> CompletesTo<T>(this Task<T> input, params string[] expectedCompletions)
+        where T: InputAssert =>
+            await (await input).CompletesTo(expectedCompletions);
+
+        internal static async Task<T> CompletesTo<T>(this T input, params string[] expectedCompletions)
+        where T: InputAssert
+        {
+            var actualCompletions = await input.Engine.Complete(input.Code, input.CursorPos ?? 0);
+            Assert.IsNotNull(actualCompletions, "Engine returned null for completions.");
+            Assert.IsNotNull(actualCompletions.Value.Matches, "Engine returned completions with null matches.");
+
+            var actualMatches = actualCompletions.Value.Matches.OrderBy(match => match).ToList();
+            var expectedMatches = expectedCompletions.OrderBy(match => match).ToList();
+
+            try
+            {
+                Assert.AreEqual(actualMatches.Count, expectedMatches.Count);
+                foreach (var (actual, expected) in actualMatches.Zip(expectedMatches))
+                {
+                    Assert.AreEqual(actual, expected);
+                }
+            }
+            catch (AssertFailedException ex)
+            {
+                var message = $"Expected completions [{string.Join(", ", expectedMatches)}], but engine returned completions [{string.Join(", ", actualMatches)}]";
+                throw new AssertFailedException(message, ex);
+            }
+
+            return input;
+        }
     }
 
     [TestClass]
     public class IQSharpEngineTests
     {
-        public async Task<IQSharpEngine> Init(string workspace = "Workspace")
+        public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
             engine.Start();
@@ -80,7 +144,7 @@ namespace Tests.IQSharp
         public static async Task<string?> AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             await engine.Initialized;
-            var configSource = new ConfigurationSource(skipLoading: true);
+            var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
                 new UnitTestLogger<SimulateMagic>());
@@ -181,6 +245,24 @@ namespace Tests.IQSharp
             Assert.IsNotNull(path);
             Assert.AreEqual(expectedPath.ToJson(), path!.ToJson());
         }
+
+        [TestMethod]
+        public async Task CompleteMagic() =>
+            await Assert.That
+                .UsingEngine()
+                    .Input("%sim", 3)
+                        .CompletesTo("%simulate")
+                    .Input("%experimental.", 14)
+                        .CompletesTo(
+                            "%experimental.build_info",
+                            "%experimental.simulate_noise",
+                            "%experimental.noise_model"
+                        )
+                    .Input("%ls", 3)
+                        .CompletesTo(
+                            "%lsopen",
+                            "%lsmagic"
+                        );
 
         [TestMethod]
         public async Task CompileOne()

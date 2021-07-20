@@ -59,7 +59,7 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options)
+        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService)
         {
             if (options?.Value?.AutoOpenNamespaces is string namespaces)
             {
@@ -78,6 +78,8 @@ namespace Microsoft.Quantum.IQSharp
                           nsParts => nsParts.Length > 1 ? nsParts[1] : null
                       );
             }
+
+            eventService?.TriggerServiceInitialized<ICompilerService>(this);
         }
 
         private CompilationLoader CreateTemporaryLoader(string source)

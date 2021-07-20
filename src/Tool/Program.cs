@@ -63,6 +63,7 @@ namespace Microsoft.Quantum.IQSharp
                         new Dictionary<string, string>()
                         {
                             ["--user-agent"] = "UserAgent",
+                            ["--user-agent-extra"] = "UserAgentExtra",
                             ["--hosting-env"] = "HostingEnvironment"
                         }
                     )
@@ -115,16 +116,34 @@ namespace Microsoft.Quantum.IQSharp
                         });
                     }
                 );
+                CommandOption userAgentOption = null;
 
                 AddWorkspaceOption(
                     app
-                    .AddInstallCommand()
+                    .AddInstallCommand(installCmd =>
+                    {
+                        userAgentOption = installCmd.Option(
+                            "--user-agent-extra <AGENT>",
+                            "Sets additional user agent information to be sent to the kernel.",
+                            CommandOptionType.SingleValue
+                        );
+                    })
+                    .WithKernelArguments(() =>
+                        userAgentOption!.HasValue()
+                        ? new [] {"--user-agent-extra", userAgentOption!.Value()}
+                        : Array.Empty<string>()
+                    )
                     .AddKernelCommand(
                         // These command options will be consumed by the Program.Configuration
                         // object above, rather than by the kernel application object itself.
                         // Thus, we only need placeholders to prevent the kernel application
                         // from raising an exception when unrecognized options are passed.
                         kernelCmd => {
+                            kernelCmd.Option<string>(
+                                "--user-agent-extra <AGENT>",
+                                "Sets additional user agent information to be sent to the kernel.",
+                                CommandOptionType.SingleValue
+                            );
                             kernelCmd.Option<string>(
                                 "--user-agent <AGENT>",
                                 "Specifies which user agent has initiated this kernel instance.",
