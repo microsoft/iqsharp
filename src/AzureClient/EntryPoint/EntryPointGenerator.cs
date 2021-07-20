@@ -162,14 +162,23 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogWarning("Entry point assembly contained zero or one operations; this may indicate that C# code is not being correctly regenerated. At least two operations (the entry point and the operation called from the entry point) are expected.");
             }
 
-            var entryPointOperationInfo = EntryPointAssemblyInfo
+            var entryPointOperations = EntryPointAssemblyInfo
                 .Operations
-                .Where(op => op.Header.QualifiedName.Namespace == "ENTRYPOINT" && op.Header.QualifiedName.Name == operationName)
+                .Where(op => op.Header.Attributes.Any(
+                    attr =>
+                    {
+                        var qName = attr.TypeId.ValueOr(null);
+                        return qName != null &&
+                               qName.Name == "EntryPoint" &&
+                               qName.Namespace == "Microsoft.Quantum.Core";
+                    }
+                ));
+            var entryPointOperationInfo = entryPointOperations
                 .SingleOrDefault();
 
             if (entryPointOperationInfo == null)
             {
-                throw new Exception("Entry point assembly either contained multiple entry point operations, or contained zero.");
+                throw new Exception($"Entry point assembly contained {entryPointOperations.Count()}, but expected 1.");
             }
 
             // Construct the EntryPointInfo<,> object

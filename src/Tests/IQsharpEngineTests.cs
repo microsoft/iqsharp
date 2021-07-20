@@ -917,11 +917,17 @@ namespace Tests.IQSharp
                 .Input("%azure.target ionq.mock")
                     .ExecutesSuccessfully()
                 .Input("%azure.submit RunTeleport")
-                    .ExecutesWithError(errors => errors.Contains(
-                        "The Q# operation RunTeleport could not be compiled as an entry point for job execution."
+                    .ExecutesWithError(errors => errors.Any(error =>
+                        // Use StartsWith to avoid mismatching on newlines at
+                        // the end.
+                        error.StartsWith(
+                            "The Q# operation RunTeleport could not be " +
+                            "compiled as an entry point for job execution."
+                        )
                     ));
         }
     }
 }
+
 #pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
