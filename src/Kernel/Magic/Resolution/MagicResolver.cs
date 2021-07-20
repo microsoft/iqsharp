@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class MagicSymbolResolver : IMagicSymbolResolver
     {
         private AssemblyInfo[] kernelAssemblies;
-        private Dictionary<AssemblyName, MagicSymbol[]> cache;
+        private Dictionary<string, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
         private IWorkspace workspace;
@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// </summary>
         public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger, IEventService eventService)
         {
-            this.cache = new Dictionary<AssemblyName, MagicSymbol[]>();
+            this.cache = new Dictionary<string, MagicSymbol[]>();
             this.logger = logger;
 
             this.kernelAssemblies = new[]
@@ -118,14 +118,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var result = new MagicSymbol[0];
             // If the assembly cannot possibly contain magic symbols, skip it
             // here.
-            if (IQSharpEngine.MundaneAssemblies.Contains(assm.Assembly.GetName().Name))
+            var name = assm.Assembly.GetName().Name;
+            if (name.StartsWith("System.") || IQSharpEngine.MundaneAssemblies.Contains(name))
             {
                 return result;
             }
 
             lock (cache)
             {
-                if (cache.TryGetValue(assm.Assembly.GetName(), out result))
+                if (cache.TryGetValue(assm.Assembly.FullName, out result))
                 {
                     return result;
                 }
@@ -189,7 +190,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                 logger.LogInformation("Took {Elapsed} to scan {Assembly} for magic symbols.", stopwatch.Elapsed, assm.Assembly.FullName);
                 result = allMagic.ToArray();
-                cache[assm.Assembly.GetName()] = result;
+                cache[assm.Assembly.FullName] = result;
             }
 
             return result;

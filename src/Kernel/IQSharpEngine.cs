@@ -74,6 +74,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 // do not contain any quantum code.
                 "NumSharp.Core",
                 "Newtonsoft.Json",
+                "Microsoft.CodeAnalysis.CSharp.resources",
 
                 // These assemblies are part of the Quantum Development Kit
                 // built before IQ# (in dependency ordering), and thus cannot
