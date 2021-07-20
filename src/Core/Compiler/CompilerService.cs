@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -25,6 +26,8 @@ using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
+using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
+using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 
@@ -249,9 +252,9 @@ namespace Microsoft.Quantum.IQSharp
 
                 var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
-                // Only create the serialization if we are compiling for an execution target:
+                // Only create the serialization if we aren't compiling for an execution target:
                 List<ResourceDescription>? manifestResources = null;
-                if (!string.IsNullOrEmpty(executionTarget))
+                if (string.IsNullOrEmpty(executionTarget))
                 {
                     // Generate the assembly from the C# compilation:
                     var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
@@ -265,7 +268,7 @@ namespace Microsoft.Quantum.IQSharp
 
                     manifestResources = new List<ResourceDescription>() {
                         new ResourceDescription(
-                            resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
+                            resourceName: DotnetCoreDll.SyntaxTreeResourceName,
                             dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
                             isPublic: true
                         )

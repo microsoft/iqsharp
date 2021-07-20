@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp
 {
     public class CompilerMetadata
     {
-        internal static readonly bool LoadFromCsharp = true; // todo: we should make this properly configurable
+        internal static readonly bool LoadFromCsharp = false; // todo: we should make this properly configurable
 
         private IEnumerable<String> Paths { get; }
 
@@ -96,7 +96,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Calculates Q# metadata needed for all the Assemblies and their dependencies.
         /// </summary>
         private static QsReferences QsInit(IEnumerable<string> paths) =>
-            new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources:CompilerMetadata.LoadFromCsharp));
+            new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources: false));
 
         public CompilerMetadata WithAssemblies(params AssemblyInfo[] assemblies)
         {

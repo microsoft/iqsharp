@@ -14,6 +14,7 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.Simulation.Common;
+using Microsoft.Quantum.Simulation.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
@@ -41,9 +42,19 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("HelloQ", null);
             // Check that snippets compiled from entry points have the
             // syntax trees that we need to generate classical control from.
+            Assert.That.Assembly(entryPointGenerator.EntryPointAssemblyInfo).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+            Assert.That.Assembly(entryPointGenerator.SnippetsAssemblyInfo).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+            foreach (var refAsm in entryPointGenerator.References.Assemblies)
+            {
+                System.Console.WriteLine($"Assembly {refAsm.Assembly.GetName().Name} has {refAsm.Assembly.CustomAttributes.Count(attr => attr.AttributeType == typeof(CallableDeclarationAttribute))} callable declarations...");
+                if (refAsm.Assembly.CustomAttributes.Any(attr => attr.AttributeType == typeof(CallableDeclarationAttribute)))
+                {
+                    Assert.That.Assembly(refAsm).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+                }
+            }
             foreach (var asm in entryPointGenerator.WorkspaceAssemblies)
             {
-                Assert.That.Assembly(asm.Assembly).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+                Assert.That.Assembly(asm).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
             }
             Assert.IsNotNull(entryPoint);
 

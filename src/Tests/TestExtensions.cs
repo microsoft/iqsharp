@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -170,6 +171,9 @@ namespace Tests.IQSharp
             {
                 Assembly = assembly
             };
+
+        internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo info) =>
+            assert.Assembly(info.Assembly);
 
         internal static T HasResource<T>(this T assert, string resourceName)
         where T: AssemblyAssert
