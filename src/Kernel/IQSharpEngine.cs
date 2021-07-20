@@ -55,6 +55,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
 
         /// <summary>
+        ///     Internal-only method for getting services used by this engine.
+        ///     Mainly useful in unit tests, where internal state of the
+        ///     engine may need to be tested to properly mock communications
+        ///     with Azure services.
+        /// </summary>
+        internal async Task<TService> GetEngineService<TService>() =>
+            await services.GetRequiredServiceInBackground<TService>();
+
+        /// <summary>
         ///     The simple names of those assemblies which do not need to be
         ///     searched for display encoders or magic commands.
         /// </summary>

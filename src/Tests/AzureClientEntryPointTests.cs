@@ -12,6 +12,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -38,6 +39,12 @@ namespace Tests.IQSharp
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
             var entryPoint = entryPointGenerator.Generate("HelloQ", null);
+            // Check that snippets compiled from entry points have the
+            // syntax trees that we need to generate classical control from.
+            foreach (var asm in entryPointGenerator.WorkspaceAssemblies)
+            {
+                Assert.That.Assembly(asm.Assembly).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+            }
             Assert.IsNotNull(entryPoint);
 
             var job = await entryPoint.SubmitAsync(
