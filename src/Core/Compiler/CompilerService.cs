@@ -259,7 +259,6 @@ namespace Microsoft.Quantum.IQSharp
                                   ? qsCompilation.Namespaces
                                   : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
-                // Only create the serialization if we aren't compiling for an execution target:
                 List<ResourceDescription>? manifestResources = null;
                 
                 // Generate the assembly from the C# compilation:

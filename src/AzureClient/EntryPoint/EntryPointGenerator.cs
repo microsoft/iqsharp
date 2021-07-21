@@ -159,7 +159,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (EntryPointAssemblyInfo.Operations.Count() <= 1)
             {
-                Logger?.LogWarning("Entry point assembly contained zero or one operations; this may indicate that C# code is not being correctly regenerated. At least two operations (the entry point and the operation called from the entry point) are expected.");
+                // Entry point assembly contained zero or one operations; this
+                // may indicate that C# code is not being correctly
+                // regenerated. At least two operations (the entry point and
+                // the operation called from the entry point) are expected.
+                Logger?.LogWarning(
+                    "Internal error compiling entry point for operation {OperationName}; entry point assembly did not contain the right number of operations. This should never happen, and most likely indicates a bug in IQ#. ",
+                    operationName
+                );
             }
 
             var entryPointOperations = EntryPointAssemblyInfo
