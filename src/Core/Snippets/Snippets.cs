@@ -157,7 +157,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 if (logger.HasErrors)
                 {
-                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                    throw new CompilationErrorsException(logger);
                 }
 
                 foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
