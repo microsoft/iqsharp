@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -342,7 +342,31 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
                 catch (CompilationErrorsException c)
                 {
-                    foreach (var m in c.Errors) channel.Stderr(m);
+                    // Check if the user likely tried to execute a magic
+                    // command and try to give a more helpful message in that
+                    // case.
+                    if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
+                    {
+                        var attemptedMagic = input.Split(" ", 2)[0];
+                        var msg = $"No such magic command {attemptedMagic}.";
+                        if (MagicResolver is MagicSymbolResolver iqsResolver)
+                        {
+                            var similarMagic = iqsResolver
+                                .FindAllMagicSymbols()
+                                .Select(symbol =>
+                                    (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
+                                )
+                                .OrderBy(pair => pair.Item2)
+                                .Take(3)
+                                .Select(symbol => symbol.Name);
+                            msg += $"\nPossibly similar magic commands:\n\t{string.Join(", ", similarMagic)}";
+                        }
+                        channel.Stderr(msg + "\nTo get a list of all available magic commands, run %lsmagic, or visit https://docs.microsoft.com/qsharp/api/iqsharp-magic/.");
+                    }
+                    else
+                    {
+                        foreach (var m in c.Errors) channel.Stderr(m);
+                    }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }
                 catch (Exception e)
