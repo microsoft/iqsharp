@@ -29,6 +29,7 @@ namespace Tests.IQSharp
         {
             internal IQSharpEngine Engine;
         }
+
         internal static async Task<T> WithMockAzure<T>(this Task<T> engine)
         where T: UsingEngineAssert
         {
