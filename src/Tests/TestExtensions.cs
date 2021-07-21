@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
@@ -96,9 +97,16 @@ namespace Tests.IQSharp
             return input;
         }
 
-        internal static async Task<T> ExecutesWithError<T>(this Task<T> input, Func<List<string>, bool>? onErrors = null)
+        internal static async Task<T> ExecutesWithError<T>(this Task<T> input, Func<List<string>, bool>? where = null)
         where T: InputAssert =>
-            await (await input).ExecutesWithError(onErrors);
+            await (await input).ExecutesWithError(where);
+
+        internal static async Task<T> ExecutesWithError<T>(this Task<T> input, string containing)
+        where T: InputAssert =>
+            await input.ExecutesWithError(where: errors =>
+                string.Join(Environment.NewLine, errors)
+                      .NormalizeLineEndings()
+                      .Contains(containing.NormalizeLineEndings()));
 
         internal static async Task<T> ExecutesWithError<T>(this T input, Func<List<string>, bool>? onErrors = null)
         where T: InputAssert
@@ -195,6 +203,9 @@ namespace Tests.IQSharp
             );
             return assert;
         }
+
+        internal static string NormalizeLineEndings(this string s) =>
+            Regex.Replace(s, @"\r\n|\n\r|\n|\r", "\r\n");
 
     }
 
