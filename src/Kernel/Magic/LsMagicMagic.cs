@@ -37,10 +37,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Returns a list of all currently available magic commands.",
-                Description = @"
+                Description = $@"
                     This magic command lists all of the magic commands available in the IQ# kernel,
                     as well as those defined in any packages that have been loaded in the current
-                    session via the [`%package` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/package).
+                    session via the [`%package` magic command]({KnownUris.ReferenceForMagicCommand("package")}).
                 ".Dedent(),
                 Examples = new []
                 {

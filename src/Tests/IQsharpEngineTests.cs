@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -18,10 +18,6 @@ using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Quantum.Experimental;
-using Microsoft.Quantum.IQSharp.AzureClient;
-using System.CodeDom.Compiler;
-using System.IO;
-using System.CodeDom;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -716,7 +712,7 @@ namespace Tests.IQSharp
                 .UsingEngine()
                 .Input("%lsmagi")
                 .ExecutesWithError(containing:
-                    @"
+                    $@"
                         No such magic command %lsmagi.
 
                         Possibly similar magic commands:
@@ -724,7 +720,7 @@ namespace Tests.IQSharp
                         - %lsopen
                         - %debug
 
-                        To get a list of all available magic commands, run %lsmagic, or visit https://docs.microsoft.com/qsharp/api/iqsharp-magic/.
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
                     ".Dedent().Trim());
 
         [TestMethod]

@@ -371,7 +371,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                 .Select(symbol => symbol.Name);
                             channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
                         }
-                        channel.Stderr("To get a list of all available magic commands, run %lsmagic, or visit https://docs.microsoft.com/qsharp/api/iqsharp-magic/.");
+                        channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
                     }
                     else
                     {
