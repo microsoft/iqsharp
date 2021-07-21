@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -25,6 +26,9 @@ using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
+using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
+using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
+using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 
@@ -134,7 +138,7 @@ namespace Microsoft.Quantum.IQSharp
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
-                LoadReferencesBasedOnGeneratedCsharp = string.IsNullOrEmpty(executionTarget), // deserialization of resources in references is only needed if there is an execution target
+                LoadReferencesBasedOnGeneratedCsharp = false, // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
                 RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
@@ -162,7 +166,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true);
         }
 
         /// <summary>
@@ -211,7 +215,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
         private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null)
+            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
@@ -226,16 +230,20 @@ namespace Microsoft.Quantum.IQSharp
             {
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
                 var trees = new List<CodeAnalysis.SyntaxTree>();
-                foreach (var file in sources.Keys)
+                var allSources = regenerateAll
+                    ? GetSourceFiles.Apply(qsCompilation.Namespaces)
+                    : sources.Keys.Select(
+                        file => CompilationUnitManager.GetFileId(file)
+                      );
+                foreach (var file in allSources)
                 {
-                    var sourceFile = CompilationUnitManager.GetFileId(file);
                     var codegenContext = string.IsNullOrEmpty(executionTarget)
                         ? CodegenContext.Create(qsCompilation.Namespaces)
                         : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
-                    var code = SimulationCode.generate(sourceFile, codegenContext);
+                    var code = SimulationCode.generate(file, codegenContext);
                     var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
                     trees.Add(tree);
-                    logger.LogDebug($"Generated the following C# code for {sourceFile}:\n=============\n{code}\n=============\n");
+                    logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
                 }
 
                 // Compile the C# syntax trees:
@@ -247,30 +255,29 @@ namespace Microsoft.Quantum.IQSharp
                     metadata.RoslynMetadatas,
                     options);
 
-                var fromSources = qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
+                var fromSources = regenerateAll
+                                  ? qsCompilation.Namespaces
+                                  : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
-                // Only create the serialization if we are compiling for an execution target:
                 List<ResourceDescription>? manifestResources = null;
-                if (!string.IsNullOrEmpty(executionTarget))
+                
+                // Generate the assembly from the C# compilation:
+                var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+
+                using var serializedCompilation = new MemoryStream();
+                if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
                 {
-                    // Generate the assembly from the C# compilation:
-                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
-
-                    using var serializedCompilation = new MemoryStream();
-                    if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
-                    {
-                        logger.LogError("IQS005", "Failed to write compilation to binary stream.");
-                        return null;
-                    }
-
-                    manifestResources = new List<ResourceDescription>() {
-                        new ResourceDescription(
-                            resourceName: DotnetCoreDll.ResourceNameQsDataBondV1,
-                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
-                            isPublic: true
-                        )
-                    };
+                    logger.LogError("IQS005", "Failed to write compilation to binary stream.");
+                    return null;
                 }
+
+                manifestResources = new List<ResourceDescription>() {
+                    new ResourceDescription(
+                        resourceName: DotnetCoreDll.SyntaxTreeResourceName,
+                        dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                        isPublic: true
+                    )
+                };
 
                 using var ms = new MemoryStream();
                 var result = compilation.Emit(ms, manifestResources: manifestResources);
