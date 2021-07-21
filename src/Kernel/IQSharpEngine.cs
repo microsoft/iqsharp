@@ -358,7 +358,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
                     {
                         var attemptedMagic = input.Split(" ", 2)[0];
-                        var msg = $"No such magic command {attemptedMagic}.";
+                        channel.Stderr($"No such magic command {attemptedMagic}.");
                         if (MagicResolver is MagicSymbolResolver iqsResolver)
                         {
                             var similarMagic = iqsResolver
@@ -369,9 +369,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                 .OrderBy(pair => pair.Item2)
                                 .Take(3)
                                 .Select(symbol => symbol.Name);
-                            msg += $"\nPossibly similar magic commands:\n\t{string.Join(", ", similarMagic)}";
+                            channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
                         }
-                        channel.Stderr(msg + "\nTo get a list of all available magic commands, run %lsmagic, or visit https://docs.microsoft.com/qsharp/api/iqsharp-magic/.");
+                        channel.Stderr("To get a list of all available magic commands, run %lsmagic, or visit https://docs.microsoft.com/qsharp/api/iqsharp-magic/.");
                     }
                     else
                     {
