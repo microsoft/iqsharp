@@ -38,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         Azure Quantum workspace.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}).
                                                 
                         #### Possible errors
 

@@ -56,7 +56,7 @@ namespace Microsoft.Quantum.IQSharp.Common
                 .Exists(m => m.Severity == LSP.DiagnosticSeverity.Error);
 
         public System.Func<LSP.Diagnostic, string> Format => 
-            QsCompiler.Diagnostics.Formatting.MsBuildFormat; 
+            QsCompiler.Diagnostics.Formatting.HumanReadableFormat; 
 
         public virtual IEnumerable<string> Messages =>
             this.Logs.Select(Format);
@@ -81,7 +81,7 @@ namespace Microsoft.Quantum.IQSharp.Common
             if (m.IsError() && ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
             if (m.IsWarning() && WarningCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
 
-            Logger?.Log(MapLevel(m.Severity), $"{m.Code}: {m.Message}");
+            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", m.Code, m.Source, m.Range, m.Message);
             Logs.Add(m);
         }
 

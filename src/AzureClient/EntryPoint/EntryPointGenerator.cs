@@ -118,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (!workspaceAssemblies.Any() || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling workspace.");
-                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                    throw new CompilationErrorsException(logger);
                 }
 
                 WorkspaceAssemblies = workspaceAssemblies.ToArray();
@@ -135,7 +135,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
-                    throw new CompilationErrorsException(logger.Errors.ToArray());
+                    throw new CompilationErrorsException(logger);
                 }
 
                 compilerMetadata = compilerMetadata.WithAssemblies(SnippetsAssemblyInfo);
@@ -154,10 +154,39 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (EntryPointAssemblyInfo == null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
-                throw new CompilationErrorsException(logger.Errors.ToArray());
+                throw new CompilationErrorsException(logger);
             }
 
-            var entryPointOperationInfo = EntryPointAssemblyInfo.Operations.Single();
+            if (EntryPointAssemblyInfo.Operations.Count() <= 1)
+            {
+                // Entry point assembly contained zero or one operations; this
+                // may indicate that C# code is not being correctly
+                // regenerated. At least two operations (the entry point and
+                // the operation called from the entry point) are expected.
+                Logger?.LogWarning(
+                    "Internal error compiling entry point for operation {OperationName}; entry point assembly did not contain the right number of operations. This should never happen, and most likely indicates a bug in IQ#. ",
+                    operationName
+                );
+            }
+
+            var entryPointOperations = EntryPointAssemblyInfo
+                .Operations
+                .Where(op => op.Header.Attributes.Any(
+                    attr =>
+                    {
+                        var qName = attr.TypeId.ValueOr(null);
+                        return qName != null &&
+                               qName.Name == "EntryPoint" &&
+                               qName.Namespace == "Microsoft.Quantum.Core";
+                    }
+                ));
+            var entryPointOperationInfo = entryPointOperations
+                .SingleOrDefault();
+
+            if (entryPointOperationInfo == null)
+            {
+                throw new Exception($"Entry point assembly contained {entryPointOperations.Count()}, but expected 1.");
+            }
 
             // Construct the EntryPointInfo<,> object
             var parameterTypes = entryPointOperationInfo.RoslynParameters.Select(p => p.ParameterType).ToArray();

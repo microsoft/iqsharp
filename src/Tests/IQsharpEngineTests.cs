@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -25,76 +25,6 @@ using Microsoft.Quantum.Experimental;
 
 namespace Tests.IQSharp
 {
-    internal static class TestExtensions
-    {
-        internal class InputAssert : UsingEngineAssert
-        {
-            internal string Code;
-            internal int? CursorPos;
-        }
-
-        internal class UsingEngineAssert
-        {
-            internal IQSharpEngine Engine;
-        }
-
-        internal static void AssertIsOk(this ExecutionResult response) =>
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status, $"Response was not marked as Ok.\n\tActual status: {response.Status}\n\tResponse output: {response.Output}");
-
-
-        internal async static Task<InputAssert> Input<T>(this Task<T> assert, string code, int? cursorPos = null)
-        where T: UsingEngineAssert =>
-            (await assert).Input(code, cursorPos);
-
-        internal static InputAssert Input(this UsingEngineAssert assert, string code, int? cursorPos = null) =>
-            new InputAssert
-            {
-                Code = code,
-                CursorPos = cursorPos,
-                Engine = assert.Engine
-            };
-
-        internal static UsingEngineAssert UsingEngine(this Assert _, IQSharpEngine engine) =>
-            new UsingEngineAssert
-            {
-                Engine = engine
-            };
-
-        internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert) =>
-            assert.UsingEngine(await IQSharpEngineTests.Init());
-
-        internal static async Task<T> CompletesTo<T>(this Task<T> input, params string[] expectedCompletions)
-        where T: InputAssert =>
-            await (await input).CompletesTo(expectedCompletions);
-
-        internal static async Task<T> CompletesTo<T>(this T input, params string[] expectedCompletions)
-        where T: InputAssert
-        {
-            var actualCompletions = await input.Engine.Complete(input.Code, input.CursorPos ?? 0);
-            Assert.IsNotNull(actualCompletions, "Engine returned null for completions.");
-            Assert.IsNotNull(actualCompletions.Value.Matches, "Engine returned completions with null matches.");
-
-            var actualMatches = actualCompletions.Value.Matches.OrderBy(match => match).ToList();
-            var expectedMatches = expectedCompletions.OrderBy(match => match).ToList();
-
-            try
-            {
-                Assert.AreEqual(actualMatches.Count, expectedMatches.Count);
-                foreach (var (actual, expected) in actualMatches.Zip(expectedMatches))
-                {
-                    Assert.AreEqual(actual, expected);
-                }
-            }
-            catch (AssertFailedException ex)
-            {
-                var message = $"Expected completions [{string.Join(", ", expectedMatches)}], but engine returned completions [{string.Join(", ", actualMatches)}]";
-                throw new AssertFailedException(message, ex);
-            }
-
-            return input;
-        }
-    }
-
     [TestClass]
     public class IQSharpEngineTests
     {
@@ -772,6 +702,27 @@ namespace Tests.IQSharp
             Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
         }
 
+        /// <summary>
+        ///     Checks that the hint provided to users when a magic command fails
+        ///     to resolve is correct.
+        /// </summary>
+        [TestMethod]
+        public async Task TestHintOnFailedMagic() =>
+            await Assert.That
+                .UsingEngine()
+                .Input("%lsmagi")
+                .ExecutesWithError(containing:
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %debug
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    ".Dedent().Trim());
+
         [TestMethod]
         public async Task TestDebugMagic()
         {
@@ -938,7 +889,65 @@ namespace Tests.IQSharp
                 }
             ), 2);
         }
+
+        [TestMethod]
+        public async Task CompileAndSubmitWithClassicalControl()
+        {
+            const string source = @"
+                open Microsoft.Quantum.Measurement;
+
+                operation PrepareBellPair(left : Qubit, right : Qubit) : Unit is Adj + Ctl {
+                    H(left);
+                    CNOT(left, right);
+                }
+
+                operation Teleport(msg : Qubit, target : Qubit) : Unit {
+                    use register = Qubit();
+
+                    PrepareBellPair(register, target);
+                    Adjoint PrepareBellPair(msg, register);
+
+                    if MResetZ(msg) == One      { Z(target); }
+                    if MResetZ(register) == One { X(target); }
+                }
+
+                operation RunTeleport() : Unit {
+                    use left = Qubit();
+                    use right = Qubit();
+
+                    H(left);
+                    Teleport(left, right);
+                    H(right);
+
+                    if M(right) == One {
+                        fail ""Got wrong output from teleportation."";
+                    }
+                }
+            ";
+
+            var engineInput = await Assert.That
+                .UsingEngine()
+                .Input(source)
+                    .ExecutesSuccessfully()
+                .WithMockAzure()
+                .Input("%azure.target honeywell.mock")
+                    .ExecutesSuccessfully()
+                .Input("%azure.submit RunTeleport")
+                    .ExecutesSuccessfully()
+                .Input("%azure.target ionq.mock")
+                    .ExecutesSuccessfully()
+                .Input("%azure.submit RunTeleport")
+                    .ExecutesWithError(errors => errors.Any(error =>
+                        // Use StartsWith to avoid mismatching on newlines at
+                        // the end.
+                        error.StartsWith(
+                            "The Q# operation RunTeleport could not be " +
+                            "compiled as an entry point for job execution."
+                        )
+                    ));
+        }
     }
 }
+
 #pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

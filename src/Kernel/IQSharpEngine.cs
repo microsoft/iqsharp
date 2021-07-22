@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -55,6 +55,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
 
         /// <summary>
+        ///     Internal-only method for getting services used by this engine.
+        ///     Mainly useful in unit tests, where internal state of the
+        ///     engine may need to be tested to properly mock communications
+        ///     with Azure services.
+        /// </summary>
+        internal async Task<TService> GetEngineService<TService>() =>
+            await services.GetRequiredServiceInBackground<TService>();
+
+        /// <summary>
         ///     The simple names of those assemblies which do not need to be
         ///     searched for display encoders or magic commands.
         /// </summary>
@@ -65,6 +74,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 // do not contain any quantum code.
                 "NumSharp.Core",
                 "Newtonsoft.Json",
+                "Microsoft.CodeAnalysis.CSharp.resources",
 
                 // These assemblies are part of the Quantum Development Kit
                 // built before IQ# (in dependency ordering), and thus cannot
@@ -342,7 +352,31 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
                 catch (CompilationErrorsException c)
                 {
-                    foreach (var m in c.Errors) channel.Stderr(m);
+                    // Check if the user likely tried to execute a magic
+                    // command and try to give a more helpful message in that
+                    // case.
+                    if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
+                    {
+                        var attemptedMagic = input.Split(" ", 2)[0];
+                        channel.Stderr($"No such magic command {attemptedMagic}.");
+                        if (MagicResolver is MagicSymbolResolver iqsResolver)
+                        {
+                            var similarMagic = iqsResolver
+                                .FindAllMagicSymbols()
+                                .Select(symbol =>
+                                    (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
+                                )
+                                .OrderBy(pair => pair.Item2)
+                                .Take(3)
+                                .Select(symbol => symbol.Name);
+                            channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
+                        }
+                        channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
+                    }
+                    else
+                    {
+                        foreach (var m in c.Errors) channel.Stderr(m);
+                    }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }
                 catch (Exception e)
