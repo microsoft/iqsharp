@@ -352,7 +352,31 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
                 catch (CompilationErrorsException c)
                 {
-                    foreach (var m in c.Errors) channel.Stderr(m);
+                    // Check if the user likely tried to execute a magic
+                    // command and try to give a more helpful message in that
+                    // case.
+                    if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
+                    {
+                        var attemptedMagic = input.Split(" ", 2)[0];
+                        channel.Stderr($"No such magic command {attemptedMagic}.");
+                        if (MagicResolver is MagicSymbolResolver iqsResolver)
+                        {
+                            var similarMagic = iqsResolver
+                                .FindAllMagicSymbols()
+                                .Select(symbol =>
+                                    (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
+                                )
+                                .OrderBy(pair => pair.Item2)
+                                .Take(3)
+                                .Select(symbol => symbol.Name);
+                            channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
+                        }
+                        channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
+                    }
+                    else
+                    {
+                        foreach (var m in c.Errors) channel.Stderr(m);
+                    }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }
                 catch (Exception e)

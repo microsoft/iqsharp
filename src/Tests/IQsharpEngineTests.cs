@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -18,7 +18,6 @@ using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Quantum.Experimental;
-using Microsoft.Quantum.IQSharp.AzureClient;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -702,6 +701,27 @@ namespace Tests.IQSharp
             Assert.IsNotNull(resolver.Resolve("%azure.output"));
             Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
         }
+
+        /// <summary>
+        ///     Checks that the hint provided to users when a magic command fails
+        ///     to resolve is correct.
+        /// </summary>
+        [TestMethod]
+        public async Task TestHintOnFailedMagic() =>
+            await Assert.That
+                .UsingEngine()
+                .Input("%lsmagi")
+                .ExecutesWithError(containing:
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %debug
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    ".Dedent().Trim());
 
         [TestMethod]
         public async Task TestDebugMagic()
