@@ -176,5 +176,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// comparison.
         /// </returns>
         public Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token);
+
+        /// <summary>
+        ///      Returns a string indicating the current target ID if one is
+        ///      set, or <c>null</c> if no target is set.
+        /// </summary>
+        string? ActiveTargetId { get; }
     }
 }
