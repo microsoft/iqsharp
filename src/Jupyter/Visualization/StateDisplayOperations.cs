@@ -21,6 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     public class JupyterDisplayDumper : QuantumSimulator.StateDumper
     {
         private readonly IChannel Channel;
+        private readonly ICommsRouter Router;
         private long _count = -1;
         private Complex[]? _data = null;
 
@@ -72,9 +73,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Constructs a new display dumper for a given simulator, using a
         ///     given Jupyter display channel to output dumped states.
         /// </summary>
-        public JupyterDisplayDumper(QuantumSimulator sim, IChannel channel) : base(sim)
+        public JupyterDisplayDumper(QuantumSimulator sim, IChannel channel, ICommsRouter router) : base(sim)
         {
             Channel = channel;
+            Router = router;
         }
 
         /// <summary>
@@ -118,17 +120,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             if (ShowMeasurementDisplayHistogram)
             {
-                Channel.SendIoPubMessage(new Message
-                {
-                    Header = new MessageHeader()
-                    {
-                        MessageType = "iqsharp_state_dump"
-                    },
-                    Content = new MeasurementHistogramContent()
+                Router.OpenSession(
+                    "iqsharp_state_dump",
+                    new MeasurementHistogramContent()
                     {
                         State = state
-                    },
-                });
+                    }
+                ).Wait();
             }
 
             // Clean up the state vector buffer.
@@ -137,9 +135,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return result;
         }
 
-        internal static QVoid DumpToChannel(QuantumSimulator sim, IChannel channel, IConfigurationSource configurationSource, IQArray<Qubit>? qubits = null)
+        internal static QVoid DumpToChannel(QuantumSimulator sim, IChannel channel, ICommsRouter router, IConfigurationSource configurationSource, IQArray<Qubit>? qubits = null)
         {
-            new JupyterDisplayDumper(sim, channel)
+            new JupyterDisplayDumper(sim, channel, router)
                 .Configure(configurationSource)
                 .Dump(qubits);
             return QVoid.Instance;
@@ -156,6 +154,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
         internal IChannel? Channel = null;
+        internal ICommsRouter? Router = null;
 
         /// <inheritdoc />
         public JupyterDumpMachine(QuantumSimulator m) : base(m)
@@ -185,7 +184,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 "No configuration source was provided when this operation was registered. " +
                 "This is an internal error, and should never occur."
             );
-            return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, ConfigurationSource);
+            Debug.Assert(
+                Router != null,
+                "No Jupyter comms router was provided when this operation was registered. " +
+                "This is an internal error, and should never occur."
+            );
+            return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, Router, ConfigurationSource);
         };
     }
 
@@ -199,6 +203,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
         internal IChannel? Channel = null;
+        internal ICommsRouter? Router = null;
 
         /// <inheritdoc />
         public JupyterDumpRegister(QuantumSimulator m) : base(m)
@@ -229,7 +234,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 "No configuration source was provided when this operation was registered." +
                 "This is an internal error, and should never occur."
             );
-            return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, ConfigurationSource, qubits);
+            Debug.Assert(
+                Router != null,
+                "No Jupyter comms router was provided when this operation was registered. " +
+                "This is an internal error, and should never occur."
+            );
+            return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, Router, ConfigurationSource, qubits);
         };
     }
 }

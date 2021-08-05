@@ -93,7 +93,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <returns>
         ///     The value of <paramref name="simulator" />.
         /// </returns>
-        public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, IConfigurationSource configurationSource)
+        public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, ICommsRouter router, IConfigurationSource configurationSource)
         {
             // First, we disable console-based logging so as to not
             // duplicate messages.
@@ -117,9 +117,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpMachine<>)));
             var concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
             ((JupyterDumpMachine<QVoid>)concreteOp).Channel = channel;
+            ((JupyterDumpMachine<QVoid>)concreteOp).Router = router;
             ((JupyterDumpMachine<QVoid>)concreteOp).ConfigurationSource = configurationSource;
             concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
             ((JupyterDumpMachine<string>)concreteOp).Channel = channel;
+            ((JupyterDumpMachine<string>)concreteOp).Router = router;
             ((JupyterDumpMachine<string>)concreteOp).ConfigurationSource = configurationSource;
 
             // Next, we repeat the whole process for DumpRegister instead of
@@ -132,9 +134,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpRegister<>)));
             concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
             ((JupyterDumpRegister<QVoid>)concreteOp).Channel = channel;
+            ((JupyterDumpRegister<QVoid>)concreteOp).Router = router;
             ((JupyterDumpRegister<QVoid>)concreteOp).ConfigurationSource = configurationSource;
             concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
             ((JupyterDumpRegister<string>)concreteOp).Channel = channel;
+            ((JupyterDumpRegister<string>)concreteOp).Router = router;
             ((JupyterDumpRegister<string>)concreteOp).ConfigurationSource = configurationSource;
 
             return simulator;
