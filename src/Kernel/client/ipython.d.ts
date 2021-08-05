@@ -1,3 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// This file provides TypeScript type declarations for the window.IPython
+// object used for extensibility in Jupyter Notebook.
+
 export interface IPython {
     notebook: Notebook;
 }
