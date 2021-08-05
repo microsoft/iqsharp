@@ -88,6 +88,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
         }
 
+        /// <inheritdoc />
+        public string? ActiveTargetId => ActiveTarget?.TargetId;
+
         /// <inheritdoc/>
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 

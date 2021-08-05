@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 #if TELEMETRY
 
 using System;
@@ -87,6 +89,15 @@ namespace Microsoft.Quantum.IQSharp
             this.OnServiceInitialized<IExecutionEngine>();
             this.OnServiceInitialized<ICompilerService>();
 
+            // To ensure that startup of the telemetry service remains
+            // lightweight enough to observe the startup process, we do not
+            // inject required services through DI but rather create local
+            // variables for each required service and then set them as those
+            // services become available through events below.
+            IAzureClient? client = null;
+            BaseEngine? baseEngine = null;
+
+            // Subscribe the logger to global events in the event service.
             eventService.Events<ExperimentalFeatureEnabledEvent, ExperimentalFeatureContent>().On += (content) =>
             {
                 var evt = "ExperimentalFeatureEnabled".AsTelemetryEvent();
@@ -100,7 +111,16 @@ namespace Microsoft.Quantum.IQSharp
                 );
                 TelemetryLogger.LogEvent(evt);
             };
+            eventService.Events<CompletionEvent, CompletionEventArgs>().On += (args) =>
+            {
+                var evt = "CodeCompletion".AsTelemetryEvent();
+                evt.SetProperty("NCompletions".WithTelemetryNamespace(), args.NCompletions);
+                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString());
+                TelemetryLogger.LogEvent(evt);
+            };
 
+            // As each different service starts up, we can subscribe to their
+            // events as well.
             eventService.OnServiceInitialized<IMetadataController>().On += (metadataController) =>
                 metadataController.MetadataChanged += (metadataController, propertyChanged) =>
                     SetSharedContextIfChanged(metadataController, propertyChanged,
@@ -112,8 +132,6 @@ namespace Microsoft.Quantum.IQSharp
                                                 nameof(metadataController.ClientOrigin),
                                                 nameof(metadataController.ClientFirstOrigin),
                                                 nameof(metadataController.ClientIsNew));
-            eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
-                snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             eventService.OnServiceInitialized<IWorkspace>().On += (workspace) =>
             {
                 TelemetryLogger.LogEvent(
@@ -131,18 +149,17 @@ namespace Microsoft.Quantum.IQSharp
                 );
                 if (executionEngine is BaseEngine engine)
                 {
-                    engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
-                    engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                    engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(engine, client));
+                    engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(engine, client));
+                    baseEngine = engine;
                 }
             };
+            eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
+                snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(baseEngine, client));
             eventService.OnServiceInitialized<IAzureClient>().On += (azureClient) =>
-                azureClient.ConnectToWorkspace += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
-            eventService.Events<CompletionEvent, CompletionEventArgs>().On += (args) =>
             {
-                var evt = "CodeCompletion".AsTelemetryEvent();
-                evt.SetProperty("NCompletions".WithTelemetryNamespace(), args.NCompletions);
-                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString());
-                TelemetryLogger.LogEvent(evt);
+                client = azureClient;
+                azureClient.ConnectToWorkspace += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             };
         }
 
@@ -170,8 +187,8 @@ namespace Microsoft.Quantum.IQSharp
         {
             telemetryLogger.SetContext("AppInfo.Id", "iq#");
             telemetryLogger.SetContext("AppInfo.Version", Kernel.Constants.IQSharpKernelProperties.KernelVersion);
-            telemetryLogger.SetContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version.ToString());
-            telemetryLogger.SetContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version.ToString());
+            telemetryLogger.SetContext("CompilerVersion".WithTelemetryNamespace(), typeof(CompilationUnitManager).Assembly.GetName().Version?.ToString());
+            telemetryLogger.SetContext("SimulationVersion".WithTelemetryNamespace(), typeof(QuantumSimulator).Assembly.GetName().Version?.ToString());
             telemetryLogger.SetContext("Root".WithTelemetryNamespace(), Path.GetFileName(Directory.GetCurrentDirectory()), PiiKind.GenericData);
             telemetryLogger.SetContext("DeviceId".WithTelemetryNamespace(), GetDeviceId(), PiiKind.GenericData);
             telemetryLogger.SetContext("UserAgent".WithTelemetryNamespace(), config?.GetValue<string>("UserAgent"));
@@ -181,7 +198,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Return an Id for this device, namely, the first non-empty MAC address it can find across all network interfaces (if any).
         /// </summary>
-        public static string GetDeviceId() =>
+        public static string? GetDeviceId() =>
             NetworkInterface.GetAllNetworkInterfaces()?
                 .Select(n => n?.GetPhysicalAddress()?.ToString())
                 .Where(address => address != null && !string.IsNullOrWhiteSpace(address) && !address.StartsWith("000000"))
@@ -240,7 +257,7 @@ namespace Microsoft.Quantum.IQSharp
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this SnippetCompiledEventArgs info)
+        public static EventProperties AsTelemetryEvent(this SnippetCompiledEventArgs info, BaseEngine? engine, IAzureClient? client)
         {
             var evt = new EventProperties() { Name = "Compile".WithTelemetryNamespace() };
 
@@ -249,6 +266,8 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Namespaces".WithTelemetryNamespace(),
                 string.Join(",", info.Namespaces?.Where(n => n.StartsWith("Microsoft.Quantum.")).OrderBy(n => n) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), client?.ActiveTargetId);
+            evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), engine?.ExecutionCount?.ToString());
 
             return evt;
         }
@@ -279,7 +298,7 @@ namespace Microsoft.Quantum.IQSharp
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this ExecutedEventArgs info)
+        public static EventProperties AsTelemetryEvent(this ExecutedEventArgs info, BaseEngine? engine, IAzureClient? client)
         {
             var evt = new EventProperties() { Name = "Action".WithTelemetryNamespace() };
 
@@ -287,6 +306,8 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Kind".WithTelemetryNamespace(), info.Symbol?.Kind.ToString());
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Result.Status.ToString());
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), client?.ActiveTargetId);
+            evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), engine?.ExecutionCount?.ToString());
 
             return evt;
         }

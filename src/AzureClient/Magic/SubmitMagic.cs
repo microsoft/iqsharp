@@ -37,9 +37,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The command returns immediately after the job is submitted.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}),
                         and an execution target for the job must have been specified using the
-                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+                        [`%azure.target` magic command]({KnownUris.ReferenceForMagicCommand("azure.target")}).
 
                         #### Required parameters
 
