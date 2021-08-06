@@ -30,9 +30,9 @@ namespace Microsoft.Quantum.IQSharp.ExecutionPathTracer
         /// the key doesn't exist.
         /// </summary>
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defaultVal)
+        where TValue : notnull
         {
-            TValue val;
-            if (!dict.TryGetValue(key, out val))
+            if (!dict.TryGetValue(key, out var val))
             {
                 val = defaultVal;
                 dict.Add(key, val);

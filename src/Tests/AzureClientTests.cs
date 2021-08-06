@@ -253,6 +253,7 @@ namespace Tests.IQSharp
             var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
             Assert.AreEqual("ionq.simulator", target.TargetId);
 
+            var channel = new MockChannel();
             // execute the job and verify that the results are retrieved successfully
             var submissionContext = new AzureSubmissionContext()
             {
@@ -261,7 +262,7 @@ namespace Tests.IQSharp
                 ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
-            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(channel, submissionContext, CancellationToken.None));
             Assert.IsNotNull(histogram);
         }
 
