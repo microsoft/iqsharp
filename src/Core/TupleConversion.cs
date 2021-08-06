@@ -58,7 +58,12 @@ namespace Microsoft.Quantum.IQSharp
             var args = JObject.Parse(json);
             foreach (var a in args)
             {
-                result.Add(a.Key, a.Value?.ToString(Formatting.None));
+                var value = a.Value?.ToString(Formatting.None);
+                if (value == null)
+                {
+                    throw new JsonSerializationException($"JToken for value for property {a.Key} is null; expect JSON null values to be JValue.CreateNull() instead.");
+                }
+                result.Add(a.Key, value);
             }
 
             return result;
@@ -73,20 +78,38 @@ namespace Microsoft.Quantum.IQSharp
         public override bool CanConvert(Type objectType) =>
             objectType.IsSubclassOfGenericType(typeof(UDTBase<>));
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             // Create an instance of the base Data type and populate it with the jObject:
-            var data = Activator.CreateInstance(objectType.GetProperty("Data").PropertyType);
+            var dataProperty = objectType.GetProperty("Data");
+            if (dataProperty == null)
+            {
+                throw new JsonSerializationException($"Attempted to deserialize a UDT, but C# type {objectType} does not have a Data property.");
+            }
+            var data = Activator.CreateInstance(dataProperty.PropertyType);
+            if (data == null)
+            {
+                throw new JsonSerializationException($"Could not create new instance of type {objectType} using its default parameterless constructor.");
+            }
             serializer.Populate(reader, data);
             return Activator.CreateInstance(objectType, data);
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
+            if (value == null)
+            {
+                throw new JsonSerializationException("UDTs cannot be null.");
+            }
             var objectType = value.GetType();
-            var dataType = objectType.GetProperty("Data").PropertyType;
+            var dataProperty = objectType.GetProperty("Data");
+            if (dataProperty == null)
+            {
+                throw new JsonSerializationException($"Attempted to deserialize a UDT, but C# type {objectType} does not have a Data property.");
+            }
+            var dataType = dataProperty.PropertyType;
             var tempWriter = new StringWriter();
-            serializer.Serialize(tempWriter, objectType.GetProperty("Data").GetValue(value), dataType);
+            serializer.Serialize(tempWriter, dataProperty.GetValue(value), dataType);
             var token = JToken.Parse(tempWriter.ToString());
             token["@type"] = objectType.FullName;
             token.WriteTo(writer);
@@ -126,7 +149,8 @@ namespace Microsoft.Quantum.IQSharp
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var tokenData = new Dictionary<string, object>
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            var tokenData = new Dictionary<string, object?>
             {
                 ["@type"] = "@tuple"
             };
@@ -151,7 +175,9 @@ namespace Microsoft.Quantum.IQSharp
                     break;
                 }
 
-                value = type.GetField("Rest").GetValue(value);
+                var rest = type.GetField("Rest")?.GetValue(value);
+                Debug.Assert(rest != null, "Tuple to be serialized either had more than 7 type parameters but did not have a Rest property, or had a Rest property whose value is null; this should never happen.");
+                value = rest;
                 itemOffset += maxTupleLength;
             }
 
@@ -170,8 +196,11 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         public override void WriteJson(JsonWriter writer, [AllowNull] ResourcesEstimator value, JsonSerializer serializer) =>
-            JToken
-            .FromObject(value.AsDictionary())
+            (
+                value?.AsDictionary() is {} dict
+                ? JToken.FromObject(dict)
+                : JValue.CreateNull()
+            )
             .WriteTo(writer);
     }
 
@@ -212,7 +241,7 @@ namespace Microsoft.Quantum.IQSharp
     ///     Delegates JSON conversion from Newtonsoft.Json to a converter
     ///     for System.Text.Json.
     /// </summary>
-    internal class DelegatedConverter<TTarget, TDelegated> : JsonConverter<TTarget>
+    internal class DelegatedConverter<TTarget, TDelegated> : JsonConverter<TTarget?>
     where TTarget: class, TDelegated
     {
         private readonly System.Text.Json.Serialization.JsonConverter<TDelegated> converter;
@@ -223,16 +252,16 @@ namespace Microsoft.Quantum.IQSharp
             this.options.Converters.Add(converter);
         }
 
-        public override TTarget ReadJson(JsonReader reader, Type objectType, [AllowNull] TTarget existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TTarget? ReadJson(JsonReader reader, Type objectType, [AllowNull] TTarget existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var asJson = JToken.ReadFrom(reader).ToString();
             var delegated = System.Text.Json.JsonSerializer.Deserialize<TDelegated>(asJson, options);
-            return (TTarget) delegated;
+            return (TTarget?) delegated;
         }
 
         public override void WriteJson(JsonWriter writer, [AllowNull] TTarget value, JsonSerializer serializer)
         {
-            var asJson = System.Text.Json.JsonSerializer.Serialize<TDelegated>(value, options);
+            var asJson = System.Text.Json.JsonSerializer.Serialize<TDelegated?>(value, options);
             var token = JToken.Parse(asJson);
             token.WriteTo(writer);
         }

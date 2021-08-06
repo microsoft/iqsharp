@@ -33,15 +33,15 @@ namespace Microsoft.Quantum.IQSharp
         /// Default entry point. Returns the list of operations in the Workspace.
         /// </summary>
         [HttpGet]
-        public async Task<Response<string[]>> List()
+        public async Task<Response<string[]?>> List()
         {
             try
             {
-                return new Response<string[]>(Status.Success, new string[] { }, References.Packages?.ToArray());
+                return new Response<string[]?>(Status.Success, new string[] { }, References.Packages?.ToArray());
             }
             catch (Exception e)
             {
-                return new Response<string[]>(Status.Error, new string[] { e.Message });
+                return new Response<string[]?>(Status.Error, new string[] { e.Message });
             }
         }
 
@@ -49,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Default entry point. Returns the list of operations in the Workspace.
         /// </summary>
         [HttpGet("add/{pkg}")]
-        public async Task<Response<string[]>> Add(string pkg)
+        public async Task<Response<string[]?>> Add(string pkg)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp
             }
             catch (Exception e)
             {
-                return new Response<string[]>(Status.Error, new string[] { e.Message });
+                return new Response<string[]?>(Status.Error, new string[] { e.Message });
             }
         }
     }

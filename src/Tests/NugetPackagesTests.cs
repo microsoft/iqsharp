@@ -133,9 +133,9 @@ namespace Tests.IQSharp
                 var pkg = new PackageIdentity(pkgName, pkgVersion);
                 var localPkg = LocalFolderUtility.GetPackageV3(SettingsUtility.GetGlobalPackagesFolder(mgr.NugetSettings), pkg, mgr.Logger);
 
-                if (localPkg != null)
+                if (localPkg != null && Path.GetDirectoryName(localPkg.Path) is {} path)
                 {
-                    Directory.Delete(Path.GetDirectoryName(localPkg.Path), true);
+                    Directory.Delete(path, true);
                 }
             }
 

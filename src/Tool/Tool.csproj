@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <PlatformTarget>x64</PlatformTarget>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Microsoft.Quantum.IQSharp</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp</AssemblyName>
   </PropertyGroup>

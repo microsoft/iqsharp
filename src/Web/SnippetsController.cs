@@ -48,7 +48,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Default entry point. Returns the list of operations in the Workspace.
         /// </summary>
         [HttpGet]
-        public async Task<Response<string[]>> GetMany() =>
+        public async Task<Response<string[]?>> GetMany() =>
             await AsResponse(async (logger) =>
             await IfReady(async () =>
             {
@@ -61,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp
         /// found and those operations then become available for simulation.
         /// </summary>
         [HttpPost("compile")]
-        public async Task<Response<string[]>> Compile([FromBody] CompileSnippetModel model) =>
+        public async Task<Response<string[]?>> Compile([FromBody] CompileSnippetModel model) =>
             await AsResponse(async (logger) =>
             await IfReady(async () =>
             {

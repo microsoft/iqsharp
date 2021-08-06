@@ -1,58 +1,41 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Quantum.IQSharp.Common;
 
 namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
     /// List of arguments that are part of the Reloaded event.
     /// </summary>
-    public class ReloadedEventArgs : EventArgs
-    {
-        public ReloadedEventArgs(string workspace, string status, int fileCount, int projectCount, string[] errors, TimeSpan duration)
-        {
-            this.Workspace = workspace;
-            this.Status = status;
-            this.FileCount = fileCount;
-            this.ProjectCount = projectCount;
-            this.Errors = errors;
-            this.Duration = duration;
-        }
-
-        /// <summary>
-        /// The name of IQ#'s workspace folder
-        /// </summary>
-        public string Workspace { get; }
-
-        /// <summary>
-        /// The workspace status. Can be "success" or "error"
-        /// </summary>
-        public string Status { get; }
-
-        /// <summary>
-        /// The number of files used for compilation.
-        /// </summary>
-        public int FileCount { get; }
-
-        /// <summary>
-        /// The number of projects used for compilation.
-        /// </summary>
-        public int ProjectCount { get; }
-
-        /// <summary>
-        /// The list of error ids reported by the Q# parser (if any).
-        /// </summary>
-        public string[] Errors { get; }
-
-        /// <summary>
-        /// The total time the reload operation took.
-        /// </summary>
-        public TimeSpan Duration { get; }
-    }
+    /// <param name="Workspace">
+    /// The name of IQ#'s workspace folder
+    /// </param>
+    /// <param name="Status">
+    /// The workspace status. Can be "success" or "error"
+    /// </param>
+    /// <param name="FileCount">
+    /// The number of files used for compilation.
+    /// </param>
+    /// <param name="ProjectCount">
+    /// The number of projects used for compilation.
+    /// </param>
+    /// <param name="Errors">
+    /// The list of error ids reported by the Q# parser (if any).
+    /// </param>
+    /// <param name="Duration">
+    /// The total time the reload operation took.
+    /// </param>
+    public record ReloadedEventArgs(
+        string Workspace,
+        string Status,
+        int FileCount,
+        int ProjectCount,
+        string?[] Errors,
+        TimeSpan Duration
+    );
 
     /// <summary>
     /// A Workspace represents a folder in the host with .qs files
@@ -117,7 +100,7 @@ namespace Microsoft.Quantum.IQSharp
         /// To get all assembly information, use the <see cref="Assemblies"/>
         /// property.
         /// </remarks>
-        AssemblyInfo AssemblyInfo { get; }
+        AssemblyInfo? AssemblyInfo { get; }
 
         /// <summary>
         /// Information of all assemblies built from this Workspace.

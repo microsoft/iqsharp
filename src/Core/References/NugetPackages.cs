@@ -294,7 +294,9 @@ namespace Microsoft.Quantum.IQSharp
                 return Enumerable.Empty<AssemblyInfo>();
             }
 
-            var root = Path.GetDirectoryName(pkgInfo.Path);
+            // GetDirectoryName returns null if its input represents
+            // a root directory; in that case, the path is correct as-is.
+            var root = Path.GetDirectoryName(pkgInfo.Path) ?? pkgInfo.Path;
             string[] CheckOnFramework(NuGetFramework framework)
             {
                 var frameworkReducer = new FrameworkReducer();
@@ -329,7 +331,7 @@ namespace Microsoft.Quantum.IQSharp
             return names
                 .Select(LoadAssembly)
                 .Select(AssemblyInfo.Create)
-                .Where(a => a != null);
+                .WhereNotNull();
         }
 
 
@@ -337,7 +339,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Finds the latest version of the package with the given id. 
         /// The id must match. It returns null if the package is not found.
         /// </summary>
-        public async Task<NuGetVersion> GetLatestVersion(string package)
+        public async Task<NuGetVersion?> GetLatestVersion(string package)
         {
             package = package?.Trim() ?? throw new ArgumentNullException(nameof(package));
 

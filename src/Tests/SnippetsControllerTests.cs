@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Microsoft.Quantum.IQSharp;
@@ -35,9 +35,15 @@ namespace Tests.IQSharp
             Console.WriteLine(JsonConvert.SerializeObject(response));
             Assert.AreEqual(Status.Success, response.Status);
             Assert.AreEqual(0, response.Messages.Length);
-            foreach (var op in ops.Zip(response.Result, (expected, actual) => new { expected, actual })) { Assert.AreEqual(op.expected, op.actual); }
 
-            return response.Result;
+            var result = response.Result ?? Array.Empty<string>();
+            Assert.AreEqual(ops.Length, result);
+            foreach (var op in ops.Zip(result, (expected, actual) => new { expected, actual }))
+            {
+                Assert.AreEqual(op.expected, op.actual);
+            }
+
+            return result;
         }
 
         public static async Task<object> AssertSimulate(SnippetsController controller, string snippetName, params string[] messages)
@@ -182,7 +188,7 @@ namespace Tests.IQSharp
         {
             var compiler = new CompilerService(null, null, eventService: null);
 
-            var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).ToArray();
+            var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(n => n.ToFullName()).ToArray();
 
             Assert.AreEqual(2, elements.Length);
             Assert.AreEqual("SNIPPET.Op2", elements[1]);

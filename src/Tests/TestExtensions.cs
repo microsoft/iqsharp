@@ -20,16 +20,10 @@ namespace Tests.IQSharp
     
     internal static class TestExtensions
     {
-        internal class InputAssert : UsingEngineAssert
-        {
-            internal string Code;
-            internal int? CursorPos;
-        }
-
-        internal class UsingEngineAssert
-        {
-            internal IQSharpEngine Engine;
-        }
+        internal record UsingEngineAssert(IQSharpEngine Engine);
+        internal record InputAssert(IQSharpEngine Engine, string Code, int? CursorPos) : UsingEngineAssert(Engine);
+        
+        internal record AssemblyAssert(AssemblyInfo AssemblyInfo);
 
         internal static async Task<T> WithMockAzure<T>(this Task<T> engine)
         where T: UsingEngineAssert
@@ -59,18 +53,10 @@ namespace Tests.IQSharp
             (await assert).Input(code, cursorPos);
 
         internal static InputAssert Input(this UsingEngineAssert assert, string code, int? cursorPos = null) =>
-            new InputAssert
-            {
-                Code = code,
-                CursorPos = cursorPos,
-                Engine = assert.Engine
-            };
+            new InputAssert(assert.Engine, code, cursorPos);
 
         internal static UsingEngineAssert UsingEngine(this Assert _, IQSharpEngine engine) =>
-            new UsingEngineAssert
-            {
-                Engine = engine
-            };
+            new UsingEngineAssert(engine);
 
         internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert) =>
             assert.UsingEngine(await IQSharpEngineTests.Init());
@@ -170,16 +156,11 @@ namespace Tests.IQSharp
             return input;
         }
 
-        internal class AssemblyAssert
+        internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo? info)
         {
-            internal AssemblyInfo AssemblyInfo;
+            Assert.IsNotNull(info);
+            return new AssemblyAssert(info);
         }
-
-        internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo info) =>
-            new AssemblyAssert
-            {
-                AssemblyInfo = info
-            };
 
         internal static T HasResource<T>(this T assert, string resourceName)
         where T: AssemblyAssert

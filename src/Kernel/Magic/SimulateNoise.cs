@@ -113,7 +113,7 @@ namespace Microsoft.Quantum.Experimental
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
-            var symbol = SymbolResolver.Resolve(name) as dynamic; // FIXME: Should be IQSharpSymbol.
+            var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             var qsim = new OpenSystemsSimulator(
@@ -129,7 +129,7 @@ namespace Microsoft.Quantum.Experimental
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
             qsim.OnDisplayableDiagnostic += channel.Display;
-            var operation = symbol.Operation as OperationInfo;
+            var operation = symbol.Operation;
             var value = await operation.RunAsync(qsim, inputParameters);
             return value.ToExecutionResult();
         }

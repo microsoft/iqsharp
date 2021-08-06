@@ -8,16 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp.Common;
-using NuGet.Frameworks;
 using NuGet.Packaging;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -42,8 +37,8 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public class Settings
         {
-            private string _workspace;
-            private string _cacheFolder;
+            private string? _workspace;
+            private string? _cacheFolder;
 
             /// <summary>
             /// The Workspace's root folder
@@ -132,7 +127,7 @@ namespace Microsoft.Quantum.IQSharp
         public IEnumerable<string> SourceFiles => Projects.SelectMany(p => p.SourceFiles).Distinct();
 
         /// <inheritdoc/>
-        public AssemblyInfo AssemblyInfo =>
+        public AssemblyInfo? AssemblyInfo =>
             Projects
                 .Where(p => string.IsNullOrEmpty(p.ProjectFile))
                 .Select(p => p.AssemblyInfo)
@@ -140,7 +135,9 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public IEnumerable<AssemblyInfo> Assemblies =>
-            Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
+            Projects
+            .Select(p => p.AssemblyInfo)
+            .WhereNotNull();
 
         /// <summary>
         /// The compilation errors, if any.
@@ -184,8 +181,8 @@ namespace Microsoft.Quantum.IQSharp
             NugetPackages = packages;
             Logger = logger;
 
-            Root = config?.Value.Workspace;
-            CacheFolder = config?.Value.CacheFolder;
+            Root = config.Value.Workspace;
+            CacheFolder = config.Value.CacheFolder;
             SkipAutoLoadProject = config?.Value.SkipAutoLoadProject ?? false;
             MonitorWorkspace = config?.Value.MonitorWorkspace ?? false;
 
@@ -380,7 +377,7 @@ namespace Microsoft.Quantum.IQSharp
             return true;
         }
 
-        private void LoadReferencedPackages(Action<string> statusCallback = null)
+        private void LoadReferencedPackages(Action<string>? statusCallback = null)
         {
             foreach (var project in Projects)
             {
@@ -443,17 +440,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
-        public void Reload(Action<string> statusCallback = null)
+        public void Reload(Action<string>? statusCallback = null)
         {
             Initialization.Wait();
             DoReload(statusCallback);
         }
 
-        private void DoReload(Action<string> statusCallback = null)
+        private void DoReload(Action<string>? statusCallback = null)
         { 
             var duration = Stopwatch.StartNew();
             var fileCount = 0;
-            var errorIds = new List<string>();
+            var errorIds = new List<string?>();
             ErrorMessages = new List<string>();
 
             try
@@ -510,7 +507,7 @@ namespace Microsoft.Quantum.IQSharp
                             logger.LogError(
                                 "IQS003",
                                 $"Error compiling project {project.ProjectFile}: {e.Message}");
-                            project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                            project.AssemblyInfo = null;
                         }
 
                         ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
@@ -520,7 +517,7 @@ namespace Microsoft.Quantum.IQSharp
                     else
                     {
                         Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
-                        project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        project.AssemblyInfo = null;
                     }
 
                     if (!string.IsNullOrWhiteSpace(project.ProjectFile))

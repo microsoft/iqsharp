@@ -115,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp
                 .Where(include => !string.IsNullOrEmpty(include))
                 .Select(include => Path.GetFullPath(
                     include!.Replace('\\', Path.DirectorySeparatorChar),
-                    Path.GetDirectoryName(ProjectFile)))
+                    Path.GetDirectoryName(ProjectFile).IsNotNull()))
                 .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
 
         /// <summary>
@@ -289,7 +289,17 @@ namespace Microsoft.Quantum.IQSharp
         /// <param name="cacheFolder">The path to the assembly cache folder.</param>
         /// <returns>The created <see cref="Project"/> object.</returns>
         internal static Project FromProjectFile(string projectFile, string cacheFolder) =>
-            new Project(projectFile, Path.GetDirectoryName(projectFile), cacheFolder);
+            new Project(
+                projectFile,
+                // Path.GetDirectoryName only returns null in two conditions:
+                // - Its argument is null
+                // - Its argument is a root directory.
+                // Since we know that projectFile is not null, and does not
+                // represent a directory at all, the return value should not
+                // be null.
+                Path.GetDirectoryName(projectFile).IsNotNull(),
+                cacheFolder
+            );
 
         private Project(string projectFile, string rootFolder, string cacheFolder)
         {

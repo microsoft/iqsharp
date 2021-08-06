@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -16,7 +16,7 @@ namespace Microsoft.Quantum.IQSharp
         internal static bool IsSubclassOfGenericType(this Type subType, Type baseType)
         {
             // Remove any type parameters of subType as applicable.
-            subType = subType?.WithoutTypeParameters();
+            subType = subType.WithoutTypeParameters();
             if (subType == baseType)
             {
                 return true;

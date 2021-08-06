@@ -19,6 +19,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// Information about the state to be displayed.
         /// </summary>
         [JsonProperty("state")]
-        public DisplayableState State { get; set; } = new DisplayableState();
+        public DisplayableState? State { get; set; }
     }
 }

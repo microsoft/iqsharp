@@ -1,20 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#nullable enable
-
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
-using System.Linq;
 using System.Numerics;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -130,14 +123,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             Logger?.LogDebug("Got debug advance message:", message);
             var content = (message.Content as UnknownContent);
-            var session = content?.Data?["debug_session"];
+            var session = content?.Data?["debug_session"]?.ToString();
             if (session == null)
             {
                 Logger?.LogWarning("Got debug advance message, but debug_session was null.", message);
             }
             else
             {
-                var sessionGuid = Guid.Parse(session.ToString());
+                var sessionGuid = Guid.Parse(session);
                 ManualResetEvent? @event = null;
                 lock (SessionAdvanceEvents)
                 {
@@ -228,14 +221,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                             Content = new DebugStatusContent
                             {
                                 DebugSession = session.ToString(),
-                                State = new DisplayableState
-                                {
-
-                                    QubitIds = qsim.QubitIds.Select(q => (int)q),
-                                    NQubits = allocatedQubitsCount,
-                                    Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                    DivId = debugSessionDivId
-                                }
+                                State = new DisplayableState(
+                                    QubitIds: qsim.QubitIds.Select(q => (int)q),
+                                    NQubits: allocatedQubitsCount,
+                                    Amplitudes: new DebugStateDumper(qsim).GetAmplitudes(),
+                                    DivId: debugSessionDivId
+                                )
                             }
                         }
                     );
