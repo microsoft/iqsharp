@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -249,6 +250,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Duration = stopwatch.Elapsed
             });
             return completions;
+        }
+
+        public override async Task<IEnumerable<Completion>> CompleteMundane(string code, int cursorPos)
+        {
+            var position = new TextDocumentPositionParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = new Uri("file:///snippet.qs")
+                },
+                // FIXME: change to line / char
+                Position = new VisualStudio.LanguageServer.Protocol.Position
+                {
+                    Character = cursorPos,
+                    Line = 0
+                }
+            };
+            return Array.Empty<Completion>();
         }
 
         /// <summary>

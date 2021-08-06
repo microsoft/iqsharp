@@ -45,6 +45,6 @@ namespace Microsoft.Quantum.IQSharp
         ///      that it is going to compile.
         /// </summary>
         [JsonIgnore]
-        public Uri Uri => new Uri(Path.GetFullPath(Path.Combine("/", $"snippet_{id}.qs")));
+        public Uri Uri => new Uri($"jupyter-cell:{id}.qs");
     }
 }

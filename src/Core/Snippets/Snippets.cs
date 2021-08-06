@@ -128,6 +128,30 @@ namespace Microsoft.Quantum.IQSharp
                     ? GlobalReferences?.CompilerMetadata
                     : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
 
+        public ProjectManager? ProjectForSnippet(string code, string id)
+        {
+            if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentNullException(nameof(id));
+
+
+            try
+            {
+                var snippets = SelectSnippetsToCompile(code, id).ToArray();
+                var projectManager = new ProjectManager(exceptionLogger: null);
+                projectManager.LoadProjectsAsync(
+                    projectFiles: todo,
+                    projectLoader: todo
+                );
+                // TODO: don't use internal properties!
+                var compilationManager = (CompilationUnitManager)projectManager.GetType().GetProperty("Manager", BindingFlags.NonPublic).GetValue(projectManager);
+                compilationManager.AddOrUpdateSourceFileAsync()
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Compiles the given code. 
         /// If the operations defined in this code are already defined
@@ -201,12 +225,12 @@ namespace Microsoft.Quantum.IQSharp
         /// - either because they have the same id, or because they previously defined an operation
         /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
-        private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
+        private IEnumerable<Snippet> SelectSnippetsToCompile(string code, string? id = null)
         {
             var ops = Compiler.IdentifyElements(code).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
-            return snippetsWithNoOverlap.Append(new Snippet { code = code });
+            return snippetsWithNoOverlap.Append(id == null ? new Snippet { code = code } : new Snippet { code = code, id = id });
         }
 
         /// <summary>
