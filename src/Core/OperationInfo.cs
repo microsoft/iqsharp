@@ -29,14 +29,14 @@ namespace Microsoft.Quantum.IQSharp
         private Lazy<ParameterInfo[]> _roslynParams;
         private Lazy<Type> _returnType;
 
-        internal OperationInfo(Type roslynType, CallableDeclarationHeader header)
+        internal OperationInfo(Type? roslynType, CallableDeclarationHeader header)
         {
             this.Header = header ?? throw new ArgumentNullException(nameof(header));
             RoslynType = roslynType;
             var runMethod = new Lazy<MethodInfo>(() =>
-                RoslynType.GetMethod("Run") is {} method
+                RoslynType?.GetMethod("Run") is {} method
                 ? method
-                : throw new Exception($"Roslyn type {roslynType} generated for a Q# operation did not have a Run method.")
+                : throw new Exception($"Roslyn type {roslynType} generated for a Q# operation does not exist or does not have a Run method.")
             );
             _roslynParams = new Lazy<ParameterInfo[]>(() => runMethod.Value.GetParameters().Skip(1).ToArray());
             _returnType = new Lazy<Type>(() => runMethod.Value.ReturnType.GenericTypeArguments.Single());
@@ -63,7 +63,7 @@ namespace Microsoft.Quantum.IQSharp
         /// The underlying compiled .NET Type for this Q# operation
         /// </summary>
         [JsonIgnore]
-        public Type RoslynType { get; }
+        public Type? RoslynType { get; }
 
         /// <summary>
         /// The input parameters for the underlying compiled .NET Type for this Q# operation

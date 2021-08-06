@@ -81,7 +81,6 @@ namespace Microsoft.Quantum.IQSharp
                 // Find the associated type.
                 var fullName = callable.QualifiedName.ToFullName();
                 var type = Assembly.GetType(fullName);
-                Debug.Assert(type != null, $"Type {fullName} does not exist in {Assembly}, even though a header exists for callable {callable.QualifiedName.ToFullName()}.");
                 var info = new OperationInfo(type, callable);
                 ops.Add(info);
             }
