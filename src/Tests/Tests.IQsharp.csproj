@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <NoWarn>1701</NoWarn>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

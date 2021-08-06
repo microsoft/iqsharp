@@ -1,15 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-#nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text.RegularExpressions;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.Simulation.Core;
-using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -110,7 +102,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     ///     Represents a quantum state vector and all metadata needed to display
     ///     that state vector.
     /// </summary>
-    public class DisplayableState
+    public record DisplayableState(
+        string DivId,
+        IEnumerable<int>? QubitIds,
+        int NQubits,
+        Complex[] Amplitudes
+    )
     {
         private static readonly IComparer<string> ToIntComparer =
             Comparer<string>.Create((label1, label2) =>
@@ -132,20 +129,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     will be displayed.
         /// </summary>
         [JsonProperty("div_id")]
-        public string DivId { get; set; } = string.Empty;
+        public string DivId { get; init; } = DivId;
 
         /// <summary>
         ///     The indexes of each qubit on which this state is defined, or
         ///     <c>null</c> if these indexes are not known.
         /// </summary>
         [JsonProperty("qubit_ids")]
-        public IEnumerable<int>? QubitIds { get; set; }
+        public IEnumerable<int>? QubitIds { get; init; } = QubitIds;
 
         /// <summary>
         ///     The number of qubits on which this state is defined.
         /// </summary>
         [JsonProperty("n_qubits")]
-        public int NQubits { get; set; }
+        public int NQubits { get; init; } = NQubits;
 
         /// <remarks>
         ///     These amplitudes represent the computational basis states
@@ -153,7 +150,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
         /// </remarks>
         [JsonProperty("amplitudes")]
-        public Complex[]? Amplitudes { get; set; }
+        public Complex[] Amplitudes { get; init; } = Amplitudes;
 
         /// <summary>
         ///     An enumerable source of the significant amplitudes of this state

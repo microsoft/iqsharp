@@ -46,12 +46,17 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var parameterValues = new List<object>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
+                if (parameter.Name == null)
+                {
+                    throw new Exception($"Required parameter {parameter} did not have a name.");
+                }
+
                 if (!submissionContext.InputParameters.ContainsKey(parameter.Name))
                 {
                     throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
                 }
 
-                string rawParameterValue = submissionContext.InputParameters[parameter.Name];
+                var rawParameterValue = submissionContext.InputParameters[parameter.Name];
                 try
                 {
                     var parameterValue = submissionContext.InputParameters.DecodeParameter(parameter.Name, type: parameter.ParameterType);
@@ -88,7 +93,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext))
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
             var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext };
-            return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
+            // We use the null forgiveness operator (!) here, since we know
+            // that generated "SubmitAsync" methods always return a non-null
+            // task.
+            return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters)!;
         }
     }
 }

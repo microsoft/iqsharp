@@ -1,17 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#nullable enable
-
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
 // NB: The name `Documentation` can be ambiguous in this context,

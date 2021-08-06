@@ -1,15 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-#nullable enable
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Data;
-using System.Linq;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {

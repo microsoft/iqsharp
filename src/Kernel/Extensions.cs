@@ -1,19 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#nullable enable
-
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -89,7 +80,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (match == null || !match.Success)
                 return null;
 
-            if (!Version.TryParse(match.Groups[1].Value, out Version version))
+            if (!Version.TryParse(match.Groups[1].Value, out Version? version) || version == null)
                 return null;
 
             // return null for development versions that start with 0.0

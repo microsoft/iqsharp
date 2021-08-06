@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
@@ -36,8 +36,8 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
-            if (snippets?.AssemblyInfo != null) yield return snippets.AssemblyInfo;
-            foreach (var asm in workspace?.Assemblies) yield return asm;
+            if (snippets?.AssemblyInfo is not null) yield return snippets.AssemblyInfo;
+            foreach (var asm in workspace.Assemblies) yield return asm;
             foreach (var asm in references.Assemblies) yield return asm;
         }
 
@@ -55,9 +55,10 @@ namespace Microsoft.Quantum.IQSharp
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public OperationInfo Resolve(string name) => ResolveFromAssemblies(name, RelevantAssemblies());
+        public OperationInfo? Resolve(string name) =>
+            ResolveFromAssemblies(name, RelevantAssemblies());
 
-        public static OperationInfo ResolveFromAssemblies(string name, IEnumerable<AssemblyInfo> assemblies)
+        public static OperationInfo? ResolveFromAssemblies(string name, IEnumerable<AssemblyInfo> assemblies)
         {
             var isQualified = name.Contains('.');
             foreach (var operation in assemblies.SelectMany(asm => asm.Operations))

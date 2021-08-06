@@ -23,14 +23,10 @@ using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
-    public class CompletionEventArgs
-    {
-        public int NCompletions { get; set; }
-        public TimeSpan Duration { get; set; }
-    }
+    public record CompletionEventArgs(int NCompletions, TimeSpan Duration);
+
     public class CompletionEvent : Event<CompletionEventArgs>
-    {
-    }
+    { }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
@@ -227,11 +223,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             stopwatch.Start();
             var completions = await base.Complete(code, cursorPos);
             stopwatch.Stop();
-            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs
-            {
-                NCompletions = completions?.Matches?.Count ?? 0,
-                Duration = stopwatch.Elapsed
-            });
+            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs(
+                NCompletions: completions?.Matches?.Count ?? 0,
+                Duration: stopwatch.Elapsed
+            ));
             return completions;
         }
 
@@ -243,12 +238,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             var knownAssemblies = references
                 .Assemblies
-                .Select(asm => asm.Assembly.GetName())
+                .Select(asm => asm.Assembly.GetName().FullName)
                 .ToImmutableHashSet()
                 // Except assemblies known at compile-time as well.
-                .Add(typeof(StateVectorToHtmlResultEncoder).Assembly.GetName())
-                .Add(typeof(AzureClientErrorToHtmlEncoder).Assembly.GetName());
-            foreach (var knownAssembly in knownAssemblies) logger.LogDebug("Loaded known assembly {Name}", knownAssembly.FullName);
+                .Add(typeof(StateVectorToHtmlResultEncoder).Assembly.GetName().FullName)
+                .Add(typeof(AzureClientErrorToHtmlEncoder).Assembly.GetName().FullName);
+            foreach (var knownAssembly in knownAssemblies) logger.LogDebug("Loaded known assembly {Name}", knownAssembly);
 
             // Register new display encoders when packages load.
             references.PackageLoaded += (sender, args) =>
@@ -256,8 +251,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 logger.LogDebug("Scanning for display encoders and magic symbols after loading {Package}.", args.PackageId);
                 foreach (var assembly in references.Assemblies
                                                    .Select(asm => asm.Assembly)
-                                                   .Where(asm => !knownAssemblies.Contains(asm.GetName()))
-                                                   .Where(asm => !MundaneAssemblies.Contains(asm.GetName().Name))
+                                                   .Where(asm => !knownAssemblies.Contains(asm.GetName().FullName))
+                                                   .Where(asm => asm.GetName().Name is not {} name ||
+                                                            !MundaneAssemblies.Contains(name))
                 )
                 {
                     // Look for display encoders in the new assembly.
@@ -311,7 +307,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                             );
                         }
                     }
-                    knownAssemblies = knownAssemblies.Add(assembly.GetName());
+                    knownAssemblies = knownAssemblies.Add(assembly.GetName().FullName);
                 }
             };
         }

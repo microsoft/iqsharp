@@ -27,15 +27,15 @@ namespace Tests.IQSharp
     [TestClass]
     public class DisplayConverterTests
     {
-        private readonly DisplayableState testState = new DisplayableState
-        {
-            QubitIds = new[] {0, 1, 2},
-            NQubits = 3,
-            Amplitudes = Enumerable
+        private readonly DisplayableState testState = new DisplayableState(
+            QubitIds: new[] {0, 1, 2},
+            NQubits: 3,
+            Amplitudes: Enumerable
                 .Range(0, 8)
                 .Select(idx => new System.Numerics.Complex(0, idx))
-                .ToArray()
-        };
+                .ToArray(),
+            DivId: "test-state"
+        );
 
         [TestMethod]
         public void TestBigEndianLabels()

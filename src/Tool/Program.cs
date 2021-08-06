@@ -1,19 +1,17 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-#nullable enable
+
+using System.Diagnostics;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Kernel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.Quantum.IQSharp
 {
+
     /// <summary>
     /// The iqsharp program.
     /// On top of the default commands for a Jupyter Kernel, this program also
@@ -24,17 +22,17 @@ namespace Microsoft.Quantum.IQSharp
     {
         public static IConfiguration? Configuration;
 
-        public class LoggingOptions
+        public record LoggingOptions
         {
             public string? LogPath { get; set; }
         }
 
         public static bool TelemetryOptOut
-#if TELEMETRY
+    #if TELEMETRY
             => !string.IsNullOrEmpty(Configuration?[nameof(TelemetryOptOut)]);
-#else
+    #else
             => true;
-#endif
+    #endif
 
         /// <summary>
         /// Creates dictionary of kernelspec file names to the embedded resource path
@@ -116,7 +114,7 @@ namespace Microsoft.Quantum.IQSharp
                         });
                     }
                 );
-                CommandOption userAgentOption = null;
+                CommandOption? userAgentOption = null;
 
                 AddWorkspaceOption(
                     app
@@ -168,7 +166,10 @@ namespace Microsoft.Quantum.IQSharp
 
         public static IWebHost GetHttpServer(string[]? args)
         {
-           return WebHost.CreateDefaultBuilder(args)
+            // Program.Configuration should be set to something non-null
+            // in Main; we assert that here.
+            Debug.Assert(Configuration != null, "Configuration was not set in Main().");
+            return WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
                 .UseUrls("http://localhost:8888")
                 .UseStartup<Startup>()
                 .UseConfiguration(Configuration)
@@ -197,4 +198,5 @@ namespace Microsoft.Quantum.IQSharp
             return app;
         }
     }
+
 }

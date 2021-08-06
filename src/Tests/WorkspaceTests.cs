@@ -82,7 +82,7 @@ namespace Tests.IQSharp
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
 
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Array.Empty<OperationInfo>());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
@@ -104,7 +104,7 @@ namespace Tests.IQSharp
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
             Assert.IsTrue(ws.Projects.Count() == 1);
             Assert.IsTrue(string.IsNullOrEmpty(ws.Projects.First().ProjectFile));
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Array.Empty<OperationInfo>());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectB.RotateAndMeasure").Any());
         }
 
@@ -119,7 +119,7 @@ namespace Tests.IQSharp
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
             
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Array.Empty<OperationInfo>());
             Assert.IsFalse(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 
@@ -127,7 +127,7 @@ namespace Tests.IQSharp
             ws.Reload();
             Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
 
-            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Array.Empty<OperationInfo>());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 

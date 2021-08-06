@@ -1,0 +1,21 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
+        <LanguageVersion>10.0</LanguageVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <WarningsAsErrors>
+            CS8600,
+            <!-- Possible null reference return. -->
+            CS8603,
+            <!-- Possible null reference argument for parameter -->
+            CS8604,
+
+            <!-- WebRequest, HttpWebRequest, ServicePoint, WebClient are obsolete -->
+            SYSLIB0014
+        </WarningsAsErrors>
+    </PropertyGroup>
+</Project>

@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp
 
         // The list of operations available in the workspace.
         public override IEnumerable<OperationInfo> Operations =>
-            Workspace?.Assemblies?.SelectMany(asm => asm.Operations);
+            Workspace.Assemblies.SelectMany(asm => asm.Operations);
 
         public WorkspaceController(IWorkspace workspace)
         {
@@ -41,10 +41,8 @@ namespace Microsoft.Quantum.IQSharp
         public async Task<Response<string[]>> GetMany() => 
             await AsResponse(async(logger) => 
             await IfReady(async () =>
-            {
-                var names = Operations?.Select(c => c.FullName).ToArray();
-                return names;
-            }));
+                Operations.Select(c => c.FullName).ToArray()
+            ));
 
         /// <summary>
         /// Get one operation.
@@ -66,7 +64,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             try
             {
-                Workspace?.Reload();
+                Workspace.Reload();
                 if (Workspace.HasErrors) return new Response<string[]>(Status.Error, Workspace.ErrorMessages.ToArray());
                 return await GetMany();
             }

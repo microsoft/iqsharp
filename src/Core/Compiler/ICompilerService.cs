@@ -19,26 +19,26 @@ namespace Microsoft.Quantum.IQSharp
         /// Dictionary of auto-opened namespaces when compiling Q# snippets.
         /// Key is the full namespace name, value (if non-null) is the name under which the namespace is opened.
         /// </summary>
-        public IDictionary<string, string> AutoOpenNamespaces { get; set; }
+        public IDictionary<string, string?> AutoOpenNamespaces { get; set; }
 
         /// <summary>
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
-        AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapability = null);
+        AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapability = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
-        AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapabilities = null);
+        AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapabilities = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        AssemblyInfo BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapability = null);
+        AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapability = null);
 
         /// <summary>
         /// Returns the names of all declared callables and types. 
@@ -52,6 +52,6 @@ namespace Microsoft.Quantum.IQSharp
         /// under which the namespace is opened.
         /// The compiler does this on a best effort basis, so it will return the elements even if the compilation fails. 
         /// </summary>
-        IDictionary<string, string> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
+        IDictionary<string, string?> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
     }
 }

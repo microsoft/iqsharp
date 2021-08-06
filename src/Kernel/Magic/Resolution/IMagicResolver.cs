@@ -1,16 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Common;
-
-using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {

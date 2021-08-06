@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Microsoft.AspNetCore.Builder;
@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
-using System;
 using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Quantum.IQSharp
 {
+
     /// <summary>
     /// StartUp class used when starting as a WebHost (http server)
     /// </summary>
@@ -44,11 +44,11 @@ namespace Microsoft.Quantum.IQSharp
         private Type GetTelemetryServiceType()
         {
             return
-#if TELEMETRY
+    #if TELEMETRY
                 Program.TelemetryOptOut ? typeof(NullTelemetryService) : typeof(TelemetryService);
-#else
+    #else
                 typeof(NullTelemetryService);
-#endif
+    #endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -62,4 +62,5 @@ namespace Microsoft.Quantum.IQSharp
             });
         }
     }
+
 }
