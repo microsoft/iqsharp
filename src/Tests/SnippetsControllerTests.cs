@@ -37,7 +37,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(0, response.Messages.Length);
 
             var result = response.Result ?? Array.Empty<string>();
-            Assert.AreEqual(ops.Length, result);
+            Assert.AreEqual(ops.Length, result.Length);
             foreach (var op in ops.Zip(result, (expected, actual) => new { expected, actual }))
             {
                 Assert.AreEqual(op.expected, op.actual);

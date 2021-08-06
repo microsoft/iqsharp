@@ -86,7 +86,7 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public static class OperationInfoExtensions
     {
-        public static async Task<object> RunAsync(this OperationInfo op, IOperationFactory qsim, IDictionary<string, string> arguments)
+        public static async Task<object> RunAsync(this OperationInfo op, IOperationFactory qsim, IDictionary<string, string>? arguments = null)
         {
             if (op.RoslynType == null) throw new InvalidOperationException($"Operation {op.FullName} can't be executed.");
 
@@ -100,7 +100,7 @@ namespace Microsoft.Quantum.IQSharp
             return await (dynamic)run.Invoke(null, args)!;
         }
 
-        private static object[] GetRunArguments(this OperationInfo op, IOperationFactory qsim, IDictionary<string, string> arguments)
+        private static object[] GetRunArguments(this OperationInfo op, IOperationFactory qsim, IDictionary<string, string>? arguments = null)
         {
             var invalid = new List<string>();
             var values = new List<object>();

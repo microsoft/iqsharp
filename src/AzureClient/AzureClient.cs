@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -523,8 +524,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var client = new HttpClient();
-                using var responseStream = await client.GetStreamAsync(job.OutputDataUri);
+                // When mocking, we may have a file:/// URI instead of an http:// or https://
+                // URI. That's not supported by HttpClient, so we check the scheme here.
+                using var responseStream =
+                    job.OutputDataUri.Scheme == "file"
+                    ? File.OpenRead(job.OutputDataUri.LocalPath)
+                    : await new HttpClient().GetStreamAsync(job.OutputDataUri);
                 return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
             catch (Exception e)

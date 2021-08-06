@@ -29,7 +29,7 @@ namespace Microsoft.Quantum.IQSharp
         /// to formulate an input tuple.
         /// </summary>
         [NonAction]
-        public async Task<object> Simulate(string id, IDictionary<string, string> args, Action<string> logger) =>
+        public async Task<object> Simulate(string id, IDictionary<string, string>? args, Action<string> logger) =>
             await IfReady(async () =>
             {
                 using (var qsim = new QuantumSimulator())
@@ -48,7 +48,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the given arguments.
         /// </summary>
         [NonAction]
-        public async Task<Dictionary<string, double>> Estimate(string id, IDictionary<string, string> args, Action<string> logger) =>
+        public async Task<Dictionary<string, double>> Estimate(string id, IDictionary<string, string>? args, Action<string> logger) =>
             await IfReady(async () =>
             {
                 var qsim = new ResourcesEstimator();
@@ -143,9 +143,10 @@ namespace Microsoft.Quantum.IQSharp
         /// if it is POST, it expects a json object in the body and uses JsonToDict to convert that also into a key/value pairs dictionary
         /// </summary>
         /// <returns></returns>
-        internal static async Task<IDictionary<string, string>> GetRunArguments(HttpRequest request) =>
+        internal static async Task<IDictionary<string, string>?> GetRunArguments(HttpRequest? request) =>
             request switch
             {
+                null => null,
                 { Method: "GET" } =>
                     new Dictionary<string, string>(
                         request.Query.ToDictionary(
