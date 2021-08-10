@@ -38,7 +38,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class IQSharpEngine : BaseEngine
     {
         private readonly IPerformanceMonitor performanceMonitor;
-        private readonly PerformanceMonitor performanceMonitor;
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;

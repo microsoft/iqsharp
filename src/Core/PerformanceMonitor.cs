@@ -56,11 +56,14 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc />
-        protected void Start()
+        public void Start()
         {
-            alive = true;
-            thread = new Thread(EventLoop);
-            thread.Start();
+            if (!alive)
+            {
+                alive = true;
+                thread = new Thread(EventLoop);
+                thread.Start();
+            }
         }
 
         /// <inheritdoc />

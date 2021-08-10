@@ -95,5 +95,11 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
+        /// <summary>
+        ///      Begins performance monitoring. Does nothing if performance
+        ///      monitoring has already been started.
+        /// </summary>
+        public void Start();
+
     }
 }
