@@ -25,8 +25,10 @@ old_client = qsharp.client
 ## SETUP ##
 
 def setup_module():
-    # Override with the mock client
+    # Override with the mock client.
     qsharp.client = qsharp.clients.mock.MockClient()
+    # Set which operations the mock client will report in response to `%who`.
+    qsharp.client.mock_operations = ["A.B.C", "A.B.D", "A.E.F"]
 
 def teardown_module():
     qsharp.client = old_client
@@ -42,7 +44,7 @@ def test_can_import_sub_ns():
 
 def test_import_dir_is_correct():
     import A
-    assert dir(A) == ["B"]
+    assert dir(A) == ["B", "E"]
 
     import A.B
     assert dir(A.B) == ["C", "D"]
