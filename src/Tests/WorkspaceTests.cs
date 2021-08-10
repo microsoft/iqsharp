@@ -59,10 +59,10 @@ namespace Tests.IQSharp
             var fileName = Path.Combine(Path.GetFullPath("Workspace"), "BasicOps.qs");
             File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
             ws.Reload();
-            op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            op = ws.AssemblyInfo?.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
+            Assert.IsNotNull(op);
             Assert.IsFalse(ws.HasErrors);
             Assert.AreNotSame(originalAssembly, ws.AssemblyInfo);
-            Assert.IsNotNull(op);
         }
 
         [TestMethod]

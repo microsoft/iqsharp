@@ -9,6 +9,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Azure.Quantum.Authentication;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +29,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameWorkspaceName = "workspace";
         private const string ParameterNameResourceId = "resourceId";
         private const string ParameterNameLocation = "location";
-        
+        private const string ParameterNameCredential = "credential";
+
+        private IConfigurationSource? config { get; }
+
+
         // A valid resource ID looks like:
         // /subscriptions/f846b2bd-d0e2-4a1d-8141-4c6944a9d387/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Quantum/Workspaces/WORKSPACE_NAME
         private readonly static Regex ResourceIdRegex = new Regex(
@@ -39,7 +46,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public ConnectMagic(IAzureClient azureClient)
+        /// <param name="config">Configuration Settings.</param>
+        /// <param name="logger">Logger instance for messages.</param>
+        public ConnectMagic(IAzureClient azureClient, IConfigurationSource config, ILogger<ConnectMagic> logger)
             : base(
                 azureClient,
                 "azure.connect",
@@ -68,15 +77,38 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - `{ParameterNameResourceGroupName}=<string>`: The Azure resource group name for the Azure Quantum workspace.
                         - `{ParameterNameWorkspaceName}=<string>`: The name of the Azure Quantum workspace.
                         
-                        #### Optional parameters
-
-                        - `{ParameterNameRefresh}`: Bypasses any saved or cached credentials when connecting to Azure.
-                        - `{ParameterNameStorageAccountConnectionString}=<string>`: The connection string to the Azure storage
-                        account. Required if the specified Azure Quantum workspace was not linked to a storage
-                        account at workspace creation time.
                         - `{ParameterNameLocation}=<string>`: The Azure region where the Azure Quantum workspace is provisioned.
                         This may be specified as a region name such as `""East US""` or a location name such as `""eastus""`.
                         If no valid value is specified, defaults to `""westus""`.
+
+                        #### Optional parameters
+
+                        - `{ParameterNameStorageAccountConnectionString}=<string>`: The connection string to the Azure storage
+                        account. Required if the specified Azure Quantum workspace was not linked to a storage
+                        account at workspace creation time.
+                        - `{ParameterNameCredential}=<CredentialType>`: The type of credentials to use to authenticate with Azure.
+                        NOTE: to authenticate we leverage the [Azure Identity library](https://docs.microsoft.com/dotnet/api/overview/azure/identity-readme), 
+                        based on this parameter we will create an instance of a Credential Class. 
+                        Possible options are:
+                          * [Environment](https://docs.microsoft.com/dotnet/api/azure.identity.environmentcredential):
+                             Authenticates a service principal or user via credential information specified in environment variables.
+                          * [ManagedIdentity](https://docs.microsoft.com/dotnet/api/azure.identity.managedidentitycredential):
+                             Authenticates the managed identity of an azure resource.
+                          * [CLI](https://docs.microsoft.com/dotnet/api/azure.identity.azureclicredential):
+                             Authenticate in a development environment with the Azure CLI.
+                          * [SharedToken](https://docs.microsoft.com/dotnet/api/azure.identity.sharedtokencachecredential):
+                             Authenticate using tokens in the local cache shared between Microsoft applications.
+                          * [VisualStudio](https://docs.microsoft.com/dotnet/api/azure.identity.visualstudiocredential):
+                             Authenticate using data from Visual Studio.
+                          * [VisualStudioCode](https://docs.microsoft.com/dotnet/api/azure.identity.visualstudiocodecredential):
+                             Authenticate in a development environment with Visual Studio Code.
+                          * [Interactive](https://docs.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential):
+                             Opens a new browser window to interactively authenticate a user 
+                             and obtain an access token.
+                          * [DeviceCode](https://docs.microsoft.com/dotnet/api/azure.identity.devicecodecredential):
+                             Authenticates a user using the device code flow to obtain an access token.
+                        If not provided, it will try each credential type in order and pick the first one that can
+                        succesfully authenticate with Azure.
                         
                         #### Possible errors
 
@@ -86,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     Examples = new[]
                     {
                         $@"
-                            Connect to an Azure Quantum workspace using its resource ID:
+                            Connect to an Azure Quantum workspace using its resource ID to the 'West Us' region:
                             ```
                             In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
@@ -106,25 +138,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
 
                         $@"
-                            Connect to an Azure Quantum workspace using individual subscription ID, resource group name, and workspace name parameters:
+                            Connect to an Azure Quantum workspace using individual subscription ID, resource group name, using a browser to prompt for user credentials with Azure:
                             ```
                             In []: %azure.connect {ParameterNameSubscriptionId}=""SUBSCRIPTION_ID""
                                                   {ParameterNameResourceGroupName}=""RESOURCE_GROUP_NAME""
                                                   {ParameterNameWorkspaceName}=""WORKSPACE_NAME""
-                                                  {ParameterNameStorageAccountConnectionString}=""STORAGE_ACCOUNT_CONNECTION_STRING""
+                                                  {ParameterNameCredential}=""interactive""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
-                                    <list of Q# execution targets available in the Azure Quantum workspace>
-                            ```
-                        ".Dedent(),
-
-                        $@"
-                            Connect to an Azure Quantum workspace and force a credential prompt using
-                            the `{ParameterNameRefresh}` option:
-                            ```
-                            In []: %azure.connect {ParameterNameRefresh} ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME""
-                            Out[]: To sign in, use a web browser to open the page https://microsoft.com/devicelogin
-                                    and enter the code [login code] to authenticate.
-                                    Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```
                         ".Dedent(),
@@ -138,7 +158,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                },
+                logger)
+        {
+            this.config = config;
+        }
 
         /// <summary>
         ///     Connects to an Azure workspace given a subscription ID, resource group name,
@@ -149,7 +173,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input);
             if (!inputParameters.Any())
             {
-                return await AzureClient.GetConnectionStatusAsync(channel);
+                return await AzureClient.GetConnectionStatusAsync(channel, cancellationToken);
             }
 
             var resourceId = inputParameters.DecodeParameter<string>(ParameterNameResourceId, defaultValue: string.Empty);
@@ -177,9 +201,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             else
             {
                 // look for each of the parameters individually
-                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: string.Empty);
-                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: string.Empty);
-                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: string.Empty);
+                subscriptionId = inputParameters.DecodeParameter<string>(ParameterNameSubscriptionId, defaultValue: config?.SubscriptionId ?? string.Empty);
+                resourceGroupName = inputParameters.DecodeParameter<string>(ParameterNameResourceGroupName, defaultValue: config?.WorkspaceRG ?? string.Empty);
+                workspaceName = inputParameters.DecodeParameter<string>(ParameterNameWorkspaceName, defaultValue: config?.WorkspaceName ?? string.Empty);
             }
 
             if (string.IsNullOrWhiteSpace(subscriptionId) ||
@@ -191,9 +215,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.WorkspaceNotFound.ToExecutionResult();
             }
 
+            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: config?.WorkspaceLocation ?? string.Empty);
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
-            var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: string.Empty);
-            var refreshCredentials = inputParameters.DecodeParameter<bool>(ParameterNameRefresh, defaultValue: false);
+            var credentialType = inputParameters.DecodeParameter<CredentialType>(ParameterNameCredential, defaultValue: CredentialType.Default);
             return await AzureClient.ConnectAsync(
                 channel,
                 subscriptionId,
@@ -201,7 +225,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 workspaceName,
                 storageAccountConnectionString,
                 location,
-                refreshCredentials);
+                credentialType,
+                cancellationToken);
         }
     }
 }

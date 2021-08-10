@@ -4,7 +4,7 @@
 #nullable enable
 
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
 using System;
 using System.IO;
 
@@ -12,27 +12,41 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockCloudJob : CloudJob
     {
+        private string _id;
+        private string? _outputFile;
+
         public MockCloudJob(string? id = null)
             : base(
-                new Azure.Quantum.Workspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName"),
+                new MockAzureWorkspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
                 new JobDetails(
-                    containerUri: null,
-                    inputDataFormat: null,
-                    providerId: null,
-                    target: null,
-                    id: id ?? Guid.NewGuid().ToString(),
-                    status: "Succeeded",
-                    outputDataUri: CreateMockOutputFileUri()
+                    containerUri: string.Empty,
+                    inputDataFormat: string.Empty,
+                    providerId: string.Empty,
+                    target: string.Empty
                 ))
         {
+            _id = id ?? Guid.NewGuid().ToString();
         }
 
-        private static string CreateMockOutputFileUri()
+        public override string Id => _id;
+
+        public override string Status => JobStatus.Succeeded.ToString();
+
+        public override Uri OutputDataUri
         {
-            var tempFilePath = Path.GetTempFileName();
-            using var outputFile = new StreamWriter(tempFilePath);
-            outputFile.WriteLine(@"{'Histogram':['0',0.5,'1',0.5]}");
-            return new Uri(tempFilePath).AbsoluteUri;
+            get
+            {
+                if (_outputFile == null)
+                {
+                    var path = Path.GetTempFileName();
+                    using var outputFile = new StreamWriter(path);
+                    outputFile.WriteLine(@"{'Histogram':['0',0.5,'1',0.5]}");
+
+                    _outputFile = path;
+                }
+
+                return new Uri(_outputFile);
+            }
         }
     }
 }

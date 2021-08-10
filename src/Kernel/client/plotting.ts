@@ -1,18 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// This is a bit of a hack needed to map the requireJS
-// call made by TypeScript onto the URL that Jupyter
-// makes our kernelspec available at.
-//
-// Using this hack, we can split the type import and
-// the runtime import apart, then glue them back
-// together using a declare global to solve TS2686.
-/// <amd-dependency path="chart" name="Chart" />
-import type * as ChartJs from "chart.js";
-declare global {
-    const Chart: typeof ChartJs;
-}
+import { Chart } from "chart.js";
 
 export interface Complex {
     Real: number;
@@ -29,7 +18,8 @@ export interface DisplayableState {
 
 export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
 
-export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: DisplayableState) {
+export function updateChart(plotStyle: PlotStyle, chart: Chart, state: DisplayableState) {
+    fitChart(chart, state);
     switch (plotStyle) {
         case "amplitude-phase":
             updateWithAmplitudePhaseData(chart, state);
@@ -45,7 +35,12 @@ export function updateChart(plotStyle: PlotStyle, chart: ChartJs, state: Display
     }
 }
 
-function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
+function fitChart(chart: Chart, state: DisplayableState) {
+    let chartWidth = state.amplitudes.length * 100;
+    chart.canvas.parentElement.style.width = `${chartWidth}px`;
+}
+
+function updateWithAmplitudePhaseData(chart: Chart, state: DisplayableState) {
     let amps = state.amplitudes;
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
@@ -102,7 +97,7 @@ function updateWithAmplitudePhaseData(chart: ChartJs, state: DisplayableState) {
 
 }
 
-function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState) {
+function updateWithAmplitudeSquaredData(chart: Chart, state: DisplayableState) {
     let amps = state.amplitudes;
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
@@ -152,7 +147,7 @@ function updateWithAmplitudeSquaredData(chart: ChartJs, state: DisplayableState)
     chart.update();
 }
 
-function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
+function updateWithRealImagData(chart: Chart, state: DisplayableState) {
     let amps = state.amplitudes;
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
@@ -213,13 +208,14 @@ function updateWithRealImagData(chart: ChartJs, state: DisplayableState) {
 
 export function createNewCanvas(
     parentNode: HTMLElement, initialState?: DisplayableState | null
-): { chart: ChartJs } {
+): { chart: Chart } {
     let canvas = document.createElement("canvas");
     canvas.style.width = "100%"
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
-            responsive: true
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
 
@@ -255,7 +251,7 @@ export function createToolbarContainer(toolbarName: string) {
     return toolbarContainer;
 }
 
-export function attachDumpMachineToolbar(chart: ChartJs, state: DisplayableState) {
+export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState) {
     // Create toolbar container and insert at the beginning of the state div
     let stateDiv = document.getElementById(state.div_id);
     let toolbarContainer = createToolbarContainer("Chart options:");

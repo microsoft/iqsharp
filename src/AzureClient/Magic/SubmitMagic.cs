@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -22,7 +23,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public SubmitMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public SubmitMagic(IAzureClient azureClient, ILogger<SubmitMagic> logger)
             : base(
                 azureClient,
                 "azure.submit",
@@ -35,9 +37,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The command returns immediately after the job is submitted.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}),
                         and an execution target for the job must have been specified using the
-                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+                        [`%azure.target` magic command]({KnownUris.ReferenceForMagicCommand("azure.target")}).
 
                         #### Required parameters
 
@@ -90,7 +92,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                },
+                logger)
         { }
 
         /// <summary>

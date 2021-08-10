@@ -174,13 +174,13 @@ namespace Tests.IQSharp
             // Run:
             var results = await AssertSimulate(controller, "DependsOnWorkspace", "Hello Foo again!") as QArray<Result>;
             Assert.IsNotNull(results);
-            Assert.AreEqual(5, results.Length);
+            Assert.AreEqual(5, results!.Length);
         }
 
         [TestMethod]
         public void IdentifyOperations()
         {
-            var compiler = new CompilerService(null, null);
+            var compiler = new CompilerService(null, null, eventService: null);
 
             var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).ToArray();
 

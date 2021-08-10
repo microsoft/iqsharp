@@ -46,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     symbol was defined.
         /// </summary>
         [JsonProperty("source")]
-        public string Source => Operation.Header.SourceFile;
+        public string Source => Operation.Header.Source.AssemblyOrCodeFile;
 
         /// <summary>
         ///     The documentation for this symbol, as provided by its API
@@ -118,9 +118,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <param name="opsResolver">
         ///     An object to be used to resolve operation names to symbols.
         /// </param>
-        public SymbolResolver(IOperationResolver opsResolver)
+        /// <param name="eventService">
+        ///     The event service used to signal the successful start of this
+        ///     resolver service.
+        /// </param>
+        public SymbolResolver(IOperationResolver opsResolver, IEventService eventService)
         {
             this.opsResolver = opsResolver;
+
+            eventService?.TriggerServiceInitialized<ISymbolResolver>(this);
         }
 
         /// <summary>

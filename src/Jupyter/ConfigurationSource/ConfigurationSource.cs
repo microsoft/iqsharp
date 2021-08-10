@@ -23,7 +23,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public IDictionary<string, JToken> Configuration => _Configuration;
         private readonly IDictionary<string, JToken> _Configuration;
 
-        private string ConfigPath =>
+        /// <summary>
+        /// The path of the file use to persist configuration into disk.
+        /// </summary>
+        public static string ConfigPath =>
             Path.Join(Directory.GetCurrentDirectory(), ".iqsharp-config.json");
 
         /// <summary>
@@ -31,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     configuration options from the file <c>.iqsharp-config.json</c>,
         ///     if that file exists.
         /// </summary>
-        public ConfigurationSource(bool skipLoading = false)
+        public ConfigurationSource(IEventService? eventService = null, bool skipLoading = false)
         {
             // Try loading configuration from a JSON file in the current working
             // directory.
@@ -52,6 +55,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 _Configuration = new Dictionary<string, JToken>();
             }
+
+            eventService?.TriggerServiceInitialized<IConfigurationSource>(this);
         }
 
         /// <summary>

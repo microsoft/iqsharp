@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
+using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -23,7 +24,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public ExecuteMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public ExecuteMagic(IAzureClient azureClient, ILogger<ExecuteMagic> logger)
             : base(
                 azureClient,
                 "azure.execute",
@@ -36,9 +38,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The command waits a specified amount of time for the job to complete before returning.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}),
                         and an execution target for the job must have been specified using the
-                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+                        [`%azure.target` magic command]({KnownUris.ReferenceForMagicCommand("azure.target")}).
 
                         #### Required parameters
 
@@ -68,6 +70,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - {AzureClientError.JobSubmissionFailed.ToMarkdown()}
                         - {AzureClientError.JobNotCompleted.ToMarkdown()}
                         - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
+                        - {AzureClientError.JobFailedOrCancelled.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
@@ -106,7 +109,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                }, logger)
         { }
 
         /// <summary>

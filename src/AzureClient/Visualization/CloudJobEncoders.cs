@@ -22,18 +22,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? dateTime
             : null as DateTime?;
 
+        // Overloading `ToDateTime` in order to unblock changes in PR https://github.com/microsoft/qsharp-runtime/pull/467. 
+        private static DateTime? ToDateTime(this DateTime? dateTime) => dateTime;
+
         internal static Dictionary<string, object?> ToDictionary(this CloudJob cloudJob) =>
             new Dictionary<string, object?>()
             {
                 ["id"] = cloudJob.Id,
-                ["name"] = cloudJob.Details.Name,
-                ["status"] = cloudJob.Status,
+                ["name"] = cloudJob.Details.Name ?? string.Empty,
+                ["status"] = cloudJob.Status ?? string.Empty,
                 ["uri"] = cloudJob.Uri.ToString(),
-                ["provider"] = cloudJob.Details.ProviderId,
-                ["target"] = cloudJob.Details.Target,
-                ["creation_time"] = cloudJob.Details.CreationTime.ToDateTime()?.ToUniversalTime(),
-                ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToUniversalTime(),
-                ["end_execution_time"] = cloudJob.Details.EndExecutionTime.ToDateTime()?.ToUniversalTime(),
+                ["provider"] = cloudJob.Details.ProviderId ?? string.Empty,
+                ["target"] = cloudJob.Details.Target ?? string.Empty,
+                ["creation_time"] = cloudJob.Details.CreationTime?.ToUniversalTime(),
+                ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime?.ToUniversalTime(),
+                ["end_execution_time"] = cloudJob.Details.EndExecutionTime?.ToUniversalTime(),
             };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
@@ -41,13 +44,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 Columns = new List<(string, Func<CloudJob, string>)>
                 {
-                    ("Job Name", cloudJob => cloudJob.Details.Name),
+                    ("Job Name", cloudJob => cloudJob.Details.Name ?? cloudJob.Id),
                     ("Job ID", cloudJob => $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{cloudJob.Id}</a>"),
-                    ("Job Status", cloudJob => cloudJob.Status),
-                    ("Target", cloudJob => cloudJob.Details.Target),
-                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime.ToDateTime()?.ToString() ?? string.Empty),
-                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
-                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime.ToDateTime()?.ToString() ?? string.Empty),
+                    ("Job Status", cloudJob => cloudJob.Status ?? string.Empty),
+                    ("Target", cloudJob => cloudJob.Details.Target ?? string.Empty),
+                    ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
+                    ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
+                    ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };

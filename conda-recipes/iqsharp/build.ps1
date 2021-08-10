@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 if ($PSVersionTable.PSEdition -eq "Desktop") {
@@ -24,7 +24,7 @@ $TargetDirectory = (Join-Path (Join-Path $Env:PREFIX "opt") "iqsharp");
 New-Item -Force -ItemType Directory -ErrorAction SilentlyContinue $TargetDirectory;
 
 Write-Host "## Artifact manifest ($ArtifactRoot): ##"
-Get-ChildItem -Recurse $ArtifactRoot | %{ Write-Host $_.FullName }
+Get-ChildItem -Recurse $ArtifactRoot | ForEach-Object { Write-Host $_.FullName }
 
 Write-Host "## Copying IQ# from '$SelfContainedDirectory' into '$TargetDirectory...' ##"
 Copy-Item (Join-Path $SelfContainedDirectory "*") $TargetDirectory -Verbose -Recurse -Force;
@@ -50,7 +50,7 @@ Push-Location $TargetDirectory
 
     # Build up an install command to execute.
     & "./$BaseName" --version;
-    $InstallCmd = "./$BaseName install --path-to-tool $(Resolve-Path $PathToTool) --sys-prefix";
+    $InstallCmd = "./$BaseName install --path-to-tool $(Resolve-Path $PathToTool) --sys-prefix --user-agent-extra `"(iqsharp:conda)`"";
     Write-Host "$ $InstallCmd";
     Invoke-Expression $InstallCmd;
 Pop-Location

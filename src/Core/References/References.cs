@@ -88,8 +88,6 @@ namespace Microsoft.Quantum.IQSharp
             Nugets = packages;
             Logger = logger;
 
-            eventService?.TriggerServiceInitialized<IReferences>(this);
-
             var referencesOptions = options.Value;
             if (referencesOptions?.AutoLoadPackages is string autoLoadPkgs)
             {
@@ -103,6 +101,8 @@ namespace Microsoft.Quantum.IQSharp
             _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             AssemblyLoadContext.Default.Resolving += Resolve;
+
+            eventService?.TriggerServiceInitialized<IReferences>(this);
         }
 
         /// <inheritdoc/>
@@ -173,6 +173,7 @@ namespace Microsoft.Quantum.IQSharp
             AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
+            Logger?.LogInformation("Loaded package {Id}::{Version} in {Time}.", pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed);
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed));
         }
 
@@ -185,7 +186,16 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) =>
-            Assemblies.FirstOrDefault(a => a.Assembly.FullName == name.FullName)?.Assembly;
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) 
+        {
+            bool Compare(AssemblyInfo a) =>
+                // If the Assembly requested doesn't include version, then check only for the simple name
+                // of the assembly, otherwise check for the full name (including PublicKey)
+                (name.Version == null)
+                    ? a.Assembly.GetName().Name == name.Name
+                    : a.Assembly.FullName == name.FullName;
+            
+            return Assemblies.FirstOrDefault(Compare)?.Assembly;
+        }
     }
 }

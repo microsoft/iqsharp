@@ -12,6 +12,7 @@ import json
 
 from typing import List, Dict, Callable, Any
 from distutils.version import LooseVersion
+from contextlib import contextmanager
 
 ## LOGGING ##
 
@@ -99,3 +100,8 @@ class MockClient(object):
         """
         logger.debug(f"MockClient.component_versions called with keyword arguments:\n{kwargs}")
         return {}
+
+    @contextmanager
+    def capture_diagnostics(self, passthrough: bool) -> List[Any]:
+        data = []
+        yield data

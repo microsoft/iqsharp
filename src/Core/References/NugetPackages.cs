@@ -111,7 +111,8 @@ namespace Microsoft.Quantum.IQSharp
 
         public NugetPackages(
             IOptions<Settings> config,
-            ILogger<NugetPackages> logger
+            ILogger<NugetPackages>? logger,
+            IEventService? eventService
         )
         {
             this.Logger = new NuGetLogger(logger);
@@ -120,6 +121,8 @@ namespace Microsoft.Quantum.IQSharp
             this.DefaultVersions = InitDefaultVersions(config?.Value.DefaultPackageVersions);
             this.Items = Enumerable.Empty<PackageIdentity>();
             this.Assemblies = Enumerable.Empty<AssemblyInfo>();
+
+            eventService?.TriggerServiceInitialized<INugetPackages>(this);
         }
 
         /// <summary>

@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Azure.Quantum.Client.Models;
+using Azure.Quantum.Jobs.Models;
+
+using Microsoft.Azure.Quantum;
 using Microsoft.Jupyter.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,21 +18,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal static class TargetStatusExtensions
     {
-        internal static Dictionary<string, object> ToDictionary(this TargetStatus target) =>
+        internal static Dictionary<string, object> ToDictionary(this TargetStatusInfo target) =>
             new Dictionary<string, object>()
             {
-                ["id"] = target.Id ?? string.Empty,
+                ["id"] = target.TargetId ?? string.Empty,
                 ["current_availability"] = target.CurrentAvailability ?? string.Empty,
                 ["average_queue_time"] = target.AverageQueueTime ?? 0,
             };
 
-        internal static Table<TargetStatus> ToJupyterTable(this IEnumerable<TargetStatus> targets) =>
-            new Table<TargetStatus>
+        internal static Table<TargetStatusInfo> ToJupyterTable(this IEnumerable<TargetStatusInfo> targets) =>
+            new Table<TargetStatusInfo>
             {
-                Columns = new List<(string, Func<TargetStatus, string>)>
+                Columns = new List<(string, Func<TargetStatusInfo, string>)>
                 {
-                    ("Target ID", target => target.Id ?? string.Empty),
-                    ("Current Availability", target => target.CurrentAvailability ?? string.Empty),
+                    ("Target ID", target => target.TargetId ?? string.Empty),
+                    ("Current Availability", target => target.CurrentAvailability?.ToString() ?? string.Empty),
                     ("Average Queue Time (Seconds)", target => target.AverageQueueTime?.ToString() ?? string.Empty),
                 },
                 Rows = targets.ToList()
@@ -49,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
-            displayable.AsEnumerableOf<TargetStatus>() is IEnumerable<TargetStatus> targets
+            displayable.AsEnumerableOf<TargetStatusInfo>() is IEnumerable<TargetStatusInfo> targets
                 ? tableEncoder.Encode(targets.ToJupyterTable())
                 : null;
     }
@@ -66,7 +68,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc/>
         public EncodedData? Encode(object displayable) =>
-            displayable.AsEnumerableOf<TargetStatus>() is IEnumerable<TargetStatus> targets
+            displayable.AsEnumerableOf<TargetStatusInfo>() is IEnumerable<TargetStatusInfo> targets
                 ? tableEncoder.Encode(targets.ToJupyterTable())
                 : null;
     }
@@ -74,14 +76,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <summary>
     /// Encodes a <see cref="TargetStatus"/> object as JSON.
     /// </summary>
-    public class TargetStatusJsonConverter : JsonConverter<TargetStatus>
+    public class TargetStatusJsonConverter : JsonConverter<TargetStatusInfo>
     {
         /// <inheritdoc/>
-        public override TargetStatus ReadJson(JsonReader reader, Type objectType, TargetStatus? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TargetStatusInfo ReadJson(JsonReader reader, Type objectType, TargetStatusInfo? existingValue, bool hasExistingValue, JsonSerializer serializer)
             => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, TargetStatus? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TargetStatusInfo? value, JsonSerializer serializer)
         {
             if (value != null) JToken.FromObject(value.ToDictionary()).WriteTo(writer);
         }
@@ -90,14 +92,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <summary>
     /// Encodes an enumeration of <see cref="TargetStatus"/> objects as JSON.
     /// </summary>
-    public class TargetStatusListJsonConverter : JsonConverter<IEnumerable<TargetStatus>>
+    public class TargetStatusListJsonConverter : JsonConverter<IEnumerable<TargetStatusInfo>>
     {
         /// <inheritdoc/>
-        public override IEnumerable<TargetStatus> ReadJson(JsonReader reader, Type objectType, IEnumerable<TargetStatus>? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override IEnumerable<TargetStatusInfo> ReadJson(JsonReader reader, Type objectType, IEnumerable<TargetStatusInfo>? existingValue, bool hasExistingValue, JsonSerializer serializer)
             => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, IEnumerable<TargetStatus>? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, IEnumerable<TargetStatusInfo>? value, JsonSerializer serializer)
         {
             if (value != null) JToken.FromObject(value.Select(job => job.ToDictionary())).WriteTo(writer);
         }

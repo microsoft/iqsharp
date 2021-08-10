@@ -31,13 +31,58 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Quantum.IQSharp.AzureClient;
 
 namespace Tests.IQSharp
 {
+    internal static class TelemetryTestExtensions
+    {
+        internal static void AssertEventCount(
+            this MockTelemetryService.MockAppLogger logger,
+            int count
+        )
+        {
+            var msg = $"Expected {count} telemetry events, got:\n";
+            foreach (var evt in logger.Events)
+            {
+                var evtMsg = $"\tName = {evt.Name}, Type = {evt.Type}, EventId = {evt.EventId}\n";
+                foreach (var prop in evt.Properties)
+                {
+                    evtMsg += $"\t\t{prop.Key} = {prop.Value}\n";
+                }
+                msg += evtMsg;
+            }
+            Assert.AreEqual(count, logger.Events.Count, msg);
+        }
+    }
     [TestClass]
     public class TelemetryTests
     {
         public static readonly Type TelemetryServiceType = typeof(MockTelemetryService);
+
+        public async Task<IQSharpEngine> InitAsync(IServiceProvider services)
+        {
+            var engine = services.GetService<IExecutionEngine>();
+            if (engine is IQSharpEngine iqsEngine)
+            {
+                iqsEngine.Start();
+                await iqsEngine.Initialized;
+                Assert.IsNotNull(iqsEngine.Workspace);
+                await Task.WhenAll(
+                    iqsEngine.Workspace!.Initialization,
+                    // Wait for any other required services. This keeps the
+                    // service started telemetry events from causing problems
+                    // for later assertions.
+                    services.GetRequiredServiceInBackground<IAzureClient>(),
+                    services.GetRequiredServiceInBackground<IEntryPointGenerator>()
+                );
+                return iqsEngine;
+            }
+            else throw new Exception($"Expected engine to be an IQSharpEngine, but got a {engine?.GetType().ToString() ?? "<null>"} instead.");
+        }
+
+        public IQSharpEngine Init(IServiceProvider services) =>
+            InitAsync(services).Result;
 
         [TestMethod]
         public void MockTelemetryService()
@@ -249,12 +294,12 @@ namespace Tests.IQSharp
             var services = Startup.CreateServiceProvider(workspace);
             var logger = GetAppLogger(services);
 
-            var engine = services.GetService<IExecutionEngine>() as IQSharpEngine;
             var performanceMonitor = services.GetService<IPerformanceMonitor>();
 
             // Disable background logging so as to enable a determinstic test.
             // performanceMonitor.EnableBackgroundReporting = false;
 
+            var engine = Init(services);
             var channel = new MockChannel();
 
             logger.Events.Clear();
@@ -262,16 +307,16 @@ namespace Tests.IQSharp
 
             var count = 0;
             engine.ExecuteMundane(SNIPPETS.HelloQ, channel).Wait();
-            Assert.AreEqual(count + 1, logger.Events.Count);
+            logger.AssertEventCount(count + 1);
             Assert.AreEqual("Quantum.IQSharp.Compile", logger.Events[count].Name);
             Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
-
             count++;
+
             engine.Execute("%simulate HelloQ", channel).Wait();
             // We expect both an Action and a SimulatorPerformance event from
             // running %simulate.
-            Assert.AreEqual(count + 2, logger.Events.Count);
+            logger.AssertEventCount(count + 2);
             Assert.AreEqual("Quantum.IQSharp.Action", logger.Events[count].Name);
             Assert.AreEqual("%simulate", logger.Events[count].Properties["Quantum.IQSharp.Command"]);
             Assert.AreEqual("Ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
@@ -280,6 +325,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(typeof(QuantumSimulator).FullName, logger.Events[count].Properties["Quantum.IQSharp.SimulatorName"]);
             Assert.AreEqual("0", logger.Events[count].Properties["Quantum.IQSharp.NQubits"]);
             // NB: Not testing Duration, since that is non-determinstic.
+            count++;
 
             // Make sure that forcing a performance report works.
             // NB: currently disabled due to an issue that only reproduces in
@@ -289,9 +335,8 @@ namespace Tests.IQSharp
             // Assert.AreEqual(count + 1, logger.Events.Count);
             // Assert.AreEqual("Quantum.IQSharp.KernelPerformance", logger.Events[count].Name);
 
-            count++;
             engine.Execute("%package Microsoft.Quantum.Standard", channel).Wait();
-            Assert.AreEqual(count + 2, logger.Events.Count);
+            logger.AssertEventCount(count + 2);
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[count].Name);
             Assert.AreEqual("Microsoft.Quantum.Standard", logger.Events[count].Properties["Quantum.IQSharp.PackageId"]);
             Assert.IsTrue(!string.IsNullOrWhiteSpace(logger.Events[count].Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));

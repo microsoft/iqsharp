@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,8 @@ using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -24,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class MagicSymbolResolver : IMagicSymbolResolver
     {
         private AssemblyInfo[] kernelAssemblies;
-        private Dictionary<AssemblyInfo, MagicSymbol[]> cache;
+        private Dictionary<string, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
         private IWorkspace workspace;
@@ -35,9 +38,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     services to search assembly references for subclasses of
         ///     <see cref="Microsoft.Jupyter.Core.MagicSymbol" />.
         /// </summary>
-        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger)
+        public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger, IEventService eventService)
         {
-            this.cache = new Dictionary<AssemblyInfo, MagicSymbol[]>();
+            this.cache = new Dictionary<string, MagicSymbol[]>();
             this.logger = logger;
 
             this.kernelAssemblies = new[]
@@ -48,6 +51,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.references = services.GetService<IReferences>();
             this.workspace = services.GetService<IWorkspace>();
+
+            eventService?.TriggerServiceInitialized<IMagicSymbolResolver>(this);
         }
 
 
@@ -84,7 +89,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Symbol names without a dot are resolved to the first symbol
         ///     whose base name matches the given name.
         /// </remarks>
-        public MagicSymbol Resolve(string symbolName)
+        public MagicSymbol? Resolve(string symbolName)
         {
             if (symbolName == null || !symbolName.TrimStart().StartsWith("%")) return null;
 
@@ -102,65 +107,100 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             return null;
         }
 
-        /// <summary>
-        /// Finds the MagicSymbols inside an assembly, and returns an instance of each.
-        /// </summary>
+        IEnumerable<ISymbol> ISymbolResolver.MaybeResolvePrefix(string symbolPrefix) =>
+            FindAllMagicSymbols()
+            .Where(symbol => symbol.Name.StartsWith(symbolPrefix))
+            .OrderBy(symbol => symbol.Name);
+
+        /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindMagic(AssemblyInfo assm)
         {
             var result = new MagicSymbol[0];
-
-            if (cache.TryGetValue(assm, out result))
+            // If the assembly cannot possibly contain magic symbols, skip it
+            // here.
+            var name = assm.Assembly.GetName().Name;
+            if (name.StartsWith("System.") || IQSharpEngine.MundaneAssemblies.Contains(name))
             {
                 return result;
             }
 
-            this.logger.LogInformation($"Looking for MagicSymbols in {assm.Assembly.FullName}");
-
-            // If types from an assembly cannot be loaded, log a warning and continue.
-            var allMagic = new List<MagicSymbol>();
-            try
+            lock (cache)
             {
-                var magicTypes = assm.Assembly
-                    .GetTypes()
-                    .Where(t =>
-                    {
-                        if (!t.IsClass && t.IsAbstract) { return false; }
-                        var matched = t.IsSubclassOf(typeof(MagicSymbol));
-                        this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
-                        return matched;
-                    });
-
-                foreach (var t in magicTypes)
+                if (cache.TryGetValue(assm.Assembly.FullName, out result))
                 {
-                    try
+                    return result;
+                }
+
+                this.logger.LogInformation($"Looking for MagicSymbols in {assm.Assembly.FullName}");
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                // If types from an assembly cannot be loaded, log a warning and continue.
+                var allMagic = new List<MagicSymbol>();
+                try
+                {
+                    var magicTypes = assm.Assembly
+                        .GetTypes()
+                        .Where(t =>
+                        {
+                            if (!t.IsClass || t.IsAbstract) { return false; }
+                            var matched = t.IsSubclassOf(typeof(MagicSymbol));
+
+                            // This logging statement is expensive, so we only run it when we need to for debugging.
+                            #if DEBUG
+                            this.logger.LogDebug("Class {Class} subclass of MagicSymbol? {Matched}", t.FullName, matched);
+                            #endif
+
+                            return matched;
+                        });
+
+                    foreach (var t in magicTypes)
                     {
-                        var m = ActivatorUtilities.CreateInstance(services, t) as MagicSymbol;
-                        allMagic.Add(m);
-                        this.logger.LogInformation($"Found MagicSymbols {m.Name} ({t.FullName})");
-                    }
-                    catch (Exception e)
-                    {
-                        this.logger.LogWarning($"Unable to create instance of MagicSymbol {t.FullName}. Magic will not be enabled.\nMessage:{e.Message}");
+                        try
+                        {
+                            var symbol = ActivatorUtilities.CreateInstance(services, t);
+                            if (symbol is MagicSymbol magic)
+                            {
+                                allMagic.Add(magic);
+                                this.logger.LogInformation($"Found MagicSymbols {magic.Name} ({t.FullName})");
+                            }
+                            else if (symbol is {})
+                            {
+                                throw new Exception($"Unable to create magic symbol of type {t}; service activator returned an object of type {symbol.GetType()}, which is not a subtype of MagicSymbol.");
+                            }
+                            else if (symbol == null)
+                            {
+                                throw new Exception($"Unable to create magic symbol of type {t}; service activator returned null.");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            this.logger.LogWarning(e, $"Unable to create instance of MagicSymbol {t.FullName}; service activator threw an exception of type {e.GetType()}. Magic will not be enabled.\nMessage: {e.Message}");
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(
-                    ex,
-                    "Encountered exception loading types from {AssemblyName}.",
-                    assm.Assembly.FullName
-                );
-            }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(
+                        ex,
+                        "Encountered exception loading types from {AssemblyName}.",
+                        assm.Assembly.FullName
+                    );
+                }
 
-            result = allMagic.ToArray();
-            cache[assm] = result;
+                logger.LogInformation("Took {Elapsed} to scan {Assembly} for magic symbols.", stopwatch.Elapsed, assm.Assembly.FullName);
+                result = allMagic.ToArray();
+                cache[assm.Assembly.FullName] = result;
+            }
 
             return result;
         }
 
         /// <inheritdoc />
         public IEnumerable<MagicSymbol> FindAllMagicSymbols() =>
-            RelevantAssemblies().SelectMany(FindMagic);
+            RelevantAssemblies()
+            .AsParallel()
+            .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
+            .SelectMany(FindMagic);
     }
 }

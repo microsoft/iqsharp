@@ -32,29 +32,31 @@ namespace Microsoft.Quantum.IQSharp.Common
             this.Logs = new List<LSP.Diagnostic>();
         }
 
-        public static LogLevel MapLevel(LSP.DiagnosticSeverity original)
-        {
-            switch (original)
+        // NB: We define both a method which takes a
+        //     Nullable<DiagnosticSeverity> and a plain DiagnosticSeverity
+        //     value directly, as different versions of the LSP client API
+        //     vary in their handling of nullablity of diagnostic severity.
+        //     This allows IQ# to build with both different versions.
+        //     At some point, the non-nullable overload should be removed.
+        public static LogLevel MapLevel(LSP.DiagnosticSeverity? original) =>
+            original switch
             {
-                case LSP.DiagnosticSeverity.Error:
-                    return LogLevel.Error;
-                case LSP.DiagnosticSeverity.Warning:
-                    return LogLevel.Warning;
-                case LSP.DiagnosticSeverity.Information:
-                    return LogLevel.Information;
-                case LSP.DiagnosticSeverity.Hint:
-                    return LogLevel.Debug;
-                default:
-                    return LogLevel.Trace;
-            }
-        }
+                LSP.DiagnosticSeverity.Error => LogLevel.Error,
+                LSP.DiagnosticSeverity.Warning => LogLevel.Warning,
+                LSP.DiagnosticSeverity.Information => LogLevel.Information,
+                LSP.DiagnosticSeverity.Hint => LogLevel.Debug,
+                _ => LogLevel.Trace
+            };
+
+        public static LogLevel MapLevel(LSP.DiagnosticSeverity original) =>
+            MapLevel((LSP.DiagnosticSeverity?)original);
 
         public bool HasErrors =>
             Logs
                 .Exists(m => m.Severity == LSP.DiagnosticSeverity.Error);
 
         public System.Func<LSP.Diagnostic, string> Format => 
-            QsCompiler.Diagnostics.Formatting.MsBuildFormat; 
+            QsCompiler.Diagnostics.Formatting.HumanReadableFormat; 
 
         public virtual IEnumerable<string> Messages =>
             this.Logs.Select(Format);
@@ -79,7 +81,7 @@ namespace Microsoft.Quantum.IQSharp.Common
             if (m.IsError() && ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
             if (m.IsWarning() && WarningCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
 
-            Logger?.Log(MapLevel(m.Severity), $"{m.Code}: {m.Message}");
+            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", m.Code, m.Source, m.Range, m.Message);
             Logs.Add(m);
         }
 

@@ -18,19 +18,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Returns the source of the given QsNamespaceElement (either QsCallable or QsCustomTypes)
         /// </summary>
-        public static string SourceFile(this QsNamespaceElement e)
-        {
-            if (e is QsNamespaceElement.QsCallable c)
+        public static string SourceFile(this QsNamespaceElement e) =>
+            (e switch
             {
-                return c.Item.SourceFile;
-            }
-            else if (e is QsNamespaceElement.QsCustomType t)
-            {
-                return t.Item.SourceFile;
-            }
-
-            return "[Unknown]";
-        }
+                QsNamespaceElement.QsCallable { Item: var callable } => callable.Source,
+                QsNamespaceElement.QsCustomType { Item: var type } => type.Source,
+                _ => null
+            })?.AssemblyOrCodeFile ?? "[Unknown]";
 
         /// <summary>
         /// Returns the name of the given QsNamespaceElement (either QsCallable or QsCustomTypes)

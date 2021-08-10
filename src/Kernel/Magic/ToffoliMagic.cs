@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -21,7 +22,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ToffoliMagic(ISymbolResolver resolver) : base(
+        public ToffoliMagic(ISymbolResolver resolver, ILogger<ToffoliMagic> logger) : base(
             "toffoli",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -31,7 +32,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     which performs a simulation of the given function or operation in which the state is always
                     a simple product state in the computational basis, and prints the resulting return value.
 
-                    See the [ToffoliSimulator user guide](https://docs.microsoft.com/quantum/user-guide/machines/toffoli-simulator) to learn more.
+                    See the [ToffoliSimulator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/toffoli-simulator) to learn more.
 
                     #### Required parameters
 
@@ -58,7 +59,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.SymbolResolver = resolver;
         }

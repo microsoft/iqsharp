@@ -36,7 +36,7 @@ namespace Tests.IQSharp
         {
             var mgr = Init();
 
-            async Task TestOne(string pkg, string version)
+            async Task TestOne(string pkg, string? version)
             {
                 var actual = await mgr.GetLatestVersion(pkg);
 
@@ -70,7 +70,7 @@ namespace Tests.IQSharp
                 $"Microsoft.Quantum.Chemistry::{version}"
             };
 
-            var mgr = new NugetPackages(new MockNugetOptions(versions), null);
+            var mgr = new NugetPackages(new MockNugetOptions(versions), null, eventService: null);
 
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Standard"));
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Chemistry"));

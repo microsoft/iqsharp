@@ -21,6 +21,8 @@ RUN apt-get update && \
                        # Note that we install them here to minimize the number
                        # of layers.
                        libgomp1 \
+                       # Dependency for QIR
+                       libc6 \
                        # Not strictly needed, but Git is useful for several
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
@@ -95,7 +97,9 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
     cat ${HOME}/.nuget/NuGet/NuGet.Config
 # Add Python and NuGet packages from the build context
 ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
-ADD wheels/*.whl ${LOCAL_PACKAGES}/wheels/
+# When adding wheels, use *-any.whl to make sure that platform-specific wheels
+# are not incorrectly added to the Docker image.
+ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
 # Give the notebook user ownership over the packages and config copied from
 # the context.
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
@@ -112,6 +116,10 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Get the az quantum extension
 RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
+# Assign the .azure folder back to the notebook user so that they
+# can run az commands.
+RUN chown -R ${USER}:${USER} /home/${USER}/.azure
+
 # Switch to the notebook user to finish the installation.
 USER ${USER}
 # Make sure that .NET Core is on the notebook users' path.
@@ -120,7 +128,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.14.2011120240" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.18.2106148499-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \

@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
@@ -31,15 +32,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Given a given snippets collection, constructs a new magic command
         ///     that queries callables defined in that snippets collection.
         /// </summary>
-        public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine) : base(
+        public LsMagicMagic(IMagicSymbolResolver resolver, IExecutionEngine engine, ILogger<LsMagicMagic> logger) : base(
             "lsmagic",
             new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Returns a list of all currently available magic commands.",
-                Description = @"
+                Description = $@"
                     This magic command lists all of the magic commands available in the IQ# kernel,
                     as well as those defined in any packages that have been loaded in the current
-                    session via the [`%package` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/package).
+                    session via the [`%package` magic command]({KnownUris.ReferenceForMagicCommand("package")}).
                 ".Dedent(),
                 Examples = new []
                 {
@@ -51,11 +52,18 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.resolver = resolver;
-            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
-            (engine as IQSharpEngine).RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
+            if (engine is IQSharpEngine iQSharpEngine)
+            {
+                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
+                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
+            }
+            else
+            {
+                throw new Exception($"Expected execution engine to be an IQ# engine, but was {engine.GetType()}.");
+            }
         }
 
         /// <inheritdoc />

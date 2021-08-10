@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
@@ -23,7 +24,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Constructs a new magic command that adds package references to
         ///     a given references collection.
         /// </summary>
-        public PackageMagic(IReferences references) : base(
+        public PackageMagic(IReferences references, ILogger<PackageMagic> logger) : base(
             "package",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -71,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         ```
                     ".Dedent(),
                 }
-            })
+            }, logger)
         {
             this.References = references;
         }
