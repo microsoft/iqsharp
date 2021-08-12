@@ -158,6 +158,9 @@ namespace Tests.IQSharp
         public List<string> msgs = new List<string>();
         public List<Message> iopubMessages = new List<Message>();
 
+        private readonly ICommsRouter mockRouter = new MockCommsRouter(new MockShell());
+        public ICommsRouter CommsRouter => mockRouter;
+
         public void Display(object displayable)
         {
             

@@ -26,7 +26,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ICommsRouter router, ILogger<SimulateMagic> logger) : base(
+        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ILogger<SimulateMagic> logger) : base(
             "simulate",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -65,7 +65,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
-            this.Router = router;
         }
 
         /// <summary>
@@ -79,8 +78,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     simulation options (e.g.: dump formatting options).
         /// </summary>
         public IConfigurationSource ConfigurationSource { get; }
-
-        public ICommsRouter Router { get; }
 
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel) =>
@@ -99,7 +96,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
             using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, Router, ConfigurationSource)
+                .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
             qsim.OnDisplayableDiagnostic += channel.Display;
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);

@@ -28,8 +28,6 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
-        static readonly ICommsRouter MockRouter = new MockCommsRouter(new MockShell());
-
         public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
@@ -79,7 +77,6 @@ namespace Tests.IQSharp
             var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
-                MockRouter,
                 new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
@@ -210,7 +207,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, MockRouter, new UnitTestLogger<SimulateMagic>());
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
