@@ -80,7 +80,7 @@ namespace Microsoft.Quantum.IQSharp
             }
             catch (CompilationErrorsException c)
             {
-                return new Response<T>(Status.Error, c.FormattedErrors);
+                return new Response<T>(Status.Error, c.Errors);
             }
             catch (Exception e)
             {

@@ -375,7 +375,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     else
                     {
-                        foreach (var m in c.FormattedErrors) channel.Stderr(m);
+                        foreach (var m in c.Errors) channel.Stderr(m);
                     }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }
