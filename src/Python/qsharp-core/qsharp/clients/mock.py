@@ -10,7 +10,7 @@
 import atexit
 import json
 
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Optional
 from distutils.version import LooseVersion
 from contextlib import contextmanager
 
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class MockClient(object):
     packages: List[str]
+    mock_operations: List[str] = ["A.B.C", "A.B.D", "A.E.F"]
 
     def __init__(self):
         self.packages = []
@@ -56,7 +57,7 @@ class MockClient(object):
 
     def get_available_operations(self) -> List[str]:
         logger.debug("MockClient.get_available_operations called.")
-        return ["A.B.C", "A.B.D", "A.E.F"]
+        return self.mock_operations
 
     def get_operation_metadata(self, name : str) -> Dict[str, Any]:
         logger.debug(f"MockClient.get_operation_metadata called with name {name}.")
