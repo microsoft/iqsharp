@@ -331,6 +331,8 @@ namespace Tests.IQSharp
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
 
+        string? IAzureClient.ActiveTargetId => "mock.mock";
+
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
