@@ -13,7 +13,7 @@ import importlib
 from importlib.abc import MetaPathFinder, Loader
 import qsharp
 
-from typing import Optional, Any, Dict
+from typing import Iterable, List, Optional, Any, Dict, Tuple
 
 import logging
 logger = logging.getLogger(__name__)
@@ -118,9 +118,54 @@ class QSharpModule(ModuleType):
         self.__path__ = []
         self.__loader__ = loader
 
+    def _all_sub_namespaces_as_parts(self) -> Iterable[Tuple[str]]:
+        qs_namespaces = qsharp.get_available_operations_by_namespace().keys()
+        all_namespaces = set()
+        for ns in qs_namespaces:
+            parts = tuple(ns.split("."))
+            all_namespaces.add(parts)
+            for idx_part in range(1, len(parts)):
+                all_namespaces.add(tuple(parts[:-idx_part]))
+
+        return all_namespaces
+
+    def _immediate_sub_namespaces(self) -> Iterable[str]:
+        parts = tuple(self._qs_name.split("."))
+        for ns in self._all_sub_namespaces_as_parts():
+            if ns[:len(parts)] == parts and len(ns) > len(parts):
+                yield ns[len(parts)]
+
+    def _all_sub_namespaces(self) -> Iterable[str]:
+        return [
+            ".".join(ns)
+            for ns in self._all_sub_namespaces_as_parts()
+            if ".".join(ns).startswith(self._qs_name + ".")
+        ]
+
+    def __dir__(self) -> Iterable[str]:
+        ops = qsharp.get_available_operations_by_namespace()
+        return list(sorted(
+            list(self._immediate_sub_namespaces()) + 
+            ops.get(self._qs_name, [])
+        ))
+
     def __getattr__(self, name):
         ops = qsharp.get_available_operations_by_namespace()
-        if name in ops[self._qs_name]:
+        # NB: Our Q# namespace name may not exist as a key, as the namespace
+        #     name may be a prefix (e.g.: `Microsoft` and `Microsoft.Quantum.`
+        #     may be empty, even though `Microsoft.Quantum.Intrinsic` is not).
+        #
+        #     Thus, we need to look for sub-namespaces as well as callables.
+        #     While subnamespaces aren't a concept in Q#, they are in Python,
+        #     and are needed to make tab completion on imports work correctly.
+        #
+        #     Start by looking for sub-namespaces.
+        sub_namespaces = list(self._all_sub_namespaces())
+        qualified_name = f"{self._qs_name}.{name}"
+        if qualified_name in sub_namespaces:
+            return self.__loader__.load_module(qualified_name)
+
+        if self._qs_name in ops and name in ops[self._qs_name]:
             op_cls = new_class(name, (QSharpCallable, ))
 
             # Copy over metadata from the operation's header.
