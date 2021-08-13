@@ -39,6 +39,11 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        public PerformanceMonitor(IEventService? eventService = null)
+        {
+            eventService?.TriggerServiceInitialized<IPerformanceMonitor>(this);
+        }
+
         /// <inheritdoc />
         public event EventHandler<SimulatorPerformanceArgs>? OnSimulatorPerformanceAvailable;
 
