@@ -12,19 +12,21 @@ namespace Microsoft.Quantum.IQSharp.Common
     public class CompilationErrorsException : InvalidOperationException
     {
         public CompilationErrorsException(QSharpLogger logger) : this(
-            logger.Errors.ToArray(),
             logger.Logs.ToArray()
         )
         {
         }
 
-        public CompilationErrorsException(string[] errors, Diagnostic[] diagnostics) : base("Invalid snippet code")
+        public CompilationErrorsException(Diagnostic[] diagnostics) : base("Invalid snippet code")
         {
-            this.Errors = errors;
             this.Diagnostics = diagnostics;
         }
 
-        public string[] Errors { get; }
+        public IEnumerable<Diagnostic> Errors =>
+            Diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+
+        public IEnumerable<string> FormattedErrors =>
+            Errors.Select(QsCompiler.Diagnostics.Formatting.MsBuildFormat);
         public Diagnostic[] Diagnostics { get; }
     }
 }

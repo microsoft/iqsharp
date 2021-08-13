@@ -190,7 +190,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 duration.Stop();
                 var status = logger.HasErrors ? "error" : "ok";
-                var errorIds = logger.ErrorIds .ToArray();
+                var errorIds = logger.ErrorIds.ToArray();
                 SnippetCompiled?.Invoke(this, new SnippetCompiledEventArgs(status, errorIds, Compiler.AutoOpenNamespaces.Keys.ToArray(), duration.Elapsed));
             }
         }
