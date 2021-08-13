@@ -338,7 +338,6 @@ namespace Microsoft.Quantum.IQSharp
 
             return evt;
         }
-    }
 
         public static EventProperties AsTelemetryEvent(this ConnectToWorkspaceEventArgs info)
         {
