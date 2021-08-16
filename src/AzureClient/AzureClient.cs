@@ -26,7 +26,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
-        internal Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
+        /// <inheritdoc />
+        public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
