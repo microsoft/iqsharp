@@ -55,8 +55,8 @@ namespace Microsoft.Quantum.IQSharp.Common
             Logs
                 .Exists(m => m.Severity == LSP.DiagnosticSeverity.Error);
 
-        public System.Func<LSP.Diagnostic, string> Format => 
-            QsCompiler.Diagnostics.Formatting.HumanReadableFormat; 
+        public System.Func<LSP.Diagnostic, string> Format =>
+            QsCompiler.Diagnostics.Formatting.MsBuildFormat;
 
         public virtual IEnumerable<string> Messages =>
             this.Logs.Select(Format);
