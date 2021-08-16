@@ -1,6 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -23,10 +25,10 @@ namespace Microsoft.Quantum.IQSharp.Common
     {
         public Response() { }
 
-        public Response(Status status, string[] messages, T result = default(T))
+        public Response(Status status, IEnumerable<string> messages, T result = default(T))
         {
             this.Status = status;
-            this.Messages = messages;
+            this.Messages = messages.ToArray();
             this.Result = result;
         }
 
