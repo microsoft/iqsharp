@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { IPython } from "./ipython";
@@ -12,8 +12,15 @@ import { draw, Circuit, StyleConfig, STYLES } from "@microsoft/quantum-viz.js";
 
 declare global {
     interface Window {
-        iqsharp: Kernel
+        iqsharp: Kernel;
     }
+}
+
+interface Complex {
+    Real: number;
+    Imaginary: number;
+    Phase: number;
+    Magnitude: number;
 }
 
 class Kernel {
@@ -95,7 +102,6 @@ class Kernel {
                         addToolbarButton(debugContainer, "▶️ Next step", event => this.advanceDebugger(debugSession));
                     }
                 }
-                
             }
         );
 
@@ -147,52 +153,34 @@ class Kernel {
     }
 
     setupMeasurementHistogramDataListener() {
-        IPython.notebook.kernel.register_iopub_handler(
+        IPython.notebook.kernel.comm_manager.register_target<{state: DisplayableState}>(
             "iqsharp_state_dump",
-            message => {
-                console.log("iqsharp_state_dump message received", message);
-                let state: DisplayableState = message.content.state;
+            (comm, message) => {
+                console.log("iqsharp_state_dump comm session opened", message);
+                let state = message.content.data.state;
                 let stateDivId = state.div_id;
                 if (stateDivId != null) {
                     let stateDiv = document.getElementById(stateDivId);
                     if (stateDiv != null) {
-                        let { chart: chart} = createNewCanvas(stateDiv, state);
+                        let { chart: chart } = createNewCanvas(stateDiv, state);
                         attachDumpMachineToolbar(chart, state);
                     }
                 }
+                comm.close();
             }
         );
     }
 
     requestEcho() {
-        // Try sending something for the kernel to echo back in order to test
-        // communicates with the kernel. Note that iqsharp_echo_request will get
-        // two responses: an output over iopub, and a reply over shell. We thus
-        // subscribe both callbacks in order to make sure that both work
-        // correctly.
         let value = "hello!";
-        // The output callback is registered with the kernel object itself,
-        // since outputs aren't a reply to any particular message.
-        IPython.notebook.kernel.register_iopub_handler(
-            "iqsharp_echo_output",
-            message => {
-                console.log("Got echo output:", message);
-            }
-        );
-        // By contrast, callbacks for replies are associated with the message
-        // itself, since we don't want the callback to pick up echo replies that
-        // are replies to other messages.
-        IPython.notebook.kernel.send_shell_message(
-            "iqsharp_echo_request",
-            { value: value },
-            {
-                shell: {
-                    reply: (message) => {
-                        console.log("Got echo reply:", message);
-                    }
-                }
-            }
-        );
+        let comm = IPython.notebook.kernel.comm_manager.new_comm("iqsharp_echo");
+        comm.on_msg((message) => {
+            console.log("Got echo output via comms:", message);
+        });
+        comm.on_close((message) => {
+            console.log("Echo comm closed:", message);
+        })
+        comm.send(value);
     }
 
     getOriginQueryString() {
@@ -205,29 +193,24 @@ class Kernel {
         // available. For example, the browser user agent isn't exposed to the
         // kernel by the Jupyter protocol, since the client may not even be in a
         // browser at all.
-        IPython.notebook.kernel.send_shell_message(
-            "iqsharp_clientinfo_request",
+        let comm_session = IPython.notebook.kernel.comm_manager.new_comm(
+            "iqsharp_clientinfo",
             {
                 "user_agent": navigator.userAgent,
                 "client_language": navigator.language,
                 "client_host": location.hostname,
                 "client_origin": this.getOriginQueryString(),
-            },
-            {
-                shell: {
-                    reply: (message) => {
-                        let content = message?.content;
-                        console.log("clientinfo_reply message and content", message, content);
-                        this.hostingEnvironment = content?.hosting_environment;
-                        this.iqsharpVersion = content?.iqsharp_version;
-                        this.telemetryOptOut = content?.telemetry_opt_out;
-                        console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
-
-                        this.initTelemetry();
-                    }
-                }
             }
         );
+        comm_session.on_msg((message) => {
+            console.log("clientinfo_reply message", message);
+            this.hostingEnvironment = message?.hosting_environment;
+            this.iqsharpVersion = message?.iqsharp_version;
+            this.telemetryOptOut = message?.telemetry_opt_out;
+            console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
+
+            this.initTelemetry();
+        });
     }
 
     initTelemetry() {
@@ -251,8 +234,8 @@ class Kernel {
 
         Telemetry.origin = this.getOriginQueryString();
         Telemetry.clientInfoAvailable.on((clientInfo: ClientInfo) => {
-            IPython.notebook.kernel.send_shell_message(
-                "iqsharp_clientinfo_request",
+            IPython.notebook.kernel.comm_manager.new_comm(
+                "iqsharp_clientinfo",
                 {
                     "client_country": clientInfo.CountryCode,
                     "client_id": clientInfo.Id,

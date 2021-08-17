@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -63,6 +63,7 @@ namespace Tests.IQSharp
             var shell = new MockShell();
             services.AddSingleton<IShellServer>(shell);
             services.AddSingleton<IShellRouter>(new MockShellRouter(shell));
+            services.AddSingleton<ICommsRouter>(new MockCommsRouter(shell));
             services.AddSingleton<IOptions<KernelContext>>(new MockKernelOptions());
             services.AddSingleton<INugetPackages>(new MockNugetPackages());
             services.AddSingleton<IAzureFactory>(new MocksAzureFactory());
@@ -73,4 +74,5 @@ namespace Tests.IQSharp
             services.AddSingleton(typeof(ITelemetryService), TelemetryTests.TelemetryServiceType);
         }
     }
+
 }
