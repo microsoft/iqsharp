@@ -41,6 +41,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
             services.AddSingleton<INoiseModelSource, NoiseModelSource>();
+            services.AddSingleton<ClientInfoListener>();
 
             return services;
         }
