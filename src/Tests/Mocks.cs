@@ -15,6 +15,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace Tests.IQSharp
 {
@@ -99,6 +100,51 @@ namespace Tests.IQSharp
         }
     }
 
+    public class MockCommsRouter : ICommsRouter
+    {
+        private MockShell shell;
+
+        public MockCommsRouter(MockShell shell)
+        {
+            this.shell = shell;
+        }
+
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task<ICommSession> OpenSession(string targetName, object? data) =>
+            new MockCommSession();
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        public ICommSessionOpen SessionOpenEvent(string targetName) =>
+            new MockCommSessionOpen();
+    }
+
+    internal class MockCommSessionOpen : ICommSessionOpen
+    {
+        public event Func<ICommSession, JToken, Task>? On;
+    }
+
+    internal class MockCommSession : ICommSession
+    {
+        public bool IsValid { get; private set; } = true;
+
+        private readonly string id = Guid.NewGuid().ToString();
+        public string Id => id;
+
+        public event Func<CommMessageContent, Task>? OnMessage;
+        public event Func<CommSessionClosedBy, Task>? OnClose;
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task Close()
+        {
+            IsValid = false;
+        }
+
+        public async Task SendMessage(object contents)
+        { }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    }
+
     public class MockUpdatableDisplay : IUpdatableDisplay
     {
         public void Update(object displayable)
@@ -111,6 +157,9 @@ namespace Tests.IQSharp
         public List<string> errors = new List<string>();
         public List<string> msgs = new List<string>();
         public List<Message> iopubMessages = new List<Message>();
+
+        private readonly ICommsRouter mockRouter = new MockCommsRouter(new MockShell());
+        public ICommsRouter CommsRouter => mockRouter;
 
         public void Display(object displayable)
         {

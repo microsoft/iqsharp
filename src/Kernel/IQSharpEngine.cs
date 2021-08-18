@@ -42,6 +42,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
+        private readonly ICommsRouter commsRouter = null;
         private readonly IEventService eventService;
 
         // NB: These properties may be null if the engine has not fully started
@@ -106,6 +107,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IPerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IMetadataController metadataController,
+            ICommsRouter commsRouter,
             IEventService eventService
         ) : base(shell, shellRouter, context, logger, services)
         {
@@ -126,6 +128,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.services = services;
             this.logger = logger;
             this.metadataController = metadataController;
+            this.commsRouter = commsRouter;
             this.eventService = eventService;
         }
 
@@ -215,6 +218,19 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             // Handle new shell messages.
             ShellRouter.RegisterHandlers<IQSharpEngine>();
+
+            // Handle a simple comm session handler for echo messages.
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += async (session, data) =>
+            {
+                session.OnMessage += async (content) =>
+                {
+                    if (content.RawData.TryAs<string>(out var data))
+                    {
+                        await session.SendMessage(data);
+                    }
+                    await session.Close();
+                };
+            };
 
             // Report performance after completing startup.
             performanceMonitor.Report();
