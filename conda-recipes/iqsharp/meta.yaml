@@ -26,7 +26,7 @@ requirements:
   run:
     - python
     - jupyter_client
-    - pyzmq<20.0.0       # due to incompatibility of IQ# with pyzmq>=20.0.0
+    - pyzmq
     - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
