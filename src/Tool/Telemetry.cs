@@ -26,13 +26,19 @@ namespace Microsoft.Quantum.IQSharp
     {
         private const string TOKEN = "55aee962ee9445f3a86af864fc0fa766-48882422-3439-40de-8030-228042bd9089-7794";
 
+        // To ensure that startup of the telemetry service remains
+        // lightweight enough to observe the startup process, we do not
+        // inject required services through DI but rather create local
+        // variables for each required service and then set them as those
+        // services become available through events below.
+        internal static IAzureClient? client = null;
+        internal static BaseEngine? baseEngine = null;
+
         private void OnServiceInitialized<T>()
         {
             EventService.OnServiceInitialized<T>().On += (service) =>
             {
-                var evt = "ServiceInitialized"
-                    .AsTelemetryEvent()
-                    .WithTimeSinceStart();
+                var evt = "ServiceInitialized".AsTelemetryEvent();
                 evt.SetProperty("Service", $"{typeof(T).Namespace}.{typeof(T).Name}");
                 TelemetryLogger.LogEvent(evt);
             };
@@ -51,13 +57,13 @@ namespace Microsoft.Quantum.IQSharp
             TelemetryLogger = CreateLogManager(config);
             InitTelemetryLogger(TelemetryLogger, config);
             TelemetryLogger.LogEvent(
-                "TelemetryStarted".AsTelemetryEvent().WithTimeSinceStart()
+                "TelemetryStarted".AsTelemetryEvent()
             );
 
             eventService.OnKernelStarted().On += (kernelApp) =>
             {
                 TelemetryLogger.LogEvent(
-                    "KernelStarted".AsTelemetryEvent().WithTimeSinceStart()
+                    "KernelStarted".AsTelemetryEvent()
                 );
             };
             eventService.OnKernelStopped().On += (kernelApp) =>
@@ -76,8 +82,7 @@ namespace Microsoft.Quantum.IQSharp
             eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
             {
                 var evt = "WorkspaceReady"
-                    .AsTelemetryEvent()
-                    .WithTimeSinceStart();
+                    .AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
             this.OnServiceInitialized<IReferences>();
@@ -88,14 +93,6 @@ namespace Microsoft.Quantum.IQSharp
             this.OnServiceInitialized<IEntryPointGenerator>();
             this.OnServiceInitialized<IExecutionEngine>();
             this.OnServiceInitialized<ICompilerService>();
-
-            // To ensure that startup of the telemetry service remains
-            // lightweight enough to observe the startup process, we do not
-            // inject required services through DI but rather create local
-            // variables for each required service and then set them as those
-            // services become available through events below.
-            IAzureClient? client = null;
-            BaseEngine? baseEngine = null;
 
             // Subscribe the logger to global events in the event service.
             eventService.Events<ExperimentalFeatureEnabledEvent, ExperimentalFeatureContent>().On += (content) =>
@@ -135,7 +132,7 @@ namespace Microsoft.Quantum.IQSharp
             eventService.OnServiceInitialized<IWorkspace>().On += (workspace) =>
             {
                 TelemetryLogger.LogEvent(
-                    "WorkspaceInitialized".AsTelemetryEvent().WithTimeSinceStart()
+                    "WorkspaceInitialized".AsTelemetryEvent()
                 );
                 workspace.Reloaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                 workspace.ProjectLoaded += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
@@ -145,12 +142,12 @@ namespace Microsoft.Quantum.IQSharp
             eventService.OnServiceInitialized<IExecutionEngine>().On += (executionEngine) =>
             {
                 TelemetryLogger.LogEvent(
-                    "ExecutionEngineInitialized".AsTelemetryEvent().WithTimeSinceStart()
+                    "ExecutionEngineInitialized".AsTelemetryEvent()
                 );
                 if (executionEngine is BaseEngine engine)
                 {
-                    engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(engine, client));
-                    engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(engine, client));
+                    engine.MagicExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                    engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                     baseEngine = engine;
                 }
             };
@@ -161,7 +158,8 @@ namespace Microsoft.Quantum.IQSharp
                 performanceMonitor.OnKernelPerformanceAvailable += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             };
             eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
-                snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent(baseEngine, client));
+                snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+
             eventService.OnServiceInitialized<IAzureClient>().On += (azureClient) =>
             {
                 client = azureClient;
@@ -234,10 +232,19 @@ namespace Microsoft.Quantum.IQSharp
             $"Quantum.IQSharp.{name}";
 
         public static EventProperties AsTelemetryEvent(this string name) =>
-            new EventProperties() { Name = name.WithTelemetryNamespace() };
+            new EventProperties() { Name = name.WithTelemetryNamespace() }
+            .SetCommonProperties();
 
-        public static EventProperties WithTimeSinceStart(this EventProperties evt)
+        /// <summary>
+        ///      Sets properties common across telemetry events.
+        /// </summary>
+        /// <returns><paramref name="evt"/> for use in fluent chains.</returns>
+        public static EventProperties SetCommonProperties(this EventProperties evt)
         {
+            evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), TelemetryService.baseEngine?.ExecutionCount?.ToString());
+            evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), TelemetryService.client?.ActiveTargetId);
+            evt.SetProperty("CurrentSubscription".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.SubscriptionId, PiiKind.GenericData);
+            evt.SetProperty("CurrentWorkspaceName".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.WorkspaceName, PiiKind.GenericData);
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),
                 // The "c" format converts using the "constant" format, which
@@ -246,6 +253,7 @@ namespace Microsoft.Quantum.IQSharp
                     DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
                 ).ToString("c")
             );
+
             return evt;
         }
 
@@ -259,11 +267,12 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("ProjectCount".WithTelemetryNamespace(), info.ProjectCount);
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this SnippetCompiledEventArgs info, BaseEngine? engine, IAzureClient? client)
+        public static EventProperties AsTelemetryEvent(this SnippetCompiledEventArgs info)
         {
             var evt = new EventProperties() { Name = "Compile".WithTelemetryNamespace() };
 
@@ -272,8 +281,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Namespaces".WithTelemetryNamespace(),
                 string.Join(",", info.Namespaces?.Where(n => n.StartsWith("Microsoft.Quantum.")).OrderBy(n => n) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
-            evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), client?.ActiveTargetId);
-            evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), engine?.ExecutionCount?.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }
@@ -286,6 +294,7 @@ namespace Microsoft.Quantum.IQSharp
                 info.PackageId.StartsWith("Microsoft.Quantum.") ? info.PackageId : "other package");
             evt.SetProperty("PackageVersion".WithTelemetryNamespace(), info.PackageVersion);
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }
@@ -300,11 +309,12 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("PackageReferenceCount".WithTelemetryNamespace(), info.PackageReferenceCount);
             evt.SetProperty("UserAdded".WithTelemetryNamespace(), info.UserAdded);
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this ExecutedEventArgs info, BaseEngine? engine, IAzureClient? client)
+        public static EventProperties AsTelemetryEvent(this ExecutedEventArgs info)
         {
             var evt = new EventProperties() { Name = "Action".WithTelemetryNamespace() };
 
@@ -312,8 +322,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Kind".WithTelemetryNamespace(), info.Symbol?.Kind.ToString());
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Result.Status.ToString());
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
-            evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), client?.ActiveTargetId);
-            evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), engine?.ExecutionCount?.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }
@@ -349,6 +358,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("UseCustomStorage".WithTelemetryNamespace(), info.UseCustomStorage);
             evt.SetProperty("CredentialType".WithTelemetryNamespace(), info.CredentialType.ToString());
             evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetCommonProperties();
 
             return evt;
         }

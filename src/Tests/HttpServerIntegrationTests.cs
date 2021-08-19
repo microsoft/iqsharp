@@ -74,7 +74,7 @@ namespace Tests.IQSharp
                 // TODO: Use constant strings for these http requests. Port and paths.
 
                 // Compile a snippet with the server and get back a list of now executable operations.
-                var compileResult = await "http://localhost:8888/api"
+                var compileResult = await "http://localhost:8008/api"
                     .AppendPathSegment("Snippets")
                     .AppendPathSegment("compile")
                     .PostJsonAsync(new CompileSnippetModel
@@ -87,7 +87,7 @@ namespace Tests.IQSharp
                 Assert.AreEqual("HelloQ", compileResult.Result.First());
 
                 // Now simulate the operation and check the output is as expected.
-                var simulateResult = await "http://localhost:8888/api"
+                var simulateResult = await "http://localhost:8008/api"
                     .AppendPathSegment("Snippets")
                     .AppendPathSegment("HelloQ")
                     .AppendPathSegment("simulate")
