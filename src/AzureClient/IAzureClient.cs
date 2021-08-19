@@ -182,5 +182,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///      set, or <c>null</c> if no target is set.
         /// </summary>
         string? ActiveTargetId { get; }
+
+        /// <summary>
+        ///     Returns the active workspace connected to this client, or
+        ///     <c>null</c> if none is set.
+        /// </summary>
+        Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; }
     }
 }
