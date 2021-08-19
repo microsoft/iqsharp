@@ -238,7 +238,6 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), TelemetryService.baseEngine?.ExecutionCount?.ToString());
             evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), TelemetryService.client?.ActiveTargetId);
             evt.SetProperty("CurrentSubscription".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.SubscriptionId, PiiKind.GenericData);
-            evt.SetProperty("CurrentWorkspaceName".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.WorkspaceName, PiiKind.GenericData);
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),
                 // The "c" format converts using the "constant" format, which
