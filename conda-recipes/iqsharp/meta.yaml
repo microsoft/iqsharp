@@ -31,7 +31,7 @@ requirements:
 
 test:
   requires:
-    - notebook=6.0.1
+    - notebook
     - python>=3.6
     - jupyter_client<5.3.3
     - pyzmq==19.0.2
