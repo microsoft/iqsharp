@@ -320,6 +320,7 @@ namespace Tests.IQSharp
 
     public class MockAzureClient : IAzureClient
     {
+        public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace => null;
         internal AzureClientAction LastAction = AzureClientAction.None;
         internal string SubscriptionId = string.Empty;
         internal string ResourceGroupName = string.Empty;
