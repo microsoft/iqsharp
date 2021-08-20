@@ -108,7 +108,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);
             };
-            var stopwatch = new Stopwatch();
+            var stopwatch = Stopwatch.StartNew();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
             stopwatch.Stop();
             var result = value.ToExecutionResult();
