@@ -27,14 +27,13 @@ requirements:
     - python
     - jupyter_client
     - pyzmq
-    - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
 
 test:
   requires:
     - notebook
     - python>=3.6
-    - jupyter_client<5.3.3
-    - pyzmq==19.0.2
+    - jupyter_client
+    - pyzmq
     - pip
 
   source_files:

@@ -13,7 +13,7 @@ requirements:
     - python
     - setuptools
     - jupyter
-    - jupyter_client<5.3.3
+    - jupyter_client
     - iqsharp={{ version }}
 
   run:
@@ -28,7 +28,7 @@ build:
 test:
   requires:
     - python
-    - pyzmq==19.0.2
+    - pyzmq
     - iqsharp={{ version }}
     - pytest
 
