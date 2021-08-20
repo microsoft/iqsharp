@@ -37,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
-        private readonly PerformanceMonitor performanceMonitor;
+        private readonly IPerformanceMonitor performanceMonitor;
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
@@ -104,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
-            PerformanceMonitor performanceMonitor,
+            IPerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
             IMetadataController metadataController,
             ICommsRouter commsRouter,
@@ -112,6 +112,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
+            performanceMonitor.EnableBackgroundReporting = true;
+            performanceMonitor.OnKernelPerformanceAvailable += (source, args) =>
+            {
+                logger.LogInformation(
+                    "Estimated RAM usage:" +
+                    "\n\tManaged: {Managed} bytes" +
+                    "\n\tTotal:   {Total} bytes",
+                    args.ManagedRamUsed,
+                    args.TotalRamUsed
+                );
+            };
             performanceMonitor.Start();
             this.configurationSource = configurationSource;
             this.services = services;
