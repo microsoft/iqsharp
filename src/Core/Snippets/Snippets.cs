@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -24,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp
     public class Snippets : ISnippets
     {
         // caches the Q# compiler metadata
-        private Lazy<CompilerMetadata> _metadata;
+        private Task<CompilerMetadata> _metadata;
 
         /// <summary>
         /// Namespace that all Snippets gets compiled into.
@@ -45,7 +46,7 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyInfo = new AssemblyInfo(null);
             Items = new Snippet[0];
 
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            Reset();
             Workspace.Reloaded += OnWorkspaceReloaded;
             GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
 
@@ -54,12 +55,17 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<ISnippets>(this);
         }
 
+        private void Reset()
+        {
+            _metadata = Task.Run(LoadCompilerMetadata);
+        }
+
         /// <summary>
         /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
         /// </summary>
         private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
         {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            Reset();
         }
 
         /// <summary>
@@ -67,7 +73,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e)
         {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            Reset();
         }
 
         /// <summary>
@@ -153,7 +159,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 var snippets = SelectSnippetsToCompile(code).ToArray();
-                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                var assembly = Compiler.BuildSnippets(snippets, _metadata.Result, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (logger.HasErrors)
                 {
