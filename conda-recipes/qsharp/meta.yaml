@@ -18,7 +18,7 @@ requirements:
 
   run:
     - python
-    - pyzmq<20.0.0            # due to incompatibility of IQ# with pyzmq>=20.0.0
+    - pyzmq
     - iqsharp={{ version }}
 
 build:
