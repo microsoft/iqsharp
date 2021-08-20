@@ -151,6 +151,7 @@ namespace Tests.IQSharp
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
             Assert.AreEqual(2L, logger.Events[0].Properties["Quantum.IQSharp.FileCount"]);
             Assert.AreEqual(0L, logger.Events[0].Properties["Quantum.IQSharp.ProjectCount"]);
+            AssertDuration(logger.Events[0]);
         }
 
         [TestMethod]
@@ -174,6 +175,7 @@ namespace Tests.IQSharp
             Assert.IsTrue(logger.Events[0].Properties["Quantum.IQSharp.Errors"].ToString().StartsWith("QS"));
             Assert.AreEqual(2L, logger.Events[0].Properties["Quantum.IQSharp.FileCount"]);
             Assert.AreEqual(0L, logger.Events[0].Properties["Quantum.IQSharp.ProjectCount"]);
+            AssertDuration(logger.Events[0]);
         }
 
         [TestMethod]
@@ -194,6 +196,7 @@ namespace Tests.IQSharp
             Assert.AreEqual("Quantum.IQSharp.Compile", logger.Events[count].Name);
             Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
             Assert.AreEqual("", logger.Events[0].Properties["Quantum.IQSharp.Errors"]);
+            AssertDuration(logger.Events[0]);
 
             count++;
             snippets.Compile(SNIPPETS.HelloQ);
@@ -254,6 +257,7 @@ namespace Tests.IQSharp
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
             Assert.AreEqual("Microsoft.Quantum.Standard", logger.Events[0].Properties["Quantum.IQSharp.PackageId"]);
             Assert.IsTrue(!string.IsNullOrWhiteSpace(logger.Events[0].Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));
+            AssertDuration(logger.Events[0]);
 
             mgr.AddPackage("Microsoft.Quantum.Standard");
             Assert.AreEqual(2, logger.Events.Count);
@@ -280,6 +284,7 @@ namespace Tests.IQSharp
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
             Assert.IsTrue(logger.Events[0].Properties["Quantum.IQSharp.PackageId"].ToString().StartsWith("Microsoft.Quantum.Xunit"));
             Assert.IsTrue(!string.IsNullOrWhiteSpace(logger.Events[0].Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));
+            AssertDuration(logger.Events[0]);
 
             Assert.AreEqual("Quantum.IQSharp.ProjectLoad", logger.Events[1].Name);
             Assert.AreEqual(PiiKind.Uri, logger.Events[1].PiiProperties["Quantum.IQSharp.ProjectUri"]);
@@ -340,6 +345,7 @@ namespace Tests.IQSharp
                     Assert.AreEqual("Quantum.IQSharp.Compile", evt.Name);
                     Assert.AreEqual("ok", evt.Properties["Quantum.IQSharp.Status"]);
                     Assert.AreEqual("", evt.Properties["Quantum.IQSharp.Errors"]);
+                    AssertDuration(evt);
                 }
             );
 
@@ -354,11 +360,7 @@ namespace Tests.IQSharp
                     Assert.AreEqual("Quantum.IQSharp.SimulatorPerformance", evt.Name);
                     Assert.AreEqual(typeof(QuantumSimulator).FullName, evt.Properties["Quantum.IQSharp.SimulatorName"]);
                     Assert.AreEqual(0L, evt.Properties["Quantum.IQSharp.NQubits"]);
-                    // NB: Not testing the value of Duration, since that is
-                    //     non-determinstic. We just need to make sure that
-                    //     it's there and not null.
-                    Assert.IsTrue(evt.Properties.ContainsKey("Quantum.IQSharp.Duration"));
-                    Assert.IsNotNull(evt.Properties["Quantum.IQSharp.Duration"]);
+                    AssertDuration(evt);
                 },
                 // Since the Quantum.IQSharp.Action event is only raised when a
                 // magic command completes, we expect for that event to come
@@ -368,6 +370,7 @@ namespace Tests.IQSharp
                     Assert.AreEqual("Quantum.IQSharp.Action", evt.Name);
                     Assert.AreEqual("%simulate", evt.Properties["Quantum.IQSharp.Command"]);
                     Assert.AreEqual("Ok", evt.Properties["Quantum.IQSharp.Status"]);
+                    AssertDuration(evt);
                 }
             );
 
@@ -379,14 +382,26 @@ namespace Tests.IQSharp
                     Assert.AreEqual("Quantum.IQSharp.PackageLoad", evt.Name);
                     Assert.AreEqual("Microsoft.Quantum.Standard", evt.Properties["Quantum.IQSharp.PackageId"]);
                     Assert.IsTrue(!string.IsNullOrWhiteSpace(evt.Properties["Quantum.IQSharp.PackageVersion"]?.ToString()));
+                    AssertDuration(evt);
                 },
                 evt =>
                 {
                     Assert.AreEqual("Quantum.IQSharp.Action", evt.Name);
                     Assert.AreEqual("%package", evt.Properties["Quantum.IQSharp.Command"]);
                     Assert.AreEqual("Ok", evt.Properties["Quantum.IQSharp.Status"]);
+                    AssertDuration(evt);
                 }
             );
+        }
+
+        private static void AssertDuration(EventProperties evt)
+        {
+            // NB: Not testing the value of Duration, since that is
+            //     non-determinstic. We just need to make sure that
+            //     it's there and is greater than zero.
+            Assert.IsTrue(evt.Properties.ContainsKey("Quantum.IQSharp.Duration"));
+            Assert.IsNotNull(evt.Properties["Quantum.IQSharp.Duration"]);
+            Assert.IsTrue(TimeSpan.Parse(evt.Properties["Quantum.IQSharp.Duration"]?.ToString() ?? "") > TimeSpan.Zero, "Duration must be > 0");
         }
 
         [TestMethod]
