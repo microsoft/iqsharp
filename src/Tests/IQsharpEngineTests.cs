@@ -77,6 +77,7 @@ namespace Tests.IQSharp
             var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
+                new PerformanceMonitor(),
                 new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
@@ -207,7 +208,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<SimulateMagic>());
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new PerformanceMonitor(), new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:

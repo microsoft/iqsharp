@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -112,7 +112,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var evt = "CodeCompletion".AsTelemetryEvent();
                 evt.SetProperty("NCompletions".WithTelemetryNamespace(), args.NCompletions);
-                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString());
+                evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString("G"));
                 TelemetryLogger.LogEvent(evt);
             };
 
@@ -150,6 +150,12 @@ namespace Microsoft.Quantum.IQSharp
                     engine.HelpExecuted += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
                     baseEngine = engine;
                 }
+            };
+
+            eventService.OnServiceInitialized<IPerformanceMonitor>().On += (performanceMonitor) =>
+            {
+                performanceMonitor.OnSimulatorPerformanceAvailable += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
+                performanceMonitor.OnKernelPerformanceAvailable += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
             };
             eventService.OnServiceInitialized<ISnippets>().On += (snippets) =>
                 snippets.SnippetCompiled += (_, info) => TelemetryLogger.LogEvent(info.AsTelemetryEvent());
@@ -260,7 +266,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("FileCount".WithTelemetryNamespace(), info.FileCount);
             evt.SetProperty("ProjectCount".WithTelemetryNamespace(), info.ProjectCount);
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
 
             return evt;
@@ -274,7 +280,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Errors".WithTelemetryNamespace(), string.Join(",", info.Errors?.OrderBy(e => e) ?? Enumerable.Empty<string>()));
             evt.SetProperty("Namespaces".WithTelemetryNamespace(),
                 string.Join(",", info.Namespaces?.Where(n => n.StartsWith("Microsoft.Quantum.")).OrderBy(n => n) ?? Enumerable.Empty<string>()));
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
 
             return evt;
@@ -287,7 +293,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("PackageId".WithTelemetryNamespace(),
                 info.PackageId.StartsWith("Microsoft.Quantum.") ? info.PackageId : "other package");
             evt.SetProperty("PackageVersion".WithTelemetryNamespace(), info.PackageVersion);
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
 
             return evt;
@@ -302,7 +308,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("ProjectReferenceCount".WithTelemetryNamespace(), info.ProjectReferenceCount);
             evt.SetProperty("PackageReferenceCount".WithTelemetryNamespace(), info.PackageReferenceCount);
             evt.SetProperty("UserAdded".WithTelemetryNamespace(), info.UserAdded);
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
 
             return evt;
@@ -315,8 +321,29 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Command".WithTelemetryNamespace(), info.Symbol?.Name);
             evt.SetProperty("Kind".WithTelemetryNamespace(), info.Symbol?.Kind.ToString());
             evt.SetProperty("Status".WithTelemetryNamespace(), info.Result.Status.ToString());
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
+
+            return evt;
+        }
+
+        public static EventProperties AsTelemetryEvent(this SimulatorPerformanceArgs info)
+        {
+            var evt = new EventProperties() { Name = "SimulatorPerformance".WithTelemetryNamespace() };
+
+            evt.SetProperty("SimulatorName".WithTelemetryNamespace(), info.SimulatorName);
+            evt.SetProperty("NQubits".WithTelemetryNamespace(), info.NQubits);
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
+
+            return evt;
+        }
+
+        public static EventProperties AsTelemetryEvent(this KernelPerformanceArgs info)
+        {
+            var evt = new EventProperties() { Name = "KernelPerformance".WithTelemetryNamespace() };
+
+            evt.SetProperty("ManagedRamUsed".WithTelemetryNamespace(), info.ManagedRamUsed);
+            evt.SetProperty("TotalRamUsed".WithTelemetryNamespace(), info.TotalRamUsed);
 
             return evt;
         }
@@ -330,7 +357,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("Location".WithTelemetryNamespace(), info.Location);
             evt.SetProperty("UseCustomStorage".WithTelemetryNamespace(), info.UseCustomStorage);
             evt.SetProperty("CredentialType".WithTelemetryNamespace(), info.CredentialType.ToString());
-            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString());
+            evt.SetProperty("Duration".WithTelemetryNamespace(), info.Duration.ToString("G"));
             evt.SetCommonProperties();
 
             return evt;
