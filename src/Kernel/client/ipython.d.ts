@@ -26,14 +26,13 @@ export type ShellCallbacks = {
     shell_done?: (message: Message<any>) => void,
     iopub_done?: (message: Message<any>) => void
 }
-
 export interface Events {
     on(event: string, callback: (any) => void);
 }
 
 export interface CommSession {
     send(data: any): string;
-    on_msg(callback: (message: any) => void): void;
+    on_msg(callback: (message: Message<{ comm_id: string, data: any }>) => void): void;
     on_close(callback: (message: any) => void): void;
     close(data?: any): void;
 }
