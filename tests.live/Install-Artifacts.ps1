@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 <#
@@ -16,7 +16,7 @@ function Install-PreReqs() {
     "Intalling Pester" | Write-Verbose
     Install-Module -Name Pester -SkipPublisherCheck -Force -Scope CurrentUser
 
-    Push-Location ..
+    Push-Location (Join-Path $PSScriptRoot ..)
         "Running bootstrap" | Write-Verbose
         .\bootstrap.ps1
 
