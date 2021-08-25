@@ -22,6 +22,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private const string ParameterNameFilter = "__filter__";
         private const string ParameterNameCount = "count";
 
+        private const int CountDefaultValue = 30;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JobsMagic"/> class.
         /// </summary>
@@ -48,8 +50,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                         - A string to filter the list of jobs. Jobs which have an ID, name, or target
                         containing the provided filter parameter will be displayed. If not specified,
-                        all recent jobs are displayed.
-                        - `{ParameterNameCount}=<integer>` (default=30): The max number of jobs to return.
+                        no job is filtered.
+                        - `{ParameterNameCount}=<integer>` (default={CountDefaultValue}): The max number of jobs to return.
 
                         #### Possible errors
 
@@ -90,7 +92,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
             var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
-            var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: 30);
+            var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: CountDefaultValue);
             return await AzureClient.GetJobListAsync(channel, filter, count, cancellationToken);
         }
     }
