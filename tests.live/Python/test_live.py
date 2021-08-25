@@ -66,24 +66,24 @@ def test_targets():
 
 def test_local_simulation():
     """
-    Test that the QRNG operation can run successfully locally.
+    Test that the SampleQrng operation can run successfully locally.
     """
     import qsharp
     qsharp.reload()
 
-    from Microsoft.Quantum.SanityTests import QRNG
+    from Microsoft.Quantum.SanityTests import SampleQrng
     count = 3
-    result = QRNG.simulate(count=count, name='andres')
+    result = SampleQrng.simulate(count=count, name='andres')
     assert len(result) == count
 
 
 def test_submit_ionq():
     """
-    Test that the QRNG operation can be submitted successfully on the ionq.simulator
+    Test that the SampleQrng operation can be submitted successfully on the ionq.simulator
     """
     import time
     import qsharp
-    from Microsoft.Quantum.SanityTests import QRNG
+    from Microsoft.Quantum.SanityTests import SampleQrng
 
     import qsharp.azure
     connect()
@@ -92,7 +92,7 @@ def test_submit_ionq():
     assert isinstance(t, qsharp.azure.AzureTarget)
     assert t.id == "ionq.simulator"
 
-    job = qsharp.azure.submit(QRNG, count=3, name="andres")
+    job = qsharp.azure.submit(SampleQrng, count=3, name="andres")
     assert isinstance(job, qsharp.azure.AzureJob)
     assert not job.id == ''
     print("Submitted job: ", job.id)

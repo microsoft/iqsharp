@@ -11,7 +11,7 @@ namespace Microsoft.Quantum.SanityTests {
 
     /// # Summary
     /// A quantum random number generator with a variable number of qubits.
-    operation QRNG(count : Int, name : String) : Result[] {
+    operation SampleQrng(count : Int, name : String) : Result[] {
         Message($"Hello {name} again!");
 
         mutable r = [Zero, size = count];
