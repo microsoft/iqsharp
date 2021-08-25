@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+
 BeforeAll {
+    # Makes sure all the required environment variables are set.
     function Test-Environment {
         $Env:AZUREQUANTUM_SUBSCRIPTION_ID | Should -Not -BeNullOrEmpty
         $Env:AZUREQUANTUM_WORKSPACE_RG | Should -Not -BeNullOrEmpty
@@ -31,11 +33,9 @@ Describe "Test Jupyter Notebooks" {
 }
 
 Describe "Test Python Integration" {
-
     BeforeAll { 
         Test-Environment
         Push-Location Python
-        
         if (Test-Path "obj") {
             Remove-Item obj -Recurse
         }
