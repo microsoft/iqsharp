@@ -1,22 +1,15 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+param(
+    [hashtable]
+    $Properties = @{}
+)
 
-# Fetch TypeScript definitions
-Push-Location (Join-Path $PSScriptRoot src/Kernel)
-    npm install
-Pop-Location
+# Get PSake.
+$psakeVersion = "4.9.0";
+$psakePath = Join-Path $PSScriptRoot "vendor";
+Save-Module -Name PSake -Path $psakePath -Force -RequiredVersion $psakeVersion;
+Import-Module (Join-Path $psakePath "psake" $psakeVersion "psake.psm1");
 
-
-# If the compiler constants include TELEMETRY, explicitly add the Aria telemetry package to the iqsharp tool:
-if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("TELEMETRY"))) {
-
-    $project =  (Join-Path $PSScriptRoot 'src\Tool\Tool.csproj')
-    $pkg =  "Microsoft.Applications.Events.Server.Core2"
-    Write-Host "##[info]Adding $pkg to $project"
-    dotnet add  $project `
-        package $pkg `
-        --no-restore `
-        --version "$Env:BUILD_ARIA_VERSION"
-}
-
+Invoke-PSake -buildFile (Join-Path $PSScriptRoot "build" "psakefile.ps1") -taskList Bootstrap -properties $Properties;

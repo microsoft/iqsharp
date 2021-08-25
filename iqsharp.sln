@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mock.Standard", "src\MockLi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExecutionPathTracer", "src\ExecutionPathTracer\ExecutionPathTracer.csproj", "{B136289B-FDCD-4354-BD7F-7FC195EE7CF3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E82C6A18-7E8B-416E-9BF1-30AE4FD07080}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CellParser", "src\CellParser\CellParser.csproj", "{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,11 +157,26 @@ Global
 		{B136289B-FDCD-4354-BD7F-7FC195EE7CF3}.Release|x64.Build.0 = Release|Any CPU
 		{B136289B-FDCD-4354-BD7F-7FC195EE7CF3}.Release|x86.ActiveCfg = Release|Any CPU
 		{B136289B-FDCD-4354-BD7F-7FC195EE7CF3}.Release|x86.Build.0 = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|x64.Build.0 = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Debug|x86.Build.0 = Debug|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|x64.ActiveCfg = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|x64.Build.0 = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|x86.ActiveCfg = Release|Any CPU
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {46F1047E-D0BC-4FF1-AC74-383480238965}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{84FE4CE2-58A2-4CC0-B9B4-75F4BB890F22} = {E82C6A18-7E8B-416E-9BF1-30AE4FD07080}
 	EndGlobalSection
 EndGlobal
