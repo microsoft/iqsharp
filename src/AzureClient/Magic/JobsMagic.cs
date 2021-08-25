@@ -49,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - A string to filter the list of jobs. Jobs which have an ID, name, or target
                         containing the provided filter parameter will be displayed. If not specified,
                         all recent jobs are displayed.
-                        - `{ParameterNameCount}=<integer>` (default={int.MaxValue}): The max number of jobs to return.
+                        - `{ParameterNameCount}=<integer>` (default=30): The max number of jobs to return.
 
                         #### Possible errors
 
@@ -74,10 +74,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         ".Dedent(),
 
                         @"
-                            Get the list of jobs whose ID, name, or target contains ""My job"", limit it to at most 10 jobs:
+                            Get the list of jobs whose ID, name, or target contains ""My job"", limit it to at most 100 jobs:
                             ```
-                            In []: %azure.jobs ""My job"" count=10
-                            Out[]: <detailed status of at most 10 matching jobs in the workspace>
+                            In []: %azure.jobs ""My job"" count=100
+                            Out[]: <detailed status of at most 100 matching jobs in the workspace>
                             ```
                         ".Dedent(),
                     },
@@ -90,7 +90,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
             var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
-            var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: int.MaxValue);
+            var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: 30);
             return await AzureClient.GetJobListAsync(channel, filter, count, cancellationToken);
         }
     }

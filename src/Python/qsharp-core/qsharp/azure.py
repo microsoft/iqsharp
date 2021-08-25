@@ -155,7 +155,7 @@ def output(jobId : str = '', **params) -> Dict:
     if "error_code" in result: raise AzureError(result)
     return result
 
-def jobs(filter : str = '', count : int = 2147483647, **params) -> List[AzureJob]:
+def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     """
     Displays a list of jobs in the current Azure Quantum workspace.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.jobs for more details.

@@ -594,7 +594,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 if (count.HasValue)
                 {
-                    if (jobs.Count >= count) break;
+                    if (jobs.Count >= count)
+                    {
+                        channel?.Stdout($"Showing only the first {count} jobs:");
+                        break;
+                    }
                 }
             }
 
