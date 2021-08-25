@@ -112,6 +112,22 @@ namespace Tests.IQSharp
             // jobs list with filter
             jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID_1"));
             Assert.AreEqual(1, jobs.Count());
+
+            // jobs list with count
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), string.Empty, 1));
+            Assert.AreEqual(1, jobs.Count());
+
+            // jobs list with invalid filter
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "INVALID_FILTER"));
+            Assert.AreEqual(0, jobs.Count());
+
+            // jobs list with partial filter
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID"));
+            Assert.AreEqual(2, jobs.Count());
+
+            // jobs list with filter and count
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID", 1));
+            Assert.AreEqual(1, jobs.Count());
         }
 
         [TestMethod]
