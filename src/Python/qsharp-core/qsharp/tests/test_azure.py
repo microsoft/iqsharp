@@ -143,7 +143,12 @@ def _test_workspace_job_execution():
     jobs = qsharp.azure.jobs(jobs[0].id)
     assert isinstance(jobs, list)
     assert len(jobs) == 1
+    
+    # Check that job count works
+    jobs = qsharp.azure.jobs(count=1)
+    assert isinstance(jobs, list)
+    assert len(jobs) == 1
 
-    jobs = qsharp.azure.jobs("invalid")
+    jobs = qsharp.azure.jobs("invalid", count=10)
     assert isinstance(jobs, list)
     assert len(jobs) == 0
