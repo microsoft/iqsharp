@@ -24,6 +24,7 @@ function Test-CondaPackage {
     }
 
     process {
+        Write-Host "##[info]Testing conda package $Path..."
         conda-build (Resolve-Path $Path) --test 2>&1 | ForEach-Object { "$_" };
         if ($LASTEXITCODE -ne 0) {
             Write-Host "##vso[task.logissue type=error;]conda-build --test failed for $Path.";

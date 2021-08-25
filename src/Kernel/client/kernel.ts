@@ -203,10 +203,11 @@ class Kernel {
             }
         );
         comm_session.on_msg((message) => {
-            console.log("clientinfo_reply message", message);
-            this.hostingEnvironment = message?.hosting_environment;
-            this.iqsharpVersion = message?.iqsharp_version;
-            this.telemetryOptOut = message?.telemetry_opt_out;
+            let client_info = message.content.data;
+            console.log("clientinfo_reply message", client_info);
+            this.hostingEnvironment = client_info.hosting_environment;
+            this.iqsharpVersion = client_info.iqsharp_version;
+            this.telemetryOptOut = client_info.telemetry_opt_out;
             console.log(`Using IQ# version ${this.iqsharpVersion} on hosting environment ${this.hostingEnvironment}.`);
 
             this.initTelemetry();
