@@ -30,12 +30,12 @@ function Install-PreReqs() {
     Install IQ# From Source
 #>
 function Install-FromSource() {
-    Push-Location ..\src\Python\qsharp-core
+    Push-Location (Join-Path $PSScriptRoot ..\src\Python\qsharp-core)
         "Installing qsharp-core from source" | Write-Verbose
         pip install -e .
     Pop-Location
 
-    Push-Location ..\src\Tool\
+    Push-Location (Join-Path $PSScriptRoot ..\src\Tool\)
         "Installing IQ# from source" | Write-Verbose
         dotnet run -- install --user
     Pop-Location
@@ -73,7 +73,9 @@ if (-not $Env:NUGET_OUTDIR) {
     Install-PreReqs
     Install-FromSource
 
-    "== IQ# installed from source." | Write-Host
+    "" | Write-Host
+    "== IQ# installed from source. ==" | Write-Host
+    "" | Write-Host
 } elseif (-not (Test-Path $Env:NUGET_OUTDIR)) {
     "" | Write-Warning
     "== The environment variable NUGET_OUTDIR is set, but pointing to an invalid location ($Env:NUGET_OUTDIR)" | Write-Warning
@@ -87,5 +89,7 @@ if (-not $Env:NUGET_OUTDIR) {
     Install-PreReqs
     Install-FromBuild
 
-    "== IQ# installed from build artifacts." | Write-Host
+    "" | Write-Host
+    "== IQ# installed from build artifacts. ==" | Write-Host
+    "" | Write-Host
 }
