@@ -17,7 +17,7 @@ To run these tests:
     * `NUGET_OUTDIR`: with the location of the build's NuGet packages
     * `NUGET_VERSION`: with the packages' NuGet version.
     * `PYTHON_OUTDIR`: with the location of the build's Python wheels
-2. Set up the following environment variables pointing to an Azure Quantum Workspace that has the Microsoft, Ionq and Honeywell providers enabled:
+2. Set up the following environment variables pointing to an Azure Quantum Workspace that has the Microsoft, IonQ and Honeywell providers enabled:
     * `$Env:AZUREQUANTUM_SUBSCRIPTION_ID=""`
     * `$Env:AZUREQUANTUM_WORKSPACE_RG=""`
     * `$Env:AZUREQUANTUM_WORKSPACE_LOCATION=""`

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 param (
     [Parameter()]
@@ -11,8 +11,7 @@ if (-not $SkipInstall) {
 }
 
 # For debug, print all relevant environment variables:
-Get-ChildItem env:AZURE*
-Get-ChildItem env:*VERSION
+Get-ChildItem env:AZURE*, env:*VERSION | Format-Table | Out-String | Write-Host
 
 # Install and run Pester
 Import-Module Pester

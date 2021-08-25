@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /// Q# code should be in one or more .qs files that live 
@@ -14,7 +14,7 @@ namespace Microsoft.Quantum.SanityTests {
     operation QRNG(count : Int, name : String) : Result[] {
         Message($"Hello {name} again!");
 
-        mutable r = new Result[count];
+        mutable r = [Zero, size = count];
         use q = Qubit[count];
 
         ApplyToEach(H, q);

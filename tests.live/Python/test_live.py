@@ -72,7 +72,7 @@ def test_local_simulation():
     qsharp.reload()
 
     from Microsoft.Quantum.SanityTests import QRNG
-    count=3
+    count = 3
     result = QRNG.simulate(count=count, name='andres')
     assert len(result) == count
 
