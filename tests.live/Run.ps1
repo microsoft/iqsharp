@@ -6,12 +6,12 @@ param (
     $SkipInstall=$False
 )
 
+# For debug, print all relevant environment variables:
+Get-ChildItem env:AZURE*, env:*VERSION, env:*OUTDIR | Format-Table | Out-String | Write-Host
+
 if (-not $SkipInstall) {
     .\Install-Artifacts.ps1
 }
-
-# For debug, print all relevant environment variables:
-Get-ChildItem env:AZURE*, env:*VERSION | Format-Table | Out-String | Write-Host
 
 # Install and run Pester
 Import-Module Pester

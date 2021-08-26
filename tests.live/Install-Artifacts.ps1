@@ -83,7 +83,7 @@ if (-not $Env:NUGET_OUTDIR) {
     "" | Write-Warning
     Exit 1
 } else {
-    "== Preparing environment to use artifacts with version '$Env:NUGET_OUTDIR' " | Write-Host
+    "== Preparing environment to use artifacts with version '$Env:NUGET_VERSION' " | Write-Host
     "== from '$Env:NUGET_OUTDIR' and '$Env:PYTHON_OUTDIR'" | Write-Host
 
     Install-PreReqs
