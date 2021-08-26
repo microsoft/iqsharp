@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -356,6 +357,66 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     knownAssemblies = knownAssemblies.Add(assembly.GetName());
                 }
             };
+        }
+
+        // TODO: move somewhere better.
+        // TODO: make a display encoder.
+        public record AggregateResults(List<ExecutionResult> Results);
+
+        public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken cancellationToken)
+        {
+            // TODO: Pass currently open namespaces in from ICompilerService.AutoOpenNamespaces.
+            // Start by splitting cell into parts.
+            var splitResult = CellParser.CellParser.SplitCell(input);
+            // TODO: update AutoOpenNamespaces with result from cell splitting.
+
+            // TODO: This is pretty hacky for now, but should let us experiment
+            //       by delegating each part to either executemundane or
+            //       executemagic.
+            var allResults = new List<ExecutionResult>();
+            foreach (var part in splitResult.Parts)
+            {
+                allResults.Add(await part.Match<Task<ExecutionResult>>(
+                    async callable =>
+                    {
+                        return await ExecuteMundane(callable.Contents, channel);
+                    },
+                    async udt =>
+                    {
+                        return await ExecuteMundane(udt.Contents, channel);
+                    },
+                    async magic =>
+                    {
+                        var symbol = MagicResolver?.Resolve(magic.CommandName);
+                        if (symbol is MagicSymbol magicSymbol)
+                        {
+                            return await magicSymbol.Execute(magic.Input, channel);
+                        }
+                        else
+                        {
+                            channel.Stderr($"Magic command {magic.CommandName} not recognized.");
+                            return ExecuteStatus.Error.ToExecutionResult();
+                        }
+                    }
+                ));
+            }
+
+            if (allResults.Count == 1)
+            {
+                return allResults.Single();
+            }
+            else if (allResults.Count == 0)
+            {
+                return ExecuteStatus.Ok.ToExecutionResult();
+            }
+            else
+            {
+                return new AggregateResults(allResults).ToExecutionResult(
+                    status: allResults.All(result => result.Status == ExecuteStatus.Error)
+                            ? ExecuteStatus.Ok
+                            : ExecuteStatus.Error // FIXME: check if any are abort!
+                );
+            }
         }
 
         /// <summary>
