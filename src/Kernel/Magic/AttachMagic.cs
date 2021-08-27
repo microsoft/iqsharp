@@ -22,10 +22,23 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "attach",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "TODO",
-                Description = @"TODO".Dedent(),
+                Summary = "Attaches a debugger to the current IQ# session.",
+                Description = @"
+                    If no debugger is attached to the current IQ# session, launches a new debugger and attaches it, allowing for stepping through IQ# implementation code.
+
+                    If a debugger is already attached, this magic command acts as a breakpoint when executed.
+
+                    > **NOTE:** This command is not included in release versions of the IQ# kernel, and is only intended for use by IQ# contributors.
+                    > If you are interested in debugging Q# code written in IQ#, please see the [`%debug` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/debug) instead.
+                ".Dedent(),
                 Examples = new string []
                 {
+                    @"
+                        Attach a debugger to the current IQ# sessiuon:
+                        ```
+                        %attach
+                        ```
+                    ".Dedent()
                 }
             }, logger)
         { }
