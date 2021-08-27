@@ -112,6 +112,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public TEnum GetOptionOrDefault<TEnum>(string optionName, TEnum defaultValue) where TEnum : struct =>
             GetOptionOrDefault(optionName, defaultValue, Enum.Parse<TEnum>);
 
+        // TODO: Add to %config documentation.
+        public bool ExpandErrorMessages =>
+            GetOptionOrDefault("core.expandErrorMessages", true);
+
+        public bool ShowErrorHints =>
+            GetOptionOrDefault("core.showHints", true);
+
         /// <summary>
         ///     The labeling convention to be used when labeling computational
         ///     basis states (bit string, little-endian or big-endian).

@@ -1,6 +1,7 @@
 namespace Microsoft.Quantum.IQSharp.CellParser;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
 using System.IO;
 
 internal static class AntrlExtensions

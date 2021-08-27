@@ -126,12 +126,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Compile the snippets against the provided execution target
-            var snippets = Snippets.Items.ToArray();
+            var snippets = Snippets.Declarations;
             if (snippets.Any())
             {
-                Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
+                Logger?.LogDebug($"{snippets.Count} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = Compiler.BuildSnippets(
-                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
+                    snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll")
+                ).Item1;
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");

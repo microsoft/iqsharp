@@ -86,37 +86,23 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
         }
 
-        private CompilationLoader CreateTemporaryLoader(string source)
+        private CompilationLoader CreateTemporaryLoader(string source, string ns)
         {
             var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
-            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {source} }}" } }.ToImmutableDictionary();
+            var sources = new Dictionary<Uri, string>() { { uri, $"namespace {ns} {{ {source} }}" } }.ToImmutableDictionary();
             var loadOptions = new CompilationLoader.Configuration();
             return new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
         }
 
         /// <inheritdoc/>
-        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        public IEnumerable<QsNamespaceElement> IdentifyElements(string source, string? ns = null)
         {
-            var loader = CreateTemporaryLoader(source);
+            ns ??= Snippets.SNIPPETS_NAMESPACE;
+            var loader = CreateTemporaryLoader(source, ns);
             if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
-            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(Snippets.SNIPPETS_NAMESPACE, out var tree)
+            return loader.VerifiedCompilation.SyntaxTree.TryGetValue(ns, out var tree)
                    ? tree.Elements
                    : ImmutableArray<QsNamespaceElement>.Empty;
-        }
-
-        /// <inheritdoc/>
-        public IDictionary<string, string?> IdentifyOpenedNamespaces(string source)
-        {
-            var loader = CreateTemporaryLoader(source);
-            if (loader.VerifiedCompilation == null) { return ImmutableDictionary<string, string?>.Empty; }
-            return loader.VerifiedCompilation.Tokenization.Values
-                .SelectMany(tokens => tokens.SelectMany(fragments => fragments))
-                .Where(fragment => fragment.Kind != null && fragment.Kind.IsOpenDirective)
-                .Select(fragment => ((QsFragmentKind.OpenDirective)fragment.Kind!))
-                .Where(openDirective => !string.IsNullOrEmpty(openDirective.Item1.Symbol?.AsDeclarationName(null)))
-                .ToDictionary(
-                    openDirective => openDirective.Item1.Symbol.AsDeclarationName(null),
-                    openDirective => openDirective.Item2.ValueOr(null)?.Symbol?.AsDeclarationName(null));
         }
 
         /// <summary> 
@@ -169,23 +155,41 @@ namespace Microsoft.Quantum.IQSharp
             return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true);
         }
 
-        /// <summary>
-        /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
-        /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
-        /// with the same name as the snippet id.
-        /// </summary>
-        public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        // TODO: This needs to be somewhere better, too.
+        public static Uri UriForDeclarationName(string qualifiedName)
+        {
+            var uri = Path.GetFullPath(Path.Combine("/", $"{qualifiedName}.qs"));
+            System.Console.WriteLine($"!!!! {uri}");
+            return new Uri(uri);
+        }
+
+        public string WrapSnippet(string? nsName, DeclarationSnippet snippet, string openSep = " ")
+        {
+            string OpenStatements(DeclarationSnippet s) =>
+                string.Join(openSep, s.OpenNamespaces.Select(
+                    entry => string.IsNullOrEmpty(entry.Alias) 
+                        ? $"open {entry.Name};"
+                        : $"open {entry.Name} as {entry.Alias};"
+                ));
+
+            string NamespacePart(string qualifiedName) =>
+                string.Join(".", qualifiedName.Split(".").SkipLast(1));
+
+            // FIXME: This is a bit hacky, as it involves stripping the key back
+            //        out to get the namespace.
+            return nsName == null
+                   ? $"{OpenStatements(snippet)}\n{snippet.Source}"
+                   : $"namespace {NamespacePart(nsName)} {{ {OpenStatements(snippet)}\n{snippet.Source}\n}}";
+        }
+
+        public (AssemblyInfo?, IDictionary<Uri, string>) BuildSnippets(IDictionary<string, DeclarationSnippet> snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             RuntimeCapability? runtimeCapability = null)
         {
-            string openStatements = string.Join("", AutoOpenNamespaces.Select(
-                entry => string.IsNullOrEmpty(entry.Value) 
-                    ? $"open {entry.Key};"
-                    : $"open {entry.Key} as {entry.Value};"
-                ));
-            string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.code}\n}}";
 
-            var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
+            var sources = snippets.ToImmutableDictionary(
+                s => UriForDeclarationName(s.Key),
+                s => WrapSnippet(s.Key, s.Value)
+            );
 
             // Ignore some warnings about already-open namespaces and aliases when compiling snippets.
             var warningCodesToIgnore = new List<QsCompiler.Diagnostics.WarningCode>()
@@ -198,7 +202,7 @@ namespace Microsoft.Quantum.IQSharp
             var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
-            return assembly;
+            return (assembly, sources);
         }
 
         /// <summary>

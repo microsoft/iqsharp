@@ -35,7 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Jupyter.Core" Version="1.5.157285" />
+    <!-- <PackageReference Include="Microsoft.Jupyter.Core" Version="1.5.157285" /> -->
+    <ProjectReference Include="../../../jupyter-core/src/jupyter-core.csproj" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />
   </ItemGroup>
 

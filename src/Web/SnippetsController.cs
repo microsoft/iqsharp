@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Web.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,19 +66,21 @@ namespace Microsoft.Quantum.IQSharp
             await AsResponse(async (logger) =>
             await IfReady(async () =>
             {
-                var result = Snippets.Compile(model.Code);
+                // FIXME: Need to port web controller over to use cellparser.
+                return Array.Empty<string>();
+                // var result = Snippets.Compile(model.Code);
 
-                // log warnings:
-                foreach (var m in result.warnings) { logger(m); }
+                // // log warnings:
+                // foreach (var m in result.warnings) { logger(m); }
 
-                // Gets the names of all the operations found for this snippet
-                var opsNames =
-                    result.Elements?
-                        .Where(e => e.IsQsCallable)
-                        .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
-                        .ToArray();
+                // // Gets the names of all the operations found for this snippet
+                // var opsNames =
+                //     result.Elements?
+                //         .Where(e => e.IsQsCallable)
+                //         .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
+                //         .ToArray();
 
-                return opsNames;
+                // return opsNames;
             }));
 
         /// <summary>

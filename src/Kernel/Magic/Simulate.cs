@@ -14,6 +14,10 @@ using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    // FIXME: This will change JSON that Python needs to pick up unless we
+    //        attach a new JSON encoder that ignores operationname.
+    public record SimulateResult(String OperationName, object Output);
+
     /// <summary>
     ///     A magic command that can be used to simulate operations and functions
     ///     on a full-state quantum simulator.
@@ -111,13 +115,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var stopwatch = Stopwatch.StartNew();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
             stopwatch.Stop();
-            var result = value.ToExecutionResult();
             (Monitor as PerformanceMonitor)?.ReportSimulatorPerformance(new SimulatorPerformanceArgs(
                 simulatorName: qsim.GetType().FullName,
                 nQubits: (int)maxNQubits,
                 duration: stopwatch.Elapsed
             ));
-            return result;
+            return new SimulateResult(name, value).ToExecutionResult();
         }
     }
 }

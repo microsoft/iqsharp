@@ -21,6 +21,7 @@ using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
 using System.Threading;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -165,6 +166,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
+        protected virtual Task RegisterDisplayEncoder<TEncoder>()
+        where TEncoder: IResultEncoder
+        {
+            return Task.Run(() => RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<TEncoder>(services)));
+        }
+
         private async Task StartAsync()
         {
             base.Start();
@@ -206,16 +213,23 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var references = await serviceTasks.References;
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
-            RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
-            RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
-            RegisterDisplayEncoder(new TaskStatusToTextEncoder());
-            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new DataTableToHtmlEncoder());
-            RegisterDisplayEncoder(new DataTableToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
+            await Task.WhenAll(
+                RegisterDisplayEncoder<IQSharpSymbolToHtmlResultEncoder>(),
+                RegisterDisplayEncoder<IQSharpSymbolToTextResultEncoder>(),
+                RegisterDisplayEncoder<TaskStatusToTextEncoder>(),
+                RegisterDisplayEncoder<StateVectorToHtmlResultEncoder>(),
+                RegisterDisplayEncoder<StateVectorToTextResultEncoder>(),
+                RegisterDisplayEncoder<DataTableToHtmlEncoder>(),
+                RegisterDisplayEncoder<DataTableToTextEncoder>(),
+                RegisterDisplayEncoder<DisplayableExceptionToHtmlEncoder>(),
+                RegisterDisplayEncoder<DisplayableExceptionToTextEncoder>(),
+                RegisterDisplayEncoder<DisplayableHtmlElementEncoder>(),
+                // TODO: plain text as well.
+                RegisterDisplayEncoder<CompilationResultToHtmlEncoder>(),
+                RegisterDisplayEncoder<AggregateResultsToHtmlEncoder>(),
+                RegisterDisplayEncoder<DeclarationSnippetToHtmlEncoder>(),
+                RegisterDisplayEncoder<SimulateResultToHtmlEncoder>()
+            );
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -236,6 +250,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterJsonEncoder(jsonMimeType,
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
+                .Concat(new JsonConverter[] { new SimulateResultToJsonConverter() })
                 .ToArray());
 
             logger.LogDebug("Registering IQ# symbol resolvers.");
@@ -362,43 +377,71 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         // TODO: move somewhere better.
         // TODO: make a display encoder.
         public record AggregateResults(List<ExecutionResult> Results);
+        // TODO: Move to compilerservice or similar.
+        public List<(string Namespace, string? Alias)>? GloballyOpenNamespaces = null;
 
         public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken cancellationToken)
         {
-            // TODO: Pass currently open namespaces in from ICompilerService.AutoOpenNamespaces.
+            GloballyOpenNamespaces ??=
+                (await services?.GetRequiredServiceInBackground<ICompilerService>())
+                .AutoOpenNamespaces
+                .Select(
+                    item => (item.Key, item.Value)
+                )
+                .ToList();
             // Start by splitting cell into parts.
-            var splitResult = CellParser.CellParser.SplitCell(input);
+            var splitResult = CellParser.CellParser.SplitCell(input, GloballyOpenNamespaces);
             // TODO: update AutoOpenNamespaces with result from cell splitting.
 
             // TODO: This is pretty hacky for now, but should let us experiment
             //       by delegating each part to either executemundane or
             //       executemagic.
             var allResults = new List<ExecutionResult>();
+            var declarationsChunk = new List<CellParser.CellParser.Declaration>();
             foreach (var part in splitResult.Parts)
             {
-                allResults.Add(await part.Match<Task<ExecutionResult>>(
-                    async callable =>
+                if (part.TryPickT0(out var declaration, out var magic))
+                {
+                    declarationsChunk.Add(declaration);
+                }
+                else
+                {
+                    if (declarationsChunk.Any())
                     {
-                        return await ExecuteMundane(callable.Contents, channel);
-                    },
-                    async udt =>
-                    {
-                        return await ExecuteMundane(udt.Contents, channel);
-                    },
-                    async magic =>
-                    {
-                        var symbol = MagicResolver?.Resolve(magic.CommandName);
-                        if (symbol is MagicSymbol magicSymbol)
+                        // TODO: if this chunk compiled OK, update global namespaces here.
+                        var result = await CompileDeclarations(declarationsChunk);
+                        allResults.Add(result);
+                        declarationsChunk.Clear();
+
+                        if (result.Status != ExecuteStatus.Ok)
                         {
-                            return await magicSymbol.Execute(magic.Input, channel);
-                        }
-                        else
-                        {
-                            channel.Stderr($"Magic command {magic.CommandName} not recognized.");
-                            return ExecuteStatus.Error.ToExecutionResult();
+                            break;
                         }
                     }
-                ));
+
+                    var symbol = MagicResolver?.Resolve(magic.CommandName);
+                    if (symbol is MagicSymbol magicSymbol)
+                    {
+                        var result = await magicSymbol.Execute(magic.Input, channel);
+                        allResults.Add(result);
+                        if (result.Status != ExecuteStatus.Ok)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        channel.Stderr($"Magic command {magic.CommandName} not recognized.");
+                        allResults.Add(ExecuteStatus.Error.ToExecutionResult());
+                        break;
+                    }
+                }
+            }
+
+
+            if (declarationsChunk.Any())
+            {
+                allResults.Add(await CompileDeclarations(declarationsChunk));
             }
 
             if (allResults.Count == 1)
@@ -419,81 +462,129 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
         }
 
+        // TODO: Make a display encoder.
+        // TODO: Move definition somewhere sensible.
+        /// <param name="NewDeclarations"><c>null</c> if compilation failed.</param>
+        public record CompilationResult(List<Diagnostic> Diagnostics, List<string>? NewDeclarations, IDictionary<Uri, string>? Sources);
+
+        public virtual async Task<ExecutionResult> CompileDeclarations(List<CellParser.CellParser.Declaration> declarationsChunk)
+        {
+            string QualifiedName(CellParser.CellParser.Declaration declaration) =>
+                (declaration.Namespace ?? Microsoft.Quantum.IQSharp.Snippets.SNIPPETS_NAMESPACE) +
+                "." + declaration.Name;
+            var results = await Snippets.AddOrReplaceDeclarations(
+                declarationsChunk.ToDictionary(
+                    part => QualifiedName(part),
+                    part => new DeclarationSnippet(part.Contents, part.OpenNamespaces)
+                )
+            );
+            var relevantSources = declarationsChunk.Select(
+                decl => CompilerService.UriForDeclarationName(QualifiedName(decl)).LocalPath
+            ).ToHashSet();
+            return new CompilationResult(
+                // Filter diagnostics to those relevant to new declarations.
+                results
+                    .Diagnostics
+                    .Where(diagnostic =>
+                        diagnostic.Source == null
+                        || relevantSources.Contains(diagnostic.Source)
+                    )
+                    .ToList(),
+                results.Succeeded
+                ? declarationsChunk.Select(decl =>
+                      decl.Namespace == null
+                      ? decl.Name
+                      : $"{decl.Namespace}.{decl.Name}"
+                  )
+                  .ToList()
+                : null,
+                results.Sources
+            ).ToExecutionResult(results.Succeeded ? ExecuteStatus.Ok : ExecuteStatus.Error);
+
+        }
+
+        // FIXME: Only to provide definition for abstract method; not actually
+        //        used. Need to make not abstract in base class.
+        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
+        {
+            return ExecuteStatus.Ok.ToExecutionResult();
+        }
+
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
         /// the operations found. These operations are then available for simulation and estimate.
         /// </summary>
-        public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
-        {
-            channel = channel.WithNewLines();
+        // public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
+        // {
+        //     channel = channel.WithNewLines();
 
-            return await Task.Run(async () =>
-            {
-                try
-                {
-                    await this.Initialized;
-                    // Once the engine is initialized, we know that Workspace
-                    // and Snippets are both not-null.
-                    var workspace = this.Workspace!;
-                    var snippets = this.Snippets!;
+        //     return await Task.Run(async () =>
+        //     {
+        //         try
+        //         {
+        //             await this.Initialized;
+        //             // Once the engine is initialized, we know that Workspace
+        //             // and Snippets are both not-null.
+        //             var workspace = this.Workspace!;
+        //             var snippets = this.Snippets!;
 
-                    await workspace.Initialization;
+        //             await workspace.Initialization;
 
-                    var code = snippets.Compile(input);
+        //             var code = snippets.Compile(input);
 
-                    foreach (var m in code.warnings) { channel.Stdout(m); }
+        //             foreach (var m in code.warnings) { channel.Stdout(m); }
 
-                    // Gets the names of all the operations found for this snippet
-                    var opsNames =
-                        code.Elements?
-                            .Where(e => e.IsQsCallable)
-                            .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
-                            .ToArray();
+        //             // Gets the names of all the operations found for this snippet
+        //             var opsNames =
+        //                 code.Elements?
+        //                     .Where(e => e.IsQsCallable)
+        //                     .Select(e => e.ToFullName().WithoutNamespace(IQSharp.Snippets.SNIPPETS_NAMESPACE))
+        //                     .ToArray();
 
-                    return opsNames.ToExecutionResult();
-                }
-                catch (CompilationErrorsException c)
-                {
-                    // Check if the user likely tried to execute a magic
-                    // command and try to give a more helpful message in that
-                    // case.
-                    if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
-                    {
-                        var attemptedMagic = input.Split(" ", 2)[0];
-                        channel.Stderr($"No such magic command {attemptedMagic}.");
-                        if (MagicResolver is MagicSymbolResolver iqsResolver)
-                        {
-                            var similarMagic = iqsResolver
-                                .FindAllMagicSymbols()
-                                .Select(symbol =>
-                                    (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
-                                )
-                                .OrderBy(pair => pair.Item2)
-                                .Take(3)
-                                .Select(symbol => symbol.Name);
-                            channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
-                        }
-                        channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
-                    }
-                    else
-                    {
-                        foreach (var m in c.Errors) channel.Stderr(m);
-                    }
-                    return ExecuteStatus.Error.ToExecutionResult();
-                }
-                catch (Exception e)
-                {
-                    Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
-                    channel.Stderr(e.Message);
-                    return ExecuteStatus.Error.ToExecutionResult();
-                }
-                finally
-                {
-                    performanceMonitor.Report();
-                }
-            });
-        }
+        //             return opsNames.ToExecutionResult();
+        //         }
+        //         catch (CompilationErrorsException c)
+        //         {
+        //             // Check if the user likely tried to execute a magic
+        //             // command and try to give a more helpful message in that
+        //             // case.
+        //             if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
+        //             {
+        //                 var attemptedMagic = input.Split(" ", 2)[0];
+        //                 channel.Stderr($"No such magic command {attemptedMagic}.");
+        //                 if (MagicResolver is MagicSymbolResolver iqsResolver)
+        //                 {
+        //                     var similarMagic = iqsResolver
+        //                         .FindAllMagicSymbols()
+        //                         .Select(symbol =>
+        //                             (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
+        //                         )
+        //                         .OrderBy(pair => pair.Item2)
+        //                         .Take(3)
+        //                         .Select(symbol => symbol.Name);
+        //                     channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
+        //                 }
+        //                 channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
+        //             }
+        //             else
+        //             {
+        //                 foreach (var m in c.Errors) channel.Stderr(m);
+        //             }
+        //             return ExecuteStatus.Error.ToExecutionResult();
+        //         }
+        //         catch (Exception e)
+        //         {
+        //             Logger.LogWarning(e, "Exception while executing mundane input: {Input}", input);
+        //             channel.Stderr(e.Message);
+        //             return ExecuteStatus.Error.ToExecutionResult();
+        //         }
+        //         finally
+        //         {
+        //             performanceMonitor.Report();
+        //         }
+        //     });
+        // }
     }
 }
 

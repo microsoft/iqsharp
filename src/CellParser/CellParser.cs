@@ -20,17 +20,15 @@ internal static class CellParserExtensions
 
 public class CellParser
 {
-    public record CallableDeclaration(string Contents, string? Namespace, INamespaceList OpenNamespaces);
-    public record UdtDeclaration(string Contents, string? Namespace, INamespaceList OpenNamespaces);
+    public record Declaration(string Contents, string Name, string? Namespace, INamespaceList OpenNamespaces);
     public record MagicCommandInvocation(string CommandName, string Input = "");
 
-    public sealed class CellPart : OneOfBase<CallableDeclaration, UdtDeclaration, MagicCommandInvocation>
+    public sealed class CellPart : OneOfBase<Declaration, MagicCommandInvocation>
     {
-        public CellPart(OneOf<CallableDeclaration, UdtDeclaration, MagicCommandInvocation> input) : base(input)
+        public CellPart(OneOf<Declaration, MagicCommandInvocation> input) : base(input)
         { }
 
-        public static implicit operator CellPart(CallableDeclaration _) => new CellPart(_);
-        public static implicit operator CellPart(UdtDeclaration _) => new CellPart(_);
+        public static implicit operator CellPart(Declaration _) => new CellPart(_);
         public static implicit operator CellPart(MagicCommandInvocation _) => new CellPart(_);
     }
 
@@ -47,16 +45,15 @@ public class CellParser
                 "\n// ---\n",
                 Parts.Select(part =>
                     part.Match(
-                        callable => 
-                            $"// Callable declaration in namespace {callable.Namespace ?? "<default snippet>"}\n" +
+                        declaration => 
+                            $"// Callable or UDT declaration in namespace {declaration.Namespace ?? "<default snippet>"}\n" +
                             "// Open statements in effect for declaration:\n" +
                             string.Join(
                                 Environment.NewLine,
-                                callable.OpenNamespaces.AsComments()
+                                declaration.OpenNamespaces.AsComments()
                             ) +
                             Environment.NewLine +
-                            callable.Contents,
-                        udt => "udt",
+                            declaration.Contents,
                         magic => $"// Magic command invocation:\n{magic.CommandName} {magic.Input}"
                     )
                 )
@@ -75,25 +72,37 @@ public class CellParser
         private string? CurrentNamespace = null;
         private INamespaceList? CurrentlyOpenedNamespaces = null;
 
+        // FIXME: Does not yet capture attributes.
         public override void EnterCallableDeclaration(IQSharpCellParser.CallableDeclarationContext context)
         {
             var start = context.Start.StartIndex;
             var stop = context.Stop.StopIndex;
             var text = context.Start.InputStream.GetText(new Interval(start, stop));
 
-            Parts.Add(new CallableDeclaration(text, CurrentNamespace, CurrentNamespace == null ? GloballyOpenedNamespaces : CurrentlyOpenedNamespaces));
+            Parts.Add(new Declaration(
+                text,
+                context.name.Text,
+                CurrentNamespace,
+                CurrentNamespace == null ? GloballyOpenedNamespaces : CurrentlyOpenedNamespaces
+            ));
             base.EnterCallableDeclaration(context);
         }
 
         // FIXME: Consolidate with previous method.
-        public override void EnterUserDefinedType(IQSharpCellParser.UserDefinedTypeContext context)
+        // FIXME: Does not yet capture attributes.
+        public override void EnterTypeDeclaration(IQSharpCellParser.TypeDeclarationContext context)
         {
             var start = context.Start.StartIndex;
             var stop = context.Stop.StopIndex;
             var text = context.Start.InputStream.GetText(new Interval(start, stop));
 
-            Parts.Add(new UdtDeclaration(text, CurrentNamespace, CurrentNamespace == null ? GloballyOpenedNamespaces : CurrentlyOpenedNamespaces));
-            base.EnterUserDefinedType(context);
+            Parts.Add(new Declaration(
+                text,
+                context.Identifier().GetText(),
+                CurrentNamespace,
+                CurrentNamespace == null ? GloballyOpenedNamespaces : CurrentlyOpenedNamespaces
+            ));
+            base.EnterTypeDeclaration(context);
         }
 
         public override void EnterOpenDirective(IQSharpCellParser.OpenDirectiveContext context)

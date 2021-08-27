@@ -28,10 +28,7 @@ namespace Microsoft.Quantum.IQSharp
         AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
             RuntimeCapability runtimeCapability = null);
 
-        /// <summary>
-        /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
-        /// </summary>
-        AssemblyInfo BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
+        (AssemblyInfo?, IDictionary<Uri, string>) BuildSnippets(IDictionary<string, DeclarationSnippet> snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
             RuntimeCapability runtimeCapabilities = null);
 
         /// <summary>
@@ -45,13 +42,8 @@ namespace Microsoft.Quantum.IQSharp
         /// The compiler does this on a best effort basis, and in particular without relying on any context and/or type information, 
         /// so it will return the elements even if the compilation fails.
         /// </summary>
-        IEnumerable<QsNamespaceElement> IdentifyElements(string source);
+        IEnumerable<QsNamespaceElement> IdentifyElements(string source, string ns);
 
-        /// <summary>
-        /// Returns a dictionary of all opened namespaces. The key is the full name, and the value (if non-null) is the alias
-        /// under which the namespace is opened.
-        /// The compiler does this on a best effort basis, so it will return the elements even if the compilation fails. 
-        /// </summary>
-        IDictionary<string, string> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
+        string WrapSnippet(string? nsName, DeclarationSnippet snippet, string openSep = " ");
     }
 }

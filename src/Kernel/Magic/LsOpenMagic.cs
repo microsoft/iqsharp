@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Constructs an instance of %lsopen given an instance of the
         ///     compiler service.
         /// </summary>
-        public LsOpenMagic(ICompilerService compiler, ILogger<LsOpenMagic> logger) : base(
+        public LsOpenMagic(IExecutionEngine engine, ILogger<LsOpenMagic> logger) : base(
             "lsopen",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -47,27 +47,27 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
             }, logger)
         {
-            this.Compiler = compiler;
+            this.Engine = (IQSharpEngine)engine;
         }
 
         /// <summary>
-        ///     The compiler service used to identify open namespaces.
+        ///     The engine used to identify open namespaces.
         /// </summary>
-        public ICompilerService Compiler { get; }
+        public IQSharpEngine Engine { get; }
 
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string? input, IChannel channel) => new Table<(string, string)>
+        public override ExecutionResult Run(string? input, IChannel channel) => new Table<(string, string?)>
         {
-            Columns = new List<(string, Func<(string, string), string>)>
+            Columns = new List<(string, Func<(string, string?), string>)>
             {
                 ("Namespace", item => item.Item1),
                 ("Alias", item => item.Item2 ?? "")
             },
-            Rows = Compiler.AutoOpenNamespaces
-                .OrderBy(item => item.Key)
+            Rows = Engine.GloballyOpenNamespaces
+                .OrderBy(item => item.Namespace)
                 .Select(
-                    item => (item.Key, item.Value)
+                    item => (item.Namespace, item.Alias)
                 )
                 .ToList()
         }.ToExecutionResult();
