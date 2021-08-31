@@ -10,6 +10,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+[.]venv/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -41,7 +42,7 @@ Generated\ Files/
 
 # NUNIT
 *.VisualState.xml
-TestResult.xml
+TestResult[s].xml
 
 # Build Results of an ATL Project
 [Dd]ebugPS/
