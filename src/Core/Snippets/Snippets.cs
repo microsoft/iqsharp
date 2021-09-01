@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,6 +15,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -134,63 +138,43 @@ namespace Microsoft.Quantum.IQSharp
                     ? GlobalReferences?.CompilerMetadata
                     : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
 
-        /// <summary>
-        /// Compiles the given code. 
-        /// If the operations defined in this code are already defined
-        /// in existing Snippets, those Snippets are skipped. 
-        /// If successful, this updates the AssemblyInfo
-        /// with the new operations found in the Snippet.
-        /// If errors are found during compilation, a `CompilationErrorsException` is triggered
-        /// with the list of errors found.
-        /// If successful, the list of snippets is updated to include those that were part of the 
-        /// compilation and it will return a new Snippet with the warnings and Q# elements
-        /// reported by the compiler.
-        /// </summary>
-        public Snippet Compile(string code)
+        public ImmutableDictionary<string, DeclarationSnippet> Declarations { get; private set; }
+            = ImmutableDictionary<string, DeclarationSnippet>.Empty;
+
+        public async Task<(bool Succeeded, List<Diagnostic> Diagnostics, IDictionary<Uri, string>? Sources)> AddOrReplaceDeclarations(IDictionary<string, DeclarationSnippet> declarationSnippets)
         {
-            if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
+            var newDeclarations = Declarations;
+            foreach (var (name, declaration) in declarationSnippets)
+            {
+                newDeclarations = newDeclarations.SetItem(name, declaration);
+            }
 
-            var duration = Stopwatch.StartNew();
+            // Try to compile. If it works, update Declarations.
+            return await CompileDeclarations(newDeclarations);
+        }
 
+        private async Task<(bool Succeeded, List<Diagnostic> Diagnostics, IDictionary<Uri, string>? Sources)> CompileDeclarations(ImmutableDictionary<string, DeclarationSnippet> declarationSnippets)
+        {
             // We add exactly one line of boilerplate code at the beginning of each snippet,
             // so tell the logger to subtract one from all displayed line numbers.
             var logger = new QSharpLogger(Logger, lineNrOffset: -1);
 
+            var duration = Stopwatch.StartNew();
+
+            IDictionary<Uri, string>? sources = null;
+
             try
             {
-                var snippets = SelectSnippetsToCompile(code).ToArray();
-                var assembly = Compiler.BuildSnippets(snippets, _metadata.Result, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                // TODO: make async and run in bg thread.
+                var assembly = Compiler.BuildSnippets(declarationSnippets, _metadata.Result, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
-                if (logger.HasErrors)
+                if (!logger.HasErrors)
                 {
-                    throw new CompilationErrorsException(logger);
+                    // We succeeded, so update declarations and our assembly info.
+                    AssemblyInfo = assembly.Item1;
+                    Declarations = declarationSnippets;
                 }
-
-                foreach (var entry in Compiler.IdentifyOpenedNamespaces(code))
-                {
-                    Compiler.AutoOpenNamespaces[entry.Key] = entry.Value;
-                }
-
-                // populate the original snippet with the results of the compilation:
-                Snippet populate(Snippet s) =>
-                    new Snippet()
-                    {
-                        id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
-                        code = s.code,
-                        warnings = logger.Logs
-                            .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri))
-                            .Select(logger.Format)
-                            .ToArray(),
-                        Elements = assembly?.SyntaxTree?
-                            .SelectMany(ns => ns.Elements)
-                            .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri))
-                            .ToArray()
-                    };
-
-                AssemblyInfo = assembly;
-                Items = snippets.Select(populate).ToArray();
-
-                return Items.Last();
+                sources = assembly.Item2;
             }
             finally
             {
@@ -199,6 +183,9 @@ namespace Microsoft.Quantum.IQSharp
                 var errorIds = logger.ErrorIds.ToArray();
                 SnippetCompiled?.Invoke(this, new SnippetCompiledEventArgs(status, errorIds, Compiler.AutoOpenNamespaces.Keys.ToArray(), duration.Elapsed));
             }
+
+            return (!logger.HasErrors, logger.Logs, sources);
+
         }
 
         /// <summary>
@@ -207,9 +194,9 @@ namespace Microsoft.Quantum.IQSharp
         /// - either because they have the same id, or because they previously defined an operation
         /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
-        private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
+        private IEnumerable<Snippet> SelectSnippetsToCompile(string code, string? ns = null)
         {
-            var ops = Compiler.IdentifyElements(code).Select(Extensions.ToFullName).ToArray();
+            var ops = Compiler.IdentifyElements(code, ns).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
             return snippetsWithNoOverlap.Append(new Snippet { code = code });

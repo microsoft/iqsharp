@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -42,6 +45,12 @@ namespace Microsoft.Quantum.IQSharp
         public TimeSpan Duration { get; }
     }
 
+    public record DeclarationSnippet(string Source, ImmutableList<(string Name, string? Alias)> OpenNamespaces)
+    {
+        public DeclarationSnippet(string Source, IEnumerable<(string Name, string? Alias)> OpenNamespaces)
+        : this(Source, OpenNamespaces.ToImmutableList())
+        { }
+    }
 
     /// <summary>
     ///  Snippets represent pieces of Q# code provided by the user.
@@ -66,12 +75,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         IEnumerable<Snippet> Items { get; set; }
 
-        /// <summary>
-        /// Adds or updates a snippet of code. If successful, this updates the AssemblyInfo
-        /// with the new operations found in the Snippet and returns a new Snippet
-        /// populated with the results of the compilation.
-        /// </summary>
-        Snippet Compile(string code);
+        Task<(bool Succeeded, List<Diagnostic> Diagnostics, IDictionary<Uri, string>? Sources)> AddOrReplaceDeclarations(IDictionary<string, DeclarationSnippet> declarationSnippets);
+
+        ImmutableDictionary<string, DeclarationSnippet> Declarations { get; }
 
         /// <summary>
         /// The list of operations found in all snippets compiled successfully so far.

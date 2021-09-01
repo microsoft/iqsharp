@@ -30,6 +30,12 @@ namespace Microsoft.Quantum.IQSharp
         public string code { get; set; }
 
         /// <summary>
+        ///     The name of the namespace that this snippet should be compiled
+        ///     in, or <c>null</c> if the default namespace should be used.
+        /// </summary>
+        public string? Namespace { get; set; }
+
+        /// <summary>
         /// Any compilation warnings trigger for this Snippet.
         /// </summary>
         public string[] warnings { get; set; }
