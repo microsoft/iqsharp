@@ -84,8 +84,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.metadata = metadata;
             this.commsRouter = commsRouter;
 
+            logger.LogDebug("Started client info listener.");
             commsRouter.SessionOpenEvent("iqsharp_clientinfo").On += async (session, data) =>
             {
+                logger.LogDebug("Got iqsharp_clientinfo message: {Data}", data.ToString());
                 if (!data.TryAs<ClientInfoContent>(out var content))
                 {
                     logger.LogError(

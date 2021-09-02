@@ -274,10 +274,22 @@ namespace Tests.IQSharp
             jobsMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
 
-            // with arguments - should still print job status
+            // with default argument - should still print job status
             azureClient = new MockAzureClient();
             jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
             jobsMagic.Test($"{jobId}");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // with default and count arguments - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"{jobId} count=1");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // only with count argument - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"count=1");
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
         }
 
@@ -390,7 +402,7 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? token = default)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();
