@@ -178,8 +178,8 @@ namespace Tests.IQSharp
             // has not being applied to the C# client yet
             System.Environment.SetEnvironmentVariable("AZUREQUANTUM_SUBSCRIPTION_ID", subscriptionId);
             System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_RG", resourceGroupName);
-            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_LOCATION", workspaceName);
-            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_NAME", location);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_NAME", workspaceName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_LOCATION", location);
 
             connectMagic.Test("credential=ENVIRONMENT");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
