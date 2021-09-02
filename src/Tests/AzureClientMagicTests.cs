@@ -39,10 +39,10 @@ namespace Tests.IQSharp
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
 
-        private readonly string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
-        private readonly string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
-        private readonly string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
-        private readonly string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
+        private readonly string EnvironmentSubscriptionId = "AZURE_QUANTUM_SUBSCRIPTION_ID";
+        private readonly string EnvironmentResourceGroup = "AZURE_QUANTUM_WORKSPACE_RG";
+        private readonly string EnvironmentLocation = "AZURE_QUANTUM_WORKSPACE_LOCATION";
+        private readonly string EnvironmentWorkspaceName = "AZURE_QUANTUM_WORKSPACE_NAME";
 
         [TestMethod]
         public void TestConnectMagic()
