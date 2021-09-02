@@ -174,6 +174,13 @@ namespace Tests.IQSharp
             System.Environment.SetEnvironmentVariable(EnvironmentWorkspaceName, workspaceName);
             System.Environment.SetEnvironmentVariable(EnvironmentLocation, location);
 
+            // Temporarily set the environment variables with old prefix, as the renaming
+            // has not being applied to the C# client yet
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_SUBSCRIPTION_ID", subscriptionId);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_RG", resourceGroupName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_LOCATION", workspaceName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_NAME", location);
+
             connectMagic.Test("credential=ENVIRONMENT");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
