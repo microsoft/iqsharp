@@ -4,10 +4,10 @@
 BeforeAll {
     # Makes sure all the required environment variables are set.
     function Test-Environment {
-        $Env:AZUREQUANTUM_SUBSCRIPTION_ID | Should -Not -BeNullOrEmpty
-        $Env:AZUREQUANTUM_WORKSPACE_RG | Should -Not -BeNullOrEmpty
-        $Env:AZUREQUANTUM_WORKSPACE_LOCATION | Should -Not -BeNullOrEmpty
-        $Env:AZUREQUANTUM_WORKSPACE_NAME | Should -Not -BeNullOrEmpty
+        $Env:AZURE_QUANTUM_SUBSCRIPTION_ID | Should -Not -BeNullOrEmpty
+        $Env:AZURE_QUANTUM_WORKSPACE_RG | Should -Not -BeNullOrEmpty
+        $Env:AZURE_QUANTUM_WORKSPACE_LOCATION | Should -Not -BeNullOrEmpty
+        $Env:AZURE_QUANTUM_WORKSPACE_NAME | Should -Not -BeNullOrEmpty
     }
 }
     
