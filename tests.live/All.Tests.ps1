@@ -8,6 +8,12 @@ BeforeAll {
         $Env:AZURE_QUANTUM_WORKSPACE_RG | Should -Not -BeNullOrEmpty
         $Env:AZURE_QUANTUM_WORKSPACE_LOCATION | Should -Not -BeNullOrEmpty
         $Env:AZURE_QUANTUM_WORKSPACE_NAME | Should -Not -BeNullOrEmpty
+
+        # Temporarily setting old environment variables
+        $Env:AZUREQUANTUM_SUBSCRIPTION_ID = $Env:AZURE_QUANTUM_SUBSCRIPTION_ID 
+        $Env:AZUREQUANTUM_WORKSPACE_RG = $Env:AZURE_QUANTUM_WORKSPACE_RG
+        $Env:AZUREQUANTUM_WORKSPACE_LOCATION = $Env:AZURE_QUANTUM_WORKSPACE_LOCATION
+        $Env:AZUREQUANTUM_WORKSPACE_NAME = $Env:AZURE_QUANTUM_WORKSPACE_NAME
     }
 }
     
