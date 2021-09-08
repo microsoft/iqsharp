@@ -33,7 +33,7 @@ test:
     - notebook
     - python>=3.6
     # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
-    - jupyter_client<=7.0.1
+    - jupyter_client==6.1.12
     - pyzmq
     - pip
 
