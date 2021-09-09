@@ -32,7 +32,8 @@ test:
   requires:
     - notebook
     - python>=3.6
-    - jupyter_client
+    # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
+    - jupyter_client==6.1.12
     - pyzmq
     - pip
 
