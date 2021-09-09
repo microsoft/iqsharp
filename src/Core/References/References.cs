@@ -98,8 +98,7 @@ namespace Microsoft.Quantum.IQSharp
                 AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
-            Reset();
-            Debug.Assert(_metadata != null); // should be set by Reset call.
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
@@ -124,7 +123,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// Manages nuget packages.
         internal INugetPackages Nugets { get; }
-        private Task<CompilerMetadata> _metadata;
+        private Lazy<CompilerMetadata> _metadata;
 
         private ILogger<References> Logger { get; }
 
@@ -135,7 +134,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public ImmutableArray<AssemblyInfo> Assemblies { get; private set; }
 
-        public CompilerMetadata CompilerMetadata => _metadata.Result;
+        public CompilerMetadata CompilerMetadata => _metadata.Value;
 
         /// <summary>
         /// The list of Nuget Packages that are available for compilation and execution.
@@ -180,7 +179,7 @@ namespace Microsoft.Quantum.IQSharp
 
         private void Reset()
         {
-            _metadata = Task.Run(() => new CompilerMetadata(this.Assemblies));
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
         }
 
         /// <summary>
