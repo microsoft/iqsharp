@@ -123,7 +123,6 @@ namespace Microsoft.Quantum.Experimental
             if (NoiseModelSource.NoiseModel != null)
             {
                 var json = JsonSerializer.Serialize(NoiseModelSource.NoiseModel);
-                Console.WriteLine(json);
                 qsim.NoiseModel = NoiseModelSource.NoiseModel;
             }
             Logger?.LogDebug("Simulating with noise model: {NoiseModel}", JsonSerializer.Serialize(NoiseModelSource.NoiseModel));
