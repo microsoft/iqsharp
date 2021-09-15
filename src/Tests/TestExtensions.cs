@@ -20,35 +20,6 @@ namespace Tests.IQSharp
     
     internal static class TestExtensions
     {
-        internal class EnumerableAssert<T>
-        {
-            internal IEnumerable<T> Source;
-        }
-
-        internal static EnumerableAssert<T> Enumerable<T>(this Assert assert, IEnumerable<T> source) =>
-            new EnumerableAssert<T>
-            {
-                Source = source
-            };
-
-        internal static EnumerableAssert<T> Contains<T>(this EnumerableAssert<T> enumerableAssert, T item)
-        {
-            Assert.IsTrue(
-                enumerableAssert.Source.Contains(item),
-                $"Enumerable {enumerableAssert.Source} did not contain item {item}."
-            );
-            return enumerableAssert;
-        }
-
-        internal static EnumerableAssert<T> Any<T>(this EnumerableAssert<T> enumerableAssert, Func<T, bool> filter)
-        {
-            Assert.IsTrue(
-                enumerableAssert.Source.Any(filter),
-                $"Enumerable {enumerableAssert.Source} did not contain an item satisfying predicate {filter}."
-            );
-            return enumerableAssert;
-        }
-
         internal class InputAssert : UsingEngineAssert
         {
             internal string Code;

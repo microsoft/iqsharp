@@ -19,16 +19,7 @@ namespace Microsoft.Quantum.IQSharp
     {
         internal static readonly bool LoadFromCsharp = false; // todo: we should make this properly configurable
 
-        private static readonly ImmutableHashSet<string> KnownClassicalAssemblies =
-            new string[]
-            {
-                "netstandard",
-                "NumSharp.Core",
-                "Newtonsoft.Json"
-            }
-            .ToImmutableHashSet();
-
-        private Dictionary<String, bool> Paths { get; }
+        private IEnumerable<String> Paths { get; }
 
         /// <summary>
         /// The list of Assemblies and their dependencies in the format the C# compiler (Roslyn) expects them.
@@ -43,11 +34,11 @@ namespace Microsoft.Quantum.IQSharp
         public CompilerMetadata(IEnumerable<AssemblyInfo> assemblies)
         {
             Paths = PathsInit(assemblies);
-            RoslynMetadatas = RoslynInit(Paths.Keys);
-            QsMetadatas = QsInit(Paths.Where((item) => item.Value).Select(item => item.Key));
+            RoslynMetadatas = RoslynInit(Paths);
+            QsMetadatas = QsInit(Paths);
         }
 
-        private CompilerMetadata(Dictionary<string, bool> paths, IEnumerable<MetadataReference> roslyn, QsReferences qsharp)
+        private CompilerMetadata(IEnumerable<String> paths, IEnumerable<MetadataReference> roslyn, QsReferences qsharp)
         {
             Paths = paths;
             RoslynMetadatas = roslyn;
@@ -57,33 +48,33 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Calculates the paths for all the Assemblies and their dependencies.
         /// </summary>
-        private static Dictionary<string, bool> PathsInit(IEnumerable<AssemblyInfo> assemblies, Dictionary<string, bool> seed = null)
+        private static List<string> PathsInit(IEnumerable<AssemblyInfo> assemblies, IEnumerable<string> seed = null)
         {
-            var found = new Dictionary<string, bool>(seed ?? new Dictionary<string, bool>());
+            var found = new List<string>(seed ?? Enumerable.Empty<string>());
             foreach (var a in assemblies)
             {
-                AddReferencesPaths(found, a.Assembly, a.Location, !KnownClassicalAssemblies.Contains(a.Assembly.GetName().Name));
+                AddReferencesPaths(found, a.Assembly, a.Location);
             }
             return found;
         }
 
-        private static void AddReferencesPaths(Dictionary<string, bool> found, Assembly asm, string location, bool isPossiblyQuantum)
+        private static void AddReferencesPaths(List<string> found, Assembly asm, string location)
         {
             if (string.IsNullOrEmpty(location)) return;
 
-            if (found.ContainsKey(location))
+            if (found.Contains(location))
             {
                 return;
             }
 
-            found.Add(location, isPossiblyQuantum);
+            found.Add(location);
 
             foreach (var a in asm.GetReferencedAssemblies())
             {
                 try
                 {
                     var assm = Assembly.Load(a);
-                    AddReferencesPaths(found, assm, assm.Location, isPossiblyQuantum && !KnownClassicalAssemblies.Contains(assm.GetName().Name));
+                    AddReferencesPaths(found, assm, assm.Location);
                 }
                 catch (Exception)
                 {
@@ -105,15 +96,13 @@ namespace Microsoft.Quantum.IQSharp
         /// Calculates Q# metadata needed for all the Assemblies and their dependencies.
         /// </summary>
         private static QsReferences QsInit(IEnumerable<string> paths) =>
-            new QsReferences(ProjectManager.LoadReferencedAssemblies(
-                paths, ignoreDllResources: false
-            ));
+            new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources: false));
 
         public CompilerMetadata WithAssemblies(params AssemblyInfo[] assemblies)
         {
             var extraPaths = PathsInit(assemblies, Paths);
-            var extraRoslyn = RoslynInit(extraPaths.Keys);
-            var extraQsharp = QsInit(Paths.Union(extraPaths).Where((item) => item.Value).Select(item => item.Key));
+            var extraRoslyn = RoslynInit(extraPaths);
+            var extraQsharp = QsInit(Paths.Union(extraPaths));
 
             return new CompilerMetadata(extraPaths, extraRoslyn, extraQsharp);
         }
