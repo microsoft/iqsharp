@@ -96,7 +96,7 @@ namespace Microsoft.Quantum.IQSharp
         ///      Given a new simulator performance record, emits an event with
         ///      that performance data.
         /// </summary>
-        internal void ReportSimulatorPerformance(SimulatorPerformanceArgs args)
+        public void ReportSimulatorPerformance(SimulatorPerformanceArgs args)
         {
             this.OnSimulatorPerformanceAvailable?.Invoke(this, args);
         }

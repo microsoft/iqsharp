@@ -153,7 +153,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         private QuantumSimulator Simulator { get; }
         internal IConfigurationSource? ConfigurationSource = null;
         internal IChannel? Channel = null;
-        internal ICommsRouter? Router = null;
 
         /// <inheritdoc />
         public JupyterDumpMachine(QuantumSimulator m) : base(m)

@@ -56,8 +56,12 @@ namespace Tests.IQSharp
             return serviceProvider;
         }
 
-        internal static T Create<T>(string workspaceFolder) =>
-            ActivatorUtilities.CreateInstance<T>(CreateServiceProvider(workspaceFolder));
+        internal static T Create<T>(string workspaceFolder)
+        {
+            var serviceProvider = CreateServiceProvider(workspaceFolder);
+            serviceProvider.AddBuiltInMagicSymbols();
+            return ActivatorUtilities.CreateInstance<T>(serviceProvider);
+        }
 
         public static void AddMocks(this IServiceCollection services)
         {
