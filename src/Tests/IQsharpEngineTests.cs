@@ -719,7 +719,7 @@ namespace Tests.IQSharp
                         Possibly similar magic commands:
                         - %lsmagic
                         - %lsopen
-                        - %debug
+                        - %estimate
 
                         To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
                     ".Dedent().Trim());
