@@ -3,6 +3,9 @@
 
 $failed = $false;
 
+Write-Host "## Running unit tests from within qsharp conda package."
+
+
 $Env:IQSHARP_PACKAGE_SOURCE = "$Env:NUGET_OUTDIR"
 $Env:IQSHARP_LOG_LEVEL = "Debug"
 
