@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             "No Azure Quantum workspace was found that matches the specified criteria.";
 
         public const string AzureClientErrorNoWorkspaceLocation =
-            "Please specify the location associated with your workspace.";
+            "The location parameter is missing.";
 
         public const string AzureClientErrorInvalidWorkspaceLocation =
             "The location provided is invalid.";

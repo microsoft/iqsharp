@@ -119,7 +119,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         $@"
                             Connect to an Azure Quantum workspace using its resource ID to the 'West Us' region:
                             ```
-                            In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME"" {ParameterNameSubscriptionId}=""West US""
+                            In []: %azure.connect ""/subscriptions/.../Microsoft.Quantum/Workspaces/WORKSPACE_NAME"" {ParameterNameLocation}=""West US""
                             Out[]: Connected to Azure Quantum workspace WORKSPACE_NAME in location westus.
                                     <list of Q# execution targets available in the Azure Quantum workspace>
                             ```

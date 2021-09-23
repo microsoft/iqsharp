@@ -188,6 +188,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             if (string.IsNullOrWhiteSpace(location))
             {
+                channel?.Stderr($"No location provided.");
                 return AzureClientError.NoWorkspaceLocation.ToExecutionResult();
             }
 
