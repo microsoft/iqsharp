@@ -46,6 +46,19 @@ def test_empty_workspace():
     jobs = qsharp.azure.jobs()
     assert jobs == []
 
+def test_workspace_create_with_no_location():
+    """
+    Tests behavior of a mock workspace with no location.
+    """
+    with pytest.raises(AzureError) as exception_info:
+        qsharp.azure.connect(
+            storage="test",
+            subscription="test",
+            resourceGroup="test",
+            workspace="test"
+        )
+    assert exception_info.value.error_name == "NoWorkspaceLocation"
+
 def test_workspace_create_with_parameters():
     """
     Tests behavior of a mock workspace with providers, using parameters to connect.
@@ -88,9 +101,11 @@ def test_workspace_create_with_resource_id_and_storage():
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
     storageAccountConnectionString = "test"
+    location = "test"
     targets = qsharp.azure.connect(
         resourceId=f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}",
-        storage=storageAccountConnectionString)
+        storage=storageAccountConnectionString,
+        location=location)
     assert isinstance(targets, list)
     assert len(targets) > 0
 
