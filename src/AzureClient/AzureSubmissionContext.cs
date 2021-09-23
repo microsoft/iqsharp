@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
+using System.Collections.Immutable;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -36,6 +37,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     The Q# operation name to be executed as part of this job.
         /// </summary>
         public string OperationName { get; set; } = string.Empty;
+
+        // NOTE: The following member is inherited from IQuantumMachineSubmissionContext, but it's not used.
+        //       This is supporting the change in https://github.com/microsoft/qsharp-runtime/pull/829
+        //       Notice that this is different from the existing 'InputParameters' member below.
+        //       Upcoming work will enable this functionality and align those similar named items.
+        /// <inheritdoc/>
+        public ImmutableDictionary<string, string> InputParams { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         ///     The input parameters to be provided to the specified Q# operation.
