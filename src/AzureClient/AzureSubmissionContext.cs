@@ -43,7 +43,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         //       Notice that this is different from the existing 'InputParameters' member below.
         //       Upcoming work will enable this functionality and align those similar named items.
         /// <inheritdoc/>
-        public ImmutableDictionary<string, string> InputParams { get; set; } = new Dictionary<string, string>();
+        public ImmutableDictionary<string, string> InputParams { get; set; } = Dictionary<string, string>.Empty;
 
         /// <summary>
         ///     The input parameters to be provided to the specified Q# operation.
