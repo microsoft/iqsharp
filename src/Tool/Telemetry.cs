@@ -115,6 +115,13 @@ namespace Microsoft.Quantum.IQSharp
                 evt.SetProperty("Duration".WithTelemetryNamespace(), args.Duration.ToString("G"));
                 TelemetryLogger.LogEvent(evt);
             };
+            eventService.Events<DeviceCapabilitiesEvent, DeviceCapabilitiesArgs>().On += (args) =>
+            {
+                var evt = "DeviceCapabilities".AsTelemetryEvent();
+                evt.SetProperty("NProcessors".WithTelemetryNamespace(), args.NProcessors);
+                evt.SetProperty("TotalMemoryInGiB".WithTelemetryNamespace(), args.TotalMemoryInGiB);
+                TelemetryLogger.LogEvent(evt);
+            };
 
             // As each different service starts up, we can subscribe to their
             // events as well.
