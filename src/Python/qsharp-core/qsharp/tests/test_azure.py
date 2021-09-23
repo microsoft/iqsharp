@@ -34,7 +34,8 @@ def test_empty_workspace():
         storage="test",
         subscription="test",
         resourceGroup="test",
-        workspace="test"
+        workspace="test",
+        location="test"
     )
     assert targets == []
 
@@ -53,7 +54,8 @@ def test_workspace_create_with_parameters():
         storage="test",
         subscription="test",
         resourceGroup="test",
-        workspace="WorkspaceNameWithMockProviders"
+        workspace="WorkspaceNameWithMockProviders",
+        location="test"
     )
     assert isinstance(targets, list)
     assert len(targets) > 0
@@ -68,8 +70,10 @@ def test_workspace_create_with_resource_id():
     subscriptionId = "f846b2bd-d0e2-4a1d-8141-4c6944a9d387"
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
+    location = "test"
     targets = qsharp.azure.connect(
-        resourceId=f"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}")
+        resourceId=f"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}",
+        location=location)
     assert isinstance(targets, list)
     assert len(targets) > 0
 
