@@ -91,6 +91,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         WorkspaceNotFound,
 
         /// <summary>
+        /// A workspace was provided without a location.
+        /// </summary>
+        [Description(Resources.AzureClientErrorNoWorkspaceLocation)]
+        NoWorkspaceLocation,
+
+
+        /// <summary>
+        /// A workspace was provided without an invalid location.
+        /// </summary>
+        [Description(Resources.AzureClientErrorInvalidWorkspaceLocation)]
+        InvalidWorkspaceLocation,
+
+        /// <summary>
         /// The Azure Quantum job failed or was cancelled.
         /// </summary>
         [Description(Resources.AzureClientErrorJobFailedOrCancelled)]

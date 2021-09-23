@@ -166,22 +166,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private string GetNormalizedLocation(string location, IChannel? channel)
         {
-            // Default to "westus" if no location was specified.
-            var defaultLocation = "westus";
-            if (string.IsNullOrWhiteSpace(location))
-            {
-                channel?.Stderr($"[WARN]: location parameter is missing. Will try to connect to a workspace in region `{defaultLocation}`.");
-                location = defaultLocation;
-            }
-
             // Convert user-provided location into names recognized by Azure resource manager.
             // For example, a customer-provided value of "West US" should be converted to "westus".
             var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
             if (UriHostNameType.Unknown == Uri.CheckHostName(normalizedLocation))
             {
-                // If provided location is invalid, "westus" is used.
-                normalizedLocation = defaultLocation;
-                channel?.Stderr($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
+                channel?.Stderr($"Invalid location {location} specified.");
+                return string.Empty;
             }
 
             return normalizedLocation;
@@ -195,7 +186,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             TokenCredential credential,
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return AzureClientError.NoWorkspaceLocation.ToExecutionResult();
+            }
+
             location = GetNormalizedLocation(location, channel);
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return AzureClientError.InvalidWorkspaceLocation.ToExecutionResult();
+            }
 
             try
             {
