@@ -39,10 +39,10 @@ namespace Tests.IQSharp
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
 
-        private readonly string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
-        private readonly string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
-        private readonly string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
-        private readonly string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
+        private readonly string EnvironmentSubscriptionId = "AZURE_QUANTUM_SUBSCRIPTION_ID";
+        private readonly string EnvironmentResourceGroup = "AZURE_QUANTUM_WORKSPACE_RG";
+        private readonly string EnvironmentLocation = "AZURE_QUANTUM_WORKSPACE_LOCATION";
+        private readonly string EnvironmentWorkspaceName = "AZURE_QUANTUM_WORKSPACE_NAME";
 
         [TestMethod]
         public void TestConnectMagic()
@@ -174,6 +174,13 @@ namespace Tests.IQSharp
             System.Environment.SetEnvironmentVariable(EnvironmentWorkspaceName, workspaceName);
             System.Environment.SetEnvironmentVariable(EnvironmentLocation, location);
 
+            // Temporarily set the environment variables with old prefix, as the renaming
+            // has not being applied to the C# client yet
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_SUBSCRIPTION_ID", subscriptionId);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_RG", resourceGroupName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_NAME", workspaceName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_LOCATION", location);
+
             connectMagic.Test("credential=ENVIRONMENT");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
@@ -274,10 +281,22 @@ namespace Tests.IQSharp
             jobsMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
 
-            // with arguments - should still print job status
+            // with default argument - should still print job status
             azureClient = new MockAzureClient();
             jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
             jobsMagic.Test($"{jobId}");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // with default and count arguments - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"{jobId} count=1");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // only with count argument - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"count=1");
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
         }
 
@@ -390,7 +409,7 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? token = default)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();

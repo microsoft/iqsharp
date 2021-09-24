@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -29,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp
     public class Snippets : ISnippets
     {
         // caches the Q# compiler metadata
-        private Task<CompilerMetadata> _metadata;
+        private Lazy<CompilerMetadata> _metadata;
 
         /// <summary>
         /// Namespace that all Snippets gets compiled into.
@@ -50,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyInfo = new AssemblyInfo(null);
             Items = new Snippet[0];
 
-            Reset();
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
             Workspace.Reloaded += OnWorkspaceReloaded;
             GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
 
@@ -59,17 +58,12 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<ISnippets>(this);
         }
 
-        private void Reset()
-        {
-            _metadata = Task.Run(LoadCompilerMetadata);
-        }
-
         /// <summary>
         /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
         /// </summary>
         private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
         {
-            Reset();
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
         }
 
         /// <summary>
@@ -77,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e)
         {
-            Reset();
+            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
         }
 
         /// <summary>

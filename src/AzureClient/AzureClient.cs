@@ -570,7 +570,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -590,6 +590,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (job.Matches(filter))
                 {
                     jobs.Add(job);
+                }
+
+                if (count.HasValue)
+                {
+                    if (jobs.Count >= count)
+                    {
+                        channel?.Stdout($"Showing only the first {count} jobs:");
+                        break;
+                    }
                 }
             }
 

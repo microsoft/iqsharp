@@ -165,7 +165,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token);
+        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count, CancellationToken? token);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.

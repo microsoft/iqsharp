@@ -8,6 +8,7 @@
         "@types/chart.js": "2.8.0",
         "@types/codemirror": "0.0.56",
         "canvas": "^2.8.0",
-        "typescript": "^3.9.6"
+        "typescript": "^3.9.6",
+        "tar": "^6.1.9"
     }
 }
