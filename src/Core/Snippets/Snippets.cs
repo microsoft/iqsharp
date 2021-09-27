@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -160,7 +161,7 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 // TODO: make async and run in bg thread.
-                var assembly = Compiler.BuildSnippets(declarationSnippets, _metadata.Result, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                var assembly = Compiler.BuildSnippets(declarationSnippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
 
                 if (!logger.HasErrors)
                 {
