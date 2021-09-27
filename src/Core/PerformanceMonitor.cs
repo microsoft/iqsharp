@@ -13,7 +13,11 @@ namespace Microsoft.Quantum.IQSharp
     public class DeviceCapabilitiesEvent : Event<DeviceCapabilitiesArgs>
     {}
 
+    #if NET5_0 || NET6_0 || NET5_0_OR_GREATER
     public record DeviceCapabilitiesArgs
+    #else
+    public class DeviceCapabilitiesArgs
+    #endif
     {
         public uint? NProcessors { get; set; } = null;
         public uint? TotalMemoryInGiB { get; set; } = null;
