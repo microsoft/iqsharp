@@ -38,6 +38,7 @@ Task RegenerateAntlr -Depends CreateDevEnvironment {
     Push-Location (Join-Path $RepoRoot "src" "CellParser" "grammar")
         Get-ChildItem *.g4 `
             | ForEach-Object {
+                Write-Host "## Regenerating Antlr for $_..."
                 antlr4 -Dlanguage=CSharp $_
             }
     Pop-Location
