@@ -235,6 +235,11 @@ namespace Microsoft.Quantum.IQSharp
 
     public static class TelemetryExtensions
     {
+        // Generate a new UUID to use as a session ID.
+        // By making a static property of a non-generic static class, we
+        // ensure that there's one session ID per process.
+        internal static readonly Guid SessionId = Guid.NewGuid();
+
         public static string WithTelemetryNamespace(this string name) =>
             $"Quantum.IQSharp.{name}";
 
@@ -248,6 +253,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <returns><paramref name="evt"/> for use in fluent chains.</returns>
         public static EventProperties SetCommonProperties(this EventProperties evt)
         {
+            evt.SetProperty("SessionId".WithTelemetryNamespace(), SessionId);
             evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), TelemetryService.baseEngine?.ExecutionCount?.ToString());
             evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), TelemetryService.client?.ActiveTargetId);
             evt.SetProperty("CurrentSubscription".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.SubscriptionId, PiiKind.GenericData);
