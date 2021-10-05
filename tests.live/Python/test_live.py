@@ -10,6 +10,7 @@
 ## IMPORTS ##
 
 import pytest
+import warnings
 
 ## TESTS ##
 
@@ -69,7 +70,7 @@ def test_ionq_submit():
     """
     import time
     import qsharp
-    from Microsoft.Quantum.SanityTests import SampleQrng
+    from Microsoft.Quantum.Tests import SampleQrng
 
     # Make sure we can simulate locally:
     count = 3
@@ -88,25 +89,28 @@ def test_ionq_submit():
     assert not job.id == ''
     print("Submitted job: ", job.id)
 
-    wait_until_completed(job)
+    try:
+        wait_until_completed(job)
+    except TimeoutError:
+        warnings.warn("IonQ execution exceeded timeout. Skipping fetching results.")
+    else:
+        job = qsharp.azure.status()
+        assert isinstance(job, qsharp.azure.AzureJob)
+        assert job.status == "Succeeded"
 
-    job = qsharp.azure.status()
-    assert isinstance(job, qsharp.azure.AzureJob)
-    assert job.status == "Succeeded"
-
-    histogram = {
-        '[0,0,0]': 0.125,
-        '[0,0,1]': 0.125,
-        '[0,1,0]': 0.125,
-        '[0,1,1]': 0.125,
-        '[1,0,0]': 0.125,
-        '[1,0,1]': 0.125,
-        '[1,1,0]': 0.125,
-        '[1,1,1]': 0.125
-    }
-    retrieved_histogram = qsharp.azure.output()
-    assert isinstance(retrieved_histogram, dict)
-    assert histogram == retrieved_histogram
+        histogram = {
+            '[0,0,0]': 0.125,
+            '[0,0,1]': 0.125,
+            '[0,1,0]': 0.125,
+            '[0,1,1]': 0.125,
+            '[1,0,0]': 0.125,
+            '[1,0,1]': 0.125,
+            '[1,1,0]': 0.125,
+            '[1,1,1]': 0.125
+        }
+        retrieved_histogram = qsharp.azure.output()
+        assert isinstance(retrieved_histogram, dict)
+        assert histogram == retrieved_histogram
 
 def test_honeywell_targets():
     """
@@ -119,3 +123,40 @@ def test_honeywell_targets():
     target_ids = [t.id for t in targets]
     assert 'honeywell.hqs-lt-s1' in target_ids
     assert 'honeywell.hqs-lt-s1-apival' in target_ids
+
+def test_honeywell_submit():
+    """
+    Test that the TeleportCircuit operation can be submitted successfully on the honeywell apival target
+    """
+    import qsharp
+    from Microsoft.Quantum.Tests import TeleportCircuit
+
+    # Make sure we can simulate locally:
+    expected = True
+    result = TeleportCircuit.simulate(doPlus=expected)
+    assert result == 0 if expected else 1
+
+    import qsharp.azure
+    connect()
+
+    t = qsharp.azure.target("honeywell.hqs-lt-s1-apival")
+    assert isinstance(t, qsharp.azure.AzureTarget)
+    assert t.id == "honeywell.hqs-lt-s1-apival"
+
+    job = qsharp.azure.submit(TeleportCircuit, doPlus=expected)
+    assert isinstance(job, qsharp.azure.AzureJob)
+    assert not job.id == ''
+    print("Submitted job: ", job.id)
+
+    try: 
+        wait_until_completed(job)
+    except TimeoutError:
+        warnings.warn("Honeywell execution exceeded timeout. Skipping fetching results.")
+    else:
+        job = qsharp.azure.status()
+        assert isinstance(job, qsharp.azure.AzureJob)
+        if job.status == "Succeeded":
+            retrieved_histogram = qsharp.azure.output()
+            assert isinstance(retrieved_histogram, dict)
+            assert '0' in retrieved_histogram
+    
