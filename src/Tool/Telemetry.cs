@@ -118,8 +118,8 @@ namespace Microsoft.Quantum.IQSharp
             eventService.Events<DeviceCapabilitiesEvent, DeviceCapabilitiesArgs>().On += (args) =>
             {
                 var evt = "DeviceCapabilities".AsTelemetryEvent();
-                evt.SetProperty("NProcessors".WithTelemetryNamespace(), args.NProcessors);
-                evt.SetProperty("TotalMemoryInGiB".WithTelemetryNamespace(), args.TotalMemoryInGiB);
+                evt.SetProperty("NProcessors".WithTelemetryNamespace(), args.NProcessors?.ToString() ?? "");
+                evt.SetProperty("TotalMemoryInGiB".WithTelemetryNamespace(), args.TotalMemoryInGiB?.ToString() ?? "");
                 TelemetryLogger.LogEvent(evt);
             };
 
