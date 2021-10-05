@@ -50,8 +50,8 @@ def wait_until_completed(job):
             if poll_wait >= max_poll_wait_secs
             else poll_wait * 1.5
         )
-    
-def test_targets():
+
+def test_ionq_targets():
     """
     Tests that we can fetch targets from the service,
     and that the workspace includes the targets we need for submission
@@ -61,29 +61,20 @@ def test_targets():
 
     target_ids = [t.id for t in targets]
     assert 'ionq.simulator' in target_ids
-    assert 'honeywell.hqs-lt-s1-apival' in target_ids
+    assert 'ionq.qpu' in target_ids
 
-
-def test_local_simulation():
-    """
-    Test that the SampleQrng operation can run successfully locally.
-    """
-    import qsharp
-    qsharp.reload()
-
-    from Microsoft.Quantum.SanityTests import SampleQrng
-    count = 3
-    result = SampleQrng.simulate(count=count, name='andres')
-    assert len(result) == count
-
-
-def test_submit_ionq():
+def test_ionq_submit():
     """
     Test that the SampleQrng operation can be submitted successfully on the ionq.simulator
     """
     import time
     import qsharp
     from Microsoft.Quantum.SanityTests import SampleQrng
+
+    # Make sure we can simulate locally:
+    count = 3
+    result = SampleQrng.simulate(count=count, name='andres')
+    assert len(result) == count
 
     import qsharp.azure
     connect()
@@ -92,7 +83,7 @@ def test_submit_ionq():
     assert isinstance(t, qsharp.azure.AzureTarget)
     assert t.id == "ionq.simulator"
 
-    job = qsharp.azure.submit(SampleQrng, count=3, name="andres")
+    job = qsharp.azure.submit(SampleQrng, count=count, name="andres")
     assert isinstance(job, qsharp.azure.AzureJob)
     assert not job.id == ''
     print("Submitted job: ", job.id)
@@ -116,3 +107,15 @@ def test_submit_ionq():
     retrieved_histogram = qsharp.azure.output()
     assert isinstance(retrieved_histogram, dict)
     assert histogram == retrieved_histogram
+
+def test_honeywell_targets():
+    """
+    Tests that we can fetch targets from the service,
+    and that the workspace includes the targets we need for submission
+    """
+    targets = connect()
+    assert len(targets) > 2
+
+    target_ids = [t.id for t in targets]
+    assert 'honeywell.hqs-lt-s1' in target_ids
+    assert 'honeywell.hqs-lt-s1-apival' in target_ids

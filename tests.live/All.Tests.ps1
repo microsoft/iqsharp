@@ -8,41 +8,55 @@ BeforeAll {
         $Env:AZURE_QUANTUM_WORKSPACE_RG | Should -Not -BeNullOrEmpty
         $Env:AZURE_QUANTUM_WORKSPACE_LOCATION | Should -Not -BeNullOrEmpty
         $Env:AZURE_QUANTUM_WORKSPACE_NAME | Should -Not -BeNullOrEmpty
+        
+        # These are needed for environment credentials:
+        $Env:AZURE_TENANT_ID | Should -Not -BeNullOrEmpty
+        $Env:AZURE_CLIENT_ID | Should -Not -BeNullOrEmpty
+        $Env:AZURE_CLIENT_SECRET | Should -Not -BeNullOrEmpty
+    }
+
+    function Test-Notebook([string]$notebook) {
+        if (Test-Path "obj") {
+            Remove-Item obj -Recurse
+        }
+
+        "Running jupyter nbconvert on '$notebook'" | Write-Verbose
+        jupyter nbconvert $notebook --execute --stdout --to markdown --ExecutePreprocessor.timeout=120
+
+        $LASTEXITCODE | Should -Be 0
     }
 }
-    
 
 Describe "Test Jupyter Notebooks" {
-    BeforeAll { Test-Environment }
-
-    $Notebooks = Get-ChildItem -Directory -Path .\Notebooks\
-
-    Context "Applying nbconvert to <_>" -ForEach $Notebooks {
-        BeforeAll { Push-Location $_ }
-
-        It "Converts Notebook.ipynb in <_> successfully" {
-            if (Test-Path "obj") {
-                Remove-Item obj -Recurse
-            }
-            jupyter nbconvert Notebook.ipynb --execute --stdout --to html --ExecutePreprocessor.timeout=120
-            $LASTEXITCODE | Should -Be 0
-        }
-        
-        AfterAll { Pop-Location }
+    BeforeAll { 
+        Test-Environment
+        Push-Location .\Notebooks
     }
+
+    It "Converts IonQ.ipynb successfully" -Tag "submit.ionq" {
+       Test-Notebook "IonQ.ipynb"
+    }
+    
+    AfterAll { Pop-Location }
 }
 
 Describe "Test Python Integration" {
     BeforeAll { 
         Test-Environment
-        Push-Location Python
+        Push-Location .\Python
+
         if (Test-Path "obj") {
             Remove-Item obj -Recurse
         }
     }
 
-    It "Runs pytest successfully" {
-        python -m pytest --junitxml=junit/TestResults.xml
+    It "Runs pytest successfully for ionq" -Tag "submit.ionq" {
+        python -m pytest -k ionq --junitxml="junit/IonQ.TestResults.xml"
+        $LASTEXITCODE | Should -Be 0
+    }
+
+    It "Runs pytest successfully for honeywell" -Tag "submit.honeywell" {
+        python -m pytest -k honeywell --junitxml="junit/Honeywell.TestResults.xml"
         $LASTEXITCODE | Should -Be 0
     }
     
