@@ -55,7 +55,7 @@ function Install-FromBuild() {
 
     # Install the qsharp-core wheel:
     "Installing qsharp-core from $Env:PYTHON_OUTDIR" | Write-Verbose
-    pip install qsharp-core::$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR"
+    pip install qsharp-core::$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR
 }
 
 
