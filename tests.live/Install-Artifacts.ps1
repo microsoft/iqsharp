@@ -53,15 +53,9 @@ function Install-FromBuild() {
     dotnet tool install --global Microsoft.Quantum.IQSharp --version $Env:NUGET_VERSION --add-source $Env:NUGET_OUTDIR
     dotnet iqsharp install --user
 
-    # Install the Q# wheels.
-    Push-Location $Env:PYTHON_OUTDIR
-        "Installing all wheels from $Env:PYTHON_OUTDIR" | Write-Verbose
-        Get-ChildItem *.whl `
-        | ForEach-Object {
-            "Installing $_.Name" | Write-Verbose
-            pip install --verbose --verbose $_.Name
-        }
-    Pop-Location
+    # Install the qsharp-core wheel:
+    "Installing qsharp-core from $Env:PYTHON_OUTDIR" | Write-Verbose
+    pip install qsharp-core::$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR"
 }
 
 
