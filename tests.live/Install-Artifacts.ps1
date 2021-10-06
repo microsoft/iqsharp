@@ -51,11 +51,14 @@ function Install-FromBuild() {
     # Get the IQ# tool installed.
     "Installing IQ# from $Env:NUGET_OUTDIR using version $Env:NUGET_VERSION" | Write-Verbose
     dotnet tool install --global Microsoft.Quantum.IQSharp --version $Env:NUGET_VERSION --add-source $Env:NUGET_OUTDIR
+    if ($LASTEXITCODE -ne 0) { throw "Error installing Microsoft.Quantum.IQSharp" }
     dotnet iqsharp install --user
+    if ($LASTEXITCODE -ne 0) { throw "Error installing iqsharp kernel" }
 
     # Install the qsharp-core wheel:
     "Installing qsharp-core from $Env:PYTHON_OUTDIR" | Write-Verbose
-    pip install qsharp-core::$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR
+    pip install qsharp-core==$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR
+    if ($LASTEXITCODE -ne 0) { throw "Error installing qsharp-core wheel" }
 }
 
 
