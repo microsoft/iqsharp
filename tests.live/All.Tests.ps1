@@ -21,7 +21,7 @@ BeforeAll {
         }
 
         "Running jupyter nbconvert on '$notebook'" | Write-Verbose
-        jupyter nbconvert $notebook --execute --stdout --to markdown --ExecutePreprocessor.timeout=120
+        jupyter nbconvert $notebook --execute --stdout --to markdown --ExecutePreprocessor.timeout=120  | Write-Verbose
 
         $LASTEXITCODE | Should -Be 0
     }
@@ -51,12 +51,12 @@ Describe "Test Python Integration" {
     }
 
     It "Runs pytest successfully for ionq" -Tag "submit.ionq" {
-        python -m pytest -k ionq --junitxml="junit/IonQ.TestResults.xml"
+        python -m pytest -k ionq --junitxml="junit/TestResults-IonQ.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
     }
 
     It "Runs pytest successfully for honeywell" -Tag "submit.honeywell" {
-        python -m pytest -k honeywell --junitxml="junit/Honeywell.TestResults.xml"
+        python -m pytest -k honeywell --junitxml="junit/TestResults-Honeywell.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
     }
     
