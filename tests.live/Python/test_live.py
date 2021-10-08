@@ -126,14 +126,14 @@ def test_honeywell_targets():
 
 def test_honeywell_submit():
     """
-    Test that the TeleportCircuit operation can be submitted successfully on the honeywell apival target
+    Test that the RunTeleport operation can be submitted successfully on the honeywell apival target
     """
     import qsharp
-    from Microsoft.Quantum.Tests import TeleportCircuit
+    from Microsoft.Quantum.Tests import RunTeleport
 
     # Make sure we can simulate locally:
     expected = True
-    result = TeleportCircuit.simulate(doPlus=expected)
+    result = RunTeleport.simulate(doPlus=expected)
     assert result == 0 if expected else 1
 
     import qsharp.azure
@@ -143,7 +143,7 @@ def test_honeywell_submit():
     assert isinstance(t, qsharp.azure.AzureTarget)
     assert t.id == "honeywell.hqs-lt-s1-apival"
 
-    job = qsharp.azure.submit(TeleportCircuit, doPlus=expected)
+    job = qsharp.azure.submit(RunTeleport, doPlus=expected)
     assert isinstance(job, qsharp.azure.AzureJob)
     assert not job.id == ''
     print("Submitted job: ", job.id)
