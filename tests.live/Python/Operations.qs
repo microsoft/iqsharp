@@ -29,7 +29,7 @@ namespace Microsoft.Quantum.Tests {
     
     /// # Summary
     /// Direct implementation of Teleport's circuit
-    operation TeleportCircuit(doPlus: Bool) : Result {
+    operation RunTeleport(doPlus: Bool) : Result {
         Message("Running teleport circuit");
         
         use qubits = Qubit[3];
