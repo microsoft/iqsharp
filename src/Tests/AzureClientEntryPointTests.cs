@@ -12,6 +12,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
@@ -179,6 +180,28 @@ namespace Tests.IQSharp
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidEntryPoint });
             Assert.ThrowsException<CompilationErrorsException>(() =>
                 entryPointGenerator.Generate("InvalidEntryPoint", null));
+        }
+
+        [TestMethod]
+        public void UnusedOperationInvalidForHardware()
+        {
+            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.UnusedClassicallyControlledOperation });
+            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint);
+
+            Assert.ThrowsException<CompilationErrorsException>(() =>
+                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+        }
+
+        [TestMethod]
+        public void UnusedOperationInvalidForHardwareInWorkspace()
+        {
+            var entryPointGenerator = Init("Workspace.HardwareTarget");
+            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint);
+
+            Assert.ThrowsException<CompilationErrorsException>(() =>
+                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
         }
     }
 }

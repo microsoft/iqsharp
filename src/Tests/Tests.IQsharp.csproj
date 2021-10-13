@@ -91,6 +91,9 @@
     <None Update="Workspace.QPRGen1\Operations.qs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Workspace.HardwareTarget\Operation.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
