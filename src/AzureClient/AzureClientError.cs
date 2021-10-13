@@ -98,7 +98,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
 
         /// <summary>
-        /// A workspace was provided without an invalid location.
+        /// A workspace was provided with an invalid location.
         /// </summary>
         [Description(Resources.AzureClientErrorInvalidWorkspaceLocation)]
         InvalidWorkspaceLocation,
