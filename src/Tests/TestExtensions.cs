@@ -36,7 +36,7 @@ namespace Tests.IQSharp
         {
             // Start by connecting using the mock connection string.
             await engine
-                .Input("%azure.connect subscription=TEST_SUBSCRIPTION_ID resourceGroup=TEST_RESOURCE_GROUP_NAME workspace=NameWithMockProviders storage=TEST_CONNECTION_STRING")
+                .Input("%azure.connect subscription=TEST_SUBSCRIPTION_ID resourceGroup=TEST_RESOURCE_GROUP_NAME workspace=NameWithMockProviders storage=TEST_CONNECTION_STRING location=TEST_LOCATION")
                 .ExecutesSuccessfully();
             var client = await (await engine).Engine.GetEngineService<IAzureClient>();
             if (client is AzureClient azureClient && azureClient.ActiveWorkspace is MockAzureWorkspace workspace)

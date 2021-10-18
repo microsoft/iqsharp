@@ -34,7 +34,8 @@ def test_empty_workspace():
         storage="test",
         subscription="test",
         resourceGroup="test",
-        workspace="test"
+        workspace="test",
+        location="test"
     )
     assert targets == []
 
@@ -45,6 +46,19 @@ def test_empty_workspace():
     jobs = qsharp.azure.jobs()
     assert jobs == []
 
+def test_workspace_create_with_no_location():
+    """
+    Tests behavior of a mock workspace with no location.
+    """
+    with pytest.raises(AzureError) as exception_info:
+        qsharp.azure.connect(
+            storage="test",
+            subscription="test",
+            resourceGroup="test",
+            workspace="test"
+        )
+    assert exception_info.value.error_name == "NoWorkspaceLocation"
+
 def test_workspace_create_with_parameters():
     """
     Tests behavior of a mock workspace with providers, using parameters to connect.
@@ -53,7 +67,8 @@ def test_workspace_create_with_parameters():
         storage="test",
         subscription="test",
         resourceGroup="test",
-        workspace="WorkspaceNameWithMockProviders"
+        workspace="WorkspaceNameWithMockProviders",
+        location="test"
     )
     assert isinstance(targets, list)
     assert len(targets) > 0
@@ -68,8 +83,10 @@ def test_workspace_create_with_resource_id():
     subscriptionId = "f846b2bd-d0e2-4a1d-8141-4c6944a9d387"
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
+    location = "test"
     targets = qsharp.azure.connect(
-        resourceId=f"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}")
+        resourceId=f"/subscriptions/{subscriptionId}/RESOurceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}",
+        location=location)
     assert isinstance(targets, list)
     assert len(targets) > 0
 
@@ -84,9 +101,11 @@ def test_workspace_create_with_resource_id_and_storage():
     resourceGroupName = "test"
     workspaceName = "WorkspaceNameWithMockProviders"
     storageAccountConnectionString = "test"
+    location = "test"
     targets = qsharp.azure.connect(
         resourceId=f"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Quantum/Workspaces/{workspaceName}",
-        storage=storageAccountConnectionString)
+        storage=storageAccountConnectionString,
+        location=location)
     assert isinstance(targets, list)
     assert len(targets) > 0
 
