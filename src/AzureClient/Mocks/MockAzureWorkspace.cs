@@ -33,8 +33,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string Location { get; private set; } = string.Empty;
 
-        public QuantumJobClientOptions Options { get; private set; } = new QuantumJobClientOptions();
-
         public List<CloudJob> Jobs => MockJobIds.Select(jobId => new MockCloudJob(jobId)).ToList<CloudJob>();
 
         public QuantumJobClient Client => throw new NotImplementedException();
@@ -45,7 +43,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ResourceGroupName = resourceGroup;
             WorkspaceName = workspaceName;
             Location = location;
-            Options = options ?? Options;
 
             // Automatically add all providers for the NameWithMockProviders workspace:
             if (this.WorkspaceName == NameWithMockProviders)
