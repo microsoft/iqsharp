@@ -204,7 +204,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 // This value will be added as a prefix in the UserAgent when
                 // calling the Azure Quantum APIs
-                options.Diagnostics.ApplicationId = IsPythonUserAgent ? "IQ#/Python" : "IQ#";
+                options.Diagnostics.ApplicationId = IsPythonUserAgent ? "IQ#/Py" : "IQ#";
 
                 var workspace = AzureFactory.CreateWorkspace(
                     subscriptionId: subscriptionId,
