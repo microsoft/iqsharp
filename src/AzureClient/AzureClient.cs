@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Azure.Core;
-
+using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
@@ -200,12 +200,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
+                var options = new QuantumJobClientOptions();
+
+                // This value will be added as a prefix in the UserAgent when
+                // calling the Azure Quantum APIs
+                options.Diagnostics.ApplicationId = IsPythonUserAgent ? "IQ#/Py" : "IQ#";
+
                 var workspace = AzureFactory.CreateWorkspace(
                     subscriptionId: subscriptionId,
                     resourceGroup: resourceGroupName,
                     workspaceName: workspaceName,
                     location: location,
-                    credential: credential);
+                    credential: credential,
+                    options: options);
 
                 var providers = new List<ProviderStatusInfo>();
                 var status = workspace.ListProvidersStatusAsync(cancellationToken);
