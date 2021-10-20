@@ -19,21 +19,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroup, 
             string workspaceName, 
             string location, 
-            TokenCredential credential)
-        {
-            var options = new QuantumJobClientOptions();
-
-            // This value will be added as a prefix in the UserAgent when
-            // calling the Azure Quantum APIs
-            options.Diagnostics.ApplicationId = "IQ#";
-
-            return new Azure.Quantum.Workspace(
+            TokenCredential credential,
+            QuantumJobClientOptions options) =>
+                new Azure.Quantum.Workspace(
                     subscriptionId: subscriptionId,
                     resourceGroupName: resourceGroup,
                     workspaceName: workspaceName,
                     location: location,
-                    credential: credential);
-        }
+                    credential: credential,
+                    options: options);
 
         /// <inheritdoc />
         public IQuantumMachine? CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
