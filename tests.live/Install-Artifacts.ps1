@@ -55,7 +55,17 @@ function Install-FromBuild() {
     dotnet iqsharp install --user
     if ($LASTEXITCODE -ne 0) { throw "Error installing iqsharp kernel" }
 
-    # Install the qsharp-core wheel:
+    # Make sure the NUGET_OUTDIR is listed as a nuget source, otherwise
+    # IQ# will fail to load when packages are loaded.
+    $SourceName = "build"
+    dotnet nuget add source $Env:NUGET_OUTDIR  --name $SourceName
+    if ($LASTEXITCODE -ne 0) { 
+        "Nuget source $SourceName already exist, will be updated to point to $($Env:NUGET_OUTDIR)" | Write-Warning
+        dotnet nuget update source  $SourceName --source $Env:NUGET_OUTDIR
+        if ($LASTEXITCODE -ne 0) { throw "Failed to update nuget config" }
+    }
+
+    # Install the qsharp-core wheel
     "Installing qsharp-core from $Env:PYTHON_OUTDIR" | Write-Verbose
     pip install qsharp-core==$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR
     if ($LASTEXITCODE -ne 0) { throw "Error installing qsharp-core wheel" }
