@@ -4,6 +4,7 @@
 #nullable enable
 
 using Azure.Core;
+using Azure.Quantum;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -16,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// Creates an instance of an Azure Quantum Workspace client
         /// </summary>
-        Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, TokenCredential credential);
+        Azure.Quantum.IWorkspace CreateWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, TokenCredential credential, QuantumJobClientOptions options);
 
         /// <summary>
         /// Creates an instance of an Azure Quantum Machine
