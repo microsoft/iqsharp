@@ -1,26 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-#nullable enable
-
-using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     Represents an HTML string to be rendered as an HTML element.
     /// </summary>
-    public class DisplayableHtmlElement
-    {
-        /// <summary>
-        ///     Initializes <see cref="DisplayableHtmlElement"/> with the given HTML string.
-        /// </summary>
-        public DisplayableHtmlElement(string html) => this.Html = html;
-
-        /// <summary>
-        ///     HTML string to be rendered.
-        /// </summary>
-        public string Html { get; }
-    }
+    /// <param name="Html">
+    ///     HTML string to be rendered.
+    /// </param>
+    public record DisplayableHtmlElement(string Html);
 
     /// <summary>
     ///     Encodes <see cref="DisplayableHtmlElement" /> instances as HTML elements.
@@ -35,8 +24,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     and if so, returns its HTML element.
         /// </summary>
         public EncodedData? Encode(object displayable) =>
-            (displayable is DisplayableHtmlElement dis)
-                ? dis.Html.ToEncodedData() as EncodedData?
+            (displayable is DisplayableHtmlElement { Html: var html })
+                ? html.ToEncodedData() as EncodedData?
                 : null;
     }
 }

@@ -99,11 +99,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 {
                     try
                     {
-                        workspaceAssemblies.Add(Compiler.BuildFiles(
+                        var asm = Compiler.BuildFiles(
                             project.SourceFiles.ToArray(),
                             compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
                             logger,
-                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}")));
+                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"));
+                        if (asm is not null) workspaceAssemblies.Add(asm);
                     }
                     catch (Exception e)
                     {
@@ -130,7 +131,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = Compiler.BuildSnippets(
                     snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
-                if (SnippetsAssemblyInfo == null || logger.HasErrors)
+                if (SnippetsAssemblyInfo is null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
                     throw new CompilationErrorsException(logger);
@@ -148,8 +149,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
-                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, runtimeCapability);
-            if (EntryPointAssemblyInfo == null || logger.HasErrors)
+                operationInfo,
+                compilerMetadata,
+                logger,
+                Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"),
+                executionTarget,
+                runtimeCapability);
+            if (EntryPointAssemblyInfo is null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
                 throw new CompilationErrorsException(logger);

@@ -111,22 +111,22 @@ namespace Microsoft.Quantum.IQSharp
         /// The list of Q# operations available across all snippets.
         /// </summary>
         public IEnumerable<OperationInfo> Operations =>
-            (Workspace == null || Workspace.HasErrors)
-            ? AssemblyInfo?.Operations
-            : AssemblyInfo?.Operations
-            .Concat(
-                Workspace?
-                .Assemblies?
-                .SelectMany(asm => asm?.Operations)
-            );
+            Workspace.HasErrors
+            ? AssemblyInfo.Operations
+            : AssemblyInfo.Operations
+                .Concat(
+                    Workspace
+                    .Assemblies
+                    .SelectMany(asm => asm.Operations)
+                );
 
         /// <summary>
         /// Loads the compiler metadata, either from the GlobalReferences or includes the Workspace if available
         /// </summary>
         private CompilerMetadata LoadCompilerMetadata() =>
             Workspace.HasErrors
-                    ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+            ? GlobalReferences.CompilerMetadata
+            : GlobalReferences.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
 
         /// <summary>
         /// Compiles the given code. 
@@ -175,7 +175,7 @@ namespace Microsoft.Quantum.IQSharp
                             .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri))
                             .Select(logger.Format)
                             .ToArray(),
-                        Elements = assembly?.SyntaxTree?
+                        Elements = assembly.SyntaxTree
                             .SelectMany(ns => ns.Elements)
                             .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri))
                             .ToArray()
@@ -213,18 +213,18 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name)
         {
             if (name.Name == Path.GetFileNameWithoutExtension(this.AssemblyInfo?.Location))
             {
-                return this.AssemblyInfo.Assembly;
+                return this.AssemblyInfo?.Assembly;
             }
 
-            foreach (var asm in this.Workspace?.Assemblies)
+            foreach (var asm in this.Workspace?.Assemblies ?? Array.Empty<AssemblyInfo>())
             {
                 if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
                 {
-                    return asm.Assembly;
+                    return asm?.Assembly;
                 }
             }
 

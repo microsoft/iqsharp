@@ -9,6 +9,7 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler;
+using System.Diagnostics;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -91,11 +92,11 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         #region Equals
-        public override string ToString() => Assembly?.ToString();
+        public override string ToString() => Assembly?.ToString() ?? "<AssemblyInfo: null>";
 
-        public override bool Equals(object obj) => Equals(obj as AssemblyInfo);
+        public override bool Equals(object? obj) => Equals(obj as AssemblyInfo);
 
-        public bool Equals(AssemblyInfo other) => Assembly?.FullName == other?.Assembly?.FullName;
+        public bool Equals(AssemblyInfo? other) => Assembly?.FullName == other?.Assembly?.FullName;
 
         public override int GetHashCode() => Assembly?.FullName?.GetHashCode() ?? 0;
 
@@ -104,7 +105,8 @@ namespace Microsoft.Quantum.IQSharp
         public static bool operator !=(AssemblyInfo info1, AssemblyInfo info2) => !(info1 == info2);
         #endregion
 
-        public static AssemblyInfo Create(Assembly assembly) => assembly == null ? null : new AssemblyInfo(assembly);
+        public static AssemblyInfo? Create(Assembly assembly) =>
+            assembly == null ? null : new AssemblyInfo(assembly);
 
     }
 }

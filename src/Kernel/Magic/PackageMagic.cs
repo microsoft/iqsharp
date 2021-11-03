@@ -123,7 +123,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 await References.AddPackage(name, statusCallback);
             }
 
-            return References.Packages.ToArray().ToExecutionResult();
+            return (References.Packages?.ToArray() ?? Array.Empty<string>()).ToExecutionResult();
         }
     }
 }

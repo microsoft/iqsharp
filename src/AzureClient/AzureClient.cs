@@ -6,8 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,7 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
+        private IEnumerable<TargetStatusInfo>? AvailableTargets =>
+            AvailableProviders?.SelectMany(provider => provider.Targets ?? Array.Empty<TargetStatusInfo>());
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
@@ -135,7 +138,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }
                 finally
                 {
-                    System.Console.SetOut(currentOut);
+                    if (currentOut != null) System.Console.SetOut(currentOut);
                 }
 
                 StorageConnectionString = storageAccountConnectionString;
@@ -144,7 +147,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
 
-                if (ValidExecutionTargets.Count() == 0)
+                if (ValidExecutionTargets?.Count() is 0 or null)
                 {
                     channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
                 }
@@ -436,7 +439,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel?.Stdout($"Current execution target: {ActiveTarget.TargetId}");
             channel?.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
 
-            return AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult();
+            return AvailableTargets is {} targets
+                ? targets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult()
+                : ExecuteStatus.Ok.ToExecutionResult();
         }
 
         /// <inheritdoc/>
@@ -455,8 +460,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             // Validate that this target is valid in the workspace.
-            var target = AvailableTargets.FirstOrDefault(t => targetId == t.TargetId);
-            if (target == null)
+            if (AvailableTargets?.FirstOrDefault(t => targetId == t.TargetId) is not {} target)
             {
                 channel?.Stderr($"Target {targetId} is not available in the current Azure Quantum workspace.");
                 channel?.Stdout($"Available execution targets: {ValidExecutionTargetsDisplayText}");
@@ -529,8 +533,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                var request = WebRequest.Create(job.OutputDataUri);
-                using var responseStream = request.GetResponse().GetResponseStream();
+                // When mocking, we may have a file:/// URI instead of an http:// or https://
+                // URI. That's not supported by HttpClient, so we check the scheme here.
+                using var responseStream =
+                    job.OutputDataUri.Scheme == "file"
+                    ? File.OpenRead(job.OutputDataUri.LocalPath)
+                    : await new HttpClient().GetStreamAsync(job.OutputDataUri);
                 return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
             catch (Exception e)

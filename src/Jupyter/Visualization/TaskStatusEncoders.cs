@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#nullable enable
-
-using System;
-using Microsoft.Jupyter.Core;
-
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
 

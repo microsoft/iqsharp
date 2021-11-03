@@ -245,14 +245,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///      name <paramref name="parameterName"/> is present in the
         ///      dictionary.
         /// </param>
-        public static object? DecodeParameter(this Dictionary<string, string> parameters, string parameterName, Type type, object? defaultValue = default)
-        {
-            if (!parameters.TryGetValue(parameterName, out string parameterValue))
-            {
-                return defaultValue!;
-            }
-            return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
-        }
+        public static object? DecodeParameter(this Dictionary<string, string> parameters, string parameterName, Type type, object? defaultValue = default) =>
+            parameters.TryGetValue(parameterName, out var parameterValue)
+            ? JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue
+            :  defaultValue!;
 
         /// <summary>
         /// Makes the channel to start capturing the Console Output.

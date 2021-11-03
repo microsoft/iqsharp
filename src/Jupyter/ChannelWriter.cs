@@ -1,8 +1,7 @@
-﻿using System.Text;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-using Microsoft.Jupyter.Core;
-
-#nullable enable
+using System.Text;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -11,7 +10,7 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class ChannelWriter : System.IO.TextWriter
     {
-        private IChannel? Channel { get; }
+        private readonly IChannel? Channel;
 
         /// <summary>
         /// The default constructor.

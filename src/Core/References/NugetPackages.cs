@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         // The framework used to find packages.
-        public static NuGetFramework NETCOREAPP3_1 = NuGetFramework.ParseFolder("netcoreapp3.1");
+        public static NuGetFramework NET6_0 = NuGetFramework.ParseFolder("net6.0");
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
@@ -294,7 +294,9 @@ namespace Microsoft.Quantum.IQSharp
                 return Enumerable.Empty<AssemblyInfo>();
             }
 
-            var root = Path.GetDirectoryName(pkgInfo.Path);
+            // GetDirectoryName returns null if its input represents
+            // a root directory; in that case, the path is correct as-is.
+            var root = Path.GetDirectoryName(pkgInfo.Path) ?? pkgInfo.Path;
             string[] CheckOnFramework(NuGetFramework framework)
             {
                 var frameworkReducer = new FrameworkReducer();
@@ -311,7 +313,7 @@ namespace Microsoft.Quantum.IQSharp
                 return files.ToArray();
             }
 
-            var names = CheckOnFramework(NETCOREAPP3_1);
+            var names = CheckOnFramework(NET6_0);
 
             Assembly? LoadAssembly(string path)
             {
@@ -329,7 +331,7 @@ namespace Microsoft.Quantum.IQSharp
             return names
                 .Select(LoadAssembly)
                 .Select(AssemblyInfo.Create)
-                .Where(a => a != null);
+                .WhereNotNull();
         }
 
 
@@ -337,7 +339,7 @@ namespace Microsoft.Quantum.IQSharp
         /// Finds the latest version of the package with the given id. 
         /// The id must match. It returns null if the package is not found.
         /// </summary>
-        public async Task<NuGetVersion> GetLatestVersion(string package)
+        public async Task<NuGetVersion?> GetLatestVersion(string package)
         {
             package = package?.Trim() ?? throw new ArgumentNullException(nameof(package));
 
@@ -409,7 +411,7 @@ namespace Microsoft.Quantum.IQSharp
                 dependencyBehavior: DependencyBehavior.Lowest,
                 targetIds: new[] { pkgId.Id },
                 requiredPackageIds: Enumerable.Empty<string>(),
-                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_1, true)),
+                packagesConfig: Items.Select(p => new PackageReference(p, NET6_0, true)),
                 preferredVersions: Enumerable.Empty<PackageIdentity>(),
                 availablePackages: AvailablePackages,
                 packageSources: Repositories.Select(s => s.PackageSource),
@@ -476,7 +478,7 @@ namespace Microsoft.Quantum.IQSharp
                     var dependencyInfoResource = await repo.GetResourceAsync<DependencyInfoResource>();
                     if (dependencyInfoResource == null) continue;
 
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_1, context, this.Logger, CancellationToken.None);
+                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NET6_0, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
 
                     AvailablePackages.Add(dependencyInfo);

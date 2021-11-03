@@ -1,15 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Quantum.IQSharp.Common;
 
 namespace Microsoft.Quantum.IQSharp
 {
     public interface IOperationResolver
     {
-        OperationInfo Resolve(string input);
+        OperationInfo? Resolve(string input);
     }
 }

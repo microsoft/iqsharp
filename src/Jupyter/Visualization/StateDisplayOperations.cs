@@ -105,15 +105,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             // encoder to be there to pack it into a table.
 
             var id = System.Guid.NewGuid();
-            var state = new DisplayableState
-            {
+            var state = new DisplayableState(
                 // We cast here as we don't support a large enough number
                 // of qubits to saturate an int.
-                QubitIds = qubits?.Select(q => q.Id) ?? Simulator?.QubitIds.Select(q => (int)q) ?? Enumerable.Empty<int>(),
-                NQubits = (int)_count,
-                Amplitudes = _data,
-                DivId = $"dump-machine-div-{id}" 
-            };
+                QubitIds: qubits?.Select(q => q.Id) ?? Simulator?.QubitIds.Select(q => (int)q) ?? Enumerable.Empty<int>(),
+                NQubits: (int)_count,
+                Amplitudes: _data,
+                DivId: $"dump-machine-div-{id}" 
+            );
             Channel.Display(state);
 
             if (ShowMeasurementDisplayHistogram)

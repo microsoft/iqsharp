@@ -1,16 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#nullable enable
-
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Common;
-
 using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Kernel

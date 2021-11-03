@@ -84,7 +84,8 @@ namespace Tests.IQSharp
         public void TestJobStatus()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // not connected
             ExpectError(AzureClientError.NotConnected, azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_1"));
@@ -134,7 +135,8 @@ namespace Tests.IQSharp
         public void TestManualTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // SetActiveTargetAsync with recognized target ID, but not yet connected
             ExpectError(AzureClientError.NotConnected, azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
@@ -174,7 +176,8 @@ namespace Tests.IQSharp
         public void TestAllTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // connect to mock workspace with all providers
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
@@ -193,7 +196,8 @@ namespace Tests.IQSharp
         public void TestJobSubmission()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
             var submissionContext = new AzureSubmissionContext();
 
             // not yet connected
@@ -233,7 +237,8 @@ namespace Tests.IQSharp
         public void TestJobExecution()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -248,6 +253,7 @@ namespace Tests.IQSharp
             var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
             Assert.AreEqual("ionq.simulator", target.TargetId);
 
+            var channel = new MockChannel();
             // execute the job and verify that the results are retrieved successfully
             var submissionContext = new AzureSubmissionContext()
             {
@@ -256,7 +262,7 @@ namespace Tests.IQSharp
                 ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
-            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(channel, submissionContext, CancellationToken.None));
             Assert.IsNotNull(histogram);
         }
 
@@ -264,7 +270,8 @@ namespace Tests.IQSharp
         public void TestJobExecutionWithArrayInput()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -295,7 +302,8 @@ namespace Tests.IQSharp
         public void TestRuntimeCapabilities()
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
@@ -321,7 +329,8 @@ namespace Tests.IQSharp
         public void TestLocations()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             // Locations with whitespace should be converted correctly
             _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
@@ -340,7 +349,8 @@ namespace Tests.IQSharp
         public void TestConnectedEvent()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetService<IAzureClient>() as AzureClient;
+            Assert.IsNotNull(azureClient);
 
             ConnectToWorkspaceEventArgs? lastArgs = null;
 

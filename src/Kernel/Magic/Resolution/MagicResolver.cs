@@ -1,20 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Immutable;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.AzureClient;
-using Microsoft.Quantum.IQSharp.Common;
-
-using Newtonsoft.Json;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -119,7 +108,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // If the assembly cannot possibly contain magic symbols, skip it
             // here.
             var name = assm.Assembly.GetName().Name;
-            if (name.StartsWith("System.") || IQSharpEngine.MundaneAssemblies.Contains(name))
+            if (name == null ||
+                assm.Assembly.FullName == null ||
+                name.StartsWith("System.") ||
+                IQSharpEngine.MundaneAssemblies.Contains(name))
             {
                 return result;
             }
