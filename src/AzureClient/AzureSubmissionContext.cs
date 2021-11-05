@@ -17,12 +17,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     public sealed class AzureSubmissionContext : IQuantumMachineSubmissionContext
     {
+        private static readonly ImmutableDictionary<string, string> DefaultJobParams = ImmutableDictionary<string, string>.Empty;
         private static readonly int DefaultShots = 500;
         private static readonly int DefaultExecutionTimeoutInSeconds = 30;
         private static readonly int DefaultExecutionPollingIntervalInSeconds = 5;
         
         internal static readonly string ParameterNameOperationName = "__operationName__";
         internal static readonly string ParameterNameJobName = "jobName";
+        internal static readonly string ParameterNameJobParams = "jobParams";
         internal static readonly string ParameterNameShots = "shots";
         internal static readonly string ParameterNameTimeout = "timeout";
         internal static readonly string ParameterNamePollingInterval = "poll";
@@ -38,11 +40,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         public string OperationName { get; set; } = string.Empty;
 
-        // NOTE: The following member is inherited from IQuantumMachineSubmissionContext, but it's not used.
-        //       This is supporting the change in https://github.com/microsoft/qsharp-runtime/pull/829
-        //       Notice that this is different from the existing 'InputParameters' member below.
-        //       Upcoming work will enable this functionality and align those similar named items.
-        /// <inheritdoc/>
+        /// <summary>
+        ///     Provider-specific job parameters to be passed to the execution target, expressed as one or more JSON {"key":"value",...} pairs.
+        /// </summary>
+        /// <remarks>
+        ///     These parameters apply to %azure.execute. and %azure.submit. The JSON may not contain separating spaces. 
+        /// </remarks>
+        //
+        // NOTE: This property was named "InputParams" (instead of "JobParams") because the closely
+        //       related implementation in microsoft/qsharp-runtime used the name "InputParams"
+        //       (see https://github.com/microsoft/qsharp-runtime/pull/829).
+        //
+        //       Please notice the difference between "InputParams" and the preexisting "InputParameters"
+        //       member below.
         public ImmutableDictionary<string, string> InputParams { get; set; } = ImmutableDictionary<string, string>.Empty;
 
         /// <summary>
@@ -78,6 +88,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = AbstractMagic.ParseInputParameters(inputCommand, firstParameterInferredName: ParameterNameOperationName);
             var operationName = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var jobName = inputParameters.DecodeParameter<string>(ParameterNameJobName, defaultValue: operationName);
+            var jobParams = inputParameters.DecodeParameter<ImmutableDictionary<string, string>>(ParameterNameJobParams, defaultValue: DefaultJobParams);
             var shots = inputParameters.DecodeParameter<int>(ParameterNameShots, defaultValue: DefaultShots);
             var timeout = inputParameters.DecodeParameter<int>(ParameterNameTimeout, defaultValue: DefaultExecutionTimeoutInSeconds);
             var pollingInterval = inputParameters.DecodeParameter<int>(ParameterNamePollingInterval, defaultValue: DefaultExecutionPollingIntervalInSeconds);
@@ -87,6 +98,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 FriendlyName = jobName,
                 Shots = shots,
                 OperationName = operationName,
+                InputParams = jobParams,
                 InputParameters = inputParameters,
                 ExecutionTimeout = timeout,
                 ExecutionPollingInterval = pollingInterval,
