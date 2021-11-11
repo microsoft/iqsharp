@@ -52,8 +52,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - `{AzureSubmissionContext.ParameterNameJobName}=<string>`: Friendly name to identify this job. If not specified,
                         the Q# operation or function name will be used as the job name.
                         - `{AzureSubmissionContext.ParameterNameJobParams}=<JSON key:value pairs>`: Provider-specific job parameters
-                        expressed in JSON as one or more `key`:`value` pairs to be passed to the execution target. The JSON may not contain
-                        separating spaces. Values must be strings.
+                        expressed in JSON as one or more `key`:`value` pairs to be passed to the execution target. Values must be strings.
                         - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
                         specified Q# operation or function.
                         
