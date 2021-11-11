@@ -101,8 +101,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var maxNQubits = 0L;
 
             using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, ConfigurationSource)
+                //.WithJupyterDisplay(channel, ConfigurationSource)   // TODO(rokuzmin): Remove as a simplification of Dump().
                 .WithStackTraceDisplay(channel);
+            ////
+            qsim.DisableLogToConsole();
+            qsim.OnLog += channel.Stdout;
+            ////
             qsim.OnDisplayableDiagnostic += channel.Display;
             qsim.AfterAllocateQubits += (args) =>
             {

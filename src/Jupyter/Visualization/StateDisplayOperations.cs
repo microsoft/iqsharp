@@ -150,7 +150,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public class JupyterDumpMachine<T> : QuantumSimulator.QsimDumpMachine<T>
     {
-        private QuantumSimulator Simulator { get; }
+        private QuantumSimulator Simulator { get; }     // TODO(rokuzmin): reuse the inherited one.
         internal IConfigurationSource? ConfigurationSource = null;
         internal IChannel? Channel = null;
         internal ICommsRouter? Router = null;
