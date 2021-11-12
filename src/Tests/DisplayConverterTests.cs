@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Simulation.Simulators;
 using System.Linq;
 using System.Collections.Generic;
 
