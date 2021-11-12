@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
@@ -19,6 +20,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// Information about the state to be displayed.
         /// </summary>
         [JsonProperty("state")]
-        public DisplayableState State { get; set; } = new DisplayableState();
+        public QuantumSimulator.DisplayableState State { get; set; } = new QuantumSimulator.DisplayableState();
     }
 }

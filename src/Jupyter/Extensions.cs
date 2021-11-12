@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
@@ -74,6 +75,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
 
+        /// <summary>
+        ///     An enumerable source of the significant amplitudes of this state
+        ///     vector and their labels, where significance and labels are
+        ///     defined by the values loaded from <paramref name="configurationSource" />.
+        /// </summary>
         public static IEnumerable<(Complex, string)> SignificantAmplitudes(
             this QuantumSimulator.DisplayableState state, 
             IConfigurationSource configurationSource

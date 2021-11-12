@@ -27,7 +27,7 @@ namespace Tests.IQSharp
     [TestClass]
     public class DisplayConverterTests
     {
-        private readonly DisplayableState testState = new DisplayableState
+        private readonly QuantumSimulator.DisplayableState testState = new QuantumSimulator.DisplayableState
         {
             QubitIds = new[] {0, 1, 2},
             NQubits = 3,
@@ -42,7 +42,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.BigEndian,
+                    QuantumSimulator.BasisStateLabelingConvention.BigEndian,
                     false,
                     0
                 )
@@ -56,7 +56,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.LittleEndian,
+                    QuantumSimulator.BasisStateLabelingConvention.LittleEndian,
                     false,
                     0
                 )
@@ -70,7 +70,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.Bitstring,
+                    QuantumSimulator.BasisStateLabelingConvention.Bitstring,
                     false,
                     0
                 )

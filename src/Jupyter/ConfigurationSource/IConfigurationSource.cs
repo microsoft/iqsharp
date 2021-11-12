@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 
 using Microsoft.Quantum.Experimental;
+using Microsoft.Quantum.Simulation.Simulators;
 
 using Newtonsoft.Json.Linq;
 
@@ -117,8 +118,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
         // TODO(rokuzmin): public QuantumSimulator.BasisStateLabelingConvention ..
-        public BasisStateLabelingConvention BasisStateLabelingConvention =>
-            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
+        public QuantumSimulator.BasisStateLabelingConvention BasisStateLabelingConvention =>
+            GetOptionOrDefault("dump.basisStateLabelingConvention", QuantumSimulator.BasisStateLabelingConvention.LittleEndian);
 
         /// <summary>
         ///     Whether small amplitudes should be truncated when dumping
