@@ -358,8 +358,8 @@ class IQSharpClient(object):
                 # propagate to a Jupyter protocol error.
                 raise AlreadyExecutingError("Cannot execute through the IQ# client while another execution is completing.")
             self._busy = True
-            timeout = 300
-            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, timeout=timeout, **kwargs)
+            kwargs.setdefault('timeout', 120)
+            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, **kwargs)
         finally:
             self._busy = False
 
