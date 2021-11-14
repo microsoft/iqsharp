@@ -168,14 +168,14 @@ class IQSharpClient(object):
         return self._execute("%project", raise_on_stderr=False)
 
     def simulate(self, op, **kwargs) -> Any:
-        kwargs.setdefault('timeout', 180)
+        kwargs.setdefault('timeout', None)
         return self._execute_callable_magic('simulate', op, **kwargs)
 
     def toffoli_simulate(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('toffoli', op, **kwargs)
 
     def estimate(self, op, **kwargs) -> Dict[str, int]:
-        kwargs.setdefault('timeout', 180)
+        kwargs.setdefault('timeout', None)
         raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
         # Note that raw_counts will have the form:
         # [
