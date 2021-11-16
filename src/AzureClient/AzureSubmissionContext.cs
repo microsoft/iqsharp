@@ -44,7 +44,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Provider-specific job parameters to be passed to the execution target, expressed as one or more JSON {"key":"value",...} pairs.
         /// </summary>
         /// <remarks>
-        ///     These parameters apply to %azure.execute. and %azure.submit. The JSON may not contain separating spaces. 
+        ///     These parameters apply to %azure.execute. and %azure.submit. The JSON may not contain separating spaces when used in a Jupyter notebook. 
         /// </remarks>
         //
         // NOTE: This property was named "InputParams" (instead of "JobParams") because the closely
