@@ -306,7 +306,7 @@ class TestCaptureDiagnostics:
                 "amplitudes": [{"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}]
             }
         """
-        del captured[0]['div_id']
+        # del captured[0]['div_id']
         assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
 
 
