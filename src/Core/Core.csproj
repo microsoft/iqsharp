@@ -40,7 +40,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.20.2110171573" />
     <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.20.2110171573" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.20.2110171573" />
+
+    <!-- TODO(rokuzmin): After the 2021.11 release sync the `Microsoft.Quantum.Simulators` 
+      version with the version of the other packages. -->
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.20.2111175807-beta" />
+
     <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.20.2110171573" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
