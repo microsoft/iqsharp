@@ -129,7 +129,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.18.2106148499-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.20.2111176301-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
