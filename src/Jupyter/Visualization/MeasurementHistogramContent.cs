@@ -21,5 +21,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         [JsonProperty("state")]
         public QuantumSimulator.DisplayableState State { get; set; } = new QuantumSimulator.DisplayableState();
+
+        /// <summary>
+        /// Unique identifier of the instance.
+        /// </summary>
+        [JsonProperty("id")]
+        public string Id { get; set; } = $"{System.Guid.NewGuid()}";
     }
 }

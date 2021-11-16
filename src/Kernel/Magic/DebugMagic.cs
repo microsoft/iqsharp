@@ -235,7 +235,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                                     NQubits = allocatedQubitsCount,
                                     Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
                                     //DivId = debugSessionDivId
-                                }
+                                },
+                                Id = debugSessionDivId
                             }
                         }
                     );

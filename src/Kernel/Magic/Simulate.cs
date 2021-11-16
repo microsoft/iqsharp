@@ -103,11 +103,33 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             using var qsim = new QuantumSimulator()
                 //.WithJupyterDisplay(channel, ConfigurationSource)   // TODO(rokuzmin): Remove as a simplification of Dump().
                 .WithStackTraceDisplay(channel);
+
             ////
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
             ////
-            qsim.OnDisplayableDiagnostic += channel.Display;
+
+            //qsim.OnDisplayableDiagnostic += channel.Display;
+
+            ////
+            qsim.OnDisplayableDiagnostic += (displayable) =>
+            {
+                if (displayable is QuantumSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
+                {
+                    Debug.Assert(channel.CommsRouter != null, "Histogram display requires comms router.");
+                    channel.CommsRouter.OpenSession(
+                        "iqsharp_state_dump",
+                        new MeasurementHistogramContent()
+                        {
+                            State = state,
+                            Id = $"{System.Guid.NewGuid()}"
+                        }
+                    ).Wait();
+                }
+                channel.Display(displayable);
+            };
+            ////
+
             qsim.AfterAllocateQubits += (args) =>
             {
                 maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);
