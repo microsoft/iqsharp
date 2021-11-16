@@ -27,7 +27,7 @@ def convert_diagnostic_to_qobj(data) -> Optional[qt.Qobj]:
         return qt.Qobj(
             [[z['Real'] + 1j * z['Imaginary'] for z in data['amplitudes']]],
             dims=[[1] * data['n_qubits'], [2] * data['n_qubits']]
-        ).dag()
+        ).trans()
 
     # The State UDT case for density operators as represented in C# looks like:
     # {n_qubits: ..., data: {Mixed: {...}}}
