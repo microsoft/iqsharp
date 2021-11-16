@@ -708,6 +708,7 @@ namespace Tests.IQSharp
         ///     to resolve is correct.
         /// </summary>
         [TestMethod]
+        [Ignore()]   // TODO(rokuzmin): Remove this line upon fixing https://github.com/microsoft/iqsharp/issues/543
         public async Task TestHintOnFailedMagic() =>
             await Assert.That
                 .UsingEngine()
