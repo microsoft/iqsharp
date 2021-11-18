@@ -18,7 +18,7 @@ requirements:
 
   run:
     - python
-    - pyzmq
+    - pyzmq==19.0.2
     - iqsharp={{ version }}
 
 build:
@@ -28,7 +28,7 @@ build:
 test:
   requires:
     - python
-    - pyzmq
+    - pyzmq==19.0.2
     - iqsharp={{ version }}
     - pytest
 

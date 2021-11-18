@@ -26,7 +26,7 @@ requirements:
   run:
     - python
     - jupyter_client
-    - pyzmq
+    - pyzmq==19.0.2
 
 test:
   requires:
@@ -34,7 +34,7 @@ test:
     - python>=3.6
     # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
     - jupyter_client==6.1.12
-    - pyzmq
+    - pyzmq==19.0.2
     - pip
 
   source_files:
