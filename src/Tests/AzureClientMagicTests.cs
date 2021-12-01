@@ -40,11 +40,11 @@ namespace Tests.IQSharp
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
 
-        private readonly string jobParams = "{\"TEST_KEY1\":\"TEST_VAL1\",\"TEST_PATH\":\"C:\\ABC\\XYZ\"}";
+        private readonly string jobParams = @"{""TEST_KEY1"":""TEST_VAL1"",""TEST_PATH"":""C:\ABC\XYZ""}";
         private readonly string jobParamsKey1 = "TEST_KEY1";
         private readonly string jobParamsVal1 = "TEST_VAL1";
         private readonly string jobParamsKey2 = "TEST_PATH";
-        private readonly string jobParamsVal2 = "C:\\ABC\\XYZ";
+        private readonly string jobParamsVal2 = @"C:\ABC\XYZ";
 
         private readonly string EnvironmentSubscriptionId = "AZURE_QUANTUM_SUBSCRIPTION_ID";
         private readonly string EnvironmentResourceGroup = "AZURE_QUANTUM_WORKSPACE_RG";

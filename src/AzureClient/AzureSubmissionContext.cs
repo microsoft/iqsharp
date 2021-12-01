@@ -44,7 +44,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Provider-specific job parameters to be passed to the execution target, expressed as one or more JSON {"key":"value",...} pairs.
         /// </summary>
         /// <remarks>
-        ///     These parameters apply to %azure.execute. and %azure.submit. The JSON may not contain separating spaces when used in a Jupyter notebook. 
+        ///     These parameters apply to <c>%azure.execute</c> and <c>%azure.submit</c>. The JSON may not contain separating spaces when used in a Jupyter notebook. 
         /// </remarks>
         //
         // NOTE: This property was named "InputParams" (instead of "JobParams") because the closely
@@ -64,7 +64,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     The execution timeout for the job, expressed in seconds.
         /// </summary>
         /// <remarks>
-        ///     This setting only applies to %azure.execute. It is ignored for %azure.submit.
+        ///     This setting only applies to <c>%azure.execute</c>. It is ignored for <c>%azure.submit</c>.
         ///     The timeout determines how long the IQ# kernel will wait for the job to complete;
         ///     the Azure Quantum job itself will continue to execute until it is completed.
         /// </remarks>
@@ -75,7 +75,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     while waiting for an Azure Quantum job to complete execution.
         /// </summary>
         /// <remarks>
-        ///     This setting only applies to %azure.execute. It is ignored for %azure.submit.
+        ///     This setting only applies to <c>%azure.execute</c>. It is ignored for <c>%azure.submit</c>.
         /// </remarks>
         public int ExecutionPollingInterval { get; set; } = DefaultExecutionPollingIntervalInSeconds;
 

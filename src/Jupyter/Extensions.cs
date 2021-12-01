@@ -259,22 +259,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 // Jupyter wraps JSON in double quotes. Make sure that's what we have...
                 if (parameterValue[0] == '"' && parameterValue[parameterValue.Length - 1] == '"')
                 {
-                    StringBuilder parameterValueBuilder = new StringBuilder(parameterValue.Length);
-                    for (int i = 1; i < parameterValue.Length - 1; i++)     // Ignore (remove) the leading and trailing quotes.
-                    {
-                        char originalChar = parameterValue[i];
-
-                        // Remove backslashes unless it's an escaped-backslash pair of backslashs -- keep those.
-                        if (originalChar != '\\'
-                            || (originalChar == '\\' && parameterValue[i + 1] == '\\')
-                            || (originalChar == '\\' && parameterValue[i - 1] == '\\'))
-                        {
-                            parameterValueBuilder.Append(originalChar);
-                        }
-                    }
-                    parameterValue = parameterValueBuilder.ToString();
+                    parameterValue = parameterValue.Substring(1, parameterValue.Length - 2);    // Strip off the enclosing quotes
+                    parameterValue = parameterValue.Replace("\\\"", "\"");                      // Don't escape the interior quotes
                 }
             }
+
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
         }
 
