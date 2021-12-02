@@ -83,9 +83,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Submit a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
                             for execution on the active target in the current Azure Quantum workspace,
-                            specifying a custom job name, number of shots, timeout, and polling interval:
+                            specifying a custom job name, number of shots, and provider-specific job parameters:
                             ```
-                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100
+                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100 jobParams={""Key1"":""Val1"",""Key2"":""Val2""}
                             Out[]: Submitting MyOperation to target provider.qpu...
                                    Job successfully submitted for 100 shots.
                                       Job name: My job
