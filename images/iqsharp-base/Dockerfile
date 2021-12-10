@@ -20,7 +20,7 @@ RUN apt-get update && \
                        # Dependencies for the Quantum Development Kit.
                        # Note that we install them here to minimize the number
                        # of layers.
-                       libomp-7-dev \
+                       libomp5-7 \
                        # Dependency for QIR
                        libc6 \
                        # Not strictly needed, but Git is useful for several
