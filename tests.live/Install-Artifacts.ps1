@@ -50,7 +50,7 @@ function Install-FromBuild() {
 
     # Get the IQ# tool installed.
     "Installing IQ# from $Env:NUGET_OUTDIR using version $Env:NUGET_VERSION" | Write-Verbose
-    dotnet tool install --global Microsoft.Quantum.IQSharp --version 0.20.2111176301-beta --add-source $Env:NUGET_OUTDIR
+    dotnet tool install --global Microsoft.Quantum.IQSharp --version 0.21.2112181770-beta --add-source $Env:NUGET_OUTDIR
     if ($LASTEXITCODE -ne 0) { throw "Error installing Microsoft.Quantum.IQSharp" }
     dotnet iqsharp install --user
     if ($LASTEXITCODE -ne 0) { throw "Error installing iqsharp kernel" }
