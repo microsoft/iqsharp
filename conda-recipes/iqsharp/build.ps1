@@ -58,10 +58,10 @@ Pop-Location
 Write-Host "## Installing OpenMP support into library path. ##"
 if ($IsLinux) {
     Copy-Item -Verbose `
-        (Join-Path (Join-Path (Join-Path $TargetDirectory "runtimes") $RuntimeID) "libomp.so.*") `
+        (Join-Path (Join-Path (Join-Path (Join-Path $TargetDirectory "runtimes") $RuntimeID) "native") "libomp.so.*") `
         (Join-Path (Join-Path $Env:PREFIX "lib") "x86_64-linux-gnu")
 } elseif ($IsMacOS) {
     Copy-Item -Verbose `
-        (Join-Path (Join-Path (Join-Path $TargetDirectory "runtimes") $RuntimeID) "libomp.dylib") `
+        (Join-Path (Join-Path (Join-Path (Join-Path $TargetDirectory "runtimes") $RuntimeID) "native") "libomp.dylib") `
         (Join-Path (Join-Path $Env:PREFIX "lib") "x86_64-darwin-macho")    
 }
