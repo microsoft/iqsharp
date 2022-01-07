@@ -8,11 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
-using Azure.Quantum.Jobs.Models;
-using Microsoft.Quantum.Runtime;
 using System.Threading;
 using System.Runtime.CompilerServices;
 using Azure.Quantum.Jobs;
+using Azure.Quantum;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -38,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public QuantumJobClient Client => throw new NotImplementedException();
 
-        public MockAzureWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location)
+        public MockAzureWorkspace(string subscriptionId, string resourceGroup, string workspaceName, string location, QuantumJobClientOptions? options = null)
         {
             SubscriptionId = subscriptionId;
             ResourceGroupName = resourceGroup;

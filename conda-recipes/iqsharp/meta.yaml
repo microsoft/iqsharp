@@ -26,15 +26,15 @@ requirements:
   run:
     - python
     - jupyter_client
-    - pyzmq<20.0.0       # due to incompatibility of IQ# with pyzmq>=20.0.0
-    - backports.weakref  # for https://github.com/microsoft/iqsharp/issues/39
+    - pyzmq
 
 test:
   requires:
-    - notebook=6.0.1
+    - notebook
     - python>=3.6
-    - jupyter_client<5.3.3
-    - pyzmq==19.0.2
+    # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
+    - jupyter_client==6.1.12
+    - pyzmq
     - pip
 
   source_files:
@@ -42,7 +42,7 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pip install jupyter_kernel_test
+    - pip install jupyter_kernel_test==0.3
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 

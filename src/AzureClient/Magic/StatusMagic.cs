@@ -40,13 +40,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         Azure Quantum workspace.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}).
                         
                         #### Optional parameters
 
                         - The job ID for which to display status. If not specified, the job ID from
-                        the most recent call to [`%azure.submit`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.submit)
-                        or [`%azure.execute`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute) will be used.
+                        the most recent call to [`%azure.submit`]({KnownUris.ReferenceForMagicCommand("azure.submit")})
+                        or [`%azure.execute`]({KnownUris.ReferenceForMagicCommand("azure.execute")}) will be used.
                         
                         #### Possible errors
 

@@ -74,6 +74,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
                             ["USER_AGENT"] = "UserAgent",
+                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath",
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
@@ -169,7 +170,7 @@ namespace Microsoft.Quantum.IQSharp
         public static IWebHost GetHttpServer(string[]? args)
         {
            return WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://localhost:8888")
+                .UseUrls("http://localhost:8008")
                 .UseStartup<Startup>()
                 .UseConfiguration(Configuration)
                 .Build();

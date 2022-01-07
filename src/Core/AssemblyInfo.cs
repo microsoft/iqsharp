@@ -33,13 +33,29 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Constructor for Q# compiled assemblies.
         /// </summary>
+        /// <remarks>
+        ///     If <paramref name="qirBitcode"/> is not <c>null</c>, its
+        ///     contents will be read by this constructor, and its position
+        ///     will not be reset. That is, the position of <paramref name="qirBitcode" />
+        ///     after this call will be that set by the <see cref="System.IO.Stream.CopyTo(Stream)"/>
+        ///     method (generally, the end of the QIR bitcode stream).
+        /// </remarks>
         public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree, Stream qirBitcode)
         {
             Assembly = assembly;
             Location = location ?? assembly?.Location;
             SyntaxTree = syntaxTree;
-            QirBitcode = qirBitcode;
             _operations = new Lazy<OperationInfo[]>(InitOperations);
+
+            // If QIR bitcode is provided, read it into a new memory stream
+            // owned by this object.
+            if (qirBitcode != null)
+            {
+                var memoryStream = new MemoryStream();
+                qirBitcode.CopyTo(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                QirBitcode = memoryStream;
+            }
         }
 
         /// <summary>

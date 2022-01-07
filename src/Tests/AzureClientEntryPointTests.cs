@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -12,7 +12,10 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler;
+using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.Simulation.Common;
+using Microsoft.Quantum.Simulation.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
@@ -38,6 +41,38 @@ namespace Tests.IQSharp
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
             var entryPoint = entryPointGenerator.Generate("HelloQ", null);
+
+            Assert.IsTrue(
+                entryPointGenerator.EntryPointAssemblyInfo.Operations.Count() >= 3,
+                "Generated entry point assembly only had 0, 1, or 2 operations, but we expect at least three when C# code is properly regenerated."
+            );
+
+            Assert.That.Assembly(entryPointGenerator.EntryPointAssemblyInfo)
+                // Check that snippets compiled from entry points have the
+                // syntax trees that we need to generate classical control from.
+                .HasResource(DotnetCoreDll.SyntaxTreeResourceName)
+                // Make sure that the two particular operations we expect are both there.
+                .HasOperation("ENTRYPOINT", "HelloQ")
+                .HasOperation(Snippets.SNIPPETS_NAMESPACE, "HelloQ")
+                // Since HelloQ calls Message, that function should also be regenerated.
+                .HasOperation("Microsoft.Quantum.Intrinsic", "Message");
+
+            // We also want to make sure that all other relevant assemblies
+            // have the right resource attached.
+            Assert.That.Assembly(entryPointGenerator.SnippetsAssemblyInfo).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+            foreach (var refAsm in entryPointGenerator.References.Assemblies)
+            {
+                if (refAsm.Assembly.CustomAttributes.Any(attr => attr.AttributeType == typeof(CallableDeclarationAttribute)))
+                {
+                    Assert.That.Assembly(refAsm).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+                }
+            }
+            foreach (var asm in entryPointGenerator.WorkspaceAssemblies)
+            {
+                Assert.That.Assembly(asm).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
+            }
+
+
             Assert.IsNotNull(entryPoint);
 
             var job = await entryPoint.SubmitAsync(
@@ -145,6 +180,28 @@ namespace Tests.IQSharp
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidEntryPoint });
             Assert.ThrowsException<CompilationErrorsException>(() =>
                 entryPointGenerator.Generate("InvalidEntryPoint", null));
+        }
+
+        [TestMethod]
+        public void UnusedOperationInvalidForHardware()
+        {
+            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.UnusedClassicallyControlledOperation });
+            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint);
+
+            Assert.ThrowsException<CompilationErrorsException>(() =>
+                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+        }
+
+        [TestMethod]
+        public void UnusedOperationInvalidForHardwareInWorkspace()
+        {
+            var entryPointGenerator = Init("Workspace.HardwareTarget");
+            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint);
+
+            Assert.ThrowsException<CompilationErrorsException>(() =>
+                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
         }
     }
 }

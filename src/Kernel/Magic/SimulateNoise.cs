@@ -33,7 +33,7 @@ namespace Microsoft.Quantum.Experimental
             new Microsoft.Jupyter.Core.Documentation
             {
                 Summary = "Runs a given function or operation on the OpenSystemsSimulator target machine.",
-                Description = @"
+                Description = $@"
                     > **⚠ WARNING:** This magic command is **experimental**,
                     > is not supported, and may be removed from future versions without notice.
 
@@ -43,8 +43,8 @@ namespace Microsoft.Quantum.Experimental
 
                     #### See also
 
-                    - [`%config`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/config)
-                    - [`%experimental.noise_model`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/experimental.noise_model)
+                    - [`%config`]({KnownUris.ReferenceForMagicCommand("config")})
+                    - [`%experimental.noise_model`]({KnownUris.ReferenceForMagicCommand("experimental.noise_model")})
 
                     #### Required parameters
 
@@ -123,7 +123,6 @@ namespace Microsoft.Quantum.Experimental
             if (NoiseModelSource.NoiseModel != null)
             {
                 var json = JsonSerializer.Serialize(NoiseModelSource.NoiseModel);
-                Console.WriteLine(json);
                 qsim.NoiseModel = NoiseModelSource.NoiseModel;
             }
             Logger?.LogDebug("Simulating with noise model: {NoiseModel}", JsonSerializer.Serialize(NoiseModelSource.NoiseModel));

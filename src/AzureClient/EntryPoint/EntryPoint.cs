@@ -33,7 +33,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="outputType">Specifies the output parameter type for the
         /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream qirStream)
+        /// <param name="qirStream">
+        ///     Stream from which QIR bitcode for the entry point can be read.
+        /// </param>
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream? qirStream)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;

@@ -23,17 +23,27 @@ using Microsoft.Quantum.QsCompiler.BondSchemas;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    public class CompletionEventArgs
+    {
+        public int NCompletions { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+    public class CompletionEvent : Event<CompletionEventArgs>
+    {
+    }
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
-        private readonly PerformanceMonitor performanceMonitor;
+        private readonly IPerformanceMonitor performanceMonitor;
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
         private readonly ILogger<IQSharpEngine> logger;
         private readonly IMetadataController metadataController;
+        private readonly ICommsRouter commsRouter;
+        private readonly IEventService eventService;
 
         // NB: These properties may be null if the engine has not fully started
         //     up yet.
@@ -41,11 +51,45 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         internal ISymbolResolver? SymbolsResolver { get; private set; } = null;
 
-        internal IMagicSymbolResolver? MagicResolver { get; private set; } = null;
-
         internal IWorkspace? Workspace { get; private set; } = null;
 
         private TaskCompletionSource<bool> initializedSource = new TaskCompletionSource<bool>();
+
+        /// <summary>
+        ///     Internal-only method for getting services used by this engine.
+        ///     Mainly useful in unit tests, where internal state of the
+        ///     engine may need to be tested to properly mock communications
+        ///     with Azure services.
+        /// </summary>
+        internal async Task<TService> GetEngineService<TService>() =>
+            await services.GetRequiredServiceInBackground<TService>();
+
+        /// <summary>
+        ///     The simple names of those assemblies which do not need to be
+        ///     searched for display encoders or magic commands.
+        /// </summary>
+        internal static readonly IImmutableSet<string> MundaneAssemblies =
+            new string[]
+            {
+                // These assemblies are classical libraries used by IQ#, and
+                // do not contain any quantum code.
+                "NumSharp.Core",
+                "Newtonsoft.Json",
+                "Microsoft.CodeAnalysis.CSharp.resources",
+
+                // These assemblies are part of the Quantum Development Kit
+                // built before IQ# (in dependency ordering), and thus cannot
+                // contain types relevant to IQ#. While it doesn't hurt to scan
+                // these assemblies, we can leave them out for performance.
+                "Microsoft.Quantum.QSharp.Core",
+                "Microsoft.Quantum.QSharp.Foundation",
+                "Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime",
+                "Microsoft.Quantum.Targets.Interfaces",
+                "Microsoft.Quantum.Simulators",
+                "Microsoft.Quantum.Simulation.Common",
+                "Microsoft.Quantum.Runtime.Core",
+            }
+            .ToImmutableHashSet();
 
         /// <inheritdoc />
         public override Task Initialized => initializedSource.Task;
@@ -60,23 +104,77 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
-            PerformanceMonitor performanceMonitor,
+            IPerformanceMonitor performanceMonitor,
             IShellRouter shellRouter,
-            IMetadataController metadataController
+            IMetadataController metadataController,
+            ICommsRouter commsRouter,
+            IEventService eventService
         ) : base(shell, shellRouter, context, logger, services)
         {
             this.performanceMonitor = performanceMonitor;
+            performanceMonitor.EnableBackgroundReporting = true;
+            performanceMonitor.OnKernelPerformanceAvailable += (source, args) =>
+            {
+                logger.LogInformation(
+                    "Estimated RAM usage:" +
+                    "\n\tManaged: {Managed} bytes" +
+                    "\n\tTotal:   {Total} bytes",
+                    args.ManagedRamUsed,
+                    args.TotalRamUsed
+                );
+            };
             performanceMonitor.Start();
             this.configurationSource = configurationSource;
             this.services = services;
             this.logger = logger;
             this.metadataController = metadataController;
+            this.commsRouter = commsRouter;
+            this.eventService = eventService;
+
+            // Start comms routers as soon as possible, so that they can
+            // be responsive during kernel startup.
+            this.AttachCommsListeners();
         }
 
         /// <inheritdoc />
-        public override void Start()
+        public override void Start() =>
+            this.StartAsync().Wait();
+
+        /// <summary>
+        ///     Attaches events to listen to comm_open messages from the
+        ///     client.
+        /// </summary>
+        private void AttachCommsListeners()
+        {
+            // Make sure that the constructor for the iqsharp_clientinfo
+            // comms message is called.
+            services.GetRequiredService<ClientInfoListener>();
+
+            // Handle a simple comm session handler for echo messages.
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += async (session, data) =>
+            {
+                session.OnMessage += async (content) =>
+                {
+                    if (content.RawData.TryAs<string>(out var data))
+                    {
+                        await session.SendMessage(data);
+                    }
+                    await session.Close();
+                };
+            };
+        }
+
+        private async Task StartAsync()
         {
             base.Start();
+            var eventService = services.GetRequiredService<IEventService>();
+            eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
+            {
+                logger?.LogInformation(
+                    "Workspace ready {Time} after startup.",
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                );
+            };
 
             // Before anything else, make sure to start the right background
             // thread on the Q# compilation loader to initialize serializers
@@ -91,12 +189,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             Protocols.Initialize();
 
             logger.LogDebug("Getting services required to start IQ# engine.");
-            this.Snippets = services.GetService<ISnippets>();
-            this.SymbolsResolver = services.GetService<ISymbolResolver>();
-            this.MagicResolver = services.GetService<IMagicSymbolResolver>();
-            this.Workspace = services.GetService<IWorkspace>();
-            var references = services.GetService<IReferences>();
-            var eventService = services.GetService<IEventService>();
+            var serviceTasks = new
+            {
+                Snippets = services.GetRequiredServiceInBackground<ISnippets>(logger),
+                SymbolsResolver = services.GetRequiredServiceInBackground<ISymbolResolver>(logger),
+                MagicResolver = services.GetRequiredServiceInBackground<IMagicSymbolResolver>(logger),
+                Workspace = services.GetRequiredServiceInBackground<IWorkspace>(logger),
+                References = services.GetRequiredServiceInBackground<IReferences>(logger)
+            };
+
+            this.Snippets = await serviceTasks.Snippets;
+            this.SymbolsResolver = await serviceTasks.SymbolsResolver;
+            this.MagicResolver = await serviceTasks.MagicResolver;
+            this.Workspace = await serviceTasks.Workspace;
+            var references = await serviceTasks.References;
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
@@ -156,6 +262,21 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             #endif
         }
 
+        /// <inheritdoc />
+        public override async Task<CompletionResult?> Complete(string code, int cursorPos)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var completions = await base.Complete(code, cursorPos);
+            stopwatch.Stop();
+            eventService.Trigger<CompletionEvent, CompletionEventArgs>(new CompletionEventArgs
+            {
+                NCompletions = completions?.Matches?.Count ?? 0,
+                Duration = stopwatch.Elapsed
+            });
+            return completions;
+        }
+
         /// <summary>
         ///     Registers an event handler that searches newly loaded packages
         ///     for extensions to this engine (in particular, for result encoders).
@@ -178,13 +299,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 foreach (var assembly in references.Assemblies
                                                    .Select(asm => asm.Assembly)
                                                    .Where(asm => !knownAssemblies.Contains(asm.GetName()))
+                                                   .Where(asm => !MundaneAssemblies.Contains(asm.GetName().Name))
                 )
                 {
                     // Look for display encoders in the new assembly.
                     logger.LogDebug("Found new assembly {Name}, looking for display encoders and magic symbols.", assembly.FullName);
                     // Use the magic resolver to find magic symbols in the new assembly;
                     // it will cache the results for the next magic resolution.
-                    this.MagicResolver?.FindMagic(new AssemblyInfo(assembly));
+                    (this.MagicResolver as IMagicSymbolResolver)?.FindMagic(new AssemblyInfo(assembly));
 
                     // If types from an assembly cannot be loaded, log a warning and continue.
                     var relevantTypes = Enumerable.Empty<Type>();
@@ -272,7 +394,31 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
                 catch (CompilationErrorsException c)
                 {
-                    foreach (var m in c.Errors) channel.Stderr(m);
+                    // Check if the user likely tried to execute a magic
+                    // command and try to give a more helpful message in that
+                    // case.
+                    if (input.TrimStart().StartsWith("%") && input.Split("\n").Length == 1)
+                    {
+                        var attemptedMagic = input.Split(" ", 2)[0];
+                        channel.Stderr($"No such magic command {attemptedMagic}.");
+                        if (MagicResolver is MagicSymbolResolver iqsResolver)
+                        {
+                            var similarMagic = iqsResolver
+                                .FindAllMagicSymbols()
+                                .Select(symbol =>
+                                    (symbol.Name, symbol.Name.EditDistanceFrom(attemptedMagic))
+                                )
+                                .OrderBy(pair => pair.Item2)
+                                .Take(3)
+                                .Select(symbol => symbol.Name);
+                            channel.Stderr($"Possibly similar magic commands:\n{string.Join("\n", similarMagic.Select(m => $"- {m}"))}");
+                        }
+                        channel.Stderr($"To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.");
+                    }
+                    else
+                    {
+                        foreach (var m in c.Errors) channel.Stderr(m);
+                    }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }
                 catch (Exception e)

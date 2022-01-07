@@ -70,7 +70,7 @@ namespace Tests.IQSharp
                 $"Microsoft.Quantum.Chemistry::{version}"
             };
 
-            var mgr = new NugetPackages(new MockNugetOptions(versions), null);
+            var mgr = new NugetPackages(new MockNugetOptions(versions), null, eventService: null);
 
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Standard"));
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Chemistry"));

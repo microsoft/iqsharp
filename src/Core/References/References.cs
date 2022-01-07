@@ -89,8 +89,6 @@ namespace Microsoft.Quantum.IQSharp
             Nugets = packages;
             Logger = logger;
 
-            eventService?.TriggerServiceInitialized<IReferences>(this);
-
             var referencesOptions = options.Value;
             if (referencesOptions?.AutoLoadPackages is string autoLoadPkgs)
             {
@@ -106,6 +104,8 @@ namespace Microsoft.Quantum.IQSharp
             Debug.Assert(_metadata != null);
 
             AssemblyLoadContext.Default.Resolving += Resolve;
+
+            eventService?.TriggerServiceInitialized<IReferences>(this);
         }
 
         /// <inheritdoc/>
@@ -176,6 +176,7 @@ namespace Microsoft.Quantum.IQSharp
             AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
+            Logger?.LogInformation("Loaded package {Id}::{Version} in {Time}.", pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed);
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed));
         }
 

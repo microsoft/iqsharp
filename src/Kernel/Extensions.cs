@@ -9,7 +9,10 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.Experimental;
@@ -38,6 +41,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
             services.AddSingleton<INoiseModelSource, NoiseModelSource>();
+            services.AddSingleton<ClientInfoListener>();
 
             return services;
         }
@@ -160,5 +164,43 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 attribute => attribute.Item1.TryAsStringLiteral(out var value) ? value : null,
                 attribute => attribute.Item2.TryAsStringLiteral(out var value) ? value : null
             );
+
+        internal static Task<T> GetRequiredServiceInBackground<T>(this IServiceProvider services, ILogger? logger = null)
+        {
+            var eventService = services.GetRequiredService<IEventService>();
+            eventService.OnServiceInitialized<T>().On += (service) =>
+            {
+                logger?.LogInformation(
+                    "Service {Service} initialized {Time} after startup.",
+                    typeof(T),
+                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
+                );
+            };
+            return Task.Run(() => services.GetRequiredService<T>());
+        }
+
+        internal static int EditDistanceFrom(this string s1, string s2)
+        {
+            // Uses the approach at
+            // https://github.com/dotnet/samples/blob/main/csharp/parallel/EditDistance/Program.cs.
+            var dist = new int[s1.Length + 1, s2.Length + 1];
+            for (int i = 0; i <= s1.Length; i++) dist[i, 0] = i;
+            for (int j = 0; j <= s2.Length; j++) dist[0, j] = j;
+
+            for (int i = 1; i <= s1.Length; i++)
+            {
+                for (int j = 1; j <= s2.Length; j++)
+                {
+                    dist[i, j] = (s1[i - 1] == s2[j - 1]) ?
+                        dist[i - 1, j - 1] :
+                        1 + System.Math.Min(dist[i - 1, j],
+                            System.Math.Min(dist[i, j - 1],
+                                            dist[i - 1, j - 1]));
+                }
+            }
+
+            return dist[s1.Length, s2.Length];
+        }
     }
+
 }

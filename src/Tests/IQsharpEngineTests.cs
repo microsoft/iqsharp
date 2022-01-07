@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -25,16 +25,10 @@ using Microsoft.Quantum.Experimental;
 
 namespace Tests.IQSharp
 {
-    internal static class TestExtensions
-    {
-        internal static void AssertIsOk(this ExecutionResult response) =>
-            Assert.AreEqual(ExecuteStatus.Ok, response.Status, $"Response was not marked as Ok.\n\tActual status: {response.Status}\n\tResponse output: {response.Output}");
-    }
-
     [TestClass]
     public class IQSharpEngineTests
     {
-        public async Task<IQSharpEngine> Init(string workspace = "Workspace")
+        public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
         {
             var engine = Startup.Create<IQSharpEngine>(workspace);
             engine.Start();
@@ -80,9 +74,10 @@ namespace Tests.IQSharp
         public static async Task<string?> AssertSimulate(IQSharpEngine engine, string snippetName, params string[] messages)
         {
             await engine.Initialized;
-            var configSource = new ConfigurationSource(skipLoading: true);
+            var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
+                new PerformanceMonitor(),
                 new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
@@ -183,6 +178,24 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task CompleteMagic() =>
+            await Assert.That
+                .UsingEngine()
+                    .Input("%sim", 3)
+                        .CompletesTo("%simulate")
+                    .Input("%experimental.", 14)
+                        .CompletesTo(
+                            "%experimental.build_info",
+                            "%experimental.simulate_noise",
+                            "%experimental.noise_model"
+                        )
+                    .Input("%ls", 3)
+                        .CompletesTo(
+                            "%lsopen",
+                            "%lsmagic"
+                        );
+
+        [TestMethod]
         public async Task CompileOne()
         {
             var engine = await Init();
@@ -195,7 +208,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<SimulateMagic>());
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new PerformanceMonitor(), new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
@@ -690,6 +703,44 @@ namespace Tests.IQSharp
             Assert.IsNotNull(resolver.Resolve("%azure.jobs"));
         }
 
+        /// <summary>
+        ///     Checks that the hint provided to users when a magic command fails
+        ///     to resolve is correct.
+        /// </summary>
+        [TestMethod]
+        public async Task TestHintOnFailedMagic() =>
+            await Assert.That
+                .UsingEngine()
+                .Input("%lsmagi")
+                .ExecutesWithError(containing:
+                    // NB: Since %attach is only present in local development
+                    //     mode, hints may in general change between debug
+                    //     and release configuration.
+                    #if DEBUG
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %attach
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    "
+                    #else
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %debug
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    "
+                    #endif
+                    .Dedent().Trim());
+
         [TestMethod]
         public async Task TestDebugMagic()
         {
@@ -856,7 +907,65 @@ namespace Tests.IQSharp
                 }
             ), 2);
         }
+
+        [TestMethod]
+        public async Task CompileAndSubmitWithClassicalControl()
+        {
+            const string source = @"
+                open Microsoft.Quantum.Measurement;
+
+                operation PrepareBellPair(left : Qubit, right : Qubit) : Unit is Adj + Ctl {
+                    H(left);
+                    CNOT(left, right);
+                }
+
+                operation Teleport(msg : Qubit, target : Qubit) : Unit {
+                    use register = Qubit();
+
+                    PrepareBellPair(register, target);
+                    Adjoint PrepareBellPair(msg, register);
+
+                    if MResetZ(msg) == One      { Z(target); }
+                    if MResetZ(register) == One { X(target); }
+                }
+
+                operation RunTeleport() : Unit {
+                    use left = Qubit();
+                    use right = Qubit();
+
+                    H(left);
+                    Teleport(left, right);
+                    H(right);
+
+                    if M(right) == One {
+                        fail ""Got wrong output from teleportation."";
+                    }
+                }
+            ";
+
+            var engineInput = await Assert.That
+                .UsingEngine()
+                .Input(source)
+                    .ExecutesSuccessfully()
+                .WithMockAzure()
+                .Input("%azure.target honeywell.mock")
+                    .ExecutesSuccessfully()
+                .Input("%azure.submit RunTeleport")
+                    .ExecutesSuccessfully()
+                .Input("%azure.target ionq.mock")
+                    .ExecutesSuccessfully()
+                .Input("%azure.submit RunTeleport")
+                    .ExecutesWithError(errors => errors.Any(error =>
+                        // Use StartsWith to avoid mismatching on newlines at
+                        // the end.
+                        error.StartsWith(
+                            "The Q# operation RunTeleport could not be " +
+                            "compiled as an entry point for job execution."
+                        )
+                    ));
+        }
     }
 }
+
 #pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
