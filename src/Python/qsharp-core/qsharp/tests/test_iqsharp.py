@@ -62,6 +62,22 @@ def test_simulate():
     assert HelloAgain(
         count=1, name="Ada") == HelloAgain.simulate(count=1, name="Ada")
 
+def test_failing_simulate():
+    """
+    Checks that fail statements in Q# operations are translated into Python
+    exceptions.
+    """
+    print(qsharp)
+    fails = qsharp.compile("""
+        function Fails() : Unit {
+            fail "Failure message.";
+        }
+    """)
+    with pytest.raises(qsharp.ExecutionFailedException) as exc_info:
+        fails()
+    assert exc_info.type is qsharp.ExecutionFailedException
+    assert exc_info.value.args[0].split('\n')[0] == "Q# execution failed: Failure message."
+
 
 def test_toffoli_simulate():
     foo = qsharp.compile("""
