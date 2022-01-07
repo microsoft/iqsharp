@@ -65,6 +65,16 @@ class IQSharpError(RuntimeError):
         ])
         super().__init__(error_msg.getvalue())
 
+class ExecutionFailedException(RuntimeError):
+    """
+    Represents when a Q# execution reached a fail statement.
+    """
+    def __init__(self, message: str, stack_trace: List[str]):
+        self.message = message
+        self.stack_trace = stack_trace
+        formatted_trace = str.join('\n', stack_trace)
+        super().__init__(f"Q# execution failed: {message}\n{formatted_trace}")
+
 class AlreadyExecutingError(IOError):
     """
     Raised when the IQ# client is already executing a command and cannot safely
@@ -171,15 +181,15 @@ class IQSharpClient(object):
 
     def simulate(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
-        return self._execute_callable_magic('simulate', op, **kwargs)
+        return self._execute_callable_magic('simulate', op, _fail_as_exceptions_=True, **kwargs)
 
     def toffoli_simulate(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
-        return self._execute_callable_magic('toffoli', op, **kwargs)
+        return self._execute_callable_magic('toffoli', op, _fail_as_exceptions_=True, **kwargs)
 
     def estimate(self, op, **kwargs) -> Dict[str, int]:
         kwargs.setdefault('_timeout_', None)
-        raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
+        raw_counts = self._execute_callable_magic('estimate', op, _fail_as_exceptions_=True, **kwargs)
         # Note that raw_counts will have the form:
         # [
         #     {"Metric": "<name>", "Sum": "<value>"},
@@ -214,12 +224,7 @@ class IQSharpClient(object):
     def capture_diagnostics(self, passthrough: bool) -> List[Any]:
         captured_data = []
         def callback(msg):
-            msg_data = (
-                # Check both the old and new MIME types used by the IQ#
-                # kernel.
-                json.loads(msg['content']['data'].get('application/json', "null")) or
-                json.loads(msg['content']['data'].get('application/x-qsharp-data', "null"))
-            )
+            msg_data = _extract_data_from(msg)
             if msg_data is not None:
                 captured_data.append(msg_data)
                 return passthrough
@@ -242,7 +247,7 @@ class IQSharpClient(object):
 
     def _simulate_noise(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
-        return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
+        return self._execute_callable_magic('experimental.simulate_noise', op, _fail_as_exceptions_=True, **kwargs)
 
     def _get_noise_model(self) -> str:
         return self._execute(f'%experimental.noise_model')
@@ -306,7 +311,16 @@ class IQSharpClient(object):
             else:
                 fallback_hook(msg)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _timeout_=DEFAULT_TIMEOUT, _quiet_ : bool = False, **kwargs):
+    def _execute(self, input,
+                       return_full_result=False,
+                       raise_on_stderr : bool = False,
+                       output_hook=None,
+                       display_data_handler=None,
+                       _timeout_=DEFAULT_TIMEOUT,
+                       _quiet_ : bool = False,
+                       _fail_as_exceptions_ : bool = False,
+                       **kwargs):
+
         logger.debug(f"sending:\n{input}")
         logger.debug(f"timeout: {_timeout_}")
 
@@ -337,7 +351,7 @@ class IQSharpClient(object):
                 lambda msg: display_raw(msg['content']['data'])
             )
 
-        # Finish setting up handlers by allowing the display_data_callback
+        # Continue setting up handlers by allowing the display_data_callback
         # to intercept display data first, only sending messages through to
         # other handlers if it returns True.
         if self.display_data_callback is not None:
@@ -348,6 +362,32 @@ class IQSharpClient(object):
                     return inner_handler(msg)
 
             handlers['display_data'] = filter_display_data
+
+        # Finally, we want to make sure that if we're handling Q# failures by
+        # converting them to Python exceptions, we set up that handler last
+        # so that it has highest priority.
+        if _fail_as_exceptions_:
+            success_handler = handlers['display_data']
+
+            def convert_exceptions(msg):
+                msg_data = _extract_data_from(msg)
+                # Check if the message data looks like a C# exception
+                # serialized into JSON.
+                if (
+                    isinstance(msg_data, dict) and len(msg_data) == 3 and
+                    all(field in msg_data for field in ('Exception', 'StackTrace', 'Header'))
+                ):
+                    raise ExecutionFailedException(
+                        msg_data['Exception']['Message'],
+                        [
+                            frame.strip()
+                            for frame in
+                            msg_data['Exception']['StackTrace'].split('\n')
+                        ],
+                    )
+                return success_handler(msg)
+
+            handlers['display_data'] = convert_exceptions
 
         _output_hook = partial(
             self._handle_message,
@@ -388,3 +428,13 @@ class IQSharpClient(object):
             return (obj, content) if return_full_result else obj
         else:
             return None
+
+## UTILITY FUNCTIONS ##
+
+def _extract_data_from(msg):
+    return (
+        # Check both the old and new MIME types used by the IQ#
+        # kernel.
+        json.loads(msg['content']['data'].get('application/json', "null")) or
+        json.loads(msg['content']['data'].get('application/x-qsharp-data', "null"))
+    )
