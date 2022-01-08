@@ -42,6 +42,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="runtimeCapabilities">The runtime capabilities of the intended execution target.</param>
         /// <returns>The generated entry point.</returns>
         public IEntryPoint Generate(string operationName, string? executionTarget,
-            RuntimeCapability? runtimeCapabilities = null);
+            RuntimeCapability? runtimeCapabilities = null, bool forceQir = false);
     }
 }

@@ -76,7 +76,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         public IEntryPoint Generate(string operationName, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null)
+            RuntimeCapability? runtimeCapability = null, bool forceQir = false)
         {
             Logger?.LogDebug($"Generating entry point: operationName={operationName}, executionTarget={executionTarget}");
 
@@ -148,7 +148,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
-                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, runtimeCapability);
+                operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, runtimeCapability,
+                forceQir: forceQir);
             if (EntryPointAssemblyInfo == null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");

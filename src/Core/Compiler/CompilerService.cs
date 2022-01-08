@@ -151,7 +151,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            RuntimeCapability? runtimeCapability = null, bool forceQir = false)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -168,7 +168,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true);
+            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true, forceQir: forceQir);
         }
 
         /// <summary>
@@ -216,9 +216,16 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
+        /// <remarks>
+        ///     The resulting assembly info will contain QIR instead of a Q#
+        ///     syntax if <paramref name="executionTarget" /> is non-null or
+        ///     <paramref name="forceQir" /> is set. QIR generation requires at
+        ///     least one valid entry point to be defined.
+        /// </remarks>
         private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
             string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false)
+            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false,
+            bool forceQir = false)
         {
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
@@ -264,7 +271,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 List<ResourceDescription>? manifestResources = null;
                 Stream? qirStream = null;
-                if (string.IsNullOrEmpty(executionTarget))
+                if (string.IsNullOrEmpty(executionTarget) && !forceQir)
                 {
                     // Generate the assembly from the C# compilation:
                     var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
@@ -302,15 +309,13 @@ namespace Microsoft.Quantum.IQSharp
                     var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
                     generator.Emit(bcFile, emitBitcode: true);
                     qirStream = File.OpenRead(bcFile);
-
-                    manifestResources = new List<ResourceDescription>()
-                    {
-                       new ResourceDescription(
-                           resourceName: DotnetCoreDll.QirResourceName,
-                           dataProvider: () => qirStream,
-                           isPublic: true
-                       )
-                    };
+                }
+                else if (forceQir)
+                {
+                    // If we made it here, QIR was enabled, but we didn't have
+                    // any valid entry points.
+                    logger.LogError("IQS006", "QIR generation was enabled, but no entry points were defined.");
+                    return null;
                 }
 
                 using var ms = new MemoryStream();
