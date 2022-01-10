@@ -52,6 +52,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                         - `{AzureSubmissionContext.ParameterNameJobName}=<string>`: Friendly name to identify this job. If not specified,
                         the Q# operation or function name will be used as the job name.
+                        - `{AzureSubmissionContext.ParameterNameJobParams}=<JSON key:value pairs>`: Provider-specific job parameters
+                        expressed in JSON as one or more `key`:`value` pairs to be passed to the execution target. Values must be strings.
                         - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
                         specified Q# operation or function.
                         - `{AzureSubmissionContext.ParameterNameTimeout}=<integer>` (default=30): Time to wait (in seconds) for job completion
@@ -93,9 +95,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Run a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
                             on the active target in the current Azure Quantum workspace,
-                            specifying a custom job name, number of shots, timeout, and polling interval:
+                            specifying a custom job name, number of shots, timeout, polling interval, and provider-specific job parameters:
                             ```
-                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100 timeout=60 poll=10
+                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100 timeout=60 poll=10 jobParams={""Key1"":""Val1"",""Key2"":""Val2""}
                             Out[]: Submitting MyOperation to target provider.qpu...
                                    Job successfully submitted for 100 shots.
                                       Job name: My job

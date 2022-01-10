@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Common;
@@ -251,6 +252,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 return defaultValue!;
             }
+
+            // If this is a JSON-formatted parameter that's being deserialized into a dictionary, remove the extra quotes and backslashes.   
+            if (type == typeof(ImmutableDictionary<string, string>) && parameterValue.Length > 1)
+            {
+                // Jupyter wraps JSON in double quotes. Make sure that's what we have...
+                if (parameterValue[0] == '"' && parameterValue[parameterValue.Length - 1] == '"')
+                {
+                    parameterValue = parameterValue.Substring(1, parameterValue.Length - 2);    // Strip off the enclosing quotes
+                    parameterValue = parameterValue.Replace("\\\"", "\"");                      // Don't escape the interior quotes
+                }
+            }
+
             return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
         }
 
