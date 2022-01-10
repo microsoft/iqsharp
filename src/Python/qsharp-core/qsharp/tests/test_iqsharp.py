@@ -78,19 +78,10 @@ def test_failing_simulate():
     assert exc_info.type is qsharp.ExecutionFailedException
     assert exc_info.value.args[0].split('\n')[0] == "Q# execution failed: Failure message."
 
-
+@skip_if_no_workspace
 def test_toffoli_simulate():
-    foo = qsharp.compile("""
-        open Microsoft.Quantum.Measurement;
-
-        operation Foo() : Result {
-            using (q = Qubit()) {
-                X(q);
-                return MResetZ(q);
-            }
-        }
-    """)
-    assert foo.toffoli_simulate() == 1
+    from Microsoft.Quantum.SanityTests import MeasureOne
+    assert MeasureOne.toffoli_simulate() == 1
 
 @skip_if_no_workspace
 def test_tuples():
@@ -208,8 +199,7 @@ def test_simple_compile():
     Verifies that compile works
     """
     op = qsharp.compile( """
-    operation HelloQ() : Result
-    {
+    operation HelloQ() : Result {
         Message($"Hello from quantum world!"); 
         return Zero;
     }
@@ -224,14 +214,12 @@ def test_multi_compile():
     are returned in the correct order
     """
     ops = qsharp.compile( """
-    operation HelloQ() : Result
-    {
+    operation HelloQ() : Result {
         Message($"Hello from quantum world!"); 
         return One;
     }
 
-    operation Hello2() : Result
-    {
+    operation Hello2() : Result {
         Message($"Will call hello."); 
         return HelloQ();
     }

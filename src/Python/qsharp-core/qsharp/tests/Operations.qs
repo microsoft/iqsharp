@@ -10,8 +10,7 @@ namespace Microsoft.Quantum.SanityTests {
 
     /// # Summary
     /// The simplest program. Just generate a debug Message on the console.
-    operation HelloQ() : Unit
-    {
+    operation HelloQ() : Unit {
         Message($"Hello from quantum world!"); 
     }
 
@@ -97,5 +96,11 @@ namespace Microsoft.Quantum.SanityTests {
            return x9;
         }
         return -1;
+    }
+
+    operation MeasureOne() : Result {
+        use q = Qubit();
+        X(q);
+        return MResetZ(q);
     }
 }
