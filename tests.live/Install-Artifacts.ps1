@@ -51,17 +51,24 @@ function Install-FromBuild() {
     # Get the IQ# tool installed.
     "Installing IQ# from $Env:NUGET_OUTDIR using version $Env:NUGET_VERSION" | Write-Verbose
     dotnet tool install --global Microsoft.Quantum.IQSharp --version $Env:NUGET_VERSION --add-source $Env:NUGET_OUTDIR
+    if ($LASTEXITCODE -ne 0) { throw "Error installing Microsoft.Quantum.IQSharp" }
     dotnet iqsharp install --user
+    if ($LASTEXITCODE -ne 0) { throw "Error installing iqsharp kernel" }
 
-    # Install the Q# wheels.
-    Push-Location $Env:PYTHON_OUTDIR
-        "Installing all wheels from $Env:PYTHON_OUTDIR" | Write-Verbose
-        Get-ChildItem *.whl `
-        | ForEach-Object {
-            "Installing $_.Name" | Write-Verbose
-            pip install --verbose --verbose $_.Name
-        }
-    Pop-Location
+    # Make sure the NUGET_OUTDIR is listed as a nuget source, otherwise
+    # IQ# will fail to load when packages are loaded.
+    $SourceName = "build"
+    dotnet nuget add source $Env:NUGET_OUTDIR  --name $SourceName
+    if ($LASTEXITCODE -ne 0) { 
+        "Nuget source $SourceName already exist, will be updated to point to $($Env:NUGET_OUTDIR)" | Write-Warning
+        dotnet nuget update source  $SourceName --source $Env:NUGET_OUTDIR
+        if ($LASTEXITCODE -ne 0) { throw "Failed to update nuget config" }
+    }
+
+    # Install the qsharp-core wheel
+    "Installing qsharp-core from $Env:PYTHON_OUTDIR" | Write-Verbose
+    pip install qsharp-core==$Env:PYTHON_VERSION --find-links $Env:PYTHON_OUTDIR
+    if ($LASTEXITCODE -ne 0) { throw "Error installing qsharp-core wheel" }
 }
 
 

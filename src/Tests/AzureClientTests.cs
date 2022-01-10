@@ -41,7 +41,7 @@ namespace Tests.IQSharp
         private Task<ExecutionResult> ConnectToWorkspaceAsync(
             IAzureClient azureClient,
             string workspaceName = "TEST_WORKSPACE_NAME",
-            string locationName = "")
+            string locationName = "TEST_LOCATION")
         {
             // Reset the global set of jobs and providers everytime we connect to a new workspace:
             MockAzureWorkspace.MockJobIds = new string[] { };
@@ -323,17 +323,17 @@ namespace Tests.IQSharp
             var services = Startup.CreateServiceProvider("Workspace");
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
 
-            // Default location should be westus
-            _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
-            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
-
             // Locations with whitespace should be converted correctly
             _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
             Assert.AreEqual("australiacentral2", azureClient.ActiveWorkspace?.Location);
 
-            // Locations with invalid hostname characters should fall back to default westus
-            _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
-            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
+            // No location provided should fail
+            ExpectError(AzureClientError.NoWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: ""));
+            ExpectError(AzureClientError.NoWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "   "));
+
+            // Invalid locations should fail
+            ExpectError(AzureClientError.InvalidWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "#"));
+            ExpectError(AzureClientError.InvalidWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
         }
 
         [TestMethod]

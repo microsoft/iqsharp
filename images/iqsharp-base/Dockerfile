@@ -20,7 +20,7 @@ RUN apt-get update && \
                        # Dependencies for the Quantum Development Kit.
                        # Note that we install them here to minimize the number
                        # of layers.
-                       libgomp1 \
+                       libomp5-7 \
                        # Dependency for QIR
                        libc6 \
                        # Not strictly needed, but Git is useful for several
@@ -49,7 +49,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-3.1 && \
+    apt-get -y install dotnet-sdk-3.1=3.1.416-1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # Install prerequisites needed for integration with Live Share and VS Online.

@@ -5,6 +5,7 @@
 
 using Azure.Core;
 
+using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.Runtime;
 
@@ -18,13 +19,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             string resourceGroup, 
             string workspaceName, 
             string location, 
-            TokenCredential credential) =>
+            TokenCredential credential,
+            QuantumJobClientOptions options) =>
                 new Azure.Quantum.Workspace(
                     subscriptionId: subscriptionId,
                     resourceGroupName: resourceGroup,
                     workspaceName: workspaceName,
                     location: location,
-                    credential: credential);
+                    credential: credential,
+                    options: options);
 
         /// <inheritdoc />
         public IQuantumMachine? CreateMachine(Azure.Quantum.IWorkspace workspace, string targetName, string storageConnectionString) =>
