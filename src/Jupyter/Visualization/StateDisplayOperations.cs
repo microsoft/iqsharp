@@ -183,11 +183,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 "No configuration source was provided when this operation was registered. " +
                 "This is an internal error, and should never occur."
             );
-            Debug.Assert(
-                Channel.CommsRouter != null,
-                "No Jupyter comms router was provided when this operation was registered. " +
-                "This is an internal error, and should never occur."
-            );
+            // Debug.Assert(
+            //     Channel.CommsRouter != null,
+            //     "No Jupyter comms router was provided when this operation was registered. " +
+            //     "This is an internal error, and should never occur."
+            // );
             return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, ConfigurationSource);
         };
     }
@@ -232,11 +232,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 "No configuration source was provided when this operation was registered." +
                 "This is an internal error, and should never occur."
             );
-            Debug.Assert(
-                Channel.CommsRouter != null,
-                "No Jupyter comms router was provided when this operation was registered. " +
-                "This is an internal error, and should never occur."
-            );
+            // Debug.Assert(
+            //     Channel.CommsRouter != null,
+            //     "No Jupyter comms router was provided when this operation was registered. " +
+            //     "This is an internal error, and should never occur."
+            // );
             return JupyterDisplayDumper.DumpToChannel(Simulator, Channel, ConfigurationSource, qubits);
         };
     }
