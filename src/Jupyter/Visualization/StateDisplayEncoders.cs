@@ -412,9 +412,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         </tbody>
                     </table>";
                 
-                if (ConfigurationSource.MeasurementDisplayHistogram) {
-                    outputTable += $@"<div id=""{vector.DivId}""></div>";
-                };
+                // TODO(rokuzmin): Temporarily commenting out to check the build.
+                // if (ConfigurationSource.MeasurementDisplayHistogram) {
+                //     outputTable += $@"<div id=""{vector.DivId}""></div>";
+                // };
                 return outputTable.ToEncodedData();
             }
             else return null;
