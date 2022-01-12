@@ -1,4 +1,5 @@
 # Microsoft Quantum Development Kit: IQ# Kernel #
+<!-- change from source -->
 
 Welcome to the Microsoft Quantum Development Kit!
 
