@@ -101,9 +101,34 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var maxNQubits = 0L;
 
             using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, ConfigurationSource)
+                //.WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
-            qsim.OnDisplayableDiagnostic += channel.Display;
+
+            ////
+            qsim.DisableLogToConsole();
+            qsim.OnLog += channel.Stdout;
+            ////
+
+            //qsim.OnDisplayableDiagnostic += channel.Display;
+
+            ////
+            qsim.OnDisplayableDiagnostic += (displayable) =>
+            {
+                if (displayable is CommonNativeSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
+                {
+                    Debug.Assert(channel.CommsRouter != null, "Histogram display requires comms router.");
+                    channel.CommsRouter.OpenSession(
+                        "iqsharp_state_dump",
+                        new MeasurementHistogramContent()
+                        {
+                            State = state,
+                            Id = $"{System.Guid.NewGuid()}"
+                        }
+                    ).Wait();
+                }
+                channel.Display(displayable);
+            };
+            ////
             qsim.AfterAllocateQubits += (args) =>
             {
                 maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);

@@ -228,14 +228,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                             Content = new DebugStatusContent
                             {
                                 DebugSession = session.ToString(),
-                                State = new DisplayableState
+                                State = new CommonNativeSimulator.DisplayableState
                                 {
 
                                     QubitIds = qsim.QubitIds.Select(q => (int)q),
                                     NQubits = allocatedQubitsCount,
                                     Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                    DivId = debugSessionDivId
-                                }
+                                    //DivId = debugSessionDivId
+                                },
+                                Id = debugSessionDivId
                             }
                         }
                     );
