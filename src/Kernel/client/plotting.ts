@@ -210,7 +210,9 @@ export function createNewCanvas(
     parentNode: HTMLElement, initialState?: DisplayableState | null
 ): { chart: Chart } {
     let canvas = document.createElement("canvas");
-    canvas.style.width = "100%"
+    parentNode.style.position = "relative";
+    parentNode.style.width = "100%";
+    parentNode.style.height = "40vh";
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
@@ -251,9 +253,8 @@ export function createToolbarContainer(toolbarName: string) {
     return toolbarContainer;
 }
 
-export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState) {
+export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState, stateDiv: HTMLDivElement) {
     // Create toolbar container and insert at the beginning of the state div
-    let stateDiv = document.getElementById(state.div_id);
     let toolbarContainer = createToolbarContainer("Chart options:");
     stateDiv.insertBefore(toolbarContainer, stateDiv.firstChild);
 

@@ -109,29 +109,44 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             qsim.OnLog += channel.Stdout;
             ////
 
-            //qsim.OnDisplayableDiagnostic += channel.Display;
-
             ////
             qsim.OnDisplayableDiagnostic += (displayable) =>
             {
                 if (displayable is CommonNativeSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
                 {
-                    Debug.Assert(channel.CommsRouter != null, "Histogram display requires comms router.");
-                    channel.CommsRouter.OpenSession(
+                    // Make sure to display the state first so that it's there for the client-side
+                    // JavaScript to pick up.
+                    var id = $"{System.Guid.NewGuid()}";
+                    channel.Display(new DisplayableStateWithId
+                    {
+                        Amplitudes = state.Amplitudes,
+                        NQubits = state.NQubits,
+                        QubitIds = state.QubitIds,
+                        Id = id
+                    });
+
+                    // Tell the client to add a histogram using chart.js.
+                    var commsRouter = channel.GetCommsRouter();
+                    Debug.Assert(commsRouter != null, "Histogram display requires comms router.");
+                    commsRouter.OpenSession(
                         "iqsharp_state_dump",
                         new MeasurementHistogramContent()
                         {
                             State = state,
-                            Id = $"{System.Guid.NewGuid()}"
+                            Id = id
                         }
                     ).Wait();
                 }
-                channel.Display(displayable);
+                else
+                {
+                    channel.Display(displayable);
+                }
             };
             ////
+
             qsim.AfterAllocateQubits += (args) =>
             {
-                maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);
+                maxNQubits = System.Math.Max(qsim.QubitManager?.AllocatedQubitsCount ?? 0, maxNQubits);
             };
             var stopwatch = Stopwatch.StartNew();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);

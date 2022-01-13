@@ -161,10 +161,12 @@ class Kernel {
                 //let stateDivId = state.div_id;
                 let stateDivId = message.content.data.id;
                 if (stateDivId != null) {
-                    let stateDiv = document.getElementById(stateDivId);
+                    let stateDiv = document.getElementById(stateDivId) as HTMLDivElement;
                     if (stateDiv != null) {
                         let { chart: chart } = createNewCanvas(stateDiv, state);
-                        attachDumpMachineToolbar(chart, state);
+                        attachDumpMachineToolbar(chart, state, stateDiv);
+                    } else {
+                        console.warn(`No <div> for state dump with ID ${stateDivId} found.`);
                     }
                 }
                 comm.close();
