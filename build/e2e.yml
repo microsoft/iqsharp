@@ -17,6 +17,7 @@ pr:
 - feature/*
 - features/*
 - release/*
+- imiles/*
 
 resources:
   repositories:
