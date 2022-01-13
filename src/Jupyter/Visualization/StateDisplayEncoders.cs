@@ -245,7 +245,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         </tbody>
                     </table>";
                 
-                // TODO(rokuzmin): Temporarily commenting out to check the build.
                 if (ConfigurationSource.MeasurementDisplayHistogram && vector is DisplayableStateWithId { Id: var id })
                 {
                     outputTable += $@"<div id=""{id}""></div>";

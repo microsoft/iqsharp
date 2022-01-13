@@ -101,15 +101,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var maxNQubits = 0L;
 
             using var qsim = new QuantumSimulator()
-                //.WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
 
-            ////
             qsim.DisableLogToConsole();
             qsim.OnLog += channel.Stdout;
-            ////
 
-            ////
             qsim.OnDisplayableDiagnostic += (displayable) =>
             {
                 if (displayable is CommonNativeSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
@@ -142,7 +138,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     channel.Display(displayable);
                 }
             };
-            ////
 
             qsim.AfterAllocateQubits += (args) =>
             {

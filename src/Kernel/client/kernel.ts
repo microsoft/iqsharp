@@ -158,7 +158,6 @@ class Kernel {
             (comm, message) => {
                 console.log("iqsharp_state_dump comm session opened", message);
                 let state = message.content.data.state;
-                //let stateDivId = state.div_id;
                 let stateDivId = message.content.data.id;
                 if (stateDivId != null) {
                     let stateDiv = document.getElementById(stateDivId) as HTMLDivElement;
