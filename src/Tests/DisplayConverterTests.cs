@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Simulation.Simulators;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -27,14 +28,14 @@ namespace Tests.IQSharp
     [TestClass]
     public class DisplayConverterTests
     {
-        private readonly DisplayableState testState = new DisplayableState
+        private readonly CommonNativeSimulator.DisplayableState testState = new CommonNativeSimulator.DisplayableState
         {
             QubitIds = new[] {0, 1, 2},
             NQubits = 3,
-            Amplitudes = Enumerable
+            Amplitudes = new Dictionary<int, System.Numerics.Complex>(Enumerable
                 .Range(0, 8)
-                .Select(idx => new System.Numerics.Complex(0, idx))
-                .ToArray()
+                .Select(idx => new KeyValuePair<int, System.Numerics.Complex>(idx, new System.Numerics.Complex(0, idx)))
+            )
         };
 
         [TestMethod]
@@ -42,7 +43,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.BigEndian,
+                    CommonNativeSimulator.BasisStateLabelingConvention.BigEndian,
                     false,
                     0
                 )
@@ -56,7 +57,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.LittleEndian,
+                    CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian,
                     false,
                     0
                 )
@@ -70,7 +71,7 @@ namespace Tests.IQSharp
         {
             var testItem = testState
                 .SignificantAmplitudes(
-                    BasisStateLabelingConvention.Bitstring,
+                    CommonNativeSimulator.BasisStateLabelingConvention.Bitstring,
                     false,
                     0
                 )
