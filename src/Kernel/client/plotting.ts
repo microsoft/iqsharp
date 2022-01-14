@@ -10,11 +10,31 @@ export interface Complex {
     Phase: number;
 };
 
-export interface DisplayableState {
+export interface IDisplayableState {
     n_qubits: number;
     div_id: string;
-    amplitudes: Complex[] | null;
+    amplitudes: {[idx: number]: number} | null;
 };
+
+export class DisplayableState implements IDisplayableState {
+    n_qubits: number;
+    div_id: string;
+    amplitudes: {[idx: number]: number};
+
+    constructor(state: IDisplayableState) {
+        this.n_qubits = state.n_qubits;
+        this.div_id = state.div_id;
+        this.amplitudes = state.amplitudes;
+    }
+
+    getDenseAmplitudes(): Complex[] {
+        let dense = [];
+        for (var idx of Object.keys(this.amplitudes)) {
+            dense[idx] = this.amplitudes[idx];
+        }
+        return dense;
+    }
+}
 
 export type PlotStyle = "amplitude-phase" | "amplitude-squared" | "real-imag";
 
@@ -36,12 +56,12 @@ export function updateChart(plotStyle: PlotStyle, chart: Chart, state: Displayab
 }
 
 function fitChart(chart: Chart, state: DisplayableState) {
-    let chartWidth = state.amplitudes.length * 100;
+    let chartWidth = state.getDenseAmplitudes().length * 100;
     chart.canvas.parentElement.style.width = `${chartWidth}px`;
 }
 
 function updateWithAmplitudePhaseData(chart: Chart, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
 
@@ -98,7 +118,7 @@ function updateWithAmplitudePhaseData(chart: Chart, state: DisplayableState) {
 }
 
 function updateWithAmplitudeSquaredData(chart: Chart, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
 
@@ -148,7 +168,7 @@ function updateWithAmplitudeSquaredData(chart: Chart, state: DisplayableState) {
 }
 
 function updateWithRealImagData(chart: Chart, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
@@ -210,7 +230,9 @@ export function createNewCanvas(
     parentNode: HTMLElement, initialState?: DisplayableState | null
 ): { chart: Chart } {
     let canvas = document.createElement("canvas");
-    canvas.style.width = "100%"
+    parentNode.style.position = "relative";
+    parentNode.style.width = "100%";
+    parentNode.style.height = "40vh";
     let measurementHistogram = new Chart(canvas, {
         type: 'bar',
         options: {
@@ -251,9 +273,8 @@ export function createToolbarContainer(toolbarName: string) {
     return toolbarContainer;
 }
 
-export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState) {
+export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState, stateDiv: HTMLDivElement) {
     // Create toolbar container and insert at the beginning of the state div
-    let stateDiv = document.getElementById(state.div_id);
     let toolbarContainer = createToolbarContainer("Chart options:");
     stateDiv.insertBefore(toolbarContainer, stateDiv.firstChild);
 
@@ -267,7 +288,7 @@ export function attachDumpMachineToolbar(chart: Chart, state: DisplayableState) 
 };
 
 export function createBarChart(element: HTMLCanvasElement, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
@@ -323,7 +344,7 @@ export function createBarChart(element: HTMLCanvasElement, state: DisplayableSta
 };
 
 export function createBarChartRealImagOption(element: HTMLCanvasElement, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
     
@@ -386,7 +407,7 @@ export function createBarChartRealImagOption(element: HTMLCanvasElement, state: 
 };
 
 export function createBarChartAmplitudePhaseOption(element: HTMLCanvasElement, state: DisplayableState) {
-    let amps = state.amplitudes;
+    let amps = state.getDenseAmplitudes();
     let nBasisStates = amps.length;
     let nBitLength = Math.ceil(Math.log2(nBasisStates));
 

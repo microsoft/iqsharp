@@ -62,7 +62,7 @@ def compile(code : str) -> Union[None, QSharpCallable, List[QSharpCallable]]:
 
     ops = [
         QSharpCallable(op, "snippets")
-        for op in client.compile(code)
+        for op in compiled
     ]
     if len(ops) == 1:
         return ops[0]

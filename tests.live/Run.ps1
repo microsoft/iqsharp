@@ -23,4 +23,10 @@ $config.TestResult.OutputPath = "TestResults.xml"
 $config.TestResult.OutputFormat = "JUnitXml"
 $config.Output.Verbosity = "Detailed"
 
+if (Test-Path Env:AZURE_QUANTUM_CAPABILITIES) {
+    $config.Filter.Tag = $Env:AZURE_QUANTUM_CAPABILITIES -Split ";" | ForEach-Object { $_.trim() }
+} else  {
+    "Missing AZURE_QUANTUM_CAPABILITIES env variable. Will run all tests." | Write-Warning
+}
+
 Invoke-Pester -Configuration $config -Verbose
