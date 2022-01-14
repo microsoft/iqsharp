@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
@@ -77,71 +78,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         /// <summary>
-        ///     Adds functionality to a given quantum simulator to display
-        ///     diagnostic output with rich Jupyter formatting.
+        ///     An enumerable source of the significant amplitudes of this state
+        ///     vector and their labels, where significance and labels are
+        ///     defined by the values loaded from <paramref name="configurationSource" />.
         /// </summary>
-        /// <param name="simulator">
-        ///     The simulator to be augmented with Jupyter display
-        ///     functionality.
-        /// </param>
-        /// <param name="channel">
-        ///     The Jupyter display channel to be used to display diagnostic
-        ///     output.
-        /// </param>
-        /// <param name="configurationSource">
-        ///      A source of configuration options to be used to set display
-        ///      preferences. Typically, this will be provided by the service
-        ///      provider configured when an execution engine is constructed.
-        /// </param>
-        /// <returns>
-        ///     The value of <paramref name="simulator" />.
-        /// </returns>
-        public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, IConfigurationSource configurationSource)
-        {
-            // First, we disable console-based logging so as to not
-            // duplicate messages.
-            simulator.DisableLogToConsole();
-            // Next, we attach the display channel's standard output handling
-            // to the log event.
-            simulator.OnLog += channel.Stdout;
-
-            // Next, we register the generic version of the DumpMachine callable
-            // as an ICallable with the simulator. Below, we'll provide our
-            // implementation of DumpMachine with the channel and configuration
-            // source we got as arguments. At the moment, there's no direct
-            // way to do this when registering an implementation, so we instead
-            // get an instance of the newly registered callable and set its
-            // properties accordingly.
-            simulator.Register(
-                typeof(Diagnostics.DumpMachine<>), typeof(JupyterDumpMachine<>),
-                signature: typeof(ICallable)
-            );
-
-            var op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpMachine<>)));
-            var concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
-            ((JupyterDumpMachine<QVoid>)concreteOp).Channel = channel;
-            ((JupyterDumpMachine<QVoid>)concreteOp).ConfigurationSource = configurationSource;
-            concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
-            ((JupyterDumpMachine<string>)concreteOp).Channel = channel;
-            ((JupyterDumpMachine<string>)concreteOp).ConfigurationSource = configurationSource;
-
-            // Next, we repeat the whole process for DumpRegister instead of
-            // DumpMachine.
-            simulator.Register(
-                typeof(Diagnostics.DumpRegister<>), typeof(JupyterDumpRegister<>),
-                signature: typeof(ICallable)
-            );
-
-            op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpRegister<>)));
-            concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
-            ((JupyterDumpRegister<QVoid>)concreteOp).Channel = channel;
-            ((JupyterDumpRegister<QVoid>)concreteOp).ConfigurationSource = configurationSource;
-            concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
-            ((JupyterDumpRegister<string>)concreteOp).Channel = channel;
-            ((JupyterDumpRegister<string>)concreteOp).ConfigurationSource = configurationSource;
-
-            return simulator;
-        }
+        public static IEnumerable<(Complex, string)> SignificantAmplitudes(
+            this CommonNativeSimulator.DisplayableState state, 
+            IConfigurationSource configurationSource
+        ) => state.SignificantAmplitudes(
+            configurationSource.BasisStateLabelingConvention,
+            configurationSource.TruncateSmallAmplitudes,
+            configurationSource.TruncationThreshold
+        );
 
         /// <summary>
         ///     Adds functionality to a given quantum simulator to display

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 
 using Microsoft.Quantum.Experimental;
+using Microsoft.Quantum.Simulation.Simulators;
 
 using Newtonsoft.Json.Linq;
 
@@ -116,8 +117,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     The labeling convention to be used when labeling computational
         ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
-        public BasisStateLabelingConvention BasisStateLabelingConvention =>
-            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
+        public CommonNativeSimulator.BasisStateLabelingConvention BasisStateLabelingConvention =>
+            GetOptionOrDefault("dump.basisStateLabelingConvention", CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian);
 
         /// <summary>
         ///     Whether small amplitudes should be truncated when dumping
