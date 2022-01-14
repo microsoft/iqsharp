@@ -21,7 +21,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
-        //private Complex[]? _data = null;
         private IDictionary<int, Complex>? _data = null;
 
         public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
@@ -35,11 +34,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             return true;
         }
         
-        //public Complex[] GetAmplitudes()
         public IDictionary<int, Complex> GetAmplitudes()
         {
             var count = this.Simulator.QubitManager?.AllocatedQubitsCount ?? 0;
-            //_data = new Complex[1 << ((int)count)];
             _data = new Dictionary<int, Complex>();
             _ = base.Dump();
             return _data;

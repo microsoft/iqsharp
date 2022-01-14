@@ -35,8 +35,6 @@ namespace Tests.IQSharp
             Amplitudes = new Dictionary<int, System.Numerics.Complex>(Enumerable
                 .Range(0, 8)
                 .Select(idx => new KeyValuePair<int, System.Numerics.Complex>(idx, new System.Numerics.Complex(0, idx)))
-                //.Select(idx => new System.Numerics.Complex(0, idx))
-                //.ToArray()
             )
         };
 
