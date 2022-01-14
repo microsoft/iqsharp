@@ -307,10 +307,9 @@ class TestCaptureDiagnostics:
                 "diagnostic_kind": "state-vector",
                 "qubit_ids": [0, 1],
                 "n_qubits": 2,
-                "amplitudes": [{"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}]
+                "amplitudes": {"0": {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, "1": {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, "2": {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}, "3": {"Real": 0.5000000000000001, "Imaginary": 0.0, "Magnitude": 0.5000000000000001, "Phase": 0.0}}
             }
         """
-        del captured[0]['div_id']
         assert json.dumps(json.loads(expected)) == json.dumps(captured[0])
 
 
