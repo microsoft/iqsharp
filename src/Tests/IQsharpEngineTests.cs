@@ -713,6 +713,21 @@ namespace Tests.IQSharp
                 .UsingEngine()
                 .Input("%lsmagi")
                 .ExecutesWithError(containing:
+                    // NB: Since %attach is only present in local development
+                    //     mode, hints may in general change between debug
+                    //     and release configuration.
+                    #if DEBUG
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %attach
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    "
+                    #else
                     $@"
                         No such magic command %lsmagi.
 
@@ -722,7 +737,9 @@ namespace Tests.IQSharp
                         - %debug
 
                         To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
-                    ".Dedent().Trim());
+                    "
+                    #endif
+                    .Dedent().Trim());
 
         [TestMethod]
         public async Task TestDebugMagic()

@@ -138,6 +138,10 @@ def _test_workspace_with_providers_after_connection():
     assert isinstance(retrieved_job, AzureJob)
     assert job.id == retrieved_job.id
 
+    # Submit a job with the "jobParams" parameter
+    job2 = qsharp.azure.submit(op, jobParams={"key1": "value1", "key2": "value2"})
+    assert isinstance(job2, AzureJob)
+
 def _test_workspace_job_execution():
     # Execute a workspace operation with parameters
     op = qsharp.QSharpCallable("Microsoft.Quantum.SanityTests.HelloAgain", None)
@@ -171,3 +175,7 @@ def _test_workspace_job_execution():
     jobs = qsharp.azure.jobs("invalid", count=10)
     assert isinstance(jobs, list)
     assert len(jobs) == 0
+
+    # Execute a job with the "jobParams" parameter
+    histogram2 = qsharp.azure.execute(op, count=3, name="test2", timeout=3, poll=2, jobParams={"key": "value"})
+    assert isinstance(histogram2, dict)
