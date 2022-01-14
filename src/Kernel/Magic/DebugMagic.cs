@@ -21,7 +21,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
-        private Complex[]? _data = null;
+        private IDictionary<int, Complex>? _data = null;
 
         public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
         {
@@ -30,14 +30,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override bool Callback(uint idx, double real, double img)
         {
             if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
-            _data[idx] = new Complex(real, img);
+            _data[(int)idx] = new Complex(real, img);
             return true;
         }
         
-        public Complex[] GetAmplitudes()
+        public IDictionary<int, Complex> GetAmplitudes()
         {
             var count = this.Simulator.QubitManager?.AllocatedQubitsCount ?? 0;
-            _data = new Complex[1 << ((int)count)];
+            _data = new Dictionary<int, Complex>();
             _ = base.Dump();
             return _data;
         }
@@ -228,14 +228,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                             Content = new DebugStatusContent
                             {
                                 DebugSession = session.ToString(),
-                                State = new DisplayableState
+                                State = new CommonNativeSimulator.DisplayableState
                                 {
 
                                     QubitIds = qsim.QubitIds.Select(q => (int)q),
                                     NQubits = allocatedQubitsCount,
                                     Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                    DivId = debugSessionDivId
-                                }
+                                },
+                                Id = debugSessionDivId
                             }
                         }
                     );

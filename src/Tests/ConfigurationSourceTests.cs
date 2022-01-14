@@ -10,6 +10,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
@@ -39,7 +40,7 @@ namespace Tests.IQSharp
                 var config = new ConfigurationSource() as IConfigurationSource;
                 Assert.IsNotNull(config);
                 Assert.IsFalse(File.Exists(ConfigurationSource.ConfigPath)); // Make sure the file is not created automatically.
-                Assert.AreEqual(BasisStateLabelingConvention.LittleEndian, config.BasisStateLabelingConvention);
+                Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian, config.BasisStateLabelingConvention);
                 Assert.AreEqual(false, config.TruncateSmallAmplitudes);
                 Assert.AreEqual(4, config.MeasurementDisplayPrecision);
                 Assert.AreEqual("mixed", config.ExperimentalSimulatorRepresentation);
@@ -56,7 +57,7 @@ namespace Tests.IQSharp
 
                 config = new ConfigurationSource() as IConfigurationSource;
                 Assert.IsNotNull(config);
-                Assert.AreEqual(BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
+                Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
                 Assert.AreEqual(true, config.TruncateSmallAmplitudes);
                 Assert.AreEqual(2, config.MeasurementDisplayPrecision);
                 Assert.AreEqual("simple", config.ExperimentalSimulatorRepresentation);
@@ -73,7 +74,7 @@ namespace Tests.IQSharp
         {
             var config = new ConfigurationSource(skipLoading: true) as IConfigurationSource;
             Assert.IsNotNull(config);
-            Assert.AreEqual(BasisStateLabelingConvention.LittleEndian, config.BasisStateLabelingConvention);
+            Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian, config.BasisStateLabelingConvention);
             Assert.AreEqual(false, config.TruncateSmallAmplitudes);
             Assert.AreEqual(4, config.MeasurementDisplayPrecision);
             Assert.AreEqual("mixed", config.ExperimentalSimulatorRepresentation);
@@ -85,7 +86,7 @@ namespace Tests.IQSharp
             System.Environment.SetEnvironmentVariable("IQSHARP_EXPERIMENTAL_SIMULATORS_REPRESENTATION", "simple");
 
             // Read values again, environment should be reflected:
-            Assert.AreEqual(BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
+            Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
             Assert.AreEqual(true, config.TruncateSmallAmplitudes);
             Assert.AreEqual(2, config.MeasurementDisplayPrecision);
             Assert.AreEqual("simple", config.ExperimentalSimulatorRepresentation);
