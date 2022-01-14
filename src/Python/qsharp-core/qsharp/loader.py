@@ -7,13 +7,26 @@
 # Licensed under the MIT License.
 ##
 
+import os
 import sys
 from types import ModuleType, new_class
 import importlib
 from importlib.abc import MetaPathFinder, Loader
+import tempfile as tf
+
 import qsharp
 
 from typing import Iterable, List, Optional, Any, Dict, Tuple
+
+try:
+    import pyqir_parser as pqp
+except ImportError as ex:
+    try:
+        import pyqir.parser as pqp
+    except ImportError:
+        class pqp:
+            failed_with = ex
+            QirModule = None
 
 import logging
 logger = logging.getLogger(__name__)
@@ -107,6 +120,22 @@ class QSharpCallable(object):
         """
         return qsharp.client.trace(self, **kwargs)
 
+    def as_qir(self) -> pqp.QirModule:
+        if getattr(pqp, "failed_with", None) is not None:
+            raise pqp.failed_with
+
+        # NB: Cannot load directly from bytes due to a missing feature in
+        #     the llvm-ir crate that causes a similarly missing feature in
+        #     pyqir.parser.
+        f = tf.NamedTemporaryFile(delete=False, suffix='.bc')
+        f.close()
+        bitcode = qsharp.client.compile_to_qir(self, output=f.name)
+        module = pqp.QirModule(f.name)
+        try:
+            os.unlink(f.name)
+        except:
+            pass
+        return module
 
 class QSharpModule(ModuleType):
     _qs_name : str
