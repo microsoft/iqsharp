@@ -43,7 +43,7 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pip install jupyter_kernel_test
+    - pip install jupyter_kernel_test==0.3
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 
