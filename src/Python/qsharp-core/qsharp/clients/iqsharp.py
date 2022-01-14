@@ -48,6 +48,8 @@ except ImportError:
 import logging
 logger = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT=120
+
 ## CLASSES ##
 
 class IQSharpError(RuntimeError):
@@ -103,7 +105,7 @@ class IQSharpClient(object):
 
     def is_ready(self):
         try:
-            result = self.component_versions(timeout=6)
+            result = self.component_versions(_timeout_=6)
             logger.info(f"Q# version\n{result}")
         except Exception as ex:
             logger.info('Exception while checking if IQ# is ready.', exc_info=ex)
@@ -168,12 +170,15 @@ class IQSharpClient(object):
         return self._execute("%project", raise_on_stderr=False)
 
     def simulate(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('simulate', op, **kwargs)
 
     def toffoli_simulate(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('toffoli', op, **kwargs)
 
     def estimate(self, op, **kwargs) -> Dict[str, int]:
+        kwargs.setdefault('_timeout_', None)
         raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
         # Note that raw_counts will have the form:
         # [
@@ -236,6 +241,7 @@ class IQSharpClient(object):
     # qsharp.experimental submodule.
 
     def _simulate_noise(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
 
     def _get_noise_model(self) -> str:
@@ -268,9 +274,10 @@ class IQSharpClient(object):
         return None
 
     def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
+        _timeout_ = kwargs.pop('_timeout_', DEFAULT_TIMEOUT)
         return self._execute(
             f'%{magic} {json.dumps(map_tuples(kwargs))}',
-            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_, _timeout_=_timeout_
         )
 
     def _execute_callable_magic(self, magic : str, op,
@@ -299,9 +306,9 @@ class IQSharpClient(object):
             else:
                 fallback_hook(msg)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _quiet_ : bool = False, **kwargs):
-
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _timeout_=DEFAULT_TIMEOUT, _quiet_ : bool = False, **kwargs):
         logger.debug(f"sending:\n{input}")
+        logger.debug(f"timeout: {_timeout_}")
 
         # make sure the server is still running:
         try:
@@ -358,7 +365,7 @@ class IQSharpClient(object):
                 # propagate to a Jupyter protocol error.
                 raise AlreadyExecutingError("Cannot execute through the IQ# client while another execution is completing.")
             self._busy = True
-            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, **kwargs)
+            reply = self.kernel_client.execute_interactive(input, timeout=_timeout_, output_hook=_output_hook, **kwargs)
         finally:
             self._busy = False
 
