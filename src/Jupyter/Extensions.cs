@@ -342,5 +342,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 attribute => attribute.Item1.TryAsStringLiteral(out var value) ? value : null,
                 attribute => attribute.Item2.TryAsStringLiteral(out var value) ? value : null
             );
+
+        internal static ICommsRouter? GetCommsRouter(this IChannel channel) =>
+            // Workaround for https://github.com/microsoft/jupyter-core/issues/80.
+            channel switch
+            {
+                { CommsRouter: {} router } => router,
+                ChannelWithNewLines channelWithNewLines => channelWithNewLines.BaseChannel.GetCommsRouter(),
+                _ => null
+            };
     }
 }
