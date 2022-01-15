@@ -5,6 +5,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,10 +40,16 @@ namespace Tests.IQSharp
         private readonly string operationName = "TEST_OPERATION_NAME";
         private readonly string targetId = "TEST_TARGET_ID";
 
-        private readonly string EnvironmentSubscriptionId = "AZUREQUANTUM_SUBSCRIPTION_ID";
-        private readonly string EnvironmentResourceGroup = "AZUREQUANTUM_WORKSPACE_RG";
-        private readonly string EnvironmentLocation = "AZUREQUANTUM_WORKSPACE_LOCATION";
-        private readonly string EnvironmentWorkspaceName = "AZUREQUANTUM_WORKSPACE_NAME";
+        private readonly string jobParams = @"{""TEST_KEY1"":""TEST_VAL1"",""TEST_PATH"":""C:\ABC\XYZ""}";
+        private readonly string jobParamsKey1 = "TEST_KEY1";
+        private readonly string jobParamsVal1 = "TEST_VAL1";
+        private readonly string jobParamsKey2 = "TEST_PATH";
+        private readonly string jobParamsVal2 = @"C:\ABC\XYZ";
+
+        private readonly string EnvironmentSubscriptionId = "AZURE_QUANTUM_SUBSCRIPTION_ID";
+        private readonly string EnvironmentResourceGroup = "AZURE_QUANTUM_WORKSPACE_RG";
+        private readonly string EnvironmentLocation = "AZURE_QUANTUM_WORKSPACE_LOCATION";
+        private readonly string EnvironmentWorkspaceName = "AZURE_QUANTUM_WORKSPACE_NAME";
 
         [TestMethod]
         public void TestConnectMagic()
@@ -174,6 +181,13 @@ namespace Tests.IQSharp
             System.Environment.SetEnvironmentVariable(EnvironmentWorkspaceName, workspaceName);
             System.Environment.SetEnvironmentVariable(EnvironmentLocation, location);
 
+            // Temporarily set the environment variables with old prefix, as the renaming
+            // has not being applied to the C# client yet
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_SUBSCRIPTION_ID", subscriptionId);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_RG", resourceGroupName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_NAME", workspaceName);
+            System.Environment.SetEnvironmentVariable("AZUREQUANTUM_WORKSPACE_LOCATION", location);
+
             connectMagic.Test("credential=ENVIRONMENT");
             Assert.AreEqual(AzureClientAction.Connect, azureClient.LastAction);
             Assert.AreEqual(subscriptionId, azureClient.SubscriptionId);
@@ -225,6 +239,14 @@ namespace Tests.IQSharp
             submitMagic.Test($"{operationName}");
             Assert.AreEqual(AzureClientAction.SubmitJob, azureClient.LastAction);
             Assert.IsTrue(azureClient.SubmittedJobs.Contains(operationName));
+
+            // jobParams argument
+            Assert.IsTrue(azureClient.JobParams.IsEmpty);
+            submitMagic.Test($"{operationName} jobParams={jobParams}");
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out string value1));
+            Assert.AreEqual(value1, jobParamsVal1);
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out string value2));
+            Assert.AreEqual(value2, jobParamsVal2);
         }
 
         [TestMethod]
@@ -241,6 +263,14 @@ namespace Tests.IQSharp
             executeMagic.Test($"{operationName}");
             Assert.AreEqual(AzureClientAction.ExecuteJob, azureClient.LastAction);
             Assert.IsTrue(azureClient.ExecutedJobs.Contains(operationName));
+
+            // jobParams argument
+            Assert.IsTrue(azureClient.JobParams.IsEmpty);
+            executeMagic.Test($"{operationName} jobParams={jobParams}");
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out string value1));
+            Assert.AreEqual(value1, jobParamsVal1);
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out string value2));
+            Assert.AreEqual(value2, jobParamsVal2);
         }
 
         [TestMethod]
@@ -274,10 +304,22 @@ namespace Tests.IQSharp
             jobsMagic.Test(string.Empty);
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
 
-            // with arguments - should still print job status
+            // with default argument - should still print job status
             azureClient = new MockAzureClient();
             jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
             jobsMagic.Test($"{jobId}");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // with default and count arguments - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"{jobId} count=1");
+            Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
+
+            // only with count argument - should still print job status
+            azureClient = new MockAzureClient();
+            jobsMagic = new JobsMagic(azureClient, new UnitTestLogger<JobsMagic>());
+            jobsMagic.Test($"count=1");
             Assert.AreEqual(AzureClientAction.GetJobList, azureClient.LastAction);
         }
 
@@ -320,6 +362,7 @@ namespace Tests.IQSharp
 
     public class MockAzureClient : IAzureClient
     {
+        public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace => null;
         internal AzureClientAction LastAction = AzureClientAction.None;
         internal string SubscriptionId = string.Empty;
         internal string ResourceGroupName = string.Empty;
@@ -330,6 +373,7 @@ namespace Tests.IQSharp
         internal CredentialType CredentialType = CredentialType.Default;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
+        internal ImmutableDictionary<string, string> JobParams = ImmutableDictionary<string, string>.Empty;
 
         string? IAzureClient.ActiveTargetId => "mock.mock";
 
@@ -352,6 +396,7 @@ namespace Tests.IQSharp
         {
             LastAction = AzureClientAction.SubmitJob;
             SubmittedJobs.Add(submissionContext.OperationName);
+            JobParams = submissionContext.InputParams;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
@@ -359,6 +404,7 @@ namespace Tests.IQSharp
         {
             LastAction = AzureClientAction.ExecuteJob;
             ExecutedJobs.Add(submissionContext.OperationName);
+            JobParams = submissionContext.InputParams;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
@@ -389,7 +435,7 @@ namespace Tests.IQSharp
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? token = default)
         {
             LastAction = AzureClientAction.GetJobList;
             return ExecuteStatus.Ok.ToExecutionResult();

@@ -24,10 +24,22 @@ def convert_diagnostic_to_qobj(data) -> Optional[qt.Qobj]:
         # Got a state vector, so convert to a Qobj with type=ket.
         # The serialization for these state vectors is defined at:
         # https://github.com/microsoft/iqsharp/blob/1015192aedababc3fe6d64e6def5838ea5eaab2f/src/Jupyter/Visualization/StateDisplayEncoders.cs#L113
+
+        # We start by importing SciPy (we know it's available since it's
+        # a hard dependency of QuTiP, and QuTiP has been successfully imported
+        # at this point).
+        from scipy.sparse import csr_matrix
+        flat = list(data['amplitudes'].items())
+        csr_data = np.array([z['Real'] + 1j * z['Imaginary'] for idx, z in flat])
+        row_idxs = np.array([int(idx) for idx, z in flat])
+        col_idxs = np.zeros((len(csr_data),), dtype=int)
+        arr = csr_matrix(
+            (csr_data, (row_idxs, col_idxs))
+        )
         return qt.Qobj(
-            [[z['Real'] + 1j * z['Imaginary'] for z in data['amplitudes']]],
-            dims=[[1] * data['n_qubits'], [2] * data['n_qubits']]
-        ).dag()
+            arr,
+            dims=[[2] * data['n_qubits'], [1] * data['n_qubits']]
+        )
 
     # The State UDT case for density operators as represented in C# looks like:
     # {n_qubits: ..., data: {Mixed: {...}}}

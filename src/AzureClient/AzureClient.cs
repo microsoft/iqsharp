@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Azure.Core;
-
+using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
@@ -26,7 +26,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
-        internal Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
+        /// <inheritdoc />
+        public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
@@ -165,22 +166,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private string GetNormalizedLocation(string location, IChannel? channel)
         {
-            // Default to "westus" if no location was specified.
-            var defaultLocation = "westus";
-            if (string.IsNullOrWhiteSpace(location))
-            {
-                channel?.Stderr($"[WARN]: location parameter is missing. Will try to connect to a workspace in region `{defaultLocation}`.");
-                location = defaultLocation;
-            }
-
             // Convert user-provided location into names recognized by Azure resource manager.
             // For example, a customer-provided value of "West US" should be converted to "westus".
             var normalizedLocation = location.ToLowerInvariant().Replace(" ", "");
             if (UriHostNameType.Unknown == Uri.CheckHostName(normalizedLocation))
             {
-                // If provided location is invalid, "westus" is used.
-                normalizedLocation = defaultLocation;
-                channel?.Stderr($"Invalid location {location} specified. Falling back to location {normalizedLocation}.");
+                channel?.Stderr($"Invalid location {location} specified.");
+                return string.Empty;
             }
 
             return normalizedLocation;
@@ -194,16 +186,33 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             TokenCredential credential,
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                channel?.Stderr($"No location provided.");
+                return AzureClientError.NoWorkspaceLocation.ToExecutionResult();
+            }
+
             location = GetNormalizedLocation(location, channel);
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return AzureClientError.InvalidWorkspaceLocation.ToExecutionResult();
+            }
 
             try
             {
+                var options = new QuantumJobClientOptions();
+
+                // This value will be added as a prefix in the UserAgent when
+                // calling the Azure Quantum APIs
+                options.Diagnostics.ApplicationId = IsPythonUserAgent ? "IQ#/Py" : "IQ#";
+
                 var workspace = AzureFactory.CreateWorkspace(
                     subscriptionId: subscriptionId,
                     resourceGroup: resourceGroupName,
                     workspaceName: workspaceName,
                     location: location,
-                    credential: credential);
+                    credential: credential,
+                    options: options);
 
                 var providers = new List<ProviderStatusInfo>();
                 var status = workspace.ListProvidersStatusAsync(cancellationToken);
@@ -569,7 +578,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -589,6 +598,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 if (job.Matches(filter))
                 {
                     jobs.Add(job);
+                }
+
+                if (count.HasValue)
+                {
+                    if (jobs.Count >= count)
+                    {
+                        channel?.Stdout($"Showing only the first {count} jobs:");
+                        break;
+                    }
                 }
             }
 

@@ -165,7 +165,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, CancellationToken? token);
+        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count, CancellationToken? token);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.
@@ -182,5 +182,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///      set, or <c>null</c> if no target is set.
         /// </summary>
         string? ActiveTargetId { get; }
+
+        /// <summary>
+        ///     Returns the active workspace connected to this client, or
+        ///     <c>null</c> if none is set.
+        /// </summary>
+        Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; }
     }
 }

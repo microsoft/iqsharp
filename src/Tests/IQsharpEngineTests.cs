@@ -77,6 +77,7 @@ namespace Tests.IQSharp
             var configSource = new ConfigurationSource(skipLoading: true, eventService: null);
 
             var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource,
+                new PerformanceMonitor(),
                 new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
             var response = await simMagic.Execute(snippetName, channel);
@@ -207,7 +208,7 @@ namespace Tests.IQSharp
             var engine = await Init();
             Assert.IsNotNull(engine.SymbolsResolver);
             var configSource = new ConfigurationSource(skipLoading: true);
-            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new UnitTestLogger<SimulateMagic>());
+            var simMagic = new SimulateMagic(engine.SymbolsResolver!, configSource, new PerformanceMonitor(), new UnitTestLogger<SimulateMagic>());
             var channel = new MockChannel();
 
             // Try running without compiling it, fails:
@@ -712,6 +713,21 @@ namespace Tests.IQSharp
                 .UsingEngine()
                 .Input("%lsmagi")
                 .ExecutesWithError(containing:
+                    // NB: Since %attach is only present in local development
+                    //     mode, hints may in general change between debug
+                    //     and release configuration.
+                    #if DEBUG
+                    $@"
+                        No such magic command %lsmagi.
+
+                        Possibly similar magic commands:
+                        - %lsmagic
+                        - %lsopen
+                        - %attach
+
+                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
+                    "
+                    #else
                     $@"
                         No such magic command %lsmagi.
 
@@ -721,7 +737,9 @@ namespace Tests.IQSharp
                         - %debug
 
                         To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
-                    ".Dedent().Trim());
+                    "
+                    #endif
+                    .Dedent().Trim());
 
         [TestMethod]
         public async Task TestDebugMagic()

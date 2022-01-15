@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 
 using Microsoft.Quantum.Experimental;
+using Microsoft.Quantum.Simulation.Simulators;
 
 using Newtonsoft.Json.Linq;
 
@@ -116,8 +117,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     The labeling convention to be used when labeling computational
         ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
-        public BasisStateLabelingConvention BasisStateLabelingConvention =>
-            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
+        public CommonNativeSimulator.BasisStateLabelingConvention BasisStateLabelingConvention =>
+            GetOptionOrDefault("dump.basisStateLabelingConvention", CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian);
 
         /// <summary>
         ///     Whether small amplitudes should be truncated when dumping
@@ -211,24 +212,24 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string SubscriptionId =>
-            GetOptionOrDefault("azurequantum.subscription.id", string.Empty);
+            GetOptionOrDefault("azure.quantum.subscription.id", string.Empty);
 
         /// <summary>
         ///     Default Workspace's Resource Group to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceRG =>
-            GetOptionOrDefault("azurequantum.workspace.rg", string.Empty);
+            GetOptionOrDefault("azure.quantum.workspace.rg", string.Empty);
 
         /// <summary>
         ///     Default Workspace's location to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceLocation =>
-            GetOptionOrDefault("azurequantum.workspace.location", string.Empty);
+            GetOptionOrDefault("azure.quantum.workspace.location", string.Empty);
 
         /// <summary>
         ///     Default Workspace's name to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string WorkspaceName =>
-            GetOptionOrDefault("azurequantum.workspace.name", string.Empty);
+            GetOptionOrDefault("azure.quantum.workspace.name", string.Empty);
     }
 }

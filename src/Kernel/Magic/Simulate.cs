@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
@@ -20,13 +21,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     public class SimulateMagic : AbstractMagic
     {
         private const string ParameterNameOperationName = "__operationName__";
+        private readonly IPerformanceMonitor Monitor;
 
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, ILogger<SimulateMagic> logger) : base(
+        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor, ILogger<SimulateMagic> logger) : base(
             "simulate",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -65,6 +67,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
+            this.Monitor = monitor;
         }
 
         /// <summary>
@@ -95,12 +98,61 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
             if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
+            var maxNQubits = 0L;
+
             using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, ConfigurationSource)
                 .WithStackTraceDisplay(channel);
-            qsim.OnDisplayableDiagnostic += channel.Display;
+
+            qsim.DisableLogToConsole();
+            qsim.OnLog += channel.Stdout;
+
+            qsim.OnDisplayableDiagnostic += (displayable) =>
+            {
+                if (displayable is CommonNativeSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
+                {
+                    // Make sure to display the state first so that it's there for the client-side
+                    // JavaScript to pick up.
+                    var id = $"{System.Guid.NewGuid()}";
+                    channel.Display(new DisplayableStateWithId
+                    {
+                        Amplitudes = state.Amplitudes,
+                        NQubits = state.NQubits,
+                        QubitIds = state.QubitIds,
+                        Id = id
+                    });
+
+                    // Tell the client to add a histogram using chart.js.
+                    var commsRouter = channel.GetCommsRouter();
+                    Debug.Assert(commsRouter != null, "Histogram display requires comms router.");
+                    commsRouter.OpenSession(
+                        "iqsharp_state_dump",
+                        new MeasurementHistogramContent()
+                        {
+                            State = state,
+                            Id = id
+                        }
+                    ).Wait();
+                }
+                else
+                {
+                    channel.Display(displayable);
+                }
+            };
+
+            qsim.AfterAllocateQubits += (args) =>
+            {
+                maxNQubits = System.Math.Max(qsim.QubitManager?.AllocatedQubitsCount ?? 0, maxNQubits);
+            };
+            var stopwatch = Stopwatch.StartNew();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);
-            return value.ToExecutionResult();
+            stopwatch.Stop();
+            var result = value.ToExecutionResult();
+            (Monitor as PerformanceMonitor)?.ReportSimulatorPerformance(new SimulatorPerformanceArgs(
+                simulatorName: qsim.GetType().FullName,
+                nQubits: (int)maxNQubits,
+                duration: stopwatch.Elapsed
+            ));
+            return result;
         }
     }
 }

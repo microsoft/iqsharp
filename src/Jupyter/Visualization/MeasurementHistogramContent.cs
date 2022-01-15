@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
+using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
@@ -19,6 +20,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// Information about the state to be displayed.
         /// </summary>
         [JsonProperty("state")]
-        public DisplayableState State { get; set; } = new DisplayableState();
+        public CommonNativeSimulator.DisplayableState State { get; set; } = new CommonNativeSimulator.DisplayableState();
+
+        /// <summary>
+        /// Unique identifier of the instance.
+        /// </summary>
+        [JsonProperty("id")]
+        public string Id { get; set; } = $"{System.Guid.NewGuid()}";
     }
 }

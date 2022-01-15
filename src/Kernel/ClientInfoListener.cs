@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -14,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///     Represents information returned to the client about the current
     ///     kernel instance, such as the current hosting environment.
     /// </summary>
-    internal class ClientInfoContent : MessageContent
+    internal class ClientInfoContent
     {
         [JsonProperty("hosting_environment")]
         public string? HostingEnvironment { get; set; }
@@ -62,54 +63,55 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     }
 
     /// <summary>
-    ///     Shell handler that registers new information received from the
+    ///     Comms service that registers new information received from the
     ///     client with an appropriate metadata controller. This allows for
     ///     the client to provide metadata not initially available when the
     ///     kernel starts, such as the browser's user agent string.
     /// </summary>
-    internal class ClientInfoHandler : IShellHandler
+    internal class ClientInfoListener
     {
         public string? UserAgent { get; private set; }
-        private readonly ILogger<ClientInfoHandler> logger;
+        private readonly ILogger<ClientInfoListener> logger;
         private readonly IMetadataController metadata;
-        private readonly IShellServer shellServer;
-        public ClientInfoHandler(
-            ILogger<ClientInfoHandler> logger,
+        private readonly ICommsRouter commsRouter;
+        public ClientInfoListener(
+            ILogger<ClientInfoListener> logger,
             IMetadataController metadata,
-            IShellServer shellServer
+            ICommsRouter commsRouter
         )
         {
             this.logger = logger;
             this.metadata = metadata;
-            this.shellServer = shellServer;
-        }
+            this.commsRouter = commsRouter;
 
-        /// <inheritdoc />
-        public string MessageType => "iqsharp_clientinfo_request";
-
-        /// <inheritdoc />
-        public async Task HandleAsync(Message message)
-        {
-            var content = message.To<ClientInfoContent>();
-            metadata.UserAgent = content.UserAgent ?? metadata.UserAgent;
-            metadata.ClientId = content.ClientId ?? metadata.ClientId;
-            metadata.ClientIsNew = content.ClientIsNew ?? metadata.ClientIsNew;
-            metadata.ClientCountry = content.ClientCountry ?? metadata.ClientCountry;
-            metadata.ClientLanguage = content.ClientLanguage ?? metadata.ClientLanguage;
-            metadata.ClientHost = content.ClientHost ?? metadata.ClientHost;
-            metadata.ClientOrigin = content.ClientOrigin ?? metadata.ClientOrigin;
-            metadata.ClientFirstOrigin = content.ClientFirstOrigin ?? metadata.ClientFirstOrigin;
-            await Task.Run(() => shellServer.SendShellMessage(
-                new Message
+            logger.LogDebug("Started client info listener.");
+            commsRouter.SessionOpenEvent("iqsharp_clientinfo").On += async (session, data) =>
+            {
+                logger.LogDebug("Got iqsharp_clientinfo message: {Data}", data.ToString());
+                if (!data.TryAs<ClientInfoContent>(out var content))
                 {
-                    Header = new MessageHeader
-                    {
-                        MessageType = "iqsharp_clientinfo_reply"
-                    },
-                    Content = metadata.AsClientInfoContent()
+                    logger.LogError(
+                        "Got client info via comms, but failed to deserialize:\n{RawData}",
+                        data.ToString()
+                    );
+                    return;
                 }
-                .AsReplyTo(message)
-            ));
+                metadata.UserAgent = content.UserAgent ?? metadata.UserAgent;
+                metadata.ClientId = content.ClientId ?? metadata.ClientId;
+                metadata.ClientIsNew = content.ClientIsNew ?? metadata.ClientIsNew;
+                metadata.ClientCountry = content.ClientCountry ?? metadata.ClientCountry;
+                metadata.ClientLanguage = content.ClientLanguage ?? metadata.ClientLanguage;
+                metadata.ClientHost = content.ClientHost ?? metadata.ClientHost;
+                metadata.ClientOrigin = content.ClientOrigin ?? metadata.ClientOrigin;
+                metadata.ClientFirstOrigin = content.ClientFirstOrigin ?? metadata.ClientFirstOrigin;
+                await Task.Run(() =>
+                {
+                    session.SendMessage(
+                        metadata.AsClientInfoContent()
+                    );
+                    session.Close();
+                });
+            };
         }
     }
 }
