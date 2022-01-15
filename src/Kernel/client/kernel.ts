@@ -6,7 +6,7 @@ declare var IPython: IPython;
 
 import { Telemetry, ClientInfo } from "./telemetry";
 import { Chart } from "chart.js";
-import { DisplayableState, addToolbarButton as addToolbarButton, attachDumpMachineToolbar, createNewCanvas, createToolbarContainer, PlotStyle, updateChart } from "./plotting";
+import { IDisplayableState, DisplayableState, addToolbarButton as addToolbarButton, attachDumpMachineToolbar, createNewCanvas, createToolbarContainer, PlotStyle, updateChart } from "./plotting";
 import { defineQSharpMode } from "./syntax";
 import { draw, Circuit, StyleConfig, STYLES } from "@microsoft/quantum-viz.js";
 
@@ -153,17 +153,19 @@ class Kernel {
     }
 
     setupMeasurementHistogramDataListener() {
-        IPython.notebook.kernel.comm_manager.register_target<{state: DisplayableState}>(
+        IPython.notebook.kernel.comm_manager.register_target<{state: IDisplayableState, id: string}>(
             "iqsharp_state_dump",
             (comm, message) => {
                 console.log("iqsharp_state_dump comm session opened", message);
-                let state = message.content.data.state;
-                let stateDivId = state.div_id;
+                let state = new DisplayableState(message.content.data.state);
+                let stateDivId = message.content.data.id;
                 if (stateDivId != null) {
-                    let stateDiv = document.getElementById(stateDivId);
+                    let stateDiv = document.getElementById(stateDivId) as HTMLDivElement;
                     if (stateDiv != null) {
                         let { chart: chart } = createNewCanvas(stateDiv, state);
-                        attachDumpMachineToolbar(chart, state);
+                        attachDumpMachineToolbar(chart, state, stateDiv);
+                    } else {
+                        console.warn(`No <div> for state dump with ID ${stateDivId} found.`);
                     }
                 }
                 comm.close();

@@ -15,6 +15,11 @@ using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
 {
+    public class DisplayableStateWithId : CommonNativeSimulator.DisplayableState
+    {
+        public string? Id { get; set; }
+    }
+
     /// <summary>
     ///     Represents different styles for displaying the phases of complex
     ///     amplitudes when displaying state vectors as HTML.
@@ -69,178 +74,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         BarAndNumber
     }
 
-    /// <summary>
-    ///     The convention to be used in labeling computational basis states
-    ///     given their representations as strings of classical bits.
-    /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum BasisStateLabelingConvention
-    {
-        /// <summary>
-        ///     Label computational states directly by their bit strings.
-        /// </summary>
-        /// <example>
-        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
-        ///     by |011⟩.
-        /// </example>
-        Bitstring,
-
-        /// <summary>
-        ///     Label computational states directly by interpreting their bit
-        ///     strings as little-endian encoded integers.
-        /// </summary>
-        /// <example>
-        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
-        ///     by |6⟩.
-        /// </example>
-        LittleEndian,
-
-        /// <summary>
-        ///     Label computational states directly by interpreting their bit
-        ///     strings as big-endian encoded integers.
-        /// </summary>
-        /// <example>
-        ///     Following this convention, the state |0⟩ ⊗ |1⟩ ⊗ |1⟩ is labeled
-        ///     by |3⟩.
-        /// </example>
-        BigEndian
-    }
-
-    /// <summary>
-    ///     Represents a quantum state vector and all metadata needed to display
-    ///     that state vector.
-    /// </summary>
-    public class DisplayableState
-    {
-        private static readonly IComparer<string> ToIntComparer =
-            Comparer<string>.Create((label1, label2) =>
-                Comparer<int>.Default.Compare(
-                    Int32.Parse(label1), Int32.Parse(label2)
-                )
-            );
-
-        /// <summary>
-        ///     Metadata to be used when serializing to JSON, allowing code
-        ///     in other languages to determine what representation is used
-        ///     for this state.
-        /// </summary>
-        [JsonProperty("diagnostic_kind")]
-        private string DiagnosticKind => "state-vector";
-
-        /// <summary>
-        ///     ID for an HTML element where the vertical measurement probability histogram
-        ///     will be displayed.
-        /// </summary>
-        [JsonProperty("div_id")]
-        public string DivId { get; set; } = string.Empty;
-
-        /// <summary>
-        ///     The indexes of each qubit on which this state is defined, or
-        ///     <c>null</c> if these indexes are not known.
-        /// </summary>
-        [JsonProperty("qubit_ids")]
-        public IEnumerable<int>? QubitIds { get; set; }
-
-        /// <summary>
-        ///     The number of qubits on which this state is defined.
-        /// </summary>
-        [JsonProperty("n_qubits")]
-        public int NQubits { get; set; }
-
-        /// <remarks>
-        ///     These amplitudes represent the computational basis states
-        ///     labeled in little-endian order, as per the behavior of
-        ///     <see cref="Microsoft.Quantum.Simulation.Simulators.QuantumSimulator.StateDumper.Dump" />.
-        /// </remarks>
-        [JsonProperty("amplitudes")]
-        public Complex[]? Amplitudes { get; set; }
-
-        /// <summary>
-        ///     An enumerable source of the significant amplitudes of this state
-        ///     vector and their labels, where significance and labels are
-        ///     defined by the values loaded from <paramref name="configurationSource" />.
-        /// </summary>
-        public IEnumerable<(Complex, string)> SignificantAmplitudes(
-            IConfigurationSource configurationSource
-        ) => SignificantAmplitudes(
-            configurationSource.BasisStateLabelingConvention,
-            configurationSource.TruncateSmallAmplitudes,
-            configurationSource.TruncationThreshold
-        );
-
-        /// <summary>
-        ///     An enumerable source of the significant amplitudes of this state
-        ///     vector and their labels.
-        /// </summary>
-        /// <param name="convention">
-        ///     The convention to be used in labeling each computational basis state.
-        /// </param>
-        /// <param name="truncateSmallAmplitudes">
-        ///     Whether to truncate small amplitudes.
-        /// </param>
-        /// <param name="truncationThreshold">
-        ///     If <paramref name="truncateSmallAmplitudes" /> is <c>true</c>,
-        ///     then amplitudes whose absolute value squared are below this
-        ///     threshold are suppressed.
-        /// </param>
-        public IEnumerable<(Complex, string)> SignificantAmplitudes(
-            BasisStateLabelingConvention convention,
-            bool truncateSmallAmplitudes, double truncationThreshold
-        ) =>
-            (
-                truncateSmallAmplitudes
-                ? Amplitudes
-                    .Select((amplitude, idx) => (amplitude, idx))
-                    .Where(item =>
-                        System.Math.Pow(item.amplitude.Magnitude, 2.0) >= truncationThreshold
-                    )
-                : Amplitudes.Select((amplitude, idx) => (amplitude, idx))
-            )
-            .Select(
-                item => (item.amplitude, BasisStateLabel(convention, item.idx))
-            )
-            .OrderBy(
-                item => item.Item2,
-                // If a basis state label is numeric, we want to compare
-                // numerically rather than lexographically.
-                convention switch {
-                    BasisStateLabelingConvention.BigEndian => ToIntComparer,
-                    BasisStateLabelingConvention.LittleEndian => ToIntComparer,
-                    _ => Comparer<string>.Default
-                }
-            );
-
-        /// <summary>
-        ///     Using the given labeling convention, returns the label for a
-        ///     computational basis state described by its bit string as encoded
-        ///     into an integer index in the little-endian encoding.
-        /// </summary>
-        public string BasisStateLabel(
-            BasisStateLabelingConvention convention, int index
-        ) => convention switch
-            {
-                BasisStateLabelingConvention.Bitstring =>
-                    String.Concat(
-                        System
-                            .Convert
-                            .ToString(index, 2)
-                            .PadLeft(NQubits, '0')
-                            .Reverse()
-                    ),
-                BasisStateLabelingConvention.BigEndian =>
-                    System.Convert.ToInt64(
-                        String.Concat(
-                            System.Convert.ToString(index, 2).PadLeft(NQubits, '0').Reverse()
-                        ),
-                        fromBase: 2
-                    )
-                    .ToString(),
-                BasisStateLabelingConvention.LittleEndian =>
-                    index.ToString(),
-                _ => throw new ArgumentException($"Invalid basis state labeling convention {convention}.")
-            };
-
-    }
 
     /// <summary>
     ///     A result encoder that displays quantum state vectors as HTML tables.
@@ -276,7 +109,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             string StyleForNumber() =>
                 $@"text-align: center;";
 
-            if (displayable is DisplayableState vector)
+            if (displayable is CommonNativeSimulator.DisplayableState vector)
             {
                 // First, print out any qubit IDs if we have them.
                 var qubitIdsRow = vector.QubitIds == null
@@ -383,9 +216,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 var basisWidth = System.Math.Max(6 + vector.NQubits, 20);
                 var basisStateMnemonic = ConfigurationSource.BasisStateLabelingConvention switch
                 {
-                    BasisStateLabelingConvention.Bitstring => " (bitstring)",
-                    BasisStateLabelingConvention.LittleEndian => " (little endian)",
-                    BasisStateLabelingConvention.BigEndian => " (big endian)",
+                    CommonNativeSimulator.BasisStateLabelingConvention.Bitstring => " (bitstring)",
+                    CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian => " (little endian)",
+                    CommonNativeSimulator.BasisStateLabelingConvention.BigEndian => " (big endian)",
                     _ => ""
                 };
                 
@@ -412,8 +245,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         </tbody>
                     </table>";
                 
-                if (ConfigurationSource.MeasurementDisplayHistogram) {
-                    outputTable += $@"<div id=""{vector.DivId}""></div>";
+                if (ConfigurationSource.MeasurementDisplayHistogram && vector is DisplayableStateWithId { Id: var id })
+                {
+                    outputTable += $@"<div id=""{id}""></div>";
                 };
                 return outputTable.ToEncodedData();
             }
@@ -446,7 +280,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public EncodedData? Encode(object displayable)
         {
-            if (displayable is DisplayableState vector)
+            if (displayable is CommonNativeSimulator.DisplayableState vector)
             {
                 // TODO: refactor to use fancy printing logic from QuantumSimulator.
                 //       for now, we do something basic as a placeholder.
