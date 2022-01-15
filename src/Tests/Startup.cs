@@ -53,13 +53,13 @@ namespace Tests.IQSharp
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetRequiredService<ITelemetryService>();
             serviceProvider.GetRequiredService<IWorkspace>().Initialization.Wait();
+            serviceProvider.AddBuiltInMagicSymbols();
             return serviceProvider;
         }
 
         internal static T Create<T>(string workspaceFolder)
         {
             var serviceProvider = CreateServiceProvider(workspaceFolder);
-            serviceProvider.AddBuiltInMagicSymbols();
             return ActivatorUtilities.CreateInstance<T>(serviceProvider);
         }
 

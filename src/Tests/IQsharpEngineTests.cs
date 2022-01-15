@@ -18,6 +18,7 @@ using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Quantum.Experimental;
+using Microsoft.Extensions.DependencyInjection;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -672,7 +673,8 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestResolveMagic()
         {
-            var resolver = Startup.Create<MagicSymbolResolver>("Workspace.Broken");
+            var serviceProvider = Startup.CreateServiceProvider("Workspace.Broken");
+            var resolver = serviceProvider.GetRequiredService<IMagicSymbolResolver>();
 
             // We use the null-forgiving operator on symbol below, as the C# 8
             // nullable reference feature does not incorporate the result of
