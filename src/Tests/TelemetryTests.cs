@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 #if !TELEMETRY
@@ -44,12 +44,21 @@ namespace Tests.IQSharp
         internal static void AssertEventCount(
             this MockTelemetryService.MockAppLogger logger,
             int count,
-            params Action<EventProperties>[] eventAssertions 
+            params Action<EventProperties>[] eventAssertions
+        ) => logger.AssertEventCount(count, null, eventAssertions);
+
+        internal static void AssertEventCount(
+            this MockTelemetryService.MockAppLogger logger,
+            int count,
+            Func<EventProperties, bool>? filter,
+            params Action<EventProperties>[] eventAssertions
         )
         {
             var msg = $"Expected {count} telemetry events, got:\n";
             var events = logger.Events.Where(
-                             evt => evt.Name != "Quantum.IQSharp.KernelPerformance"
+                             evt =>
+                                evt.Name != "Quantum.IQSharp.KernelPerformance" &&
+                                filter == null ? true : filter(evt)
                          )
                          .ToList();
             foreach (var evt in events)
@@ -340,6 +349,9 @@ namespace Tests.IQSharp
             engine.ExecuteMundane(SNIPPETS.HelloQ, channel).Wait();
             logger.AssertEventCount(
                 1,
+                // Filter out device capabilities, since they may only be sent
+                // well after we initialize the performance monitor.
+                evt => evt.Name != "Quantum.IQSharp.DeviceCapabilities",
                 evt =>
                 {
                     Assert.AreEqual("Quantum.IQSharp.Compile", evt.Name);
