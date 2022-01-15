@@ -17,6 +17,7 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.Simulation.Simulators;
 using static Microsoft.Jupyter.Core.BaseEngine;
 using Microsoft.Quantum.IQSharp.Kernel;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using System.Collections.Generic;
 
