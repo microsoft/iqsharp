@@ -58,7 +58,7 @@ namespace Tests.IQSharp
             var events = logger.Events.Where(
                              evt =>
                                 evt.Name != "Quantum.IQSharp.KernelPerformance" &&
-                                filter == null ? true : filter(evt)
+                                (filter == null ? true : filter(evt))
                          )
                          .ToList();
             foreach (var evt in events)
