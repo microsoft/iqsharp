@@ -87,7 +87,7 @@ namespace Microsoft.Quantum.IQSharp
                 TelemetryLogger.LogEvent(evt);
             };
             this.OnServiceInitialized<IReferences>();
-            this.OnServiceInitialized<IConfigurationSource>();
+            this.OnServiceInitialized<Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource>();
             this.OnServiceInitialized<IMetadataController>();
             this.OnServiceInitialized<INugetPackages>();
             this.OnServiceInitialized<IAzureClient>();
