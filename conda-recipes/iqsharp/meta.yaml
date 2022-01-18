@@ -11,6 +11,8 @@ source:
 build:
   binary_relocation: False
   detect_binary_files_with_prefix: False
+  script_env:
+    - DYLD_PRINT_LIBRARIES=1 # [macos]
   has_prefix_files:
     - share/jupyter/kernels/iqsharp/kernel.json
   script: |
