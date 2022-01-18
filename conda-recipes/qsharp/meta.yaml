@@ -23,7 +23,7 @@ requirements:
 
 build:
   script_env:
-    - DYLD_PRINT_LIBRARIES=1 # [macos]
+    - DYLD_PRINT_LIBRARIES=1 # [osx]
   script: |
     pwsh -NoProfile src/conda-recipes/qsharp/build.ps1 -Version {{ version }}
 
