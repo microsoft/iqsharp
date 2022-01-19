@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
@@ -380,6 +380,23 @@ namespace Tests.IQSharp
                 Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
                 Assert.AreEqual(true, lastArgs.UseCustomStorage);
             }
+        }
+
+        [TestMethod]
+        public async Task TestCloudJobExtensions()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            var jobDetails = new JobDetails(containerUri: "",
+                                            inputDataFormat: "",
+                                            providerId: "",
+                                            target: "")
+            {
+            };
+            // var cloudJob = new CloudJob(azureWorkspace, )
+
+            // CloudJobExtensions.GetCostEstimateText
         }
     }
 }

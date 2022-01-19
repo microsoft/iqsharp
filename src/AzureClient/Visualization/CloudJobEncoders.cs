@@ -37,6 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ["creation_time"] = cloudJob.Details.CreationTime?.ToUniversalTime(),
                 ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime?.ToUniversalTime(),
                 ["end_execution_time"] = cloudJob.Details.EndExecutionTime?.ToUniversalTime(),
+                ["cost_estimate"] = cloudJob.GetCostEstimateText(),
             };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
@@ -51,9 +52,46 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
                     ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
+                    ("Cost Estimate", cloudJob => cloudJob.GetCostEstimateText()),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
+
+        internal static string GetCostEstimateText(this CloudJob cloudJob) =>
+            cloudJob?.Details?.CostEstimate == null ? String.Empty :
+                                                      $"{CurrencyHelper.GetCurrencySymbol(cloudJob.Details.CostEstimate?.CurrencyCode)} {cloudJob.Details.CostEstimate?.EstimatedTotal}";
+    }
+
+    internal static class CurrencyHelper
+    {
+        private static Dictionary<string,string> currencyCodeToSymbol = new Dictionary<string, string>();
+        static CurrencyHelper()
+        {
+            foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.AllCultures))
+            {
+                try
+                {
+                    var regionInfo = new RegionInfo(cultureInfo.Name);
+                    currencyCodeToSymbol.TryAdd(regionInfo.ISOCurrencySymbol, regionInfo.CurrencySymbol);
+                }
+                catch {}
+            }
+        }
+
+        public static string GetCurrencySymbol(string? currencyCode)
+        {
+            if (currencyCode == null)
+            {
+                return String.Empty;
+            }
+            
+            if (currencyCodeToSymbol.TryGetValue(currencyCode, out var currencySymbol))
+            {
+                return currencySymbol;
+            }
+
+            return currencyCode;
+        }
     }
 
     /// <summary>
