@@ -80,6 +80,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
+        public static CultureInfo? GetCultureInfoForCurrencyCode(string currencyCode)
+        {
+            if (currencyCodeToCultureInfo.TryGetValue(currencyCode, out var cultureInfo))
+            {
+                return cultureInfo;
+            }
+
+            return null;
+        }
+
         public static string FormatValue(string? currencyCode, float? value)
         {
             if (value == null)
