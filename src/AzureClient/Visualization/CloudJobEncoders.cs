@@ -59,12 +59,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         internal static string GetCostEstimateText(this CloudJob cloudJob) =>
             cloudJob?.Details?.CostEstimate == null ? String.Empty :
-                                                      $"{CurrencyHelper.GetCurrencySymbol(cloudJob.Details.CostEstimate?.CurrencyCode)} {cloudJob.Details.CostEstimate?.EstimatedTotal:0.00}";
+                                                      CurrencyHelper.FormatValue(cloudJob.Details.CostEstimate?.CurrencyCode,
+                                                                                 cloudJob.Details.CostEstimate?.EstimatedTotal);
     }
 
     internal static class CurrencyHelper
     {
-        private static Dictionary<string,string> currencyCodeToSymbol = new Dictionary<string, string>();
+        private static Dictionary<string, CultureInfo> currencyCodeToCultureInfo = new Dictionary<string, CultureInfo>();
         static CurrencyHelper()
         {
             foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.AllCultures)
@@ -73,25 +74,30 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 try
                 {
                     var regionInfo = new RegionInfo(cultureInfo.Name);
-                    currencyCodeToSymbol.TryAdd(regionInfo.ISOCurrencySymbol, regionInfo.CurrencySymbol);
+                    currencyCodeToCultureInfo.TryAdd(regionInfo.ISOCurrencySymbol, cultureInfo);
                 }
                 catch {}
             }
         }
 
-        public static string GetCurrencySymbol(string? currencyCode)
+        public static string FormatValue(string? currencyCode, float? value)
         {
-            if (currencyCode == null)
+            if (value == null)
             {
-                return String.Empty;
-            }
-            
-            if (currencyCodeToSymbol.TryGetValue(currencyCode, out var currencySymbol))
-            {
-                return currencySymbol;
+                return string.Empty;
             }
 
-            return currencyCode;
+            if (string.IsNullOrEmpty(currencyCode))
+            {
+                return $"{value:F2}";
+            }
+
+            if (currencyCodeToCultureInfo.TryGetValue(currencyCode, out var cultureInfo))
+            {
+                return value?.ToString("C", cultureInfo) ?? string.Empty;
+            }
+
+            return $"{currencyCode} {value:F2}";
         }
     }
 

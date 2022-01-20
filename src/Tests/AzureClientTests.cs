@@ -394,16 +394,18 @@ namespace Tests.IQSharp
             DateTimeOffset jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
             DateTimeOffset jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
             var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
-            const string costEstimateString = "$ 123.45";
+            const string costEstimateString = "$123.45";
 
             // Test Cost Estimate formatting
             var cloudJob = new MockCloudJob();
             cloudJob.Details.CostEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
-            Assert.AreEqual("$ 123.45", cloudJob.GetCostEstimateText());
+            Assert.AreEqual("$123.45", cloudJob.GetCostEstimateText());
             cloudJob.Details.CostEstimate = new MockCostEstimate("BRL", new List<UsageEvent>(), 12f);
-            Assert.AreEqual("R$ 12.00", cloudJob.GetCostEstimateText());
+            Assert.AreEqual("R$ 12,00", cloudJob.GetCostEstimateText());
             cloudJob.Details.CostEstimate = new MockCostEstimate("", new List<UsageEvent>(), 12f);
-            Assert.AreEqual(" 12.00", cloudJob.GetCostEstimateText());
+            Assert.AreEqual("12.00", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("CustomCurrency", new List<UsageEvent>(), 12f);
+            Assert.AreEqual("CustomCurrency 12.00", cloudJob.GetCostEstimateText());
             cloudJob.Details.CostEstimate = null;
             Assert.AreEqual("", cloudJob.GetCostEstimateText());
 
