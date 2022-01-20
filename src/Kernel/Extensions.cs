@@ -201,6 +201,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             return dist[s1.Length, s2.Length];
         }
+
+        internal static ICommsRouter? GetCommsRouter(this IChannel channel) =>
+            // Workaround for https://github.com/microsoft/jupyter-core/issues/80.
+            channel switch
+            {
+                { CommsRouter: {} router } => router,
+                ChannelWithNewLines channelWithNewLines => channelWithNewLines.BaseChannel.GetCommsRouter(),
+                _ => null
+            };
     }
 
 }
