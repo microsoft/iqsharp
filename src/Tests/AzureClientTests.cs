@@ -441,7 +441,7 @@ namespace Tests.IQSharp
                 ("Creation Time", jobCreationTime.ToString()),
                 ("Begin Execution Time", jobBeginExecutionTime.ToString()),
                 ("End Execution Time", jobEndExecutionTime.ToString()),
-                ("Price Estimate", costEstimateString),
+                ("Cost Estimate", costEstimateString),
             };
             Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
             Assert.AreEqual(expectedValues.Count, table.Columns.Count);

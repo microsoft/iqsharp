@@ -52,7 +52,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
                     ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
-                    ("Price Estimate", cloudJob => cloudJob.GetCostEstimateText()),
+                    ("Cost Estimate", cloudJob => cloudJob.GetCostEstimateText()),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
