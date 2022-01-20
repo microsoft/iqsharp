@@ -400,9 +400,9 @@ namespace Tests.IQSharp
             // Test Cost Estimate formatting
             var cloudJob = new MockCloudJob();
             cloudJob.Details.CostEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
-            Assert.AreEqual(123.45f.ToString("C", new CultureInfo("en-US")), cloudJob.GetCostEstimateText());
+            Assert.AreEqual(123.45f.ToString("C", new CultureInfo("en-US")).Replace(" ", ""), cloudJob.GetCostEstimateText().Replace(" ", ""));
             cloudJob.Details.CostEstimate = new MockCostEstimate("BRL", new List<UsageEvent>(), 12f);
-            Assert.AreEqual(12f.ToString("C", new CultureInfo("pt-BR")), cloudJob.GetCostEstimateText());
+            Assert.AreEqual(12f.ToString("C", new CultureInfo("pt-BR")).Replace(" ", ""), cloudJob.GetCostEstimateText().Replace(" ", ""));
             cloudJob.Details.CostEstimate = new MockCostEstimate("", new List<UsageEvent>(), 12f);
             Assert.AreEqual("12.00", cloudJob.GetCostEstimateText());
             cloudJob.Details.CostEstimate = new MockCostEstimate("CustomCurrency", new List<UsageEvent>(), 12f);
