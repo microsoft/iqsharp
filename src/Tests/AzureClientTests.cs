@@ -383,20 +383,73 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task TestCloudJobExtensions()
+        public void TestCloudJobExtensions()
         {
-            var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
-            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
-            var jobDetails = new JobDetails(containerUri: "",
-                                            inputDataFormat: "",
-                                            providerId: "",
-                                            target: "")
-            {
-            };
-            // var cloudJob = new CloudJob(azureWorkspace, )
+            const string jobId = "myjobid";
+            const string jobName = "myjobname";
+            JobStatus jobStatus = JobStatus.Succeeded;
+            const string jobProviderId = "microsoft";
+            const string jobTarget = "microsoft.paralleltempering-parameterfree.cpu";
+            DateTimeOffset jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
+            DateTimeOffset jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
+            DateTimeOffset jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
+            var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            const string costEstimateString = "$ 123.45";
 
-            // CloudJobExtensions.GetCostEstimateText
+            // Test Cost Estimate formatting
+            var cloudJob = new MockCloudJob();
+            cloudJob.Details.CostEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            Assert.AreEqual("$ 123.45", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("BRL", new List<UsageEvent>(), 12f);
+            Assert.AreEqual("R$ 12.00", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("", new List<UsageEvent>(), 12f);
+            Assert.AreEqual(" 12.00", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = null;
+            Assert.AreEqual("", cloudJob.GetCostEstimateText());
+
+            // Test CloudJob to Dictionary
+            cloudJob = new MockCloudJob(id: jobId);
+            cloudJob.Details.Name = jobName;
+            cloudJob.Details.Status = jobStatus;
+            cloudJob.Details.ProviderId = jobProviderId;
+            cloudJob.Details.Target = jobTarget;
+            cloudJob.Details.CreationTime = jobCreationTime;
+            cloudJob.Details.BeginExecutionTime = jobBeginExecutionTime;
+            cloudJob.Details.EndExecutionTime = jobEndExecutionTime;
+            cloudJob.Details.CostEstimate = costEstimate;
+            var dictionary = cloudJob.ToDictionary();
+            Assert.AreEqual(jobId, dictionary["id"]);
+            Assert.AreEqual(jobName, dictionary["name"]);
+            Assert.AreEqual(jobStatus.ToString(), dictionary["status"]);
+            Assert.AreEqual(cloudJob.Uri.ToString(), dictionary["uri"]);
+            Assert.AreEqual(jobProviderId, dictionary["provider"]);
+            Assert.AreEqual(jobTarget, dictionary["target"]);
+            Assert.AreEqual(cloudJob.Details.CreationTime, dictionary["creation_time"]);
+            Assert.AreEqual(cloudJob.Details.BeginExecutionTime, dictionary["begin_execution_time"]);
+            Assert.AreEqual(cloudJob.Details.EndExecutionTime, dictionary["end_execution_time"]);
+            Assert.AreEqual(costEstimateString, dictionary["cost_estimate"]);
+            
+            // Test CloudJob to JupyterTable
+            var cloudJobs = new List<CloudJob> { cloudJob, new MockCloudJob() };
+            var table = cloudJobs.ToJupyterTable();
+            var expectedValues = new List<(string, string)>
+            {
+                ("Job Name", jobName),
+                ("Job ID", $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{jobId}</a>"),
+                ("Job Status", jobStatus.ToString()),
+                ("Target", jobTarget),
+                ("Creation Time", jobCreationTime.ToString()),
+                ("Begin Execution Time", jobBeginExecutionTime.ToString()),
+                ("End Execution Time", jobEndExecutionTime.ToString()),
+                ("Price Estimate", costEstimateString),
+            };
+            Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
+            Assert.AreEqual(expectedValues.Count, table.Columns.Count);
+            for (int columnIndex = 0; columnIndex < expectedValues.Count; columnIndex++)
+            {
+                Assert.AreEqual(expectedValues[columnIndex].Item1, table.Columns[columnIndex].Item1);
+                Assert.AreEqual(expectedValues[columnIndex].Item2, table.Columns[columnIndex].Item2(cloudJob));
+            }
         }
     }
 }

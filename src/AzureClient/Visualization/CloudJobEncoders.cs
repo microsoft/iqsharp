@@ -52,14 +52,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
                     ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
-                    ("Cost Estimate", cloudJob => cloudJob.GetCostEstimateText()),
+                    ("Price Estimate", cloudJob => cloudJob.GetCostEstimateText()),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
 
         internal static string GetCostEstimateText(this CloudJob cloudJob) =>
             cloudJob?.Details?.CostEstimate == null ? String.Empty :
-                                                      $"{CurrencyHelper.GetCurrencySymbol(cloudJob.Details.CostEstimate?.CurrencyCode)} {cloudJob.Details.CostEstimate?.EstimatedTotal}";
+                                                      $"{CurrencyHelper.GetCurrencySymbol(cloudJob.Details.CostEstimate?.CurrencyCode)} {cloudJob.Details.CostEstimate?.EstimatedTotal:0.00}";
     }
 
     internal static class CurrencyHelper
@@ -67,7 +67,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private static Dictionary<string,string> currencyCodeToSymbol = new Dictionary<string, string>();
         static CurrencyHelper()
         {
-            foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.AllCultures))
+            foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.AllCultures)
+                                                   .Where((c) => !string.IsNullOrEmpty(c.Name) && !c.IsNeutralCulture))
             {
                 try
                 {
