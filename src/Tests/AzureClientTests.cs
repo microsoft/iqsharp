@@ -457,7 +457,7 @@ namespace Tests.IQSharp
             };
             Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
             Assert.AreEqual(expectedValues.Count, table.Columns.Count);
-            foreach ((var expected, var actual) in Enumerable.Zip(expectedValues, table.Column))
+            foreach ((var expected, var actual) in Enumerable.Zip(expectedValues, table.Columns))
             {
                 Assert.AreEqual(expected.Item1, actual.Item1);
                 Assert.AreEqual(expected.Item2, actual.Item2(cloudJob));
