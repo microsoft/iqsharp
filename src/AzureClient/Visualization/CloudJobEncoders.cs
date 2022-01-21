@@ -37,6 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ["creation_time"] = cloudJob.Details.CreationTime?.ToUniversalTime(),
                 ["begin_execution_time"] = cloudJob.Details.BeginExecutionTime?.ToUniversalTime(),
                 ["end_execution_time"] = cloudJob.Details.EndExecutionTime?.ToUniversalTime(),
+                ["cost_estimate"] = cloudJob.GetCostEstimateText(),
             };
 
         internal static Table<CloudJob> ToJupyterTable(this IEnumerable<CloudJob> jobsList) =>
@@ -51,9 +52,59 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ("Creation Time", cloudJob => cloudJob.Details.CreationTime?.ToString() ?? string.Empty),
                     ("Begin Execution Time", cloudJob => cloudJob.Details.BeginExecutionTime?.ToString() ?? string.Empty),
                     ("End Execution Time", cloudJob => cloudJob.Details.EndExecutionTime?.ToString() ?? string.Empty),
+                    ("Cost Estimate", cloudJob => cloudJob.GetCostEstimateText()),
                 },
                 Rows = jobsList.OrderByDescending(job => job.Details.CreationTime).ToList(),
             };
+
+        internal static string GetCostEstimateText(this CloudJob cloudJob) =>
+            cloudJob?.Details?.CostEstimate == null
+            ? String.Empty
+            : CurrencyHelper.FormatValue(cloudJob.Details.CostEstimate?.CurrencyCode,
+                                         cloudJob.Details.CostEstimate?.EstimatedTotal);
+    }
+
+    internal static class CurrencyHelper
+    {
+        private static Dictionary<string, CultureInfo> currencyCodeToCultureInfo = new Dictionary<string, CultureInfo>();
+        static CurrencyHelper()
+        {
+            foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.AllCultures)
+                                                   .Where((c) => !string.IsNullOrEmpty(c.Name) && !c.IsNeutralCulture))
+            {
+                try
+                {
+                    var regionInfo = new RegionInfo(cultureInfo.Name);
+                    currencyCodeToCultureInfo.TryAdd(regionInfo.ISOCurrencySymbol, cultureInfo);
+                }
+                catch {}
+            }
+        }
+
+        public static CultureInfo? GetCultureInfoForCurrencyCode(string currencyCode) =>
+            currencyCodeToCultureInfo.TryGetValue(currencyCode, out var cultureInfo)
+            ? cultureInfo
+            : (CultureInfo?) null;
+
+        public static string FormatValue(string? currencyCode, float? value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(currencyCode))
+            {
+                return $"{value:F2}";
+            }
+
+            if (currencyCodeToCultureInfo.TryGetValue(currencyCode, out var cultureInfo))
+            {
+                return value?.ToString("C", cultureInfo) ?? string.Empty;
+            }
+
+            return $"{currencyCode} {value:F2}";
+        }
     }
 
     /// <summary>

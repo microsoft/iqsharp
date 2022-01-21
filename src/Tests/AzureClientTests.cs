@@ -5,10 +5,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
@@ -379,6 +380,87 @@ namespace Tests.IQSharp
                 Assert.AreEqual(CredentialType.Environment, lastArgs.CredentialType);
                 Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
                 Assert.AreEqual(true, lastArgs.UseCustomStorage);
+            }
+        }
+
+        [TestMethod]
+        public void TestCloudJobExtensions()
+        {
+            // Note about currency formatting:
+            //   It seems that there is a differency of implementations when using the "C" currency
+            //   formatting accross different OSs.
+            //   For example, in my dev box I was getting "R$ 12.00" and in the build agent 
+            //   it was producing "R$12,00" even when explicitly passing the CultureInfo
+            //   So instead of using the expected string literals, we are using 
+            //      .ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD")
+            //   to guarantee consistency in the unit test.
+
+            const string jobId = "myjobid";
+            const string jobName = "myjobname";
+            var jobStatus = JobStatus.Succeeded;
+            const string jobProviderId = "microsoft";
+            const string jobTarget = "microsoft.paralleltempering-parameterfree.cpu";
+            var jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
+            var jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
+            var jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
+            var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            var costEstimateString = 123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD"));
+
+            // Test Cost Estimate formatting
+            var cloudJob = new MockCloudJob();
+            cloudJob.Details.CostEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            Assert.AreEqual(123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD")), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("BRL", new List<UsageEvent>(), 12f);
+            Assert.AreEqual(12f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("BRL")), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("", new List<UsageEvent>(), 12f);
+            Assert.AreEqual(12f.ToString("F2"), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("CustomCurrency", new List<UsageEvent>(), 12f);
+            Assert.AreEqual($"CustomCurrency {12f:F2}", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = null;
+            Assert.AreEqual("", cloudJob.GetCostEstimateText());
+
+            // Test CloudJob to Dictionary
+            cloudJob = new MockCloudJob(id: jobId);
+            cloudJob.Details.Name = jobName;
+            cloudJob.Details.Status = jobStatus;
+            cloudJob.Details.ProviderId = jobProviderId;
+            cloudJob.Details.Target = jobTarget;
+            cloudJob.Details.CreationTime = jobCreationTime;
+            cloudJob.Details.BeginExecutionTime = jobBeginExecutionTime;
+            cloudJob.Details.EndExecutionTime = jobEndExecutionTime;
+            cloudJob.Details.CostEstimate = costEstimate;
+            var dictionary = cloudJob.ToDictionary();
+            Assert.AreEqual(jobId, dictionary["id"]);
+            Assert.AreEqual(jobName, dictionary["name"]);
+            Assert.AreEqual(jobStatus.ToString(), dictionary["status"]);
+            Assert.AreEqual(cloudJob.Uri.ToString(), dictionary["uri"]);
+            Assert.AreEqual(jobProviderId, dictionary["provider"]);
+            Assert.AreEqual(jobTarget, dictionary["target"]);
+            Assert.AreEqual(cloudJob.Details.CreationTime, dictionary["creation_time"]);
+            Assert.AreEqual(cloudJob.Details.BeginExecutionTime, dictionary["begin_execution_time"]);
+            Assert.AreEqual(cloudJob.Details.EndExecutionTime, dictionary["end_execution_time"]);
+            Assert.AreEqual(costEstimateString, dictionary["cost_estimate"]);
+            
+            // Test CloudJob to JupyterTable
+            var cloudJobs = new List<CloudJob> { cloudJob, new MockCloudJob() };
+            var table = cloudJobs.ToJupyterTable();
+            var expectedValues = new List<(string, string)>
+            {
+                ("Job Name", jobName),
+                ("Job ID", $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{jobId}</a>"),
+                ("Job Status", jobStatus.ToString()),
+                ("Target", jobTarget),
+                ("Creation Time", jobCreationTime.ToString()),
+                ("Begin Execution Time", jobBeginExecutionTime.ToString()),
+                ("End Execution Time", jobEndExecutionTime.ToString()),
+                ("Cost Estimate", costEstimateString),
+            };
+            Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
+            Assert.AreEqual(expectedValues.Count, table.Columns.Count);
+            foreach ((var expected, var actual) in Enumerable.Zip(expectedValues, table.Columns))
+            {
+                Assert.AreEqual(expected.Item1, actual.Item1);
+                Assert.AreEqual(expected.Item2, actual.Item2(cloudJob));
             }
         }
     }
