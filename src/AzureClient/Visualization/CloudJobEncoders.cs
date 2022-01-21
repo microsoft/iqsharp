@@ -58,9 +58,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
 
         internal static string GetCostEstimateText(this CloudJob cloudJob) =>
-            cloudJob?.Details?.CostEstimate == null ? String.Empty :
-                                                      CurrencyHelper.FormatValue(cloudJob.Details.CostEstimate?.CurrencyCode,
-                                                                                 cloudJob.Details.CostEstimate?.EstimatedTotal);
+            cloudJob?.Details?.CostEstimate == null
+            ? String.Empty
+            : CurrencyHelper.FormatValue(cloudJob.Details.CostEstimate?.CurrencyCode,
+                                         cloudJob.Details.CostEstimate?.EstimatedTotal);
     }
 
     internal static class CurrencyHelper
