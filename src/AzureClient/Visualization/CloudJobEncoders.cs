@@ -86,7 +86,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? cultureInfo
             : (CultureInfo?) null;
 
-        public static string FormatValue(string? currencyCode, decimal? value)
+        public static string FormatValue(string? currencyCode, float? value)
         {
             if (value == null)
             {
