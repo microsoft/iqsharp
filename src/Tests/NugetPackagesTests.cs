@@ -24,7 +24,7 @@ namespace Tests.IQSharp
         /// We use a known-good version to avoid breaking IQ# tests due to changes in Libraries
         /// also, to make sure an end-to-end QDK build does not have circular build dependencies
         /// between Libraries and IQ#.
-        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.12.20070124");
+        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.20.2111176228-beta");
 
         public NugetPackages Init()
         {
@@ -88,7 +88,7 @@ namespace Tests.IQSharp
             using (var context = new SourceCacheContext())
             {
                 await mgr.FindDependencies(pkgId, context);
-                Assert.AreEqual(144, mgr.AvailablePackages.Count());
+                Assert.AreEqual(165, mgr.AvailablePackages.Count());
             }
         }
 
@@ -103,8 +103,8 @@ namespace Tests.IQSharp
                 await mgr.FindDependencies(pkgId, context);
                 var list = mgr.ResolveDependencyGraph(pkgId).ToArray();
 
-                Assert.AreEqual(144, mgr.AvailablePackages.Count());
-                Assert.AreEqual(107, list.Length);
+                Assert.AreEqual(165, mgr.AvailablePackages.Count());
+                Assert.AreEqual(117, list.Length);
             }
         }
 
@@ -119,7 +119,7 @@ namespace Tests.IQSharp
             {
                 var dependencies = await mgr.GetPackageDependencies(pkgId, context);
 
-                Assert.AreEqual(107, dependencies.Count());
+                Assert.AreEqual(117, dependencies.Count());
             }
         }
 
