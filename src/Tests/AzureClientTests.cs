@@ -404,7 +404,7 @@ namespace Tests.IQSharp
             var jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
             var jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
             var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
-            string costEstimateString = 123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD"));
+            var costEstimateString = 123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD"));
 
             // Test Cost Estimate formatting
             var cloudJob = new MockCloudJob();
