@@ -386,6 +386,15 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestCloudJobExtensions()
         {
+            // Note about currency formatting:
+            //   It seems that there is a differency of implementations when using the "C" currency
+            //   formatting accross different OSs.
+            //   For example, in my dev box I was getting "R$ 12.00" and in the build agent 
+            //   it was producing "R$12,00" even when explicitly passing the CultureInfo
+            //   So instead of using the expected string literals, we are using 
+            //      .ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD")
+            //   to guarantee consistency in the unit test.
+
             const string jobId = "myjobid";
             const string jobName = "myjobname";
             JobStatus jobStatus = JobStatus.Succeeded;

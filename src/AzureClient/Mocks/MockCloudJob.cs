@@ -11,6 +11,15 @@ using System.Collections.Generic;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// This class is a wrapper of the Azure Quantum SDK data model class
+    /// `Azure.Quantum.Jobs.Models.CostEstimate`
+    /// The data model is auto-generated and the generated classes have immutable
+    /// properties (with only getters), and only internal constructors.
+    /// To allow us to mock the class and initialize objects for unit tests,
+    /// we use the MockHelper to instantiate from an internal constructor
+    /// and to set/initialize immutable properties.
+    /// </summary>
     public class MockCostEstimate
     {
         public MockCostEstimate(string currencyCode, IReadOnlyList<UsageEvent> events, float? estimatedTotal)
@@ -38,6 +47,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public CostEstimate InternalCostEstimate { get; }
     }
 
+    /// <summary>
+    /// This class is a mock of the Azure Quantum SDK data model class
+    /// `Azure.Quantum.Jobs.Models.JobDetails`
+    /// The data model is auto-generated and the generated classes have immutable
+    /// properties (with only getters), and no way to initialize them.
+    /// To allow us to mock the class and initialize objects for unit tests,
+    /// we use the MockHelper to set/initialize immutable properties.
+    /// </summary>
     internal class MockJobDetails : JobDetails
     {
         public MockJobDetails(string containerUri, string inputDataFormat, string providerId, string target)

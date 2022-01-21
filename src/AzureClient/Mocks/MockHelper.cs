@@ -9,9 +9,16 @@ using System.Reflection;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// This class is used to set immutable and unitializable properties present
+    /// in the Azure Quantum SDK data model.
+    /// The data model is auto-generated and the generated classes have immutable
+    /// properties (with only getters), and sometimes internal constructors and
+    /// no public constructors.
+    /// </summary>
     internal static class MockHelper
     {
-        public static string FirstCharToLowerCase(this string str)
+        private static string FirstCharToLowerCase(this string str)
         {
             if (string.IsNullOrEmpty(str) || char.IsLower(str[0]))
                 return str;
