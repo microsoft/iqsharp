@@ -397,7 +397,7 @@ namespace Tests.IQSharp
 
             const string jobId = "myjobid";
             const string jobName = "myjobname";
-            JobStatus jobStatus = JobStatus.Succeeded;
+            var jobStatus = JobStatus.Succeeded;
             const string jobProviderId = "microsoft";
             const string jobTarget = "microsoft.paralleltempering-parameterfree.cpu";
             DateTimeOffset jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
