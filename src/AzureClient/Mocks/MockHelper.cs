@@ -51,7 +51,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 field.SetValue(obj, value);
                 return;
             }
-            var fields = typeof(T).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
             throw new NotSupportedException($"No setter or internal field found for property {propertyName} in {typeof(T).FullName}.");
         }
@@ -60,6 +59,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             typeof(T).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
                      .Where((c) => c.GetParameters().Length == parameters.Length)
                      .Select((c) => (T)(c.Invoke(parameters)))
-                     .FirstOrDefault() ?? throw new NotSupportedException($"No constructor found for type {typeof(T).FullName} accepting {parameters.Length} parameters.");
+                     .SingleOrDefault() ?? throw new NotSupportedException($"No constructor found for type {typeof(T).FullName} accepting {parameters.Length} parameters.");
     }
 }
