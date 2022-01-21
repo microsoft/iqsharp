@@ -400,9 +400,9 @@ namespace Tests.IQSharp
             var jobStatus = JobStatus.Succeeded;
             const string jobProviderId = "microsoft";
             const string jobTarget = "microsoft.paralleltempering-parameterfree.cpu";
-            DateTimeOffset jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
-            DateTimeOffset jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
-            DateTimeOffset jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
+            var jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
+            var jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
+            var jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
             var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
             string costEstimateString = 123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD"));
 
