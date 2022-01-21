@@ -457,10 +457,10 @@ namespace Tests.IQSharp
             };
             Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
             Assert.AreEqual(expectedValues.Count, table.Columns.Count);
-            for (int columnIndex = 0; columnIndex < expectedValues.Count; columnIndex++)
+            foreach ((var expected, var actual) in Enumerable.Zip(expectedValues, table.Column))
             {
-                Assert.AreEqual(expectedValues[columnIndex].Item1, table.Columns[columnIndex].Item1);
-                Assert.AreEqual(expectedValues[columnIndex].Item2, table.Columns[columnIndex].Item2(cloudJob));
+                Assert.AreEqual(expected.Item1, actual.Item1);
+                Assert.AreEqual(expected.Item2, actual.Item2(cloudJob));
             }
         }
     }
