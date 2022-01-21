@@ -33,10 +33,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             set => this.InternalCostEstimate.SetReadOnlyProperty<CostEstimate>(nameof(CurrencyCode), value);
         }
 
-        public IReadOnlyList<UsageEvent> Events
-        {
-            get => this.InternalCostEstimate.Events;
-        }
+        public IReadOnlyList<UsageEvent> Events => this.InternalCostEstimate.Events;
 
         public float? EstimatedTotal
         {
