@@ -37,6 +37,7 @@ $artifacts = @{
 } 
 
 if ($OutputFormat -eq 'FileInfo') {
+    Write-Host "Type is FileInfo"
     $artifacts.Packages = $artifacts.Packages | ForEach-Object { Get-Item $_ };
     $artifacts.Assemblies = $artifacts.Assemblies | ForEach-Object { Get-Item $_ };
 }
