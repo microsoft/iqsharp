@@ -241,7 +241,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private async Task<ExecutionResult> RefreshConnectionAsync(IChannel? channel, CancellationToken? cancellationToken = null)
+        // NB: Cancellation tokens are required here to ensure that we always
+        //     correctly propagate cooperative cancellation. This would be a
+        //     bad public API, since we would want external callers to be able
+        //     to opt-in to cooperative cancellation, but since this is a
+        //     private method, we make it required here.
+        private async Task<ExecutionResult> RefreshConnectionAsync(IChannel? channel, CancellationToken cancellationToken)
         {
             if (ActiveWorkspace == null || Credential == null)
             {
@@ -254,7 +259,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace.ResourceGroupName ?? string.Empty,
                 ActiveWorkspace.WorkspaceName ?? string.Empty,
                 ActiveWorkspace.Location ?? string.Empty,
-                Credential);
+                Credential,
+                cancellationToken: cancellationToken);
         }
 
         /// <inheritdoc/>
@@ -265,7 +271,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -300,7 +306,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoOperationName.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -427,7 +433,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NoTarget.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -448,7 +454,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -503,7 +509,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -529,8 +535,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
+                // TODO @cgranade: Update to use HttpClient instead to get
+                //                 cancellation token support.
                 var request = WebRequest.Create(job.OutputDataUri);
-                using var responseStream = request.GetResponse().GetResponseStream();
+                using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
                 return responseStream.ToHistogram(Logger).ToExecutionResult();
             }
             catch (Exception e)
@@ -561,13 +569,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 jobId = MostRecentJobId;
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
             }
 
-            var job = await ActiveWorkspace.GetJobAsync(jobId);
+            var job = await ActiveWorkspace.GetJobAsync(jobId, cancellationToken ?? default);
             if (job == null)
             {
                 channel?.Stderr($"Job ID {jobId} not found in current Azure Quantum workspace.");
@@ -586,7 +594,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
@@ -634,7 +642,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.NotConnected.ToExecutionResult();
             }
 
-            var connectionResult = await RefreshConnectionAsync(channel);
+            var connectionResult = await RefreshConnectionAsync(channel, cancellationToken ?? default);
             if (connectionResult.Status != ExecuteStatus.Ok)
             {
                 return connectionResult;
