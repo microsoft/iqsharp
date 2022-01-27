@@ -224,6 +224,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ActiveWorkspace = workspace;
                 AvailableProviders = providers;
 
+                Logger.LogDebug("Connected to workspace with {NProviders} available providers.", providers.Count);
+
                 return ExecuteStatus.Ok.ToExecutionResult();
             }
             catch (TaskCanceledException tce)
@@ -248,6 +250,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         //     private method, we make it required here.
         private async Task<ExecutionResult> RefreshConnectionAsync(IChannel? channel, CancellationToken cancellationToken)
         {
+            Logger.LogDebug("Refreshing Azure connection.");
             if (ActiveWorkspace == null || Credential == null)
             {
                 return AzureClientError.NotConnected.ToExecutionResult();
@@ -312,7 +315,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var machine =AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
+            var machine = AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
             if (machine == null)
             {
                 // We should never get here, since ActiveTarget should have already been validated at the time it was set.
@@ -345,6 +348,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
+                Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
                 var job = await entryPoint.SubmitAsync(machine, submissionContext);
                 channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
