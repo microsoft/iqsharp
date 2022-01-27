@@ -6,7 +6,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Core;
@@ -20,6 +22,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type InputType { get; }
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
+        private ILogger? Logger { get; }
 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
@@ -31,16 +34,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="outputType">Specifies the output parameter type for the
         /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo)
+        /// <param name="logger">Logger used to report internal diagnostics.</param>
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, ILogger? logger)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
             OutputType = outputType;
             OperationInfo = operationInfo;
+            Logger = logger;
         }
 
         /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
             var parameterTypes = new List<Type>();
             var parameterValues = new List<object>();
@@ -74,6 +79,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 1 => parameterValues.Single(),
                 _ => InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray())
             };
+
+            try
+            {
+                Logger.LogDebug(
+                    "About to submit entry point {Name}.",
+                    (((dynamic)EntryPointInfo).Operation as Type)?.FullName
+                );
+            }
+            catch {}
 
             // Find and invoke the method on IQuantumMachine that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context)
