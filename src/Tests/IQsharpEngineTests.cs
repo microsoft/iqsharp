@@ -736,7 +736,7 @@ namespace Tests.IQSharp
                         Possibly similar magic commands:
                         - %lsmagic
                         - %lsopen
-                        - %estimate
+                        - %debug
 
                         To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
                     "
