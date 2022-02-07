@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using System;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
@@ -35,6 +36,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private void OnKernelStarted(ServiceProvider serviceProvider)
         {
             var eventService = serviceProvider.GetService<IEventService>();
+            serviceProvider.AddBuiltInMagicSymbols();
             eventService?.Trigger<KernelStartedEvent, IQSharpKernelApp>(this);
         }
     }

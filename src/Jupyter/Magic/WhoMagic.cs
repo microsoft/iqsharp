@@ -1,13 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Jupyter;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A magic command that can be used to query the functions and operations

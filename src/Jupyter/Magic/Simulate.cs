@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A magic command that can be used to simulate operations and functions

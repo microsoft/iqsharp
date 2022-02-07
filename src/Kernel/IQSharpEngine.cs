@@ -64,32 +64,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         internal async Task<TService> GetEngineService<TService>() =>
             await services.GetRequiredServiceInBackground<TService>();
 
-        /// <summary>
-        ///     The simple names of those assemblies which do not need to be
-        ///     searched for display encoders or magic commands.
-        /// </summary>
-        internal static readonly IImmutableSet<string> MundaneAssemblies =
-            new string[]
-            {
-                // These assemblies are classical libraries used by IQ#, and
-                // do not contain any quantum code.
-                "NumSharp.Core",
-                "Newtonsoft.Json",
-                "Microsoft.CodeAnalysis.CSharp.resources",
-
-                // These assemblies are part of the Quantum Development Kit
-                // built before IQ# (in dependency ordering), and thus cannot
-                // contain types relevant to IQ#. While it doesn't hurt to scan
-                // these assemblies, we can leave them out for performance.
-                "Microsoft.Quantum.QSharp.Core",
-                "Microsoft.Quantum.QSharp.Foundation",
-                "Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime",
-                "Microsoft.Quantum.Targets.Interfaces",
-                "Microsoft.Quantum.Simulators",
-                "Microsoft.Quantum.Simulation.Common",
-                "Microsoft.Quantum.Runtime.Core",
-            }
-            .ToImmutableHashSet();
 
         /// <inheritdoc />
         public override Task Initialized => initializedSource.Task;
@@ -299,7 +273,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 foreach (var assembly in references.Assemblies
                                                    .Select(asm => asm.Assembly)
                                                    .Where(asm => !knownAssemblies.Contains(asm.GetName()))
-                                                   .Where(asm => !MundaneAssemblies.Contains(asm.GetName().Name))
+                                                   .Where(asm => !MagicSymbolResolver.MundaneAssemblies.Contains(asm.GetName().Name))
                 )
                 {
                     // Look for display encoders in the new assembly.

@@ -1,14 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.Jupyter;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///      Represents information about a single magic symbol returned
@@ -55,10 +53,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }, logger)
         {
             this.resolver = resolver;
-            if (engine is IQSharpEngine iQSharpEngine)
+            if (engine is BaseEngine baseEngine)
             {
-                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
-                iQSharpEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToHtmlEncoder());
+                baseEngine.RegisterDisplayEncoder(new MagicSymbolSummariesToTextEncoder());
             }
             else
             {
