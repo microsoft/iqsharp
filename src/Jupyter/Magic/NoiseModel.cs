@@ -14,7 +14,6 @@ using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Quantum.IQSharp.Kernel;
 
 namespace Microsoft.Quantum.Experimental
 {
@@ -82,9 +81,9 @@ namespace Microsoft.Quantum.Experimental
             })
         {
             this.NoiseModelSource = noiseModelSource;
-            if (engine is IQSharpEngine iQSharpEngine)
+            if (engine is BaseEngine baseEngine)
             {
-                iQSharpEngine.RegisterDisplayEncoder(new NoiseModelToHtmlDisplayEncoder());
+                baseEngine.RegisterDisplayEncoder(new NoiseModelToHtmlDisplayEncoder());
             }
         }
 

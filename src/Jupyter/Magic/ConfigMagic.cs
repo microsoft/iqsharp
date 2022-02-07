@@ -6,11 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A magic command that sets or queries configuration options.

@@ -9,14 +9,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A specialized resolver for MagicSymbols. 
@@ -26,7 +25,35 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class MagicSymbolResolver : IMagicSymbolResolver
     {
-        private AssemblyInfo[] kernelAssemblies;
+        
+        /// <summary>
+        ///     The simple names of those assemblies which do not need to be
+        ///     searched for display encoders or magic commands.
+        /// </summary>
+        public static readonly IImmutableSet<string> MundaneAssemblies =
+            new string[]
+            {
+                // These assemblies are classical libraries used by IQ#, and
+                // do not contain any quantum code.
+                "NumSharp.Core",
+                "Newtonsoft.Json",
+                "Microsoft.CodeAnalysis.CSharp.resources",
+
+                // These assemblies are part of the Quantum Development Kit
+                // built before IQ# (in dependency ordering), and thus cannot
+                // contain types relevant to IQ#. While it doesn't hurt to scan
+                // these assemblies, we can leave them out for performance.
+                "Microsoft.Quantum.QSharp.Core",
+                "Microsoft.Quantum.QSharp.Foundation",
+                "Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime",
+                "Microsoft.Quantum.Targets.Interfaces",
+                "Microsoft.Quantum.Simulators",
+                "Microsoft.Quantum.Simulation.Common",
+                "Microsoft.Quantum.Runtime.Core",
+            }
+            .ToImmutableHashSet();
+
+        private readonly List<AssemblyInfo> kernelAssemblies = new List<AssemblyInfo>();
         private Dictionary<string, MagicSymbol[]> cache;
         private IServiceProvider services;
         private IReferences references;
@@ -43,14 +70,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.cache = new Dictionary<string, MagicSymbol[]>();
             this.logger = logger;
 
-            this.kernelAssemblies = new[]
-            {
-                new AssemblyInfo(typeof(MagicSymbolResolver).Assembly),
-                new AssemblyInfo(typeof(AzureClient.AzureClient).Assembly)
-            };
             this.services = services;
             this.references = services.GetService<IReferences>();
             this.workspace = services.GetService<IWorkspace>();
+
+            // Add the assmebly containing this type to the resolver.
+            this.AddKernelAssembly<MagicSymbolResolver>();
 
             eventService?.TriggerServiceInitialized<IMagicSymbolResolver>(this);
         }
@@ -119,7 +144,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             // If the assembly cannot possibly contain magic symbols, skip it
             // here.
             var name = assm.Assembly.GetName().Name;
-            if (name.StartsWith("System.") || IQSharpEngine.MundaneAssemblies.Contains(name))
+            if (name.StartsWith("System.") || MundaneAssemblies.Contains(name))
             {
                 return result;
             }
@@ -202,5 +227,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             .AsParallel()
             .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
             .SelectMany(FindMagic);
+
+        /// <inheritdoc />
+        public IMagicSymbolResolver AddKernelAssembly<TAssembly>()
+        {
+            this.kernelAssemblies.Add(new AssemblyInfo(typeof(TAssembly).Assembly));
+            return this;
+        }
     }
 }
