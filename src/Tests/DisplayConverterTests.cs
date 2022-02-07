@@ -28,13 +28,20 @@ namespace Tests.IQSharp
     [TestClass]
     public class DisplayConverterTests
     {
+        public static string Reverse(string s)
+        {
+            char[] charArray = s.ToCharArray();
+            System.Array.Reverse( charArray );
+            return new string( charArray );
+        }
+
         private readonly CommonNativeSimulator.DisplayableState testState = new CommonNativeSimulator.DisplayableState
         {
             QubitIds = new[] {0, 1, 2},
             NQubits = 3,
             Amplitudes = new Dictionary<string, System.Numerics.Complex>(Enumerable
                 .Range(0, 8)
-                .Select(idx => new KeyValuePair<string, System.Numerics.Complex>(System.Convert.ToString(idx, 2), new System.Numerics.Complex(0, idx)))
+                .Select(idx => new KeyValuePair<string, System.Numerics.Complex>(Reverse(System.Convert.ToString(idx, 2)), new System.Numerics.Complex(0, idx)))
             )
         };
 
