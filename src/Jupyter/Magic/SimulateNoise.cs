@@ -11,7 +11,6 @@ using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
@@ -81,10 +80,10 @@ namespace Microsoft.Quantum.Experimental
             this.Logger = logger;
             this.NoiseModelSource = noiseModelSource;
 
-            if (engine is IQSharpEngine iQSharpEngine)
+            if (engine is BaseEngine baseEngine)
             {
-                iQSharpEngine.RegisterDisplayEncoder(new MixedStateToHtmlDisplayEncoder());
-                iQSharpEngine.RegisterDisplayEncoder(new StabilizerStateToHtmlDisplayEncoder(configurationSource));
+                baseEngine.RegisterDisplayEncoder(new MixedStateToHtmlDisplayEncoder());
+                baseEngine.RegisterDisplayEncoder(new StabilizerStateToHtmlDisplayEncoder(configurationSource));
             }
         }
 

@@ -14,7 +14,6 @@ using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Quantum.IQSharp.Kernel;
 using System.Collections.Generic;
 
 namespace Microsoft.Quantum.Experimental
