@@ -22,7 +22,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
-        private IDictionary<string, Complex>? _data = null;
+        // private IDictionary<string, Complex>? _data = null;
+        private IDictionary<BigInteger, Complex>? _data = null;
 
         public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
         {
@@ -31,14 +32,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override bool Callback([MarshalAs(UnmanagedType.LPStr)] string idx, double real, double img)
         {
             if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
-            _data[idx] = new Complex(real, img);
+            // _data[idx] = new Complex(real, img);
+            _data[BigIntegerExtensions.ParseUnsignedBitString(idx)] = new Complex(real, img);
             return true;
         }
         
-        public IDictionary<string, Complex> GetAmplitudes()
+        // public IDictionary<string, Complex> GetAmplitudes()
+        public IDictionary<BigInteger, Complex> GetAmplitudes()
         {
             var count = this.Simulator.QubitManager?.AllocatedQubitsCount ?? 0;
-            _data = new Dictionary<string, Complex>();
+            // _data = new Dictionary<string, Complex>();
+            _data = new Dictionary<BigInteger, Complex>();
             _ = base.Dump();
             return _data;
         }
