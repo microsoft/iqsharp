@@ -25,17 +25,15 @@ requirements:
 
   run:
     - python
-    # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
-    - jupyter_client==6.1.12
-    - pyzmq==19.0.2
+    - jupyter_client>=7.0.2
+    - pyzmq<20.0.0
 
 test:
   requires:
     - notebook
     - python>=3.6
-    # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
-    - jupyter_client==6.1.12
-    - pyzmq==19.0.2
+    - jupyter_client>=7.0.2
+    - pyzmq<20.0.0
     - pip
 
   source_files:
@@ -43,7 +41,7 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pip install jupyter_kernel_test==0.3
+    - pip install jupyter_kernel_test==0.4
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 
