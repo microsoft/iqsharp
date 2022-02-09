@@ -33,7 +33,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
             // _data[idx] = new Complex(real, img);
-            _data[BigIntegerExtensions.ParseUnsignedBitString(idx)] = new Complex(real, img);
+            _data[BigIntegerExtensions.ParseUnsignedLEBitString(idx)] = new Complex(real, img);
             return true;
         }
         
