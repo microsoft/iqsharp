@@ -31,7 +31,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override bool Callback([MarshalAs(UnmanagedType.LPStr)] string idx, double real, double img)
         {
             if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
-            _data[BigIntegerExtensions.ParseUnsignedLEBitString(idx)] = new Complex(real, img);
+            _data[CommonNativeSimulator.DisplayableState.BasisStateLabelToBigInt(idx)] = new Complex(real, img);
             return true;
         }
         
