@@ -16,24 +16,22 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     ///     A magic command that can be used to simulate operations and functions
     ///     on a full-state quantum simulator.
     /// </summary>
-    public class SimulateMagic : AbstractNativeSimulateMagic
+    public class SimulateSparseMagic : AbstractNativeSimulateMagic
     {
         /// <summary>
         ///     Constructs a new magic command given a resolver used to find
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor, ILogger<SimulateMagic> logger) : base(
-            "simulate",
+        public SimulateSparseMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor, ILogger<SimulateSparseMagic> logger) : base(
+            "simulate_sparse",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "Runs a given function or operation on the QuantumSimulator target machine.",
+                Summary = "Runs a given function or operation on the sparse simulator.",
                 Description = @"
-                    This magic command allows executing a given function or operation on the QuantumSimulator, 
-                    which performs a full-state simulation of the given function or operation
+                    This magic command allows executing a given function or operation on the sparse simulator, 
+                    which performs a sparse simulation of the given function or operation
                     and prints the resulting return value.
-
-                    See the [QuantumSimulator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/full-state-simulator) to learn more.
 
                     #### Required parameters
 
@@ -46,14 +44,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     @"
                         Simulate a Q# operation defined as `operation MyOperation() : Result`:
                         ```
-                        In []: %simulate MyOperation
+                        In []: %simulate_sparse MyOperation
                         Out[]: <return value of the operation>
                         ```
                     ".Dedent(),
                     @"
                         Simulate a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
                         ```
-                        In []: %simulate MyOperation a=5 b=10
+                        In []: %simulate_sparse MyOperation a=5 b=10
                         Out[]: <return value of the operation>
                         ```
                     ".Dedent(),
@@ -62,6 +60,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         {
         }
 
-        internal override CommonNativeSimulator CreateNativeSimulator() => new QuantumSimulator();
+        internal override CommonNativeSimulator CreateNativeSimulator() => new SparseSimulator();
     }
 }
