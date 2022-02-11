@@ -27,8 +27,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public AbstractNativeSimulateMagic(string keyword, Documentation docs, ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor, ILogger<AbstractNativeSimulateMagic> logger)
-        : base(keyword, docs, logger)
+        public AbstractNativeSimulateMagic(string keyword, Documentation docs, ISymbolResolver resolver,
+                                           IConfigurationSource configurationSource, IPerformanceMonitor monitor,
+                                           ILogger<AbstractNativeSimulateMagic> logger)
+            : base(keyword, docs, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
