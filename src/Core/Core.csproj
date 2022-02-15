@@ -1,4 +1,4 @@
-0.22.192090-beta0.22.192090-beta<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -38,10 +38,10 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.22.186570-alpha" />
-    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.22.186570-alpha" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.22.186570-alpha" />
-    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.22.186570-alpha" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.22.192090-beta" />
+    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.22.192090-beta" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.22.192090-beta" />
+    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.22.192090-beta" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
