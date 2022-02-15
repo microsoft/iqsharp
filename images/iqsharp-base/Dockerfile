@@ -1,4 +1,4 @@
-# The same image used by mybinder.org
+0.22.192090-beta0.22.192090-beta# The same image used by mybinder.org
 FROM python:3.7-slim-buster
 
 # install the notebook package
