@@ -41,7 +41,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             set => this.InternalCostEstimate.SetReadOnlyProperty<CostEstimate>(nameof(EstimatedTotal), value);
         }
 
-        public CostEstimate InternalCostEstimate { get; }
+        internal CostEstimate InternalCostEstimate { get; }
     }
 
     /// <summary>

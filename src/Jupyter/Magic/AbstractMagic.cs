@@ -164,6 +164,17 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             return inputParameters;
         }
 
+        public static (Dictionary<string, string> Ordinary, Dictionary<string, string> Dashed) SplitDashedParameters(IDictionary<string, string> parameters)
+        {
+            var ordinary = new Dictionary<string, string>();
+            var dashed = new Dictionary<string, string>();
+            foreach (var item in parameters)
+            {
+                (item.Key.StartsWith("--") ? dashed : ordinary).Add(item.Key, item.Value);
+            }
+            return (ordinary, dashed);
+        }
+
         /// <summary>
         ///     A method to be run when the magic command is executed.
         /// </summary>

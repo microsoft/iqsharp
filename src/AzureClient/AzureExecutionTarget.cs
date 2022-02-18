@@ -64,7 +64,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "honeywell.qpu".
         /// </remarks>
-        protected static AzureProvider? GetProvider(string? targetId)
+        internal static AzureProvider? GetProvider(string? targetId)
         {
             if (targetId == null)
             {

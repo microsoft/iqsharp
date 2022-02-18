@@ -84,6 +84,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new CostEstimateToHtmlEncoder());
             }
 
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
