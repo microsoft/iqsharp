@@ -10,7 +10,16 @@ using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal enum AzureProvider { IonQ, Honeywell, QCI, Mock }
+    internal enum AzureProvider
+    {
+        IonQ,
+        Quantinuum,
+        // NB: This provider name is deprecated, but may exist in older
+        //     workspaces and should still be supported.
+        Honeywell,
+        QCI,
+        Mock
+    }
 
     internal class AzureExecutionTarget
     {
@@ -25,10 +34,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
         {
-            AzureProvider.IonQ      => RuntimeCapability.BasicQuantumFunctionality,
-            AzureProvider.Honeywell => RuntimeCapability.BasicMeasurementFeedback,
-            AzureProvider.QCI       => RuntimeCapability.BasicMeasurementFeedback,
-            _                       => RuntimeCapability.FullComputation
+            AzureProvider.IonQ       => RuntimeCapability.BasicQuantumFunctionality,
+            AzureProvider.Quantinuum => RuntimeCapability.BasicMeasurementFeedback,
+            AzureProvider.Honeywell  => RuntimeCapability.BasicMeasurementFeedback,
+            AzureProvider.QCI        => RuntimeCapability.BasicMeasurementFeedback,
+            _                        => RuntimeCapability.FullComputation
         };
 
         /// <summary>
@@ -62,7 +72,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>The <see cref="AzureProvider"/> enum value representing the provider.</returns>
         /// <remarks>
         ///     Valid target IDs are structured as "provider.target".
-        ///     For example, "ionq.simulator" or "honeywell.qpu".
+        ///     For example, "ionq.simulator" or "quantinuum.qpu".
         /// </remarks>
         protected static AzureProvider? GetProvider(string? targetId)
         {

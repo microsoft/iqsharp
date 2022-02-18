@@ -70,10 +70,16 @@ namespace Tests.IQSharp
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.IonQ", executionTarget?.PackageName);
 
+            // Check that deprecated targets still work.
             targetId = "HonEYWEll.targetId";
             executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
+
+            targetId = "QuantiNUUUm.targetId";
+            executionTarget = AzureExecutionTarget.Create(targetId);
+            Assert.AreEqual(targetId, executionTarget?.TargetId);
+            Assert.AreEqual("Microsoft.Quantum.Providers.Quantinuum", executionTarget?.PackageName);
 
             targetId = "qci.target.name.qpu";
             executionTarget = AzureExecutionTarget.Create(targetId);
@@ -150,7 +156,7 @@ namespace Tests.IQSharp
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("ionq", "honeywell", "unrecognized");
+            azureWorkspace?.AddProviders("ionq", "quantinuum", "unrecognized");
 
             // get connection status to verify list of targets
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
@@ -306,7 +312,7 @@ namespace Tests.IQSharp
             // Set up workspace with mock providers
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("ionq", "honeywell");
+            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum");
 
             // Verify that IonQ job fails to compile (QPRGen0)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));
@@ -315,6 +321,11 @@ namespace Tests.IQSharp
             // Verify that Honeywell job can be successfully submitted (QPRGen1)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "honeywell.mock"));
             var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Assert.IsNotNull(job);
+
+            // Verify that Quantinuum job can be successfully submitted (QPRGen1)
+            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "quantinuum.mock"));
+            job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             Assert.IsNotNull(job);
         }
 
