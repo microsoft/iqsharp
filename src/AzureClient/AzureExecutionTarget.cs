@@ -60,7 +60,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// It creates the AzureExecutionTarget instance for the given targetId.
         /// </summary>
-        public static AzureExecutionTarget? Create(string? targetId) => GetProvider(targetId) is null
+        /// <returns>
+        ///     An instance of <see cref="AzureExecutionTarget"/> if
+        ///     <param name="targetId" /> describes a target for a valid
+        ///     provider, and <c>null</c> otherwise.
+        /// </returns>
+        public static AzureExecutionTarget? Create(string? targetId) =>
+            GetProvider(targetId) is null
             ? null
             : new AzureExecutionTarget(targetId);
 
@@ -69,7 +75,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Gets the Azure Quantum provider corresponding to the given execution target.
         /// </summary>
         /// <param name="targetId">The Azure Quantum execution target ID.</param>
-        /// <returns>The <see cref="AzureProvider"/> enum value representing the provider.</returns>
+        /// <returns>
+        ///     The <see cref="AzureProvider"/> enum value representing the
+        ///     provider, or <c>null</c> if <paramref name="targetId"/> does
+        ///     not describe a valid provider.
+        /// </returns>
         /// <remarks>
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "quantinuum.qpu".
