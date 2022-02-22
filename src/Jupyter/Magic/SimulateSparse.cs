@@ -14,7 +14,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A magic command that can be used to simulate operations and functions
-    ///     on a full-state quantum simulator.
+    ///     on a sparse simulator.
     /// </summary>
     public class SimulateSparseMagic : AbstractNativeSimulateMagic
     {
