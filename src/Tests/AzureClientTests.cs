@@ -156,7 +156,7 @@ namespace Tests.IQSharp
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("ionq", "quantinuum", "unrecognized");
+            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
 
             // get connection status to verify list of targets
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));

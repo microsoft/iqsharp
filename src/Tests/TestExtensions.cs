@@ -41,7 +41,7 @@ namespace Tests.IQSharp
             var client = await (await engine).Engine.GetEngineService<IAzureClient>();
             if (client is AzureClient azureClient && azureClient.ActiveWorkspace is MockAzureWorkspace workspace)
             {
-                workspace.AddProviders("ionq", "quantinuum");
+                workspace.AddProviders("ionq", "quantinuum", "honeywell");
             }
             else
             {
