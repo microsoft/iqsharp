@@ -76,7 +76,7 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
-  container: windows:20H2
+  container: mcr.microsoft.com/windows/servercore:ltsc2019
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
