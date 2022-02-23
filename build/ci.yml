@@ -73,6 +73,7 @@ jobs:
   condition: ne(variables['Enable.Conda'], 'false')
 
 - job: "test_conda_contained"
+  dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'ubuntu-18.04'
   container: ubuntu:18.04
