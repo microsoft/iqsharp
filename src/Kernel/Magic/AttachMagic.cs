@@ -34,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Examples = new string []
                 {
                     @"
-                        Attach a debugger to the current IQ# sessiuon:
+                        Attach a debugger to the current IQ# session:
                         ```
                         %attach
                         ```
