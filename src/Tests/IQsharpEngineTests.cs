@@ -183,7 +183,10 @@ namespace Tests.IQSharp
             await Assert.That
                 .UsingEngine()
                     .Input("%sim", 3)
-                        .CompletesTo("%simulate")
+                        .CompletesTo(
+                            "%simulate",
+                            "%simulate_sparse"
+                        )
                     .Input("%experimental.", 14)
                         .CompletesTo(
                             "%experimental.build_info",
