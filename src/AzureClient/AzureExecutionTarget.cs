@@ -30,7 +30,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string? TargetId { get; }
 
-        public virtual string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
+        public virtual string PackageName => GetProvider(TargetId) switch
+        {
+            
+            AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
+            AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
+            AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
+            AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
+            _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
+        };
 
         public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
         {
