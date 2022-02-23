@@ -78,7 +78,5 @@ jobs:
     vmImage: 'ubuntu-18.04'
   container: ubuntu:18.04
   steps:
-  - pwsh: .\test-conda.ps1
-    displayName: "Testing IQ# packages self-contained"
-    workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-    condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+  - template: steps-conda.yml
+  condition: ne(variables['Enable.Conda'], 'false')
