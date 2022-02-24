@@ -76,7 +76,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
 
-            targetId = "QuantiNUUUm.targetId";
+            targetId = "QuantiNUUm.targetId";
             executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.Quantinuum", executionTarget?.PackageName);
