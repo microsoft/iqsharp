@@ -21,6 +21,7 @@ variables:
   Build.Minor: 18
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
+  agent.preferPowerShellOnContainers: false
 
 jobs:
 - job: "iqsharp"
@@ -76,7 +77,7 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
-  container: mcr.microsoft.com/powershell:windowsservercore-1809
+  container: mcr.microsoft.com/powershell:lts-nanoserver-1809
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
