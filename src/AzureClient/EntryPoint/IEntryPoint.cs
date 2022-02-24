@@ -9,6 +9,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Quantum.Runtime;
+using Microsoft.Quantum.Runtime.Submitters;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -26,6 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>The details of the submitted job.</returns>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext);
 
-        public Stream? QirStream { get; }
+        public Task<IQuantumMachineJob> SubmitAsync(IQSharpSubmitter submitter, AzureSubmissionContext submissionContext);
+
+        public Stream QirStream { get; }
     }
 }

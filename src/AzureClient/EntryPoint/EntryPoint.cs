@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
+using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -21,7 +22,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type InputType { get; }
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
-        public Stream? QirStream { get; }
+        public Stream QirStream { get; }
 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
@@ -36,7 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="qirStream">
         ///     Stream from which QIR bitcode for the entry point can be read.
         /// </param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream? qirStream)
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream qirStream)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
@@ -45,8 +46,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             QirStream = qirStream;
         }
 
-        /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
+        private object GetEntryPointInput(AzureSubmissionContext submissionContext)
         {
             var parameterTypes = new List<Type>();
             var parameterValues = new List<object>();
@@ -74,12 +74,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 }
             }
 
-            var entryPointInput = parameterValues.Count switch
+            return parameterValues.Count switch
             {
                 0 => QVoid.Instance,
                 1 => parameterValues.Single(),
                 _ => InputType.GetConstructor(parameterTypes.ToArray()).Invoke(parameterValues.ToArray())
             };
+        }
+
+        /// <inheritdoc/>
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
+        {
+            var entryPointInput = GetEntryPointInput(submissionContext);
 
             // Find and invoke the method on IQuantumMachine that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context)
@@ -95,6 +101,27 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
             var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
+        }
+
+        public Task<IQuantumMachineJob> SubmitAsync(IQSharpSubmitter submitter, AzureSubmissionContext submissionContext)
+        {
+            var entryPointInput = GetEntryPointInput(submissionContext);
+
+            // Find and invoke the method on IQuantumMachine that is declared as:
+            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context, Stream qirStream)
+            var submitMethod = typeof(IQuantumMachine)
+                .GetMethods()
+                .Single(method =>
+                    method.Name == "SubmitAsync"
+                    && method.IsGenericMethodDefinition
+                    && method.GetParameters().Length == 4
+                    && method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == EntryPointInfo.GetType().GetGenericTypeDefinition()
+                    && method.GetParameters()[1].ParameterType.IsGenericMethodParameter
+                    && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext)
+                    && method.GetParameters()[3].ParameterType == typeof(Stream))
+                .MakeGenericMethod(new Type[] { InputType, OutputType });
+            var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext, QirStream };
+            return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
         }
     }
 }
