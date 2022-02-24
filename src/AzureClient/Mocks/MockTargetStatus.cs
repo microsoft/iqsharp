@@ -15,5 +15,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         public override string TargetId { get; }
+
+        public override string ToString() => $"MockTargetStatus {{ TargetId = \"{TargetId}\" }}";
     }
 }
