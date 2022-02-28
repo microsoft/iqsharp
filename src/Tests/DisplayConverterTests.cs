@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
+using System.Numerics;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -32,9 +33,10 @@ namespace Tests.IQSharp
         {
             QubitIds = new[] {0, 1, 2},
             NQubits = 3,
-            Amplitudes = new Dictionary<int, System.Numerics.Complex>(Enumerable
+            Amplitudes = new Dictionary<BigInteger, System.Numerics.Complex>(Enumerable
                 .Range(0, 8)
-                .Select(idx => new KeyValuePair<int, System.Numerics.Complex>(idx, new System.Numerics.Complex(0, idx)))
+                .Select(idx => new KeyValuePair<BigInteger, System.Numerics.Complex>(
+                    new BigInteger(idx), new System.Numerics.Complex(0, idx)))
             )
         };
 
