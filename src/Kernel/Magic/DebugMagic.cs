@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
@@ -21,23 +22,23 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 {
     internal class DebugStateDumper : QuantumSimulator.StateDumper
     {
-        private Complex[]? _data = null;
+        private IDictionary<BigInteger, Complex>? _data = null;
 
         public DebugStateDumper(QuantumSimulator qsim) : base(qsim)
         {
         }
 
-        public override bool Callback(uint idx, double real, double img)
+        public override bool Callback([MarshalAs(UnmanagedType.LPStr)] string idx, double real, double img)
         {
             if (_data == null) throw new Exception("Expected data buffer to be initialized before callback, but it was null.");
-            _data[idx] = new Complex(real, img);
+            _data[CommonNativeSimulator.DisplayableState.BasisStateLabelToBigInt(idx)] = new Complex(real, img);
             return true;
         }
         
-        public Complex[] GetAmplitudes()
+        public IDictionary<BigInteger, Complex> GetAmplitudes()
         {
             var count = this.Simulator.QubitManager?.AllocatedQubitsCount ?? 0;
-            _data = new Complex[1 << ((int)count)];
+            _data = new Dictionary<BigInteger, Complex>();
             _ = base.Dump();
             return _data;
         }
@@ -228,14 +229,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                             Content = new DebugStatusContent
                             {
                                 DebugSession = session.ToString(),
-                                State = new DisplayableState
+                                State = new CommonNativeSimulator.DisplayableState
                                 {
 
                                     QubitIds = qsim.QubitIds.Select(q => (int)q),
                                     NQubits = allocatedQubitsCount,
                                     Amplitudes = new DebugStateDumper(qsim).GetAmplitudes(),
-                                    DivId = debugSessionDivId
-                                }
+                                },
+                                Id = debugSessionDivId
                             }
                         }
                     );

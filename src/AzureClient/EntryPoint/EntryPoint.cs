@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
@@ -22,6 +24,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type InputType { get; }
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
+        private ILogger? Logger { get; }
         public Stream QirStream { get; }
 
         /// <summary>
@@ -37,12 +40,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="qirStream">
         ///     Stream from which QIR bitcode for the entry point can be read.
         /// </param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream qirStream)
+        /// <param name="logger">Logger used to report internal diagnostics.</param>
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, , Stream qirStream, ILogger? logger)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
             OutputType = outputType;
             OperationInfo = operationInfo;
+            Logger = logger;
             QirStream = qirStream;
         }
 
@@ -143,9 +148,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext)
+        public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
             var entryPointInput = GetEntryPointInputObject(submissionContext);
+
+            try
+            {
+                Logger.LogDebug(
+                    "About to submit entry point {Name}.",
+                    (((dynamic)EntryPointInfo).Operation as Type)?.FullName
+                );
+            }
+            catch {}
 
             // Find and invoke the method on IQuantumMachine that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context)

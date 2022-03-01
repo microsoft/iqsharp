@@ -18,6 +18,7 @@ using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Quantum.Experimental;
+using Microsoft.Extensions.DependencyInjection;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -182,7 +183,10 @@ namespace Tests.IQSharp
             await Assert.That
                 .UsingEngine()
                     .Input("%sim", 3)
-                        .CompletesTo("%simulate")
+                        .CompletesTo(
+                            "%simulate",
+                            "%simulate_sparse"
+                        )
                     .Input("%experimental.", 14)
                         .CompletesTo(
                             "%experimental.build_info",
@@ -672,7 +676,8 @@ namespace Tests.IQSharp
         [TestMethod]
         public void TestResolveMagic()
         {
-            var resolver = Startup.Create<MagicSymbolResolver>("Workspace.Broken");
+            var serviceProvider = Startup.CreateServiceProvider("Workspace.Broken");
+            var resolver = serviceProvider.GetRequiredService<IMagicSymbolResolver>();
 
             // We use the null-forgiving operator on symbol below, as the C# 8
             // nullable reference feature does not incorporate the result of
@@ -713,32 +718,13 @@ namespace Tests.IQSharp
                 .UsingEngine()
                 .Input("%lsmagi")
                 .ExecutesWithError(containing:
-                    // NB: Since %attach is only present in local development
-                    //     mode, hints may in general change between debug
-                    //     and release configuration.
-                    #if DEBUG
                     $@"
                         No such magic command %lsmagi.
 
                         Possibly similar magic commands:
                         - %lsmagic
                         - %lsopen
-                        - %attach
-
-                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
                     "
-                    #else
-                    $@"
-                        No such magic command %lsmagi.
-
-                        Possibly similar magic commands:
-                        - %lsmagic
-                        - %lsopen
-                        - %debug
-
-                        To get a list of all available magic commands, run %lsmagic, or visit {KnownUris.MagicCommandReference}.
-                    "
-                    #endif
                     .Dedent().Trim());
 
         [TestMethod]

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -10,6 +10,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Quantum.IQSharp
 {
+    public class DeviceCapabilitiesEvent : Event<DeviceCapabilitiesArgs>
+    {}
+
+    #if NET5_0 || NET6_0 || NET5_0_OR_GREATER
+    public record DeviceCapabilitiesArgs
+    #else
+    public class DeviceCapabilitiesArgs
+    #endif
+    {
+        public uint? NProcessors { get; set; } = null;
+        public uint? TotalMemoryInGiB { get; set; } = null;
+    }
+
     public class PerformanceMonitor : IPerformanceMonitor
     {
         private bool alive = false;
@@ -39,9 +52,25 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
-        public PerformanceMonitor(IEventService? eventService = null)
+        public PerformanceMonitor(IEventService? eventService = null, ILogger<PerformanceMonitor>? logger = null)
         {
             eventService?.TriggerServiceInitialized<IPerformanceMonitor>(this);
+            // Get client capabilities in the background so as to not block the
+            // constructor.
+            new Thread(async () =>
+            {
+                var args = new DeviceCapabilitiesArgs
+                {
+                    NProcessors = (uint)System.Environment.ProcessorCount,
+                    // Round to nearest GiB so as to avoid collecting too much
+                    // entropy.
+                    TotalMemoryInGiB = await PlatformUtils.GetTotalMemory(logger) is ulong nBytes
+                                      ? (uint?)(nBytes / 1024 / 1024 / 1024)
+                                      : (uint?)null
+                };
+                logger?.LogInformation("Reporting device capabilities: {Capabilities}", args);
+                eventService?.Trigger<DeviceCapabilitiesEvent, DeviceCapabilitiesArgs>(args);
+            }).Start();
         }
 
         /// <inheritdoc />
@@ -96,7 +125,7 @@ namespace Microsoft.Quantum.IQSharp
         ///      Given a new simulator performance record, emits an event with
         ///      that performance data.
         /// </summary>
-        internal void ReportSimulatorPerformance(SimulatorPerformanceArgs args)
+        public void ReportSimulatorPerformance(SimulatorPerformanceArgs args)
         {
             this.OnSimulatorPerformanceAvailable?.Invoke(this, args);
         }

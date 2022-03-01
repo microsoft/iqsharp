@@ -103,6 +103,13 @@ class QSharpCallable(object):
         """
         return qsharp.client.simulate(self, **kwargs)
 
+    def simulate_sparse(self, **kwargs) -> Any:
+        """
+        Executes this function or operation on the sparse simulator, returning
+        its output as a Python object.
+        """
+        return qsharp.client.simulate_sparse(self, **kwargs)
+
     def toffoli_simulate(self, **kwargs) -> Any:
         """
         Executes this function or operation on the ToffoliSimulator target

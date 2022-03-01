@@ -8,9 +8,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.QsCompiler.SyntaxTokens;
+using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.Simulation.Common;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -75,71 +78,18 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         }
 
         /// <summary>
-        ///     Adds functionality to a given quantum simulator to display
-        ///     diagnostic output with rich Jupyter formatting.
+        ///     An enumerable source of the significant amplitudes of this state
+        ///     vector and their labels, where significance and labels are
+        ///     defined by the values loaded from <paramref name="configurationSource" />.
         /// </summary>
-        /// <param name="simulator">
-        ///     The simulator to be augmented with Jupyter display
-        ///     functionality.
-        /// </param>
-        /// <param name="channel">
-        ///     The Jupyter display channel to be used to display diagnostic
-        ///     output.
-        /// </param>
-        /// <param name="configurationSource">
-        ///      A source of configuration options to be used to set display
-        ///      preferences. Typically, this will be provided by the service
-        ///      provider configured when an execution engine is constructed.
-        /// </param>
-        /// <returns>
-        ///     The value of <paramref name="simulator" />.
-        /// </returns>
-        public static QuantumSimulator WithJupyterDisplay(this QuantumSimulator simulator, IChannel channel, IConfigurationSource configurationSource)
-        {
-            // First, we disable console-based logging so as to not
-            // duplicate messages.
-            simulator.DisableLogToConsole();
-            // Next, we attach the display channel's standard output handling
-            // to the log event.
-            simulator.OnLog += channel.Stdout;
-
-            // Next, we register the generic version of the DumpMachine callable
-            // as an ICallable with the simulator. Below, we'll provide our
-            // implementation of DumpMachine with the channel and configuration
-            // source we got as arguments. At the moment, there's no direct
-            // way to do this when registering an implementation, so we instead
-            // get an instance of the newly registered callable and set its
-            // properties accordingly.
-            simulator.Register(
-                typeof(Diagnostics.DumpMachine<>), typeof(JupyterDumpMachine<>),
-                signature: typeof(ICallable)
-            );
-
-            var op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpMachine<>)));
-            var concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
-            ((JupyterDumpMachine<QVoid>)concreteOp).Channel = channel;
-            ((JupyterDumpMachine<QVoid>)concreteOp).ConfigurationSource = configurationSource;
-            concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
-            ((JupyterDumpMachine<string>)concreteOp).Channel = channel;
-            ((JupyterDumpMachine<string>)concreteOp).ConfigurationSource = configurationSource;
-
-            // Next, we repeat the whole process for DumpRegister instead of
-            // DumpMachine.
-            simulator.Register(
-                typeof(Diagnostics.DumpRegister<>), typeof(JupyterDumpRegister<>),
-                signature: typeof(ICallable)
-            );
-
-            op = ((GenericCallable)simulator.GetInstance(typeof(Microsoft.Quantum.Diagnostics.DumpRegister<>)));
-            concreteOp = op.FindCallable(typeof(QVoid), typeof(QVoid));
-            ((JupyterDumpRegister<QVoid>)concreteOp).Channel = channel;
-            ((JupyterDumpRegister<QVoid>)concreteOp).ConfigurationSource = configurationSource;
-            concreteOp = op.FindCallable(typeof(string), typeof(QVoid));
-            ((JupyterDumpRegister<string>)concreteOp).Channel = channel;
-            ((JupyterDumpRegister<string>)concreteOp).ConfigurationSource = configurationSource;
-
-            return simulator;
-        }
+        public static IEnumerable<(Complex, string)> SignificantAmplitudes(
+            this CommonNativeSimulator.DisplayableState state, 
+            IConfigurationSource configurationSource
+        ) => state.SignificantAmplitudes(
+            configurationSource.BasisStateLabelingConvention,
+            configurationSource.TruncateSmallAmplitudes,
+            configurationSource.TruncationThreshold
+        );
 
         /// <summary>
         ///     Adds functionality to a given quantum simulator to display
@@ -327,5 +277,79 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                         ) + "]"
                     )
             ) + rowSep + "]";
+
+        
+        internal static IEnumerable<QsDeclarationAttribute> GetAttributesByName(
+            this OperationInfo operation, string attributeName,
+            string namespaceName = "Microsoft.Quantum.Documentation"
+        ) =>
+            operation.Header.Attributes.Where(
+                attribute =>
+                    // Since QsNullable<UserDefinedType>.Item can be null,
+                    // we use a pattern match here to make sure that we have
+                    // an actual UDT to compare against.
+                    attribute.TypeId.Item is UserDefinedType udt &&
+                    udt.Namespace == namespaceName &&
+                    udt.Name == attributeName
+            );
+
+        internal static bool TryAsStringLiteral(this TypedExpression expression, [NotNullWhen(true)] out string? value)
+        {
+            if (expression.Expression is QsExpressionKind<TypedExpression, Identifier, ResolvedType>.StringLiteral literal)
+            {
+                value = literal.Item1;
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
+        }
+        internal static IEnumerable<string> GetStringAttributes(
+            this OperationInfo operation, string attributeName,
+            string namespaceName = "Microsoft.Quantum.Documentation"
+        ) => operation
+            .GetAttributesByName(attributeName, namespaceName)
+            .Select(
+                attribute =>
+                    attribute.Argument.TryAsStringLiteral(out var value)
+                    ? value : null
+            )
+            .Where(value => value != null)
+            // The Where above ensures that all elements are non-nullable,
+            // but the C# compiler doesn't quite figure that out, so we
+            // need to help it with a no-op that uses the null-forgiving
+            // operator.
+            .Select(value => value!);
+
+        internal static IDictionary<string?, string?> GetDictionaryAttributes(
+            this OperationInfo operation, string attributeName,
+            string namespaceName = "Microsoft.Quantum.Documentation"
+        ) => operation
+            .GetAttributesByName(attributeName, namespaceName)
+            .SelectMany(
+                attribute => attribute.Argument.Expression switch
+                {
+                    QsExpressionKind<TypedExpression, Identifier, ResolvedType>.ValueTuple tuple =>
+                        tuple.Item.Length != 2
+                        ? throw new System.Exception("Expected attribute to be a tuple of two strings.")
+                        : ImmutableList.Create((tuple.Item[0], tuple.Item[1])),
+                    _ => ImmutableList<(TypedExpression, TypedExpression)>.Empty
+                }
+            )
+            .ToDictionary(
+                attribute => attribute.Item1.TryAsStringLiteral(out var value) ? value : null,
+                attribute => attribute.Item2.TryAsStringLiteral(out var value) ? value : null
+            );
+
+        internal static ICommsRouter? GetCommsRouter(this IChannel channel) =>
+            // Workaround for https://github.com/microsoft/jupyter-core/issues/80.
+            channel switch
+            {
+                { CommsRouter: {} router } => router,
+                ChannelWithNewLines channelWithNewLines => channelWithNewLines.BaseChannel.GetCommsRouter(),
+                _ => null
+            };
     }
 }

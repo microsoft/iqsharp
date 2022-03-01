@@ -8,9 +8,8 @@ using System.Linq;
 using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     A magic command that can be used to add Q# project references to

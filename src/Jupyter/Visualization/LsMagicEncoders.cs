@@ -11,7 +11,7 @@ using System.Linq;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     internal static class TableExtensions
     {

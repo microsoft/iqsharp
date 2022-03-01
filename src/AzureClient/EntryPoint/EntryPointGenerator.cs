@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
@@ -24,6 +25,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ILogger<EntryPointGenerator> Logger { get; }
         private IWorkspace Workspace { get; }
         private ISnippets Snippets { get; }
+        private IServiceProvider ServiceProvider { get; }
         public IReferences References { get; }
         public AssemblyInfo[] WorkspaceAssemblies { get; set; } = Array.Empty<AssemblyInfo>();
         public AssemblyInfo? SnippetsAssemblyInfo { get; set; }
@@ -35,6 +37,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ISnippets snippets,
             IReferences references,
             ILogger<EntryPointGenerator> logger,
+            IServiceProvider serviceProvider,
             IEventService eventService)
         {
             Compiler = compiler;
@@ -42,6 +45,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Snippets = snippets;
             References = references;
             Logger = logger;
+            ServiceProvider = serviceProvider;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
@@ -202,7 +206,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var entryPointInfo = entryPointInfoType.GetConstructor(new Type[] { typeof(Type) })
                 .Invoke(new object[] { entryPointOperationInfo.RoslynType });
 
-            return new EntryPoint(entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo, EntryPointAssemblyInfo.QirBitcode);
+            return new EntryPoint(
+                entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo, EntryPointAssemblyInfo.QirBitcode,
+                logger: ServiceProvider.GetService<ILogger<EntryPoint>>()
+            );
         }
     }
 }

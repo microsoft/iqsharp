@@ -17,10 +17,10 @@ steps:
   displayName: "Add QuTiP to conda environment."
 
 - task: UseDotNet@2
-  displayName: 'Use .NET Core SDK 3.1.100'
+  displayName: 'Use .NET SDK'
   inputs:
     packageType: sdk
-    version: '3.1.100'
+    useGlobalJson: true
 
 - pwsh: .\bootstrap.ps1
   displayName: "Bootstrap"

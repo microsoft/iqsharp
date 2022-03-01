@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.Simulation.Core;
 using Microsoft.Quantum.Simulation.Simulators;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
-    ///     A magic command that can be used to simulate operations and functions
-    ///     on a full-state quantum simulator.
+    ///     Abstract class for magic commands that can be used to simulate
+    ///     operations and functions on a full-state quantum simulator, using
+    ///     a common C API.
     /// </summary>
-    public class SimulateMagic : AbstractMagic
+    public abstract class AbstractNativeSimulateMagic : AbstractMagic
     {
         private const string ParameterNameOperationName = "__operationName__";
         private readonly IPerformanceMonitor Monitor;
@@ -28,42 +27,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     operations and functions, and a configuration source used to set
         ///     configuration options.
         /// </summary>
-        public SimulateMagic(ISymbolResolver resolver, IConfigurationSource configurationSource, IPerformanceMonitor monitor, ILogger<SimulateMagic> logger) : base(
-            "simulate",
-            new Microsoft.Jupyter.Core.Documentation
-            {
-                Summary = "Runs a given function or operation on the QuantumSimulator target machine.",
-                Description = @"
-                    This magic command allows executing a given function or operation on the QuantumSimulator, 
-                    which performs a full-state simulation of the given function or operation
-                    and prints the resulting return value.
-
-                    See the [QuantumSimulator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/full-state-simulator) to learn more.
-
-                    #### Required parameters
-
-                    - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
-                    or function name that has been defined either in the notebook or in a Q# file in the same folder.
-                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
-                ".Dedent(),
-                Examples = new []
-                {
-                    @"
-                        Simulate a Q# operation defined as `operation MyOperation() : Result`:
-                        ```
-                        In []: %simulate MyOperation
-                        Out[]: <return value of the operation>
-                        ```
-                    ".Dedent(),
-                    @"
-                        Simulate a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`:
-                        ```
-                        In []: %simulate MyOperation a=5 b=10
-                        Out[]: <return value of the operation>
-                        ```
-                    ".Dedent(),
-                }
-            }, logger)
+        public AbstractNativeSimulateMagic(string keyword, Documentation docs, ISymbolResolver resolver,
+                                           IConfigurationSource configurationSource, IPerformanceMonitor monitor,
+                                           ILogger<AbstractNativeSimulateMagic> logger)
+            : base(keyword, docs, logger)
         {
             this.SymbolResolver = resolver;
             this.ConfigurationSource = configurationSource;
@@ -86,6 +53,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override ExecutionResult Run(string input, IChannel channel) =>
             RunAsync(input, channel).Result;
 
+        internal abstract CommonNativeSimulator CreateNativeSimulator();
+
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
         ///     encoding of its arguments.
@@ -100,13 +69,48 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             var maxNQubits = 0L;
 
-            using var qsim = new QuantumSimulator()
-                .WithJupyterDisplay(channel, ConfigurationSource)
+            using var qsim = CreateNativeSimulator()
                 .WithStackTraceDisplay(channel);
-            qsim.OnDisplayableDiagnostic += channel.Display;
+
+            qsim.DisableLogToConsole();
+            qsim.OnLog += channel.Stdout;
+
+            qsim.OnDisplayableDiagnostic += (displayable) =>
+            {
+                if (displayable is CommonNativeSimulator.DisplayableState state && ConfigurationSource.MeasurementDisplayHistogram)
+                {
+                    // Make sure to display the state first so that it's there for the client-side
+                    // JavaScript to pick up.
+                    var id = $"{System.Guid.NewGuid()}";
+                    channel.Display(new DisplayableStateWithId
+                    {
+                        Amplitudes = state.Amplitudes,
+                        NQubits = state.NQubits,
+                        QubitIds = state.QubitIds,
+                        Id = id
+                    });
+
+                    // Tell the client to add a histogram using chart.js.
+                    var commsRouter = channel.GetCommsRouter();
+                    Debug.Assert(commsRouter != null, "Histogram display requires comms router.");
+                    commsRouter.OpenSession(
+                        "iqsharp_state_dump",
+                        new MeasurementHistogramContent()
+                        {
+                            State = state,
+                            Id = id
+                        }
+                    ).Wait();
+                }
+                else
+                {
+                    channel.Display(displayable);
+                }
+            };
+
             qsim.AfterAllocateQubits += (args) =>
             {
-                maxNQubits = System.Math.Max(qsim.QubitManager.AllocatedQubitsCount, maxNQubits);
+                maxNQubits = System.Math.Max(qsim.QubitManager?.AllocatedQubitsCount ?? 0, maxNQubits);
             };
             var stopwatch = Stopwatch.StartNew();
             var value = await symbol.Operation.RunAsync(qsim, inputParameters);

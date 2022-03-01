@@ -173,6 +173,10 @@ class IQSharpClient(object):
         kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('simulate', op, **kwargs)
 
+    def simulate_sparse(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
+        return self._execute_callable_magic('simulate_sparse', op, **kwargs)
+
     def toffoli_simulate(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('toffoli', op, **kwargs)

@@ -12,7 +12,7 @@ using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
 
-namespace Microsoft.Quantum.IQSharp.Kernel
+namespace Microsoft.Quantum.IQSharp.Jupyter
 {
     /// <summary>
     ///     Subinterface of <see cref="Microsoft.Jupyter.Core.ISymbolResolver" />
@@ -30,6 +30,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <param name="symbolName">The magic symbol name to resolve.</param>
         /// <returns>The resolved <see cref="MagicSymbol"/> object, or <c>null</c> if none was found.</returns>
         public new MagicSymbol? Resolve(string symbolName);
+
+        /// <summary>
+        ///     Given a type representing an assembly, adds that assembly to the
+        ///     list of assemblies to be searched for built-in magic commands.
+        /// </summary>
+        public IMagicSymbolResolver AddKernelAssembly<TAssembly>();
 
         /// <summary>
         /// Returns the list of all <see cref="MagicSymbol"/> objects defined in loaded assemblies.
