@@ -184,9 +184,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var options = SubmissionOptions.Default;
             options = options.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 
-            // ToDo: update this comment
-            // Find and invoke the method on IQuantumMachine that is declared as:
-            // Task<IQuantumMachineJob> SubmitAsync<TInput, TOutput>(EntryPointInfo<TInput, TOutput> info, TInput input, SubmissionContext context, Stream qirStream)
+            // Find and invoke the method on IQirSubmitter that is declared as:
+            // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)
             var submitMethod = typeof(IQirSubmitter)
                 .GetMethods()
                 .Single(method =>
