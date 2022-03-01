@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>The details of the submitted job.</returns>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext);
 
-        public Task<IQuantumMachineJob> SubmitAsync(IQSharpSubmitter submitter, AzureSubmissionContext submissionContext);
+        public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext);
 
         public Stream QirStream { get; }
     }

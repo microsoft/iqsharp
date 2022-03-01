@@ -349,11 +349,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 //channel?.Stdout(reader.ReadToEnd());
                 //entryPoint.QirStream.Seek(0, SeekOrigin.Begin);
 
-                var job = await submitter.SubmitAsync(
-                    entryPoint.QirStream, 
-                    $"ENTRYPOINT__{submissionContext.OperationName}", 
-                    new List<Runtime.Argument>(), 
-                    Runtime.Submitters.SubmissionOptions.Default.With(friendlyName: submissionContext.OperationName, shots: 1));
+                //var job = await submitter.SubmitAsync(
+                //    entryPoint.QirStream, 
+                //    $"ENTRYPOINT__{submissionContext.OperationName}", 
+                //    new List<Runtime.Argument>(), 
+                //    Runtime.Submitters.SubmissionOptions.Default.With(friendlyName: submissionContext.OperationName, shots: 1));
+                var job = await entryPoint.SubmitAsync(submitter, submissionContext);
                 channel?.Stdout($"Job successfully submitted.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
                 channel?.Stdout($"   Job ID: {job.Id}");
