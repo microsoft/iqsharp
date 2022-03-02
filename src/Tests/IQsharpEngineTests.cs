@@ -933,6 +933,8 @@ namespace Tests.IQSharp
                 .WithMockAzure()
                 .Input("%azure.target honeywell.mock")
                     .ExecutesSuccessfully()
+                .Input("%azure.target quantinuum.mock")
+                    .ExecutesSuccessfully()
                 .Input("%azure.submit RunTeleport")
                     .ExecutesSuccessfully()
                 .Input("%azure.target ionq.mock")
