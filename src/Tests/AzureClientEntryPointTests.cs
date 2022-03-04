@@ -92,14 +92,14 @@ namespace Tests.IQSharp
 
             var validArguments = new List<(Argument, string)>()
             {
-                (new Argument("myBool", new ArgumentValue.Bool(true)), "true"),
-                (new Argument("myDouble", new ArgumentValue.Double(1.2)), "1.2"),
-                (new Argument("myInt", new ArgumentValue.Int(2)), "2"),
+                (new Argument("myBool", new ArgumentValue.Bool(true)), "\"true\""),
+                (new Argument("myDouble", new ArgumentValue.Double(1.2)), "\"1.2\""),
+                (new Argument("myInt", new ArgumentValue.Int(2)), "\"2\""),
                 (new Argument("myStr", new ArgumentValue.String("\"Hello\"")), "\"Hello\""),
-                (new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)), "PauliX"),
-                (new Argument("myResult", new ArgumentValue.Result(Result.One)), "1"),
-                (new Argument("innerInt", new ArgumentValue.Int(7)), "7"),
-                (new Argument("innerDouble", new ArgumentValue.Double(6.4)), "6.4")
+                (new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)), "\"PauliX\""),
+                (new Argument("myResult", new ArgumentValue.Result(Result.One)), "\"1\""),
+                (new Argument("innerInt", new ArgumentValue.Int(7)), "\"7\""),
+                (new Argument("innerDouble", new ArgumentValue.Double(6.4)), "\"6.4\"")
             };
 
             var job = await entryPoint.SubmitAsync(
