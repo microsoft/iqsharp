@@ -54,7 +54,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             .ToImmutableHashSet();
 
         private readonly List<AssemblyInfo> kernelAssemblies = new List<AssemblyInfo>();
-        private Dictionary<string, MagicSymbol[]> cache;
+        private readonly Dictionary<string, MagicSymbol[]> assemblySymbolCache;
+        private readonly Dictionary<string, MagicSymbol> resolutionCache;
         private IServiceProvider services;
         private IReferences references;
         private IWorkspace workspace;
@@ -67,14 +68,15 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public MagicSymbolResolver(IServiceProvider services, ILogger<MagicSymbolResolver> logger, IEventService eventService)
         {
-            this.cache = new Dictionary<string, MagicSymbol[]>();
+            this.assemblySymbolCache = new Dictionary<string, MagicSymbol[]>();
+            this.resolutionCache = new Dictionary<string, MagicSymbol>();
             this.logger = logger;
 
             this.services = services;
             this.references = services.GetService<IReferences>();
             this.workspace = services.GetService<IWorkspace>();
 
-            // Add the assmebly containing this type to the resolver.
+            // Add the assembly containing this type to the resolver.
             this.AddKernelAssembly<MagicSymbolResolver>();
 
             eventService?.TriggerServiceInitialized<IMagicSymbolResolver>(this);
@@ -116,7 +118,17 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </remarks>
         public MagicSymbol? Resolve(string symbolName)
         {
-            if (symbolName == null || !symbolName.TrimStart().StartsWith("%")) return null;
+            if (symbolName == null || !symbolName.TrimStart().StartsWith("%"))
+            {
+                return null;
+            }
+            lock (resolutionCache)
+            {
+                if (resolutionCache.TryGetValue(symbolName, out var cachedSymbol))
+                {
+                    return cachedSymbol;
+                }
+            }
 
             this.logger.LogDebug($"Looking for magic {symbolName}");
 
@@ -125,6 +137,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 if (symbolName == magic.Name)
                 {
                     this.logger.LogDebug($"Using magic {magic.Name}");
+                    lock (resolutionCache)
+                    {
+                        resolutionCache[symbolName] = magic;
+                    }
                     return magic;
                 }
             }
@@ -149,9 +165,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 return result;
             }
 
-            lock (cache)
+            lock (assemblySymbolCache)
             {
-                if (cache.TryGetValue(assm.Assembly.FullName, out result))
+                if (assemblySymbolCache.TryGetValue(assm.Assembly.FullName, out result))
                 {
                     return result;
                 }
@@ -215,7 +231,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
                 logger.LogInformation("Took {Elapsed} to scan {Assembly} for magic symbols.", stopwatch.Elapsed, assm.Assembly.FullName);
                 result = allMagic.ToArray();
-                cache[assm.Assembly.FullName] = result;
+                assemblySymbolCache[assm.Assembly.FullName] = result;
             }
 
             return result;
