@@ -365,5 +365,23 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string ValidParameterTypes =
+@"
+    operation ValidParameterTypes(
+        myBool: Bool,
+        myDouble: Double,
+        myInt: Int,
+        myStr: String,
+        myPauli: Pauli,
+        myResult: Result,
+        (innerInt: Int, innerDouble: Double)
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        let r = M(q);
+        return r;
+    }
+";
+
     }
 }
