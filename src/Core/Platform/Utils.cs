@@ -64,7 +64,8 @@ namespace Microsoft.Quantum.IQSharp
             {
                 FileName = "/bin/bash",
                 Arguments = "-c \"free --total --bytes\"",
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             };
             using var proc = Process.Start(processStartInfo);
             await foreach (var line in proc.StandardOutput.ReadAllLinesAsync())
