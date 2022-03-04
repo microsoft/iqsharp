@@ -83,6 +83,19 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public async Task QIRSubmission()
+        {
+            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
+            var entryPoint = entryPointGenerator.Generate("HelloQ", null);
+
+            Assert.IsNotNull(entryPoint);
+            var job = await entryPoint.SubmitAsync(
+                new MockQIRSubmitter(new List<Argument>()),
+                new AzureSubmissionContext());
+            Assert.IsNotNull(job);
+        }
+
+        [TestMethod]
         public async Task ValidParameterTypes()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidParameterTypes });
@@ -109,6 +122,39 @@ namespace Tests.IQSharp
                     InputParameters = validArguments.ToDictionary(x => x.Item1.Name, x => x.Item2)
                 });
             Assert.IsNotNull(job);
+        }
+
+        [TestMethod]
+        public async Task InvalidParameterTypes()
+        {
+            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidParameterTypes });
+            
+            var unitEntryPoint = entryPointGenerator.Generate("UnitType", null);
+            Assert.IsNotNull(unitEntryPoint);
+            await Assert.ThrowsExceptionAsync<ArgumentException>(() => unitEntryPoint.SubmitAsync(
+                new MockQIRSubmitter(new List<Argument>()),
+                new AzureSubmissionContext()
+                {
+                    InputParameters = new[] { ("myUnit", "\"()\"") }.ToDictionary(x => x.Item1, x => x.Item2)
+                }));
+
+            var arrayEntryPoint = entryPointGenerator.Generate("ArrayType", null);
+            Assert.IsNotNull(arrayEntryPoint);
+            await Assert.ThrowsExceptionAsync<ArgumentException>(() => arrayEntryPoint.SubmitAsync(
+                new MockQIRSubmitter(new List<Argument>()),
+                new AzureSubmissionContext()
+                {
+                    InputParameters = new[] { ("myArray", "\"[2, 4, 8]\"") }.ToDictionary(x => x.Item1, x => x.Item2)
+                }));
+
+            var rangeEntryPoint = entryPointGenerator.Generate("UnitType", null);
+            Assert.IsNotNull(rangeEntryPoint);
+            await Assert.ThrowsExceptionAsync<ArgumentException>(() => rangeEntryPoint.SubmitAsync(
+                new MockQIRSubmitter(new List<Argument>()),
+                new AzureSubmissionContext()
+                {
+                    InputParameters = new[] { ("myRange", "\"0..2..10\"") }.ToDictionary(x => x.Item1, x => x.Item2)
+                }));
         }
 
         [TestMethod]
