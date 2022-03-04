@@ -147,13 +147,26 @@ namespace Tests.IQSharp
                     InputParameters = new[] { ("myArray", "\"[2, 4, 8]\"") }.ToDictionary(x => x.Item1, x => x.Item2)
                 }));
 
-            var rangeEntryPoint = entryPointGenerator.Generate("UnitType", null);
+            var rangeEntryPoint = entryPointGenerator.Generate("RangeType", null);
             Assert.IsNotNull(rangeEntryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => rangeEntryPoint.SubmitAsync(
                 new MockQIRSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new[] { ("myRange", "\"0..2..10\"") }.ToDictionary(x => x.Item1, x => x.Item2)
+                }));
+
+            var embeddedUnitEntryPoint = entryPointGenerator.Generate("EmbeddedUnitType", null);
+            Assert.IsNotNull(embeddedUnitEntryPoint);
+            await Assert.ThrowsExceptionAsync<ArgumentException>(() => embeddedUnitEntryPoint.SubmitAsync(
+                new MockQIRSubmitter(new List<Argument>()),
+                new AzureSubmissionContext()
+                {
+                    InputParameters = new[] {
+                        ("myInt", "\"2\""),
+                        ("myUnit", "\"()\""),
+                        ("myBool", "\"true\"")
+                    }.ToDictionary(x => x.Item1, x => x.Item2)
                 }));
         }
 

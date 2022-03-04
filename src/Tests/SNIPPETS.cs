@@ -378,8 +378,7 @@ namespace Tests.IQSharp
     ) : Result {
         use q = Qubit();
         H(q);
-        let r = M(q);
-        return r;
+        return M(q);
     }
 ";
 
@@ -388,22 +387,25 @@ namespace Tests.IQSharp
     operation UnitType(myUnit: Unit) : Result {
         use q = Qubit();
         H(q);
-        let r = M(q);
-        return r;
+        return M(q);
     }
     
     operation ArrayType(myArray: Int[]) : Result {
         use q = Qubit();
         H(q);
-        let r = M(q);
-        return r;
+        return M(q);
     }
     
     operation RangeType(myRange: Range) : Result {
         use q = Qubit();
         H(q);
-        let r = M(q);
-        return r;
+        return M(q);
+    }
+    
+    operation EmbeddedUnitType(myInt: Int, myUnit: Unit, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
     }
 ";
 
