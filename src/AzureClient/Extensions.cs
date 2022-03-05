@@ -4,9 +4,7 @@
 #nullable enable
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Extensions.DependencyInjection;
