@@ -25,6 +25,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
         private ILogger? Logger { get; }
+
+        /// <inheritdoc/>
         public Stream QirStream { get; }
 
         /// <summary>
@@ -177,7 +179,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
         }
 
-        public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext)
+        /// <inheritdoc/>
+        public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
 

@@ -73,6 +73,9 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public QsNamespace[] SyntaxTree { get; }
 
+        /// <summary>
+        /// The stream from which QIR bitcode for the entry point can be read.
+        /// </summary>
         public Stream QirBitcode { get; }
 
         /// <summary>

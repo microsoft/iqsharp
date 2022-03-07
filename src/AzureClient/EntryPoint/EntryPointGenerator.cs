@@ -79,6 +79,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return null;
         }
 
+        /// <inheritdoc/>
         public IEntryPoint Generate(string operationName, string? executionTarget,
             RuntimeCapability? runtimeCapability = null, bool forceQir = false)
         {
