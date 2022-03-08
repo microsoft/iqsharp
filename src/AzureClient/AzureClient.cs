@@ -42,9 +42,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatusInfo>? AvailableTargets => 
-            AvailableProviders?
-            .SelectMany(provider => provider.Targets)
-            .Where(t => t.TargetId != null && (t.TargetId.StartsWith(MicrosoftSimulator) || AzureExecutionTarget.GetProvider(t.TargetId) != AzureProvider.Microsoft));
+            AvailableProviders
+            ?.SelectMany(provider => provider.Targets)
+            ?.Where(t => t.TargetId != null && (t.TargetId.StartsWith(MicrosoftSimulator) || AzureExecutionTarget.GetProvider(t.TargetId) != AzureProvider.Microsoft));
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)

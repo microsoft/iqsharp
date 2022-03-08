@@ -115,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             else if (parameterType == typeof(Result))
             {
-                return new ArgumentValue.Result(Newtonsoft.Json.JsonConvert.DeserializeObject<Result>(parameterValue));
+                return new ArgumentValue.Result(Newtonsoft.Json.JsonConvert.DeserializeObject<Result>(parameterValue)!);
             }
             else
             {
@@ -182,6 +182,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
+            if ( QirStream is null )
+            {
+                throw new ArgumentException("A QIR stream is required for submission using a QIR submitter. No QIR stream was found.");
+            }
+
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
 
             var options = SubmissionOptions.Default;
