@@ -353,11 +353,34 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     return AzureClientError.InvalidTarget.ToExecutionResult();
                 }
 
-                var job = await entryPoint.SubmitAsync(submitter, submissionContext);
-                channel?.Stdout($"Job successfully submitted.");
-                channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
-                channel?.Stdout($"   Job ID: {job.Id}");
-                MostRecentJobId = job.Id;
+                try
+                {
+                    Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
+                    var job = await entryPoint.SubmitAsync(submitter, submissionContext);
+                    channel?.Stdout($"Job successfully submitted.");
+                    channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
+                    channel?.Stdout($"   Job ID: {job.Id}");
+                    MostRecentJobId = job.Id;
+                }
+                catch (TaskCanceledException tce)
+                {
+                    throw tce;
+                }
+                catch (ArgumentException e)
+                {
+                    var msg = $"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.";
+                    Logger.LogError(e, msg);
+
+                    channel?.Stderr(msg);
+                    channel?.Stderr(e.Message);
+                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+                }
+                catch (Exception e)
+                {
+                    channel?.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
+                    channel?.Stderr(e.InnerException?.Message ?? e.Message);
+                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+                }
             }
             else
             {
