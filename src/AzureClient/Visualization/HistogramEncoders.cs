@@ -30,6 +30,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 output = "{ \"Histogram\" : [ \"" + output.Trim() + "\", 1.0 ] }";
 
                 // TODO: Make this more general. The corresponding implementation from the az quantum cli is:
+                // https://github.com/microsoft/iqsharp/issues/607
                 //
                 //      if job.target.startswith("microsoft.simulator"):
                 //      
