@@ -38,6 +38,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <summary>
         /// The stream from which QIR bitcode for the entry point can be read.
         /// </summary>
-        public Stream QirStream { get; }
+        public Stream? QirStream { get; }
     }
 }

@@ -27,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ILogger? Logger { get; }
 
         /// <inheritdoc/>
-        public Stream QirStream { get; }
+        public Stream? QirStream { get; }
 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
@@ -43,7 +43,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Stream from which QIR bitcode for the entry point can be read.
         /// </param>
         /// <param name="logger">Logger used to report internal diagnostics.</param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream qirStream, ILogger? logger)
+        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, Stream? qirStream, ILogger? logger)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
