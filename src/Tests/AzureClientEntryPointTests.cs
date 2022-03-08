@@ -99,27 +99,27 @@ namespace Tests.IQSharp
         public async Task ValidParameterTypes()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidParameterTypes });
-            var entryPoint = entryPointGenerator.Generate("ValidParameterTypes", null);
+            var entryPoint = entryPointGenerator.Generate("UseValidParameterTypes", null);
 
             Assert.IsNotNull(entryPoint);
 
-            var validArguments = new List<(Argument, string)>()
+            var validArguments = new Dictionary<Argument, string>()
             {
-                (new Argument("myBool", new ArgumentValue.Bool(true)), "\"true\""),
-                (new Argument("myDouble", new ArgumentValue.Double(1.2)), "\"1.2\""),
-                (new Argument("myInt", new ArgumentValue.Int(2)), "\"2\""),
-                (new Argument("myStr", new ArgumentValue.String("\"Hello\"")), "\"Hello\""),
-                (new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)), "\"PauliX\""),
-                (new Argument("myResult", new ArgumentValue.Result(Result.One)), "\"1\""),
-                (new Argument("innerInt", new ArgumentValue.Int(7)), "\"7\""),
-                (new Argument("innerDouble", new ArgumentValue.Double(6.4)), "\"6.4\"")
+                { new Argument("myBool", new ArgumentValue.Bool(true)), "\"true\"" },
+                { new Argument("myDouble", new ArgumentValue.Double(1.2)), "\"1.2\"" },
+                { new Argument("myInt", new ArgumentValue.Int(2)), "\"2\"" },
+                { new Argument("myStr", new ArgumentValue.String("\"Hello\"")), "\"Hello\"" },
+                { new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)), "\"PauliX\"" },
+                { new Argument("myResult", new ArgumentValue.Result(Result.One)) , "\"1\"" },
+                { new Argument("innerInt", new ArgumentValue.Int(7)) , "\"7\"" },
+                { new Argument("innerDouble", new ArgumentValue.Double(6.4)) , "\"6.4\"" }
             };
 
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(validArguments.Select(x => x.Item1).ToList()),
+                new MockQIRSubmitter(validArguments.Select(x => x.Key).ToList()),
                 new AzureSubmissionContext()
                 {
-                    InputParameters = validArguments.ToDictionary(x => x.Item1.Name, x => x.Item2)
+                    InputParameters = validArguments.ToDictionary(x => x.Key.Name, x => x.Value)
                 });
             Assert.IsNotNull(job);
         }
@@ -129,7 +129,7 @@ namespace Tests.IQSharp
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidParameterTypes });
             
-            var unitEntryPoint = entryPointGenerator.Generate("UnitType", null);
+            var unitEntryPoint = entryPointGenerator.Generate("UseUnitType", null);
             Assert.IsNotNull(unitEntryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => unitEntryPoint.SubmitAsync(
                 new MockQIRSubmitter(new List<Argument>()),
@@ -138,7 +138,7 @@ namespace Tests.IQSharp
                     InputParameters = new[] { ("myUnit", "\"()\"") }.ToDictionary(x => x.Item1, x => x.Item2)
                 }));
 
-            var arrayEntryPoint = entryPointGenerator.Generate("ArrayType", null);
+            var arrayEntryPoint = entryPointGenerator.Generate("UseArrayType", null);
             Assert.IsNotNull(arrayEntryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => arrayEntryPoint.SubmitAsync(
                 new MockQIRSubmitter(new List<Argument>()),
@@ -147,7 +147,7 @@ namespace Tests.IQSharp
                     InputParameters = new[] { ("myArray", "\"[2, 4, 8]\"") }.ToDictionary(x => x.Item1, x => x.Item2)
                 }));
 
-            var rangeEntryPoint = entryPointGenerator.Generate("RangeType", null);
+            var rangeEntryPoint = entryPointGenerator.Generate("UseRangeType", null);
             Assert.IsNotNull(rangeEntryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => rangeEntryPoint.SubmitAsync(
                 new MockQIRSubmitter(new List<Argument>()),
@@ -156,7 +156,7 @@ namespace Tests.IQSharp
                     InputParameters = new[] { ("myRange", "\"0..2..10\"") }.ToDictionary(x => x.Item1, x => x.Item2)
                 }));
 
-            var embeddedUnitEntryPoint = entryPointGenerator.Generate("EmbeddedUnitType", null);
+            var embeddedUnitEntryPoint = entryPointGenerator.Generate("UseEmbeddedUnitType", null);
             Assert.IsNotNull(embeddedUnitEntryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => embeddedUnitEntryPoint.SubmitAsync(
                 new MockQIRSubmitter(new List<Argument>()),

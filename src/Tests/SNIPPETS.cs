@@ -363,7 +363,7 @@ namespace Tests.IQSharp
 
         public static string ValidParameterTypes =
 @"
-    operation ValidParameterTypes(
+    operation UseValidParameterTypes(
         myBool: Bool,
         myDouble: Double,
         myInt: Int,
@@ -380,25 +380,25 @@ namespace Tests.IQSharp
 
         public static string InvalidParameterTypes =
 @"
-    operation UnitType(myUnit: Unit) : Result {
+    operation UseUnitType(myUnit: Unit) : Result {
         use q = Qubit();
         H(q);
         return M(q);
     }
     
-    operation ArrayType(myArray: Int[]) : Result {
+    operation UseArrayType(myArray: Int[]) : Result {
         use q = Qubit();
         H(q);
         return M(q);
     }
     
-    operation RangeType(myRange: Range) : Result {
+    operation UseRangeType(myRange: Range) : Result {
         use q = Qubit();
         H(q);
         return M(q);
     }
     
-    operation EmbeddedUnitType(myInt: Int, myUnit: Unit, myBool: Bool) : Result {
+    operation UseEmbeddedUnitType(myInt: Int, myUnit: Unit, myBool: Bool) : Result {
         use q = Qubit();
         H(q);
         return M(q);

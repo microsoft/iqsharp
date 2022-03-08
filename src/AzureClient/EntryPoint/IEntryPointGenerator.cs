@@ -40,7 +40,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="operationName">The name of the operation to wrap in an entry point.</param>
         /// <param name="executionTarget">The intended execution target for the compiled entry point.</param>
         /// <param name="runtimeCapabilities">The runtime capabilities of the intended execution target.</param>
-        /// <param name="forceQir">When true, uses QIR to generate the entry point.</param>
+        /// <param name="forceQir">When <c>true</c>, uses QIR to generate the entry point.</param>
         /// <returns>The generated entry point.</returns>
         public IEntryPoint Generate(string operationName, string? executionTarget,
             RuntimeCapability? runtimeCapabilities = null, bool forceQir = false);

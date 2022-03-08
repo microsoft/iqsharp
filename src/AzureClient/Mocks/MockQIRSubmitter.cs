@@ -9,6 +9,7 @@ using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -23,40 +24,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             this.ExpectedArguments = expectedArguments;
         }
 
-        private bool IsArgumentValueEqual(ArgumentValue fst, ArgumentValue snd)
-        {
-            if (fst.Type != snd.Type)
+        private bool IsArgumentValueEqual(ArgumentValue fst, ArgumentValue snd) =>
+            (fst, snd) switch
             {
-                return false;
-            }
-
-            if (fst is ArgumentValue.Bool fstBool && snd is ArgumentValue.Bool sndBool)
-            {
-                return fstBool.Value == sndBool.Value;
-            }
-            else if (fst is ArgumentValue.Double fstDouble && snd is ArgumentValue.Double sndDouble)
-            {
-                return fstDouble.Value == sndDouble.Value;
-            }
-            else if (fst is ArgumentValue.Int fstInt && snd is ArgumentValue.Int sndInt)
-            {
-                return fstInt.Value == sndInt.Value;
-            }
-            else if (fst is ArgumentValue.String fstString && snd is ArgumentValue.String sndString)
-            {
-                return fstString.Value == sndString.Value;
-            }
-            else if (fst is ArgumentValue.Pauli fstPauli && snd is ArgumentValue.Pauli sndPauli)
-            {
-                return fstPauli.Value == sndPauli.Value;
-            }
-            else if (fst is ArgumentValue.Result fstResult && snd is ArgumentValue.Result sndResult)
-            {
-                return fstResult.Value == sndResult.Value;
-            }
-
-            return false;
-        }
+                (_, _) when (fst.Type != snd.Type) => false,
+                (ArgumentValue.Bool { Value: var fstVal }, ArgumentValue.Bool { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                (ArgumentValue.Double { Value: var fstVal }, ArgumentValue.Double { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                (ArgumentValue.Int { Value: var fstVal }, ArgumentValue.Int { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                (ArgumentValue.String { Value: var fstVal }, ArgumentValue.String { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                (ArgumentValue.Pauli { Value: var fstVal }, ArgumentValue.Pauli { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                (ArgumentValue.Result { Value: var fstVal }, ArgumentValue.Result { Value: var sndVal }) =>
+                    fstVal == sndVal,
+                _ => false
+            };
 
         private bool IsEqualToExpected(IReadOnlyList<Argument> arguments)
         {
@@ -65,18 +50,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return false;
             }
 
-            for (int i = 0; i < this.ExpectedArguments.Count; i++)
-            {
-                var expected = this.ExpectedArguments[i];
-                var given = arguments[i];
-
-                if (expected.Name != given.Name || !IsArgumentValueEqual(expected.Value, given.Value))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return this.ExpectedArguments
+                .Zip(arguments, (fst, snd) => (fst, snd))
+                .All(tup => tup.fst.Name == tup.snd.Name && IsArgumentValueEqual(tup.fst.Value, tup.snd.Value));
         }
 
         public Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions options)

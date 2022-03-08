@@ -64,7 +64,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
                 }
 
-                string rawParameterValue = submissionContext.InputParameters[parameter.Name];
+                var rawParameterValue = submissionContext.InputParameters[parameter.Name];
                 try
                 {
                     var parameterValue = submissionContext.InputParameters.DecodeParameter(parameter.Name, type: parameter.ParameterType);
