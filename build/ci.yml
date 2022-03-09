@@ -73,11 +73,10 @@ jobs:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "test_conda_contained"
+- job: "test_conda_windows"
   dependsOn: "pack_selfcontained"
-  pool:
-    vmImage: 'windows-2019'
-  container: mcr.microsoft.com/powershell:lts-nanoserver-1809
+  container:
+    image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
+    endpoint: qdkimages-acr
   steps:
-  - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
+    - template: steps-conda.yml
