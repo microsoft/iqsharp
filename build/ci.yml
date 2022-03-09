@@ -77,8 +77,12 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
-  container:
-    image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
-    endpoint: qdkimages-acr
   steps:
-    - template: steps-conda.yml
+    - task: Docker@2
+      inputs:
+        command: login
+        containerRegistry: qdkimages-acr
+        repository: internal/quantum/windows-test
+      displayName: Run conda tests in self-contained Windows OS
+    - script: |
+        docker run qdkimages.azurecr.io/internal/quantum/windows-test:latest
