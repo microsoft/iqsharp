@@ -343,83 +343,61 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             channel?.Stdout($"Submitting {submissionContext.OperationName} to target {ActiveTarget.TargetId}...");
 
-            if (this.ActiveTarget.TargetId.StartsWith(MicrosoftSimulator))
+            try
             {
-                var submitter = SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString);
-                if (submitter == null)
+                // QirSubmitter and CreateMachine have return types with different base types
+                // but both have a SubmitAsync method that returns an IQuantumMachineJob.
+                // Thus, we can branch on whether we need a QIR submitter or a translator,
+                // but can use the same task object to represent both return values.
+                Task<Runtime.IQuantumMachineJob>? jobTask = null;
+                if (this.ActiveTarget.TargetId.StartsWith(MicrosoftSimulator))
                 {
-                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                    return AzureClientError.InvalidTarget.ToExecutionResult();
+                    var submitter = SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString);
+                    if (submitter == null)
+                    {
+                        // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                        channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                        return AzureClientError.InvalidTarget.ToExecutionResult();
+                    }
+                    jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
+                }
+                else
+                {
+                    var machine = AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
+                    if (machine == null)
+                    {
+                        // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                        channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                        return AzureClientError.InvalidTarget.ToExecutionResult();
+                    }
+                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
                 }
 
-                try
-                {
-                    Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
-                    var job = await entryPoint.SubmitAsync(submitter, submissionContext);
-                    channel?.Stdout($"Job successfully submitted.");
-                    channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
-                    channel?.Stdout($"   Job ID: {job.Id}");
-                    MostRecentJobId = job.Id;
-                }
-                catch (TaskCanceledException tce)
-                {
-                    throw tce;
-                }
-                catch (ArgumentException e)
-                {
-                    var msg = $"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.";
-                    Logger.LogError(e, msg);
-
-                    channel?.Stderr(msg);
-                    channel?.Stderr(e.Message);
-                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
-                }
-                catch (Exception e)
-                {
-                    channel?.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
-                    channel?.Stderr(e.InnerException?.Message ?? e.Message);
-                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
-                }
+                Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
+                var job = await jobTask;
+                channel?.Stdout($"Job successfully submitted.");
+                channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
+                channel?.Stdout($"   Job ID: {job.Id}");
+                MostRecentJobId = job.Id;
             }
-            else
+            catch (TaskCanceledException tce)
             {
-                var machine = AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
-                if (machine == null)
-                {
-                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                    return AzureClientError.InvalidTarget.ToExecutionResult();
-                }
+                throw tce;
+            }
+            catch (ArgumentException e)
+            {
+                var msg = $"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.";
+                Logger.LogError(e, msg);
 
-                try
-                {
-                    Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
-                    var job = await entryPoint.SubmitAsync(machine, submissionContext);
-                    channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
-                    channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
-                    channel?.Stdout($"   Job ID: {job.Id}");
-                    MostRecentJobId = job.Id;
-                }
-                catch (TaskCanceledException tce)
-                {
-                    throw tce;
-                }
-                catch (ArgumentException e)
-                {
-                    var msg = $"Failed to parse all expected parameters for Q# operation {submissionContext.OperationName}.";
-                    Logger.LogError(e, msg);
-
-                    channel?.Stderr(msg);
-                    channel?.Stderr(e.Message);
-                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
-                }
-                catch (Exception e)
-                {
-                    channel?.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
-                    channel?.Stderr(e.InnerException?.Message ?? e.Message);
-                    return AzureClientError.JobSubmissionFailed.ToExecutionResult();
-                }
+                channel?.Stderr(msg);
+                channel?.Stderr(e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
+            }
+            catch (Exception e)
+            {
+                channel?.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
+                channel?.Stderr(e.InnerException?.Message ?? e.Message);
+                return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 
             // If the command was not %azure.execute, simply return the job status.
