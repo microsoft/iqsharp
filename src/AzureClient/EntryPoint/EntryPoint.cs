@@ -182,11 +182,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
-            if ( QirStream is null )
-            {
-                throw new ArgumentException("A QIR stream is required for submission using a QIR submitter. No QIR stream was found.");
-            }
-
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
 
             var options = SubmissionOptions.Default;
@@ -204,7 +199,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[2].ParameterType == typeof(IReadOnlyList<Argument>)
                     && method.GetParameters()[3].ParameterType == typeof(SubmissionOptions)
                     );
-            var submitParameters = new object[] { QirStream, $"ENTRYPOINT__{submissionContext.OperationName}", entryPointInput, options };
+            var submitParameters = new object[] { QirStream!, $"ENTRYPOINT__{submissionContext.OperationName}", entryPointInput, options };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
         }
     }

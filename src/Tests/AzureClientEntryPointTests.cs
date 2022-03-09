@@ -86,7 +86,7 @@ namespace Tests.IQSharp
         public async Task QIRSubmission()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
-            var entryPoint = entryPointGenerator.Generate("HelloQ", null);
+            var entryPoint = entryPointGenerator.Generate("HelloQ", null, forceQir: true);
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
@@ -99,7 +99,7 @@ namespace Tests.IQSharp
         public async Task ValidParameterTypes()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidParameterTypes });
-            var entryPoint = entryPointGenerator.Generate("UseValidParameterTypes", null);
+            var entryPoint = entryPointGenerator.Generate("UseValidParameterTypes", null, forceQir: true);
 
             Assert.IsNotNull(entryPoint);
 
