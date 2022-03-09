@@ -127,22 +127,23 @@ class QSharpCallable(object):
         """
         return qsharp.client.trace(self, **kwargs)
 
-    def as_qir(self) -> pqp.QirModule:
+    def as_qir(self) -> bytes:
+        """
+        Returns the QIR bitcode representation of the callable,
+        assuming the callable is an entry point.
+        """
         if getattr(pqp, "failed_with", None) is not None:
             raise pqp.failed_with
-
-        # NB: Cannot load directly from bytes due to a missing feature in
-        #     the llvm-ir crate that causes a similarly missing feature in
-        #     pyqir.parser.
         f = tf.NamedTemporaryFile(delete=False, suffix='.bc')
         f.close()
-        bitcode = qsharp.client.compile_to_qir(self, output=f.name)
-        module = pqp.QirModule(f.name)
+        qsharp.client.compile_to_qir(self, output=f.name)
+        with open(f.name, "rb") as bitcode_file:
+            bitcode = bitcode_file.read()
         try:
             os.unlink(f.name)
         except:
             pass
-        return module
+        return bitcode
 
 class QSharpModule(ModuleType):
     _qs_name : str
