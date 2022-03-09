@@ -75,6 +75,8 @@ jobs:
 
 - job: "test_conda_windows"
   dependsOn: "pack_selfcontained"
+  pool:
+    vmImage: 'windows-2019'
   container:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
