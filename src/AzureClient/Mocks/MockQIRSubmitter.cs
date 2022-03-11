@@ -19,6 +19,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private IReadOnlyList<Argument> ExpectedArguments = new List<Argument>();
 
+        /// <summary>
+        /// Creates a Mock QIR Submitter, with expected entry point arguments to the SubmitAsync method.
+        /// </summary>
+        /// <param name="expectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
         public MockQIRSubmitter(IReadOnlyList<Argument> expectedArguments)
         {
             this.ExpectedArguments = expectedArguments;
@@ -55,6 +59,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 .All(tup => tup.fst.Name == tup.snd.Name && IsArgumentValueEqual(tup.fst.Value, tup.snd.Value));
         }
 
+        /// <summary>
+        /// Mocks a SubmitAsync call, checking that the given <c>arguments</c>c> are a match to the expected arguments for this mock submitter.
+        /// </summary>
+        /// <param name="qir">The QIR stream for the entry point.</param>
+        /// <param name="entryPoint">The name of the entry point.</param>
+        /// <param name="arguments">The arguments to the entry point. These will be compared against the expected arguments.</param>
+        /// <param name="options">Additional submission options.</param>
+        /// <returns></returns>
         public Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions options)
         {
             var job = new MockCloudJob();
