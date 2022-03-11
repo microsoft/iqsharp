@@ -50,6 +50,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
         // TODO: EntryPointGenerator might should move out of the Azure Client
         //       project.
+        // GitHub Issue: https://github.com/microsoft/iqsharp/issues/610
         public IEntryPointGenerator EntryPointGenerator { get; }
 
         /// <inheritdoc />

@@ -181,6 +181,7 @@ namespace Tests.IQSharp
             // 2 targets per provider: mock and simulator.
 
             // TODO: uncomment once there is a microsoft.mock target
+            // GitHub Issue: https://github.com/microsoft/iqsharp/issues/609
             //Assert.AreEqual(2 * Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
 
             // set each target, which will load the corresponding package
