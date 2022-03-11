@@ -303,7 +303,7 @@ namespace Microsoft.Quantum.IQSharp
                     using var generator = new Generator(transformed);
                     generator.Apply();
 
-                    // write generated QIR to disk
+                    // Write generated QIR to disk.
                     var tempPath = Path.GetTempPath();
                     var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
                     generator.Emit(bcFile, emitBitcode: true);
