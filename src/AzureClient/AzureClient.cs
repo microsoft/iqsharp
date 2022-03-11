@@ -19,6 +19,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Runtime;
+using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -349,28 +351,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 // but both have a SubmitAsync method that returns an IQuantumMachineJob.
                 // Thus, we can branch on whether we need a QIR submitter or a translator,
                 // but can use the same task object to represent both return values.
-                Task<Runtime.IQuantumMachineJob>? jobTask = null;
-                if (this.ActiveTarget.TargetId.StartsWith(MicrosoftSimulator))
+                Task<IQuantumMachineJob>? jobTask = null;
+                if (SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString) is IQirSubmitter submitter)
                 {
-                    var submitter = SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString);
-                    if (submitter == null)
-                    {
-                        // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                        channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                        return AzureClientError.InvalidTarget.ToExecutionResult();
-                    }
                     jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
+                }
+                else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
+                {
+                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
                 }
                 else
                 {
-                    var machine = AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
-                    if (machine == null)
-                    {
-                        // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                        channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                        return AzureClientError.InvalidTarget.ToExecutionResult();
-                    }
-                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
+                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                    return AzureClientError.InvalidTarget.ToExecutionResult();
                 }
 
                 Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
