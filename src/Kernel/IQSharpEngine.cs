@@ -150,6 +150,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 );
             };
 
+            // Start registering magic symbols; we do this in the engine rather
+            // than in the kernel startup event so that we can make sure to
+            // gate any magic execution on having added relevant magic symbols.
+            services.AddBuiltInMagicSymbols();
+
+            // Start looking for magic symbols in the background while
+            // completing other initialization tasks; we'll await at the end.
+            var magicSymbolsDiscovered = Task.Run(() =>
+            {
+                (
+                    services.GetRequiredService<IMagicSymbolResolver>() as IMagicSymbolResolver
+                )?.FindAllMagicSymbols();
+            });
+
             // Before anything else, make sure to start the right background
             // thread on the Q# compilation loader to initialize serializers
             // and deserializers. Since that runs in the background, starting
@@ -178,16 +192,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Workspace = await serviceTasks.Workspace;
             var references = await serviceTasks.References;
 
-            // Start registering magic symbols; we do this in the engine rather
-            // than in the kernel startup event so that we can make sure to
-            // gate any magic execution on having added relevant magic symbols.
-            services.AddBuiltInMagicSymbols();
-            // Start looking for magic symbols in the background while
-            // completing other initialization tasks; we'll await at the end.
-            var magicSymbolsDiscovered = Task.Run(() =>
-            {
-                (MagicResolver as IMagicSymbolResolver)?.FindAllMagicSymbols();
-            });
+
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
