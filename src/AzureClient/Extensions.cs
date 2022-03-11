@@ -91,7 +91,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///      Writes an exception to a logger and emits it to the stderr stream
         ///      of a Jupyter display channel.
         /// </summary>
-        public static void Log(this Exception ex, IChannel? channel, ILogger? logger, string msg = "")
+        internal static void Log(this Exception ex, IChannel? channel, ILogger? logger, string msg = "")
         {
             logger?.LogError(ex, msg);
             channel?.Stderr(msg);
