@@ -70,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(name, null, RuntimeCapability.FullComputation, forceQir: true);
+                entryPoint = EntryPointGenerator.Generate(name, null, RuntimeCapability.FullComputation, generateQir: true);
             }
             catch (TaskCanceledException tce)
             {

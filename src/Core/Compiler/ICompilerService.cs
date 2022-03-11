@@ -25,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
         AssemblyInfo BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapability = null, bool forceQir = false);
+            RuntimeCapability runtimeCapability = null, bool generateQir = false);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
