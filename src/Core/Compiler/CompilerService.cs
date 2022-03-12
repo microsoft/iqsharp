@@ -56,6 +56,11 @@ namespace Microsoft.Quantum.IQSharp
             public string? AutoOpenNamespaces { get; set; }
         }
 
+        /// <summary>
+        /// The name of the generated namespace for the entry point.
+        /// </summary>
+        public static string EntryPointNamespaceName = "ENTRYPOINT";
+
         /// <inheritdoc/>
         public IDictionary<string, string?> AutoOpenNamespaces { get; set; } = new Dictionary<string, string?>
         {
@@ -156,7 +161,7 @@ namespace Microsoft.Quantum.IQSharp
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
 
             var entryPointUri = new Uri(Path.GetFullPath(Path.Combine("/", $"entrypoint.qs")));
-            var entryPointSnippet = @$"namespace ENTRYPOINT
+            var entryPointSnippet = @$"namespace {EntryPointNamespaceName}
                 {{
                     open {operation.Header.QualifiedName.Namespace};
                     @{BuiltIn.EntryPoint.FullName}()

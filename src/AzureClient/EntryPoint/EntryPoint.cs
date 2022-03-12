@@ -199,7 +199,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[2].ParameterType == typeof(IReadOnlyList<Argument>)
                     && method.GetParameters()[3].ParameterType == typeof(SubmissionOptions)
                     );
-            var submitParameters = new object[] { QirStream!, $"ENTRYPOINT__{submissionContext.OperationName}", entryPointInput, options };
+            var submitParameters = new object[] { QirStream!, $"{CompilerService.EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
         }
     }
