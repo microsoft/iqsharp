@@ -73,8 +73,8 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         public IEnumerable<string> ErrorIds =>
             Logs
-                .Where(m => m.Severity == VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error)
-                .Select(m => m.Code);
+                .Where(m => m.Severity == VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error && m.Code?.Second != null)
+                .Select(m => m.Code?.Second);
 
         protected override void Print(LSP.Diagnostic m)
         {
