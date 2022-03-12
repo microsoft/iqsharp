@@ -78,10 +78,11 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         protected override void Print(LSP.Diagnostic m)
         {
-            if (m.IsError() && ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
-            if (m.IsWarning() && WarningCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
+            string diagnosticCode = m.Code?.Second ?? "";
+            if (m.IsError() && ErrorCodesToIgnore.Any(code => diagnosticCode == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
+            if (m.IsWarning() && WarningCodesToIgnore.Any(code => diagnosticCode == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
 
-            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", m.Code, m.Source, m.Range, m.Message);
+            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", diagnosticCode, m.Source, m.Range, m.Message);
             Logs.Add(m);
         }
 
