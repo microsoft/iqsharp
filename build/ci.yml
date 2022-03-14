@@ -81,5 +81,5 @@ jobs:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
   steps:
-    - template: steps-conda.yml
-      condition: ne(variables['Enable.Conda'], 'false')
+  - template: steps-conda.yml
+  condition: ne(variables['Enable.Conda'], 'false')
