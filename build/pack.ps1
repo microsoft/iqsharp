@@ -84,7 +84,7 @@ function Pack-Image() {
         <# Next, we specify any additional NuGet sources to be used. #> `
         --build-arg EXTRA_NUGET_SOURCES="$extraNugetSources" `
         <# Next, we specify any additional NuGet packages that should be imported. #> `
-        --build-arg EXTRA_NUGET_PACKAGES="" `
+        --build-arg EXTRA_NUGET_PACKAGES=$("microsoft.quantum.providers.ionq", "microsoft.quantum.providers.honeywell", "microsoft.quantum.providers.qci") `
         <# Next, we tell Docker what version of IQ# to install. #> `
         --build-arg IQSHARP_VERSION=$Env:NUGET_VERSION `
         <# Finally, we tag the image with the current build number. #> `
