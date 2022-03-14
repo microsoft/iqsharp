@@ -48,7 +48,7 @@ jobs:
   steps:
   - bash: |
       conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name myEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
       source activate condaEnvironment
     displayName: 'Use conda environment w/ Python 3.7'
   - template: steps-selfcontained.yml
@@ -61,7 +61,7 @@ jobs:
   steps:
   - bash: |
       conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name myEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
       source activate condaEnvironment
     displayName: 'Use conda environment w/ Python 3.7'
   - template: steps-conda.yml
@@ -74,7 +74,7 @@ jobs:
   steps:
   - bash: |
       conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name myEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
       source activate condaEnvironment
     displayName: 'Use conda environment w/ Python 3.7'
   - template: steps-conda.yml
@@ -87,7 +87,7 @@ jobs:
   steps:
   - script:
       conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name myEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
       call activate condaEnvironment
     displayName: 'Use conda environment w/ Python 3.7'
   - template: steps-conda.yml
@@ -103,7 +103,7 @@ jobs:
   steps:
   - script:
       conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name myEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
       call activate condaEnvironment
     displayName: 'Use conda environment w/ Python 3.7'
   - template: steps-conda.yml
