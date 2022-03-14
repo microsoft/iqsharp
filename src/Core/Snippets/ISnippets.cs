@@ -71,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the new operations found in the Snippet and returns a new Snippet
         /// populated with the results of the compilation.
         /// </summary>
-        Snippet Compile(string code);
+        Snippet Compile(string code, ITaskReporter? parent = null);
 
         /// <summary>
         /// The list of operations found in all snippets compiled successfully so far.

@@ -86,18 +86,21 @@ namespace Microsoft.Quantum.IQSharp
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
         }
 
-        private CompilationLoader CreateTemporaryLoader(string source)
+        private CompilationLoader CreateTemporaryLoader(string source, ITaskReporter? perfTask = null)
         {
             var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
             var sources = new Dictionary<Uri, string>() { { uri, $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {source} }}" } }.ToImmutableDictionary();
             var loadOptions = new CompilationLoader.Configuration();
+            perfTask?.ReportStatus("Ready to create compilation loader.", "ready-loader");
             return new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
         }
 
         /// <inheritdoc/>
-        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        public IEnumerable<QsNamespaceElement> IdentifyElements(string source, ITaskReporter? parent = null)
         {
-            var loader = CreateTemporaryLoader(source);
+            using var perfTask = parent?.BeginSubtask("Identifying namespace elements", "identify-elements");
+            var loader = CreateTemporaryLoader(source, perfTask);
+            perfTask?.ReportStatus("Created loader.", "created-loader");
             if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
             return loader.VerifiedCompilation.SyntaxTree.TryGetValue(Snippets.SNIPPETS_NAMESPACE, out var tree)
                    ? tree.Elements
@@ -175,8 +178,9 @@ namespace Microsoft.Quantum.IQSharp
         /// with the same name as the snippet id.
         /// </summary>
         public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            RuntimeCapability? runtimeCapability = null, ITaskReporter? parent = null)
         {
+            using var perfTask = parent?.BeginSubtask("Building snippets.", "build-snippets");
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
                     ? $"open {entry.Key};"
@@ -195,7 +199,10 @@ namespace Microsoft.Quantum.IQSharp
             };
 
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            perfTask?.ReportStatus("About to build assembly.", "build-assembly");
+            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, 
+            executionTarget, runtimeCapability);
+            perfTask?.ReportStatus("Built assembly.", "built-assembly");
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;

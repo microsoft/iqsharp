@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -174,7 +175,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             //     https://github.com/microsoft/qsharp-compiler/pull/727
             //     https://github.com/microsoft/qsharp-compiler/pull/810
             logger.LogDebug("Loading serialization and deserialziation protocols.");
-            Protocols.Initialize();
+            //Protocols.Initialize();
 
             logger.LogDebug("Getting services required to start IQ# engine.");
             var serviceTasks = new
@@ -205,6 +206,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
+            RegisterDisplayEncoder(new TaskProgressToHtmlEncoder());
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -350,11 +352,38 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         }
 
         /// <inheritdoc />
-        public override async Task<ExecutionResult> Execute(string input, IChannel channel)
+        public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
         {
+            void ReportTaskStatus(object sender, TaskPerformanceArgs args)
+            {
+                channel.Display(args);
+            }
+
+            void ReportTaskCompletion(object sender, TaskCompleteArgs args)
+            {
+                channel.Display(args);
+            }
+
             // Make sure that all relevant initializations have completed before executing.
             await this.Initialized;
-            return await base.Execute(input, channel);
+            if (configurationSource.InternalShowPerf)
+            {
+                performanceMonitor.OnTaskPerformanceAvailable += ReportTaskStatus;
+                performanceMonitor.OnTaskCompleteAvailable += ReportTaskCompletion;
+            }
+
+            try
+            {
+                return await base.Execute(input, channel, token);
+            }
+            finally
+            {
+                if (configurationSource.InternalShowPerf)
+                {
+                    performanceMonitor.OnTaskPerformanceAvailable -= ReportTaskStatus;
+                    performanceMonitor.OnTaskCompleteAvailable -= ReportTaskCompletion;
+                }
+            }
         }
 
         /// <summary>
@@ -365,6 +394,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
         {
             channel = channel.WithNewLines();
+            using var perfTask = performanceMonitor.BeginTask("Mundane cell execution", "execute-mundane");
+
+            // TODO: make this configurable
+            QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += (type, parent, task) =>
+            {
+                channel.Stdout($"[Q# compiler perf // {perfTask.TimeSinceStart}] {type} {parent} {task}");
+            };
 
             return await Task.Run(async () =>
             {
@@ -378,11 +414,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         "Engine was not initialized before call to ExecuteMundane. " +
                         "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
                     );
+                    perfTask.ReportStatus("Initialized engine.", "init-engine");
                     var workspace = this.Workspace!;
                     var snippets = this.Snippets!;
                     await workspace.Initialization;
+                    perfTask.ReportStatus("Initialized workspace.", "init-workspace");
 
-                    var code = snippets.Compile(input);
+                    var code = snippets.Compile(input, perfTask);
+                    perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
 

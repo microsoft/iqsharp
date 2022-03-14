@@ -140,20 +140,24 @@ namespace Microsoft.Quantum.IQSharp
         /// compilation and it will return a new Snippet with the warnings and Q# elements
         /// reported by the compiler.
         /// </summary>
-        public Snippet Compile(string code)
+        public Snippet Compile(string code, ITaskReporter? parent = null)
         {
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
+            using var perfTask = parent?.BeginSubtask("Compiling snippets", "compile-snippets");
 
             // We add exactly one line of boilerplate code at the beginning of each snippet,
             // so tell the logger to subtract one from all displayed line numbers.
             var logger = new QSharpLogger(Logger, lineNrOffset: -1);
+            perfTask?.ReportStatus("Created logger.", "create-logger");
 
             try
             {
-                var snippets = SelectSnippetsToCompile(code).ToArray();
-                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                var snippets = SelectSnippetsToCompile(code, perfTask).ToArray();
+                perfTask?.ReportStatus("Selected snippets.", "selected-snippets");
+                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
+                perfTask?.ReportStatus("Built snippets.", "built-snippets");
 
                 if (logger.HasErrors)
                 {
@@ -183,6 +187,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 AssemblyInfo = assembly;
                 Items = snippets.Select(populate).ToArray();
+                perfTask?.ReportStatus("Populated snippets service with new snippets.", "populated-snippets");
 
                 return Items.Last();
             }
@@ -201,9 +206,9 @@ namespace Microsoft.Quantum.IQSharp
         /// - either because they have the same id, or because they previously defined an operation
         /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
-        private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
+        private IEnumerable<Snippet> SelectSnippetsToCompile(string code, ITaskReporter? perfTask = null)
         {
-            var ops = Compiler.IdentifyElements(code).Select(Extensions.ToFullName).ToArray();
+            var ops = Compiler.IdentifyElements(code, perfTask).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
             return snippetsWithNoOverlap.Append(new Snippet { code = code });

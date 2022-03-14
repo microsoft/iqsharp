@@ -231,5 +231,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public string WorkspaceName =>
             GetOptionOrDefault("azure.quantum.workspace.name", string.Empty);
+
+        /// <summary>
+        ///      If set to <c>true</c>, shows additional performance breakdowns
+        ///      from within the notebook.
+        /// </summary>
+        public bool InternalShowPerf =>
+            GetOptionOrDefault("internal.showPerf", false);
     }
 }
