@@ -50,6 +50,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
     apt-get -y install dotnet-sdk-3.1=3.1.416-1 && \
+    apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # Install prerequisites needed for integration with Live Share and VS Online.
@@ -128,7 +129,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.22.191200-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.23.195983" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
