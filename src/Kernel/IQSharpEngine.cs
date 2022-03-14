@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -350,11 +351,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         }
 
         /// <inheritdoc />
-        public override async Task<ExecutionResult> Execute(string input, IChannel channel)
+        public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
         {
             // Make sure that all relevant initializations have completed before executing.
             await this.Initialized;
-            return await base.Execute(input, channel);
+            return await base.Execute(input, channel, token);
         }
 
         /// <summary>
