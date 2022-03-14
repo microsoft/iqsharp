@@ -82,4 +82,4 @@ jobs:
     endpoint: qdkimages-acr
   steps:
     - template: steps-conda.yml
-    condition: ne(variables['Enable.Conda'], 'false')
+      condition: ne(variables['Enable.Conda'], 'false')
