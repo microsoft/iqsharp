@@ -54,12 +54,14 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   steps:
-  - bash: |
-      conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-      conda init bash
-      conda activate condaEnvironment
-    displayName: 'Use conda environment w/ Python 3.7'
+  - bash: conda create --yes --quiet --name condaEnvironment
+    displayName: Create Anaconda environment
+  - bash: conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    displayName: Install Anaconda packages
+  - bash: conda init bash
+    displayName: Initialize Anaconda environment
+  - bash: conda activate condaEnvironment
+    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -68,12 +70,14 @@ jobs:
   pool:
     vmImage: 'macOS-latest'
   steps:
-  - bash: |
-      conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-      conda init bash
-      conda activate condaEnvironment
-    displayName: 'Use conda environment w/ Python 3.7'
+  - bash: conda create --yes --quiet --name condaEnvironment
+    displayName: Create Anaconda environment
+  - bash: conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    displayName: Install Anaconda packages
+  - bash: conda init bash
+    displayName: Initialize Anaconda environment
+  - bash: conda activate condaEnvironment
+    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -82,12 +86,14 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   steps:
-  - script:
-      conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-      conda init powershell
-      conda activate condaEnvironment
-    displayName: 'Use conda environment w/ Python 3.7'
+  - script: conda create --yes --quiet --name condaEnvironment
+    displayName: Create Anaconda environment
+  - script: conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    displayName: Install Anaconda packages
+  - script: conda init bash
+    displayName: Initialize Anaconda environment
+  - script: conda activate condaEnvironment
+    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -99,11 +105,13 @@ jobs:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
   steps:
-  - script:
-      conda create --yes --quiet --name condaEnvironment
-      conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-      conda init powershell
-      conda activate condaEnvironment
-    displayName: 'Use conda environment w/ Python 3.7'
+  - script: conda create --yes --quiet --name condaEnvironment
+    displayName: Create Anaconda environment
+  - script: conda install --yes --quiet --name condaEnvironment python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    displayName: Install Anaconda packages
+  - script: conda init bash
+    displayName: Initialize Anaconda environment
+  - script: conda activate condaEnvironment
+    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
