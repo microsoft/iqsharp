@@ -54,20 +54,6 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   steps:
-  - script: conda create --yes --quiet --name conda_env
-    displayName: Create Anaconda environment
-  - script: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-    displayName: Install Anaconda packages
-  - script: conda init bash
-    displayName: Initialize Anaconda environment
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        eval "$(conda shell.bash hook)"
-        conda activate conda_env
-        conda info
-    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -76,19 +62,6 @@ jobs:
   pool:
     vmImage: 'macOS-latest'
   steps:
-  - script: conda create --yes --quiet --name conda_env
-    displayName: Create Anaconda environment
-  - script: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-    displayName: Install Anaconda packages
-  - script: conda init bash
-    displayName: Initialize Anaconda environment
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        conda activate conda_env
-        conda info
-    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -97,20 +70,6 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   steps:
-  - script: conda create --yes --quiet --name conda_env
-    displayName: Create Anaconda environment
-  - script: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-    displayName: Install Anaconda packages
-  - script: conda init bash
-    displayName: Initialize Anaconda environment
-  - task: Powershell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        eval "$(conda shell.powershell hook)"
-        conda activate conda_env
-        conda info
-    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -122,19 +81,5 @@ jobs:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
   steps:
-  - script: conda create --yes --quiet --name conda_env
-    displayName: Create Anaconda environment
-  - script: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-    displayName: Install Anaconda packages
-  - script: conda init bash
-    displayName: Initialize Anaconda environment
-  - task: Powershell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        eval "$(conda shell.powershell hook)"
-        conda activate conda_env
-        conda info
-    displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
