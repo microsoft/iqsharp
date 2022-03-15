@@ -83,7 +83,8 @@ jobs:
   # Pack conda packages
   ##
   - pwsh: |
-      call activate conda_env
+      conda activate conda_env
+      conda info
       .\pack-conda.ps1
     displayName: "Packing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
@@ -92,7 +93,8 @@ jobs:
   # Test conda packages
   ##
   - pwsh: |
-      call activate conda_env
+      conda activate conda_env
+      conda info
       .\test-conda.ps1
     displayName: "Testing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
