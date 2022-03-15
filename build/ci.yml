@@ -66,6 +66,7 @@ jobs:
       script: |
         eval "$(conda shell.bash hook)"
         conda activate conda_env
+        conda info
     displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -75,18 +76,18 @@ jobs:
   pool:
     vmImage: 'macOS-latest'
   steps:
-  - bash: conda create --yes --quiet --name conda_env
+  - script: conda create --yes --quiet --name conda_env
     displayName: Create Anaconda environment
-  - bash: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+  - script: conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
     displayName: Install Anaconda packages
-  - bash: conda init bash
+  - script: conda init bash
     displayName: Initialize Anaconda environment
   - task: Bash@3
     inputs:
       targetType: 'inline'
       script: |
-        eval "$(conda shell.bash hook)"
         conda activate conda_env
+        conda info
     displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -102,12 +103,13 @@ jobs:
     displayName: Install Anaconda packages
   - script: conda init bash
     displayName: Initialize Anaconda environment
-  - task: Bash@3
+  - task: Powershell@2
     inputs:
       targetType: 'inline'
-      bash: |
+      script: |
         eval "$(conda shell.bash hook)"
         conda activate conda_env
+        conda info
     displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -126,7 +128,13 @@ jobs:
     displayName: Install Anaconda packages
   - script: conda init bash
     displayName: Initialize Anaconda environment
-  - script: conda activate conda_env
+  - task: Powershell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda_env
+        conda info
     displayName: Activate Anaconda environment
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
