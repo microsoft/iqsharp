@@ -317,9 +317,9 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
-        private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload();
+        private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload().Wait();
 
-        private void OnFilesRenamed(object source, RenamedEventArgs e) => Reload();
+        private void OnFilesRenamed(object source, RenamedEventArgs e) => Reload().Wait();
 
         /// <summary>
         /// Tries to load the Workspace's information from cache. 

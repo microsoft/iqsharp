@@ -79,7 +79,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of operations found in all snippets compiled successfully so far.
         /// </summary>
-        IEnumerable<OperationInfo> Operations { get; }
+        IEnumerable<OperationInfo>? Operations { get; }
 
     }
 }

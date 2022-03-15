@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -47,6 +49,8 @@ namespace Microsoft.Quantum.IQSharp
             Items = new Snippet[0];
 
             Reset();
+            Debug.Assert(_metadata != null);
+
             Workspace.Reloaded += (sender, args) => Reset();
             GlobalReferences.PackageLoaded += (sender, args) => Reset();
 
@@ -63,7 +67,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// This event is triggered when a Snippet finishes compilation.
         /// </summary>
-        public event EventHandler<SnippetCompiledEventArgs> SnippetCompiled;
+        public event EventHandler<SnippetCompiledEventArgs>? SnippetCompiled;
 
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
@@ -100,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Q# operations available across all snippets.
         /// </summary>
-        public IEnumerable<OperationInfo> Operations =>
+        public IEnumerable<OperationInfo>? Operations =>
             (Workspace == null || Workspace.HasErrors)
             ? AssemblyInfo?.Operations
             : AssemblyInfo?.Operations
@@ -115,11 +119,10 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private CompilerMetadata LoadCompilerMetadata()
         {
-            // TODO: Demote to Debug.
-            Logger?.LogInformation("Loading compiler metadata.");
+            Logger?.LogDebug("Loading compiler metadata.");
             return Workspace.HasErrors
-                    ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+                   ? GlobalReferences.CompilerMetadata
+                   : GlobalReferences.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
         }
 
         /// <summary>
@@ -212,16 +215,21 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name)
         {
             if (name.Name == Path.GetFileNameWithoutExtension(this.AssemblyInfo?.Location))
             {
-                return this.AssemblyInfo.Assembly;
+                return this.AssemblyInfo?.Assembly;
             }
 
-            foreach (var asm in this.Workspace?.Assemblies)
+            if (this.Workspace == null)
             {
-                if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
+                return null;
+            }
+
+            foreach (var asm in this.Workspace.Assemblies)
+            {
+                if (name.Name == Path.GetFileNameWithoutExtension(asm.Location))
                 {
                     return asm.Assembly;
                 }

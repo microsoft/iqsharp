@@ -33,8 +33,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     The number of completions returned by the event.
         /// </summary>
         public int NCompletions { get; set; }
+
+        /// <summary>
+        ///      The time taken to respond to the completion request.
+        /// </summary>
         public TimeSpan Duration { get; set; }
     }
+
+    /// <summary>
+    ///      An event raised when completions are provided in response to a
+    ///      completion request.
+    /// </summary>
     public class CompletionEvent : Event<CompletionEventArgs>
     {
     }
