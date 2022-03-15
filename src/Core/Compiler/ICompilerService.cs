@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -26,20 +28,20 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
-        Task<AssemblyInfo> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapability = null);
+        Task<AssemblyInfo> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapability = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
-        Task<AssemblyInfo> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapabilities = null, ITaskReporter? parent = null);
+        Task<AssemblyInfo> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapabilities = null, ITaskReporter? parent = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        Task<AssemblyInfo> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string executionTarget = null,
-            RuntimeCapability runtimeCapability = null);
+        Task<AssemblyInfo> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapability = null);
 
         /// <summary>
         /// Returns the names of all declared callables and types. 

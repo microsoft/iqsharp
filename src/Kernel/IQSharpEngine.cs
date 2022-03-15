@@ -24,8 +24,14 @@ using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    /// <summary>
+    ///     Arguments for the <see cref="CompletionEvent"/> event.
+    /// </summary>
     public class CompletionEventArgs
     {
+        /// <summary>
+        ///     The number of completions returned by the event.
+        /// </summary>
         public int NCompletions { get; set; }
         public TimeSpan Duration { get; set; }
     }
@@ -126,7 +132,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             services.GetRequiredService<ClientInfoListener>();
 
             // Handle a simple comm session handler for echo messages.
-            commsRouter.SessionOpenEvent("iqsharp_echo").On += async (session, data) =>
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += (session, data) =>
             {
                 session.OnMessage += async (content) =>
                 {
@@ -136,6 +142,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     await session.Close();
                 };
+                // We don't have anything meaningful to wait on, so just return
+                // a complete task.
+                return Task.CompletedTask;
             };
         }
 

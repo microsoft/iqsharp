@@ -192,7 +192,7 @@ namespace Microsoft.Quantum.IQSharp
             logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
             // Initialize the workspace asynchronously
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 try
                 {
@@ -201,7 +201,7 @@ namespace Microsoft.Quantum.IQSharp
 
                     if (!LoadFromCache())
                     {
-                        DoReload();
+                        await DoReload();
                     }
                     else
                     {
