@@ -443,13 +443,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
-        public void Reload(Action<string> statusCallback = null)
+        public async Task Reload(Action<string> statusCallback = null)
         {
-            Initialization.Wait();
-            DoReload(statusCallback);
+            await Initialization;
+            await DoReload(statusCallback);
         }
 
-        private void DoReload(Action<string> statusCallback = null)
+        private async Task DoReload(Action<string> statusCallback = null)
         { 
             var duration = Stopwatch.StartNew();
             var fileCount = 0;
@@ -499,7 +499,7 @@ namespace Microsoft.Quantum.IQSharp
 
                         try
                         {
-                            project.AssemblyInfo = Compiler.BuildFiles(
+                            project.AssemblyInfo = await Compiler.BuildFiles(
                                 project.SourceFiles.ToArray(),
                                 GlobalReferences.CompilerMetadata.WithAssemblies(Assemblies.ToArray()),
                                 logger,

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -24,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp
     public class Snippets : ISnippets
     {
         // caches the Q# compiler metadata
-        private Lazy<CompilerMetadata> _metadata;
+        private Task<CompilerMetadata> _metadata;
 
         /// <summary>
         /// Namespace that all Snippets gets compiled into.
@@ -45,29 +46,18 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyInfo = new AssemblyInfo(null);
             Items = new Snippet[0];
 
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-            Workspace.Reloaded += OnWorkspaceReloaded;
-            GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
+            Reset();
+            Workspace.Reloaded += (sender, args) => Reset();
+            GlobalReferences.PackageLoaded += (sender, args) => Reset();
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
             eventService?.TriggerServiceInitialized<ISnippets>(this);
         }
 
-        /// <summary>
-        /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
-        /// </summary>
-        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
+        private void Reset()
         {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-        }
-
-        /// <summary>
-        /// Triggered when the Workspace has been reloaded. Needs to reset the CompilerMetadata
-        /// </summary>
-        private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e)
-        {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            _metadata = Task.Run(LoadCompilerMetadata);
         }
 
         /// <summary>
@@ -123,10 +113,14 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Loads the compiler metadata, either from the GlobalReferences or includes the Workspace if available
         /// </summary>
-        private CompilerMetadata LoadCompilerMetadata() =>
-            Workspace.HasErrors
+        private CompilerMetadata LoadCompilerMetadata()
+        {
+            // TODO: Demote to Debug.
+            Logger?.LogInformation("Loading compiler metadata.");
+            return Workspace.HasErrors
                     ? GlobalReferences?.CompilerMetadata
                     : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+        }
 
         /// <summary>
         /// Compiles the given code. 
@@ -140,7 +134,7 @@ namespace Microsoft.Quantum.IQSharp
         /// compilation and it will return a new Snippet with the warnings and Q# elements
         /// reported by the compiler.
         /// </summary>
-        public Snippet Compile(string code, ITaskReporter? parent = null)
+        public async Task<Snippet> Compile(string code, ITaskReporter? parent = null)
         {
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
@@ -156,7 +150,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var snippets = SelectSnippetsToCompile(code, perfTask).ToArray();
                 perfTask?.ReportStatus("Selected snippets.", "selected-snippets");
-                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
+                var assembly = await Compiler.BuildSnippets(snippets, await _metadata, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
                 perfTask?.ReportStatus("Built snippets.", "built-snippets");
 
                 if (logger.HasErrors)

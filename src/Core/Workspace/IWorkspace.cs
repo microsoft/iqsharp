@@ -137,7 +137,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
-        void Reload(Action<string> statusCallback = null);
+        Task Reload(Action<string> statusCallback = null);
 
         /// <summary>
         /// Task that will be completed when the initial workspace

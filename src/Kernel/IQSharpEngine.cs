@@ -175,7 +175,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             //     https://github.com/microsoft/qsharp-compiler/pull/727
             //     https://github.com/microsoft/qsharp-compiler/pull/810
             logger.LogDebug("Loading serialization and deserialziation protocols.");
-            //Protocols.Initialize();
+            Protocols.Initialize();
 
             logger.LogDebug("Getting services required to start IQ# engine.");
             var serviceTasks = new
@@ -396,11 +396,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             channel = channel.WithNewLines();
             using var perfTask = performanceMonitor.BeginTask("Mundane cell execution", "execute-mundane");
 
-            // TODO: make this configurable
-            QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += (type, parent, task) =>
+            void ForwardCompilerTask(QsCompiler.Diagnostics.CompilationTaskEventType type, string? parentTaskName, string taskName)
             {
-                channel.Stdout($"[Q# compiler perf // {perfTask.TimeSinceStart}] {type} {parent} {task}");
-            };
+                channel.Display(new ForwardedCompilerPerformanceEvent(
+                    type,
+                    parentTaskName,
+                    taskName,
+                    perfTask!.TimeSinceStart                    
+                ));
+            }
+
+            if (configurationSource.InternalShowCompilerPerf)
+            {
+                QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
+            }
 
             return await Task.Run(async () =>
             {
@@ -420,7 +429,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     await workspace.Initialization;
                     perfTask.ReportStatus("Initialized workspace.", "init-workspace");
 
-                    var code = snippets.Compile(input, perfTask);
+                    var code = await snippets.Compile(input, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
@@ -472,6 +481,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 finally
                 {
                     performanceMonitor.Report();
+                    if (configurationSource.InternalShowCompilerPerf)
+                    {
+                        QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent -= ForwardCompilerTask;
+                    }
                 }
             });
         }

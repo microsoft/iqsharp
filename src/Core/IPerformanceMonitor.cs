@@ -61,7 +61,7 @@ namespace Microsoft.Quantum.IQSharp
         ///      in the kernel process.
         /// </summary>
         public long ManagedRamUsed { get; }
-        
+
         /// <summary>
         ///      The approximate amount of RAM (in bytes) used by all code in
         ///      the IQ# kernel process.
@@ -113,6 +113,8 @@ namespace Microsoft.Quantum.IQSharp
         public string Description { get; }
         public string Id { get; }
         public TimeSpan TimeSinceStart { get; }
+        public TimeSpan TotalTimeSinceStart { get; }
+
         public void ReportStatus(string description, string id);
         public ITaskReporter BeginSubtask(string description, string id);
 

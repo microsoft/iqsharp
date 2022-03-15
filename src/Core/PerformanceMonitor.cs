@@ -29,6 +29,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             private readonly PerformanceMonitor monitor;
             private readonly Stopwatch stopwatch = new Stopwatch();
+            private readonly TimeSpan startedAt;
 
             internal TaskReporter(PerformanceMonitor monitor, ITaskReporter? parent, string description, string id)
             {
@@ -36,6 +37,8 @@ namespace Microsoft.Quantum.IQSharp
                 this.Parent = parent;
                 this.Description = description;
                 this.Id = id;
+
+                startedAt = parent?.TimeSinceStart ?? TimeSpan.Zero;
 
                 stopwatch.Start();
             }
@@ -45,6 +48,7 @@ namespace Microsoft.Quantum.IQSharp
             public ITaskReporter? Parent { get; }
 
             public TimeSpan TimeSinceStart => stopwatch.Elapsed;
+            public TimeSpan TotalTimeSinceStart => TimeSinceStart + startedAt;
 
             public ITaskReporter BeginSubtask(string description, string id) =>
                 new TaskReporter(monitor, this, description, id);
@@ -53,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp
             {
                 stopwatch.Stop();
                 monitor.OnTaskCompleteAvailable?.Invoke(this.monitor, new TaskCompleteArgs(
-                    this, stopwatch.Elapsed
+                    this, ((ITaskReporter)this).TotalTimeSinceStart
                 ));
             }
 
@@ -62,7 +66,7 @@ namespace Microsoft.Quantum.IQSharp
                     this,
                     description,
                     id,
-                    stopwatch.Elapsed
+                    ((ITaskReporter)this).TotalTimeSinceStart
                 ));
         }
 
@@ -112,6 +116,12 @@ namespace Microsoft.Quantum.IQSharp
                 logger?.LogInformation("Reporting device capabilities: {Capabilities}", args);
                 eventService?.Trigger<DeviceCapabilitiesEvent, DeviceCapabilitiesArgs>(args);
             }).Start();
+
+            OnTaskPerformanceAvailable += (sender, args) =>
+            {
+                // TODO: Demote to debug.
+                logger?.LogInformation("[{TimeSinceStart}] {Task} / {Description}", args.TimeSinceTaskStart, args.Task.Description, args.StatusDescription);
+            };
         }
 
         /// <inheritdoc />
