@@ -119,8 +119,7 @@ namespace Microsoft.Quantum.IQSharp
 
             OnTaskPerformanceAvailable += (sender, args) =>
             {
-                // TODO: Demote to debug.
-                logger?.LogInformation("[{TimeSinceStart}] {Task} / {Description}", args.TimeSinceTaskStart, args.Task.Description, args.StatusDescription);
+                logger?.LogDebug("[{TimeSinceStart}] {Task} / {Description}", args.TimeSinceTaskStart, args.Task.Description, args.StatusDescription);
             };
         }
 
