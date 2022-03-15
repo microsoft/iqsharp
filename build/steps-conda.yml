@@ -13,6 +13,7 @@ steps:
     downloadPath: '$(System.DefaultWorkingDirectory)/artifacts'
 
 - pwsh: |
+    call activate conda_env
     conda info
     Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
   displayName: "Move build artifacts to IQ# working directory"
@@ -25,14 +26,18 @@ steps:
 ##
 # Pack conda packages
 ##
-- pwsh: .\pack-conda.ps1
+- pwsh: |
+    call activate conda_env
+    .\pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 ##
 # Test conda packages
 ##
-- pwsh: .\test-conda.ps1
+- pwsh: |
+    call activate conda_env
+    .\test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))

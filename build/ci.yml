@@ -107,7 +107,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        eval "$(conda shell.bash hook)"
+        eval "$(conda shell.powershell hook)"
         conda activate conda_env
         conda info
     displayName: Activate Anaconda environment
@@ -132,7 +132,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        eval "$(conda shell.bash hook)"
+        eval "$(conda shell.powershell hook)"
         conda activate conda_env
         conda info
     displayName: Activate Anaconda environment
