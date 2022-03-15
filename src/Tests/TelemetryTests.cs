@@ -140,7 +140,7 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void WorkspaceReload()
+        public async Task WorkspaceReload()
         {
             var workspace = "Workspace";
             var services = Startup.CreateServiceProvider(workspace);
@@ -151,7 +151,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.Reload();
             Assert.AreEqual(1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.WorkspaceReload", logger.Events[0].Name);
             Assert.AreEqual(PiiKind.GenericData, logger.Events[0].PiiProperties["Quantum.IQSharp.Workspace"]);
@@ -175,7 +175,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.Reload();
             Assert.AreEqual(1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.WorkspaceReload", logger.Events[0].Name);
             Assert.AreEqual(PiiKind.GenericData, logger.Events[0].PiiProperties["Quantum.IQSharp.Workspace"]);
@@ -200,7 +200,7 @@ namespace Tests.IQSharp
             Assert.AreEqual(0, logger.Events.Count);
 
             var count = 0;
-            snippets.Compile(SNIPPETS.HelloQ);
+            await snippets.Compile(SNIPPETS.HelloQ);
             Assert.AreEqual(count + 1, logger.Events.Count);
             Assert.AreEqual("Quantum.IQSharp.Compile", logger.Events[count].Name);
             Assert.AreEqual("ok", logger.Events[count].Properties["Quantum.IQSharp.Status"]);
@@ -287,7 +287,7 @@ namespace Tests.IQSharp
             logger.Events.Clear();
             Assert.AreEqual(0, logger.Events.Count);
 
-            ws.Reload();
+            await ws.Reload();
             Assert.AreEqual(5, logger.Events.Count);
 
             Assert.AreEqual("Quantum.IQSharp.PackageLoad", logger.Events[0].Name);
