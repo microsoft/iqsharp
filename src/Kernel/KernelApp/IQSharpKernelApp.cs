@@ -36,7 +36,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private void OnKernelStarted(ServiceProvider serviceProvider)
         {
             var eventService = serviceProvider.GetService<IEventService>();
-            serviceProvider.AddBuiltInMagicSymbols();
             eventService?.Trigger<KernelStartedEvent, IQSharpKernelApp>(this);
         }
     }

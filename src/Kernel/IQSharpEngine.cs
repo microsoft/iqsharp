@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
+using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -155,6 +156,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 );
             };
 
+            // Start registering magic symbols; we do this in the engine rather
+            // than in the kernel startup event so that we can make sure to
+            // gate any magic execution on having added relevant magic symbols.
+            services.AddBuiltInMagicSymbols();
+
+            // Start looking for magic symbols in the background while
+            // completing other initialization tasks; we'll await at the end.
+            var magicSymbolsDiscovered = Task.Run(() =>
+            {
+                (
+                    services.GetRequiredService<IMagicSymbolResolver>() as IMagicSymbolResolver
+                )?.FindAllMagicSymbols();
+            });
+
             // Before anything else, make sure to start the right background
             // thread on the Q# compilation loader to initialize serializers
             // and deserializers. Since that runs in the background, starting
@@ -182,6 +197,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.MagicResolver = await serviceTasks.MagicResolver;
             this.Workspace = await serviceTasks.Workspace;
             var references = await serviceTasks.References;
+
+
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
             RegisterDisplayEncoder<IQSharpSymbolToHtmlResultEncoder>();
@@ -233,6 +250,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Process.GetCurrentProcess().Id
             );
 
+            await magicSymbolsDiscovered;
             eventService?.TriggerServiceInitialized<IExecutionEngine>(this);
 
             var initializedSuccessfully = initializedSource.TrySetResult(true);
@@ -337,6 +355,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
+        /// <inheritdoc />
+        public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
+        {
+            // Make sure that all relevant initializations have completed before executing.
+            await this.Initialized;
+            return await base.Execute(input, channel, token);
+        }
+
         /// <summary>
         /// This is the method used to execute Jupyter "normal" cells. In this case, a normal
         /// cell is expected to have a Q# snippet, which gets compiled and we return the name of
@@ -350,12 +376,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 try
                 {
-                    await this.Initialized;
-                    // Once the engine is initialized, we know that Workspace
+                    // Since this method is only called once this.Initialized
+                    // has completed, we know that Workspace
                     // and Snippets are both not-null.
+                    Debug.Assert(
+                        this.Initialized.IsCompleted,
+                        "Engine was not initialized before call to ExecuteMundane. " +
+                        "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
+                    );
                     var workspace = this.Workspace!;
                     var snippets = this.Snippets!;
-
                     await workspace.Initialization;
 
                     var code = snippets.Compile(input);
