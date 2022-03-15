@@ -133,6 +133,20 @@ namespace Tests.IQSharp
 
 
         [TestMethod]
+        public async Task SimulateOnBrokenWorkspace()
+        {
+            var controller = Init(@"Workspace.Broken");
+
+            var response = await controller.Simulate("Tests.qss.NoOp");
+
+            Assert.AreEqual(Status.Error, response.Status);
+            Assert.AreEqual(2, response.Messages.Length);
+            Assert.IsNotNull(response.Messages.First(m => m.Contains("QS6301")));
+            Assert.IsNotNull(response.Messages.First(m => m.Contains("QS5022")));
+        }
+
+
+        [TestMethod]
         public void JsonToDict()
         {
             var s = "bar";
