@@ -455,6 +455,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
                     );
                     perfTask.ReportStatus("Initialized engine.", "init-engine");
+
                     var workspace = this.Workspace!;
                     var snippets = this.Snippets!;
                     await workspace.Initialization;
