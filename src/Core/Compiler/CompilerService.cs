@@ -62,8 +62,17 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService)
+        private readonly Task DependenciesInitialized;
+        private readonly ILogger? Logger;
+
+        // Note to future IQ# developers: This service should start ★fast★.
+        // Please bbe judicious when adding parameters to this constructor, and
+        // defer those dependencies to tasks if at all possible.
+        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService, IServiceProvider serviceProvider)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Logger = logger;
             if (options?.Value?.AutoOpenNamespaces is string namespaces)
             {
                 logger?.LogInformation(
@@ -83,10 +92,113 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
-
-            // Force the static constructor for CSharpSyntaxTree to fire.
-            CSharpSyntaxTree.ParseText("");
+            DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
+            Task.Run(async () =>
+            {
+                await DependenciesInitialized;
+                stopwatch.Stop();
+                logger?.LogInformation(
+                    "Initialized dependencies for compiler service {Elapsed} after service start.",
+                    stopwatch.Elapsed
+                );
+            });
         }
+
+        // We take references as a task so that it can load in the background
+        // without placing a hard dependency at the level of a constructor.
+        // That in turn allows this service to begin initializing sooner during
+        // kernel startup.
+        private async Task InitializeDependencies(Task<IReferences> referencesTask) => await
+            // Force types that we'll depend on later to initialize by
+            // calling trivial methods now.
+            Task.WhenAll(
+                Task.Run(
+                    async () =>
+                    {
+                        // See https://github.com/dotnet/roslyn/issues/46340
+                        // for why this works. We need to compile something
+                        // that actually depends on something in System so
+                        // that the assembly references we're trying to cache
+                        // don't get optimized away.
+                        var compilation = CSharpCompilation.Create(
+                            Path.GetRandomFileName(),
+                            syntaxTrees: new List<CodeAnalysis.SyntaxTree>
+                            {
+                                CSharpSyntaxTree.ParseText(@"
+                                    using System;
+                                    namespace Placeholder
+                                    {
+                                        public class Placeholder
+                                        {
+                                            public void DoSomething()
+                                            {
+                                                Console.WriteLine(""hi!"");
+                                            }
+                                        }
+                                    }
+                                ")
+                            },
+                            references: (await referencesTask).CompilerMetadata.RoslynMetadatas,
+                            options: new CSharpCompilationOptions(
+                                OutputKind.DynamicallyLinkedLibrary,
+                                optimizationLevel: OptimizationLevel.Release,
+                                allowUnsafe: true
+                            )
+                        );
+                        try
+                        {
+                            using var ms = new MemoryStream();
+                            var result = compilation.Emit(ms);
+                            if (!result.Success)
+                            {
+                                var failures = string.Join("\n",
+                                    result.Diagnostics
+                                    .Select(diag => diag.ToString())
+                                );
+                                Logger?.LogWarning(
+                                    "C# compilation failure or warnings while initializing Roslyn dependencies:\n{Failures}",
+                                    failures
+                                );
+                            }
+                            else
+                            {
+                                // Do nothing — the compilation worked, so we
+                                // should have initialized things correctly.
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Exceptions here are noncritical, but could have
+                            // perf impact, so log them accordingly.
+                            Logger?.LogWarning(ex, "Exception encountered while initializing Roslyn dependencies.");
+                        }
+                    }
+                ),
+                Task.Run(
+                    () =>
+                    {
+                        var codegenContext = CodegenContext.Create(ImmutableArray<QsNamespace>.Empty);
+                        SimulationCode.generate("foo", codegenContext);
+                    }
+                ),
+                Task.Run(
+                    () =>
+                    {
+                        try
+                        {
+                            var syntaxTree = new QsCompilation(
+                                ImmutableArray<QsNamespace>.Empty,
+                                ImmutableArray<QsQualifiedName>.Empty
+                            );
+                            using var serializedCompilation = new MemoryStream();
+                            CompilationLoader.WriteBinary(syntaxTree, serializedCompilation);
+                        }
+                        // Ignore errors, since we don't care about the result;
+                        // we just want to force static constructors to load.
+                        catch {}
+                    }
+                )
+            );
 
         private CompilationLoader CreateTemporaryLoader(string source, ITaskReporter? perfTask = null)
         {
