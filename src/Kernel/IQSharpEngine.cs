@@ -353,7 +353,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         // a non-critical failure that should result in a warning.
                         try
                         {
-                            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance(services, type) as IResultEncoder);
+                            switch (ActivatorUtilities.CreateInstance(services, type))
+                            {
+                                case IResultEncoder encoder:
+                                    RegisterDisplayEncoder(encoder);
+                                    break;
+
+                                case {} other:
+                                    logger.LogWarning("Expected object of type IResultEncoder but got {Type}.", other.GetType());
+                                    break;
+
+                                default:
+                                    logger.LogWarning("Expected object of type IResultEncoder but got null.");
+                                    break;
+                            }
                         }
                         catch (Exception ex)
                         {
