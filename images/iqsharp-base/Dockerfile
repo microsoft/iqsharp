@@ -42,6 +42,7 @@ ENV NUGET_XMLDOC_MODE=skip \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
 
 # Now that we have all the dependencies in place, we install the .NET Core SDK itself.
+# Notice that we're installing the SDK for both .NET Core 3.1 as well as .NET 6.0 for compatibility.
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
     mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
     wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
@@ -49,7 +50,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-3.1=3.1.416-1 && \
+    apt-get -y install dotnet-sdk-3.1=3.1.416-1 dotnet-sdk-6.0 && \
     apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
@@ -129,7 +130,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.23.195983" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.23.198514-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
