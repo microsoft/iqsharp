@@ -18,16 +18,6 @@ import qsharp
 
 from typing import Iterable, List, Optional, Any, Dict, Tuple
 
-try:
-    import pyqir_parser as pqp
-except ImportError as ex:
-    try:
-        import pyqir.parser as pqp
-    except ImportError:
-        class pqp:
-            failed_with = ex
-            QirModule = None
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -132,8 +122,6 @@ class QSharpCallable(object):
         Returns the QIR bitcode representation of the callable,
         assuming the callable is an entry point.
         """
-        if getattr(pqp, "failed_with", None) is not None:
-            raise pqp.failed_with
         f = tf.NamedTemporaryFile(delete=False, suffix='.bc')
         f.close()
         qsharp.client.compile_to_qir(self, output=f.name)
