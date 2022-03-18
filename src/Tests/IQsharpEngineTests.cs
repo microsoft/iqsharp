@@ -951,6 +951,43 @@ namespace Tests.IQSharp
                             "compiled as an entry point for job execution."
                         )
                     ));
+
+
+            
+        }
+
+
+        /// <summary>
+        ///      Tests for regression against
+        ///      <see href="https://github.com/microsoft/iqsharp/issues/606">
+        ///          microsoft/iqsharp#606
+        ///      </see>.
+        /// </summary>
+        [TestMethod]
+        public async Task CompileAndSimulateWithLambdas()
+        {
+            const string source = @"
+                function Foo() : Unit {
+                    let f = x -> x;
+                    let y = f(12);
+                }
+
+                operation DoBar() : Unit {
+                    let u = (q) => H(q);
+                    use q = Qubit();
+                    H(q);
+                    u(q);
+                }
+            ";
+
+            var engineInput = await Assert.That
+                .UsingEngine()
+                .Input(source)
+                    .ExecutesSuccessfully()
+                .Input("%simulate Foo")
+                    .ExecutesSuccessfully()
+                .Input("%simulate DoBar")
+                    .ExecutesSuccessfully();
         }
     }
 }
