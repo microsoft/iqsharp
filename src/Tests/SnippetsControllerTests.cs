@@ -180,7 +180,8 @@ namespace Tests.IQSharp
         [TestMethod]
         public void IdentifyOperations()
         {
-            var compiler = new CompilerService(null, null, eventService: null);
+            var serviceProvider = Startup.CreateServiceProvider("Workspace");
+            var compiler = new CompilerService(null, null, eventService: null, serviceProvider: serviceProvider);
 
             var elements = compiler.IdentifyElements(SNIPPETS.Op1_Op2).Select(Extensions.ToFullName).ToArray();
 
