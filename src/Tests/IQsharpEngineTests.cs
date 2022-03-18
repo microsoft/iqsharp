@@ -183,7 +183,10 @@ namespace Tests.IQSharp
             await Assert.That
                 .UsingEngine()
                     .Input("%sim", 3)
-                        .CompletesTo("%simulate")
+                        .CompletesTo(
+                            "%simulate",
+                            "%simulate_sparse"
+                        )
                     .Input("%experimental.", 14)
                         .CompletesTo(
                             "%experimental.build_info",
@@ -932,6 +935,8 @@ namespace Tests.IQSharp
                     .ExecutesSuccessfully()
                 .WithMockAzure()
                 .Input("%azure.target honeywell.mock")
+                    .ExecutesSuccessfully()
+                .Input("%azure.target quantinuum.mock")
                     .ExecutesSuccessfully()
                 .Input("%azure.submit RunTeleport")
                     .ExecutesSuccessfully()
