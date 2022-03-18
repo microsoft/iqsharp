@@ -21,10 +21,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public string? TargetId { get; }
 
-        public virtual string PackageName => 
-            GetProvider(TargetId) == AzureProvider.Microsoft
-            ? "Microsoft.Quantum.Providers.Core"
-            : $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
+        public virtual string PackageName => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}";
 
         public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
         {
