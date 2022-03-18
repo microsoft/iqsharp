@@ -113,6 +113,12 @@ namespace Microsoft.Quantum.IQSharp
             // calling trivial methods now.
             Task.WhenAll(
                 Task.Run(
+                    () =>
+                    {
+                        CreateTemporaryLoader("");
+                    }
+                ),
+                Task.Run(
                     async () =>
                     {
                         // See https://github.com/dotnet/roslyn/issues/46340
