@@ -147,6 +147,10 @@ namespace Microsoft.Quantum.IQSharp
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
                 RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation,
+                // ToDo: The logic for determining if we should generate QIR should live in the SubmitterFactory as a
+                // static function, `TargetSupportsQir`. We should then be calling that static function here for
+                // PrepareQirGeneration instead of this logic.
+                // GitHub Issue: 
                 PrepareQirGeneration = executionTarget?.StartsWith("microsoft.simulator") ?? false
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
