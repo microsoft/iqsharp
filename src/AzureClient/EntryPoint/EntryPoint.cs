@@ -187,6 +187,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var options = SubmissionOptions.Default;
             options = options.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 
+            // The namespace must match the one found in the in CompilerService.cs in the Core project.
+            var entryPointNamespaceName = "ENTRYPOINT";
+
             // Find and invoke the method on IQirSubmitter that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)
             var submitMethod = typeof(IQirSubmitter)
@@ -199,7 +202,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[2].ParameterType == typeof(IReadOnlyList<Argument>)
                     && method.GetParameters()[3].ParameterType == typeof(SubmissionOptions)
                     );
-            var submitParameters = new object[] { QirStream!, $"{CompilerService.EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
+            var submitParameters = new object[] { QirStream!, $"{entryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
         }
     }

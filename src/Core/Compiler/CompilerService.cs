@@ -59,7 +59,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The name of the generated namespace for the entry point.
         /// </summary>
-        public static string EntryPointNamespaceName = "ENTRYPOINT";
+        private static readonly string EntryPointNamespaceName = "ENTRYPOINT";
 
         /// <inheritdoc/>
         public IDictionary<string, string?> AutoOpenNamespaces { get; set; } = new Dictionary<string, string?>

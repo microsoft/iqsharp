@@ -53,7 +53,8 @@ namespace Tests.IQSharp
                 // syntax trees that we need to generate classical control from.
                 .HasResource(DotnetCoreDll.SyntaxTreeResourceName)
                 // Make sure that the two particular operations we expect are both there.
-                .HasOperation(CompilerService.EntryPointNamespaceName, "HelloQ")
+                // The namespace must match the one found in the in CompilerService.cs in the Core project.
+                .HasOperation("ENTRYPOINT", "HelloQ")
                 .HasOperation(Snippets.SNIPPETS_NAMESPACE, "HelloQ")
                 // Since HelloQ calls Message, that function should also be regenerated.
                 .HasOperation("Microsoft.Quantum.Intrinsic", "Message");
