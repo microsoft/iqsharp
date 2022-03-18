@@ -56,7 +56,7 @@ namespace Tests.IQSharp
             var client = await (await engine).Engine.GetEngineService<IAzureClient>();
             if (client is AzureClient azureClient && azureClient.ActiveWorkspace is MockAzureWorkspace workspace)
             {
-                workspace.AddProviders("ionq", "honeywell");
+                workspace.AddProviders("ionq", "quantinuum", "honeywell");
             }
             else
             {
@@ -221,6 +221,31 @@ namespace Tests.IQSharp
 
         internal static string NormalizeLineEndings(this string s) =>
             Regex.Replace(s, @"\r\n|\n\r|\n|\r", "\r\n");
+
+        
+
+        internal class EnumerableAssert<T>
+        {
+            internal IEnumerable<T> Enumerable;
+        }
+
+        internal static EnumerableAssert<T> Enumerable<T>(this Assert assert, IEnumerable<T> enumerable) =>
+            new EnumerableAssert<T>
+            {
+                Enumerable = enumerable
+            };
+
+        internal static EnumerableAssert<T> HasCount<T>(this EnumerableAssert<T> enumerableAssert, int count)
+        {
+            // Collect in a list so that we can report on failure.
+            var elements = enumerableAssert.Enumerable.ToList();
+            Assert.AreEqual(
+                count,
+                elements.Count,
+                $"Expected {count} elements, but got {elements.Count}. Enumerable yielded values:\n{string.Join("\n", elements.Select(e => $"    - {e?.ToString() ?? "<null>"}"))}"
+            );
+            return enumerableAssert;
+        }
 
     }
 

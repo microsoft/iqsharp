@@ -159,4 +159,52 @@ def test_honeywell_submit():
             retrieved_histogram = qsharp.azure.output()
             assert isinstance(retrieved_histogram, dict)
             assert '0' in retrieved_histogram
+
+def test_quantinuum_targets():
+    """
+    Tests that we can fetch targets from the service,
+    and that the workspace includes the targets we need for submission
+    """
+    targets = connect()
+    assert len(targets) > 2
+
+    target_ids = [t.id for t in targets]
+    assert 'quantinuum.hqs-lt-s1' in target_ids
+    assert 'quantinuum.hqs-lt-s1-apival' in target_ids
+
+def test_quantinuum_submit():
+    """
+    Test that the RunTeleport operation can be submitted successfully on the quantinuum apival target
+    """
+    import qsharp
+    from Microsoft.Quantum.Tests import RunTeleport
+
+    # Make sure we can simulate locally:
+    expected = True
+    result = RunTeleport.simulate(doPlus=expected)
+    assert result == 0 if expected else 1
+
+    import qsharp.azure
+    connect()
+
+    t = qsharp.azure.target("quantinuum.hqs-lt-s1-apival")
+    assert isinstance(t, qsharp.azure.AzureTarget)
+    assert t.id == "quantinuum.hqs-lt-s1-apival"
+
+    job = qsharp.azure.submit(RunTeleport, doPlus=expected)
+    assert isinstance(job, qsharp.azure.AzureJob)
+    assert not job.id == ''
+    print("Submitted job: ", job.id)
+
+    try: 
+        wait_until_completed(job)
+    except TimeoutError:
+        warnings.warn("Quantinuum execution exceeded timeout. Skipping fetching results.")
+    else:
+        job = qsharp.azure.status()
+        assert isinstance(job, qsharp.azure.AzureJob)
+        if job.status == "Succeeded":
+            retrieved_histogram = qsharp.azure.output()
+            assert isinstance(retrieved_histogram, dict)
+            assert '0' in retrieved_histogram
     
