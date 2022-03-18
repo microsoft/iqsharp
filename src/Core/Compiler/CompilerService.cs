@@ -150,7 +150,7 @@ namespace Microsoft.Quantum.IQSharp
                 // ToDo: The logic for determining if we should generate QIR should live in the SubmitterFactory as a
                 // static function, `TargetSupportsQir`. We should then be calling that static function here for
                 // PrepareQirGeneration instead of this logic.
-                // GitHub Issue: 
+                // GitHub Issue: https://github.com/microsoft/qsharp-runtime/issues/968
                 PrepareQirGeneration = executionTarget?.StartsWith("microsoft.simulator") ?? false
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
