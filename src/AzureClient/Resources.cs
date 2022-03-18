@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             "No execution target has been configured for Azure Quantum job submission.";
 
         public const string AzureClientErrorInvalidTarget =
-            "The specified execution target is not valid for Q# job submission in the current Azure Quantum workspace.";
+            "The specified target is not enabled in this workspace. Please make sure the target name is valid and that the associated provider is added to your workspace. To add a provider to your quantum workspace in the Azure Portal, see https://aka.ms/AQ/Docs/AddProvider";
 
         public const string AzureClientErrorJobNotFound =
             "No job with the given ID was found in the current Azure Quantum workspace.";
