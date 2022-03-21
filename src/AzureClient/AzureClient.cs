@@ -46,7 +46,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEnumerable<TargetStatusInfo>? AvailableTargets => 
             AvailableProviders
             ?.SelectMany(provider => provider.Targets)
-            ?.Where(t => t.TargetId != null && (t.TargetId.StartsWith(MicrosoftSimulator) || AzureExecutionTarget.GetProvider(t.TargetId) != AzureProvider.Microsoft));
+            ?.Where(t => t.TargetId != null
+                && (t.TargetId.StartsWith(MicrosoftSimulator) // Of the Microsoft targets, we only want those that start with 'microsoft.simulator'.
+                || AzureExecutionTarget.GetProvider(t.TargetId) != AzureProvider.Microsoft)); // We want all non-Microsoft targets.
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
