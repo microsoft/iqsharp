@@ -77,10 +77,9 @@ jobs:
   # Pack conda packages
   ##
   - script: |
-      eval "$(conda shell.bash hook)"
-      activate conda_env
+      source activate conda_env
       conda info
-      pwsh .\pack-conda.ps1
+      pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
@@ -88,10 +87,9 @@ jobs:
   # Test conda packages
   ##
   - script: |
-      eval "$(conda shell.bash hook)"
-      activate conda_env
+      source activate conda_env
       conda info
-      pwsh .\test-conda.ps1
+      pwsh ./test-conda.ps1
     displayName: "Testing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
     condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
