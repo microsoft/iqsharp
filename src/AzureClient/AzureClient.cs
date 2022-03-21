@@ -28,6 +28,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        private const string MicrosoftSimulator = "microsoft.simulator";
+
         /// <summary>
         /// Returns whether a target ID is meant for quantum execution since not all targets
         /// exposed by providers are meant for that. More specifically, the Microsoft provider exposes
@@ -36,7 +38,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         private static bool IsQuantumExecutionTarget(string targetId) =>
             AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
-            || targetId.StartsWith("microsoft.simulator");
+            || targetId.StartsWith(MicrosoftSimulator);
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
