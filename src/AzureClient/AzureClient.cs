@@ -28,7 +28,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
-        private const string MicrosoftSimulator = "microsoft.simulator";
+        /// <summary>
+        /// Returns whether a target ID is meant for quantum execution since not all targets
+        /// exposed by providers are meant for that. More specifically, the Microsoft provider exposes
+        /// targets that are not meant for quantum execution and the only ones meant for that start
+        /// with "microsoft.simulator"
+        /// </summary>
+        private static bool IsQuantumExecutionTarget(string targetId) =>
+            AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
+            || targetId.StartsWith("microsoft.simulator");
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
@@ -43,12 +51,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatusInfo>? AvailableTargets => 
+        private IEnumerable<TargetStatusInfo>? AvailableTargets =>
             AvailableProviders
             ?.SelectMany(provider => provider.Targets)
-            ?.Where(t => t.TargetId != null
-                && (t.TargetId.StartsWith(MicrosoftSimulator) // Of the Microsoft targets, we only want those that start with 'microsoft.simulator'.
-                || AzureExecutionTarget.GetProvider(t.TargetId) != AzureProvider.Microsoft)); // We want all non-Microsoft targets.
+            ?.Where(t => t.TargetId != null && IsQuantumExecutionTarget(t.TargetId));
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
