@@ -3,7 +3,6 @@
 ##
 
 steps:
-
 ##
 # Pre-reqs
 ##
@@ -18,32 +17,33 @@ steps:
 ##
 # Create conda environment
 ##
-- bash: echo "##vso[task.prependpath]$CONDA/bin"
-  displayName: Add conda to PATH
-
-- bash: conda create --yes --quiet --name conda_env
+- script: |
+    conda create --yes --quiet --name conda_env
   displayName: Create Anaconda environment
-
-- bash: |
-    source activate conda_env
+  
+- script: |
     conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
 
 ##
 # Pack conda packages
 ##
-- pwsh: |
-    call activate conda_env
-    .\pack-conda.ps1
+- script: |
+    eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+    conda activate conda_env
+    conda info
+    pwsh ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
 
 ##
 # Test conda packages
 ##
-- pwsh: |
-    call activate conda_env
-    .\test-conda.ps1
+- script: |
+    eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+    conda activate conda_env
+    conda info
+    pwsh ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
