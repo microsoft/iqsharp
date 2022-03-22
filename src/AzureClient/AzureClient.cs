@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -522,6 +523,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult();
         }
 
+        private static IEnumerable<string> ReadAllLines(Stream stream)
+        {
+            using (var reader = new StreamReader(stream))
+            {
+                string line = "";
+                while ((line = reader.ReadLine()) != null)
+                {
+                    yield return line;
+                }
+            }
+        }
+
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
         {
@@ -572,10 +585,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 //                 cancellation token support.
                 var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
-                return responseStream.ToHistogram(
-                    Logger, 
-                    isSimulatorOutput: this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
-                .ToExecutionResult();
+                if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+                {
+                    var outputLines = ReadAllLines(responseStream).ToList();
+                    outputLines = outputLines.Select(line => line.Trim()).ToList();
+                    
+                    // ToDo: This is a hack to separate Messages from the result.
+                    var resultStartLine = outputLines.Count() - 1;
+                    if (outputLines[resultStartLine].EndsWith('"'))
+                    {
+                        while (!outputLines[resultStartLine].StartsWith('"'))
+                        {
+                            resultStartLine -= 1;
+                        }
+                    }
+                    
+                    var messages = String.Join('\n', outputLines.Take(resultStartLine));
+                    channel?.Stdout(messages);
+                    var result = String.Join(' ', outputLines.Skip(resultStartLine));
+
+                    return result.ToExecutionResult();
+                }
+                else
+                {
+                    return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
+                }
             }
             catch (Exception e)
             {
