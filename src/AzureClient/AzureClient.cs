@@ -328,7 +328,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapability);
+                entryPoint = await EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.RuntimeCapability);
             }
             catch (TaskCanceledException tce)
             {

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -78,12 +79,14 @@ namespace Microsoft.Quantum.IQSharp
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-                INugetPackages packages,
-                IEventService eventService,
-                ILogger<References> logger,
-                IOptions<Settings> options
-                )
+            INugetPackages packages,
+            IEventService eventService,
+            ILogger<References> logger,
+            IOptions<Settings> options,
+            IPerformanceMonitor performanceMonitor
+        )
         {
+            this.performanceMonitor = performanceMonitor;
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
             Logger = logger;
@@ -98,7 +101,8 @@ namespace Microsoft.Quantum.IQSharp
                 AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            Reset();
+            Debug.Assert(_metadata != null, "Reset did not initialize compiler metadata.");
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
@@ -123,7 +127,9 @@ namespace Microsoft.Quantum.IQSharp
 
         /// Manages nuget packages.
         internal INugetPackages Nugets { get; }
-        private Lazy<CompilerMetadata> _metadata;
+        private readonly IPerformanceMonitor performanceMonitor;
+        private Task<CompilerMetadata> _metadata;
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         private ILogger<References> Logger { get; }
 
@@ -134,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public ImmutableArray<AssemblyInfo> Assemblies { get; private set; }
 
-        public CompilerMetadata CompilerMetadata => _metadata.Value;
+        public CompilerMetadata CompilerMetadata => _metadata.Result;
 
         /// <summary>
         /// The list of Nuget Packages that are available for compilation and execution.
@@ -179,7 +185,16 @@ namespace Microsoft.Quantum.IQSharp
 
         private void Reset()
         {
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            // Begin loading metadata in the background.
+            _metadata = Task.Run(
+                () =>
+                {
+                    using var perfTask = performanceMonitor.BeginTask("Resetting reference metadata.", "reset-refs-meta");
+                    var result = new CompilerMetadata(this.Assemblies);
+                    return result;
+                },
+                tokenSource.Token
+            );
         }
 
         /// <summary>

@@ -97,21 +97,6 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             return version;
         }
-        
-
-        internal static Task<T> GetRequiredServiceInBackground<T>(this IServiceProvider services, ILogger? logger = null)
-        {
-            var eventService = services.GetRequiredService<IEventService>();
-            eventService.OnServiceInitialized<T>().On += (service) =>
-            {
-                logger?.LogInformation(
-                    "Service {Service} initialized {Time} after startup.",
-                    typeof(T),
-                    DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
-                );
-            };
-            return Task.Run(() => services.GetRequiredService<T>());
-        }
 
         internal static int EditDistanceFrom(this string s1, string s2)
         {
