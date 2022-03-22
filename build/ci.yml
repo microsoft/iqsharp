@@ -80,6 +80,8 @@ jobs:
   # Pack conda packages
   ##
   - script: |
+      echo $CONDA_EXE
+      echo $_CONDA_EXE
       eval "$('/usr/local/miniconda/bin/conda' 'shell.bash' 'hook')"
       conda activate conda_env
       conda info
