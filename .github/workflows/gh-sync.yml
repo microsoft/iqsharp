@@ -25,10 +25,10 @@ jobs:
       - name: 'Trigger gh-sync'
         uses: microsoft/gh-sync@main
         with:
-          ado-organization-url: 'https://ms-quantum.visualstudio.com/'
-          ado-project: 'Quantum Program'
-          ado-area-path: 'Quantum Program\Quantum Systems\QID\Experience'
-          github-repo: microsoft/iqsharp
-          issue-number: ${{github.event.issue.number}}
+          ado-organization-url: ${{ secrets.ADO_URL }}
+          ado-project: ${{ secrets.ADO_PROJECT }}
+          ado-area-path: ${{ secrets.ADO_AREA_PATH }}
+          github-repo: 'microsoft/iqsharp'
+          issue-number: ${{ github.event.issue.number }}
           ado-token: ${{ steps.AzureKeyVault.outputs.ghSyncBuildPAT }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
