@@ -68,10 +68,16 @@ jobs:
   ##
   # Create conda environment
   ##
+  - script: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+    
   - script: |
       conda create --yes --quiet --name conda_env
-      conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
     displayName: Create Anaconda environment
+    
+  - script: |
+      conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    displayName: Install Anaconda packages
 
   ##
   # Pack conda packages
