@@ -88,9 +88,7 @@ jobs:
   # Pack conda packages
   ##
   - script: |
-      which conda
-      type conda
-      eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+      eval "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
       conda info
       pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
@@ -100,8 +98,7 @@ jobs:
   # Test conda packages
   ##
   - script: |
-      conda init bash
-      eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+      eval "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
       conda activate conda_env
       conda info
       pwsh ./test-conda.ps1
