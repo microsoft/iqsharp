@@ -80,7 +80,7 @@ jobs:
   # Pack conda packages
   ##
   - script: |
-      eval "$('/C/Users/cgran/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+      eval "$('/usr/local/miniconda/bin/conda' 'shell.bash' 'hook')"
       conda activate conda_env
       conda info
       pwsh ./pack-conda.ps1
@@ -91,7 +91,7 @@ jobs:
   # Test conda packages
   ##
   - script: |
-      eval "$('/C/Users/cgran/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+      eval "$('/usr/local/miniconda/bin/conda' 'shell.bash' 'hook')"
       conda activate conda_env
       conda info
       pwsh ./test-conda.ps1
@@ -144,7 +144,7 @@ jobs:
   ##
   - script: |
       conda init bash
-      eval "$('/C/Users/cgran/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+      eval "$('/usr/local/miniconda/bin/conda' 'shell.bash' 'hook')"
       conda info
       pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
@@ -155,7 +155,7 @@ jobs:
   ##
   - script: |
       conda init bash
-      eval "$('/C/Users/cgran/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+      eval "$('/usr/local/miniconda/bin/conda' 'shell.bash' 'hook')"
       conda activate conda_env
       conda info
       pwsh ./test-conda.ps1
