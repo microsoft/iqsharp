@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 
@@ -7,14 +7,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -98,7 +96,9 @@ namespace Microsoft.Quantum.IQSharp
                 AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            // The call to Reset below ensures that _metadata is not null.
+            Reset();
+            Debug.Assert(_metadata != null);
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
@@ -179,8 +179,18 @@ namespace Microsoft.Quantum.IQSharp
 
         private void Reset()
         {
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(
+                this.Assemblies.Where(IsAssemblyPossiblyQSharpReference)
+            ));
         }
+
+        private static bool IsAssemblyPossiblyQSharpReference(AssemblyInfo arg) =>
+            !Regex.Match(
+                arg.Assembly.GetName().Name,
+                // Reference filtering should match the filtering at
+                // https://github.com/microsoft/qsharp-compiler/blob/c3d1a09f70960d09af68e805294962e7e6c690d8/src/QuantumSdk/Sdk/Sdk.targets#L70.
+                "(?i)system.|mscorlib|netstandard.library|microsoft.netcore.app|csharp|fsharp|microsoft.visualstudio|microsoft.testplatform|microsoft.codeanalysis|fparsec|newtonsoft|roslynwrapper|yamldotnet|markdig|serilog"
+            ).Success;
 
         /// <summary>
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext

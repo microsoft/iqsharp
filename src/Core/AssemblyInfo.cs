@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -9,6 +9,7 @@ using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler;
+using System.IO;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -25,19 +26,36 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Constructor for non Q# compiled assemblies.
         /// </summary>
-        public AssemblyInfo(Assembly assembly) : this(assembly, location: null, syntaxTree: null)
+        public AssemblyInfo(Assembly assembly) : this(assembly, location: null, syntaxTree: null, qirBitcode: null)
         {
         }
 
         /// <summary>
         /// Constructor for Q# compiled assemblies.
         /// </summary>
-        public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree)
+        /// <remarks>
+        ///     If <paramref name="qirBitcode"/> is not <c>null</c>, its
+        ///     contents will be read by this constructor, and its position
+        ///     will not be reset. That is, the position of <paramref name="qirBitcode" />
+        ///     after this call will be that set by the <see cref="System.IO.Stream.CopyTo(Stream)"/>
+        ///     method (generally, the end of the QIR bitcode stream).
+        /// </remarks>
+        public AssemblyInfo(Assembly assembly, string location, QsNamespace[] syntaxTree, Stream qirBitcode)
         {
             Assembly = assembly;
             Location = location ?? assembly?.Location;
             SyntaxTree = syntaxTree;
             _operations = new Lazy<OperationInfo[]>(InitOperations);
+
+            // If QIR bitcode is provided, read it into a new memory stream
+            // owned by this object.
+            if (qirBitcode != null)
+            {
+                var memoryStream = new MemoryStream();
+                qirBitcode.CopyTo(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                QirBitcode = memoryStream;
+            }
         }
 
         /// <summary>
@@ -54,6 +72,11 @@ namespace Microsoft.Quantum.IQSharp
         /// For Q#-based assemblies, the corresponding SyntaxTree.
         /// </summary>
         public QsNamespace[] SyntaxTree { get; }
+
+        /// <summary>
+        /// The stream from which QIR bitcode for the entry point can be read.
+        /// </summary>
+        public Stream QirBitcode { get; }
 
         /// <summary>
         /// For Q#-based assemblies, the corresponding operations found in the SyntaxTree.

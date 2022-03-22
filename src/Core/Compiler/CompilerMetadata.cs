@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -9,7 +9,6 @@ using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
-using Microsoft.Quantum.IQSharp.Common;
 
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
@@ -96,7 +95,12 @@ namespace Microsoft.Quantum.IQSharp
         /// Calculates Q# metadata needed for all the Assemblies and their dependencies.
         /// </summary>
         private static QsReferences QsInit(IEnumerable<string> paths) =>
-            new QsReferences(ProjectManager.LoadReferencedAssemblies(paths, ignoreDllResources: false));
+            new QsReferences(
+                ProjectManager.LoadReferencedAssembliesInParallel(
+                    paths,
+                    ignoreDllResources: false
+                )
+            );
 
         public CompilerMetadata WithAssemblies(params AssemblyInfo[] assemblies)
         {

@@ -19,6 +19,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Runtime;
+using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -26,6 +28,18 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
+        private const string MicrosoftSimulator = "microsoft.simulator";
+
+        /// <summary>
+        /// Returns whether a target ID is meant for quantum execution since not all targets
+        /// exposed by providers are meant for that. More specifically, the Microsoft provider exposes
+        /// targets that are not meant for quantum execution and the only ones meant for that start
+        /// with "microsoft.simulator"
+        /// </summary>
+        private static bool IsQuantumExecutionTarget(string targetId) =>
+            AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
+            || targetId.StartsWith(MicrosoftSimulator);
+
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         private TokenCredential? Credential { get; set; }
@@ -39,7 +53,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
-        private IEnumerable<TargetStatusInfo>? AvailableTargets => AvailableProviders?.SelectMany(provider => provider.Targets);
+        private IEnumerable<TargetStatusInfo>? AvailableTargets =>
+            AvailableProviders
+            ?.SelectMany(provider => provider.Targets)
+            ?.Where(t => t.TargetId != null && IsQuantumExecutionTarget(t.TargetId));
         private IEnumerable<TargetStatusInfo>? ValidExecutionTargets => AvailableTargets?.Where(AzureExecutionTarget.IsValid);
         private string ValidExecutionTargetsDisplayText =>
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
@@ -315,16 +332,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
-            var machine = AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString);
-            if (machine == null)
-            {
-                // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                return AzureClientError.InvalidTarget.ToExecutionResult();
-            }
-
-            channel?.Stdout($"Submitting {submissionContext.OperationName} to target {ActiveTarget.TargetId}...");
-
             IEntryPoint? entryPoint;
             try
             {
@@ -346,11 +353,33 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }
 
+            channel?.Stdout($"Submitting {submissionContext.OperationName} to target {ActiveTarget.TargetId}...");
+
             try
             {
+                // QirSubmitter and CreateMachine have return types with different base types
+                // but both have a SubmitAsync method that returns an IQuantumMachineJob.
+                // Thus, we can branch on whether we need a QIR submitter or a translator,
+                // but can use the same task object to represent both return values.
+                Task<IQuantumMachineJob>? jobTask = null;
+                if (SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString) is IQirSubmitter submitter)
+                {
+                    jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
+                }
+                else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
+                {
+                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
+                }
+                else
+                {
+                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                    return AzureClientError.InvalidTarget.ToExecutionResult();
+                }
+
                 Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
-                var job = await entryPoint.SubmitAsync(machine, submissionContext);
-                channel?.Stdout($"Job successfully submitted for {submissionContext.Shots} shots.");
+                var job = await jobTask;
+                channel?.Stdout($"Job successfully submitted.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
                 channel?.Stdout($"   Job ID: {job.Id}");
                 MostRecentJobId = job.Id;
@@ -543,7 +572,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 //                 cancellation token support.
                 var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
-                return responseStream.ToHistogram(Logger).ToExecutionResult();
+                return responseStream.ToHistogram(
+                    Logger, 
+                    isSimulatorOutput: this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+                .ToExecutionResult();
             }
             catch (Exception e)
             {
