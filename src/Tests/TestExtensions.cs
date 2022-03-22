@@ -20,6 +20,21 @@ namespace Tests.IQSharp
     
     internal static class TestExtensions
     {
+        internal class ObjectAssert
+        {
+            internal object? Object;
+        }
+
+        internal static ObjectAssert Object(this Assert assert, object? obj) =>
+            new ObjectAssert { Object = obj };
+
+        internal static T IsInstanceOfType<T>(this ObjectAssert assert, string message)
+        {
+            Assert.IsNotNull(assert.Object);
+            Assert.IsInstanceOfType(assert.Object, typeof(T), message);
+            return (T)assert.Object;
+        }
+
         internal class InputAssert : UsingEngineAssert
         {
             internal string Code;

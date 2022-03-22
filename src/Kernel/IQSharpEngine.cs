@@ -24,11 +24,26 @@ using System.Threading;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    /// <summary>
+    ///     Arguments for the <see cref="CompletionEvent"/> event.
+    /// </summary>
     public class CompletionEventArgs
     {
+        /// <summary>
+        ///     The number of completions returned by the event.
+        /// </summary>
         public int NCompletions { get; set; }
+
+        /// <summary>
+        ///      The time taken to respond to the completion request.
+        /// </summary>
         public TimeSpan Duration { get; set; }
     }
+
+    /// <summary>
+    ///      An event raised when completions are provided in response to a
+    ///      completion request.
+    /// </summary>
     public class CompletionEvent : Event<CompletionEventArgs>
     {
     }
@@ -126,7 +141,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             services.GetRequiredService<ClientInfoListener>();
 
             // Handle a simple comm session handler for echo messages.
-            commsRouter.SessionOpenEvent("iqsharp_echo").On += async (session, data) =>
+            commsRouter.SessionOpenEvent("iqsharp_echo").On += (session, data) =>
             {
                 session.OnMessage += async (content) =>
                 {
@@ -136,6 +151,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     await session.Close();
                 };
+                // We don't have anything meaningful to wait on, so just return
+                // a complete task.
+                return Task.CompletedTask;
             };
         }
 
@@ -206,6 +224,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
             RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
+            RegisterDisplayEncoder(new TaskProgressToHtmlEncoder());
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -334,7 +353,20 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         // a non-critical failure that should result in a warning.
                         try
                         {
-                            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance(services, type) as IResultEncoder);
+                            switch (ActivatorUtilities.CreateInstance(services, type))
+                            {
+                                case IResultEncoder encoder:
+                                    RegisterDisplayEncoder(encoder);
+                                    break;
+
+                                case {} other:
+                                    logger.LogWarning("Expected object of type IResultEncoder but got {Type}.", other.GetType());
+                                    break;
+
+                                default:
+                                    logger.LogWarning("Expected object of type IResultEncoder but got null.");
+                                    break;
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -353,9 +385,36 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <inheritdoc />
         public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
         {
+            void ReportTaskStatus(object sender, TaskPerformanceArgs args)
+            {
+                channel.Display(args);
+            }
+
+            void ReportTaskCompletion(object sender, TaskCompleteArgs args)
+            {
+                channel.Display(args);
+            }
+
             // Make sure that all relevant initializations have completed before executing.
             await this.Initialized;
-            return await base.Execute(input, channel, token);
+            if (configurationSource.InternalShowPerf)
+            {
+                performanceMonitor.OnTaskPerformanceAvailable += ReportTaskStatus;
+                performanceMonitor.OnTaskCompleteAvailable += ReportTaskCompletion;
+            }
+
+            try
+            {
+                return await base.Execute(input, channel, token);
+            }
+            finally
+            {
+                if (configurationSource.InternalShowPerf)
+                {
+                    performanceMonitor.OnTaskPerformanceAvailable -= ReportTaskStatus;
+                    performanceMonitor.OnTaskCompleteAvailable -= ReportTaskCompletion;
+                }
+            }
         }
 
         /// <summary>
@@ -366,6 +425,22 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public override async Task<ExecutionResult> ExecuteMundane(string input, IChannel channel)
         {
             channel = channel.WithNewLines();
+            using var perfTask = performanceMonitor.BeginTask("Mundane cell execution", "execute-mundane");
+
+            void ForwardCompilerTask(QsCompiler.Diagnostics.CompilationTaskEventType type, string? parentTaskName, string taskName)
+            {
+                channel.Display(new ForwardedCompilerPerformanceEvent(
+                    type,
+                    parentTaskName,
+                    taskName,
+                    perfTask!.TimeSinceStart                    
+                ));
+            }
+
+            if (configurationSource.InternalShowCompilerPerf)
+            {
+                QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
+            }
 
             return await Task.Run(async () =>
             {
@@ -379,11 +454,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         "Engine was not initialized before call to ExecuteMundane. " +
                         "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
                     );
+                    perfTask.ReportStatus("Initialized engine.", "init-engine");
+
                     var workspace = this.Workspace!;
                     var snippets = this.Snippets!;
                     await workspace.Initialization;
+                    perfTask.ReportStatus("Initialized workspace.", "init-workspace");
 
-                    var code = snippets.Compile(input);
+                    var code = await snippets.Compile(input, perfTask);
+                    perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
 
@@ -434,6 +513,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 finally
                 {
                     performanceMonitor.Report();
+                    if (configurationSource.InternalShowCompilerPerf)
+                    {
+                        QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent -= ForwardCompilerTask;
+                    }
                 }
             });
         }
