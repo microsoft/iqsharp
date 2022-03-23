@@ -422,7 +422,7 @@ namespace Microsoft.Quantum.IQSharp
                                 : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
                 // In parallel, get manifest resources by writing syntax trees to memory.
-                Task<List<ResourceDescription>?> manifestResources = null;
+                Task<List<ResourceDescription>?> manifestResources = Task.FromResult<List<ResourceDescription>?>(null);
                 Stream? qirStream = null;
                 if (string.IsNullOrEmpty(executionTarget) && !generateQir)
                 {
