@@ -79,7 +79,7 @@ jobs:
   - name: OperatingSystem
     value: 'windows'
   steps:
-    template: steps-conda.yml
+  - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
 - job: "test_conda_windows"
@@ -90,5 +90,8 @@ jobs:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
   steps:
-    template: steps-conda.yml
+  variables:
+  - name: OperatingSystem
+    value: 'windows'
+  - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
