@@ -30,7 +30,7 @@ using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
 using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
 using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
-
+using System.Threading.Tasks;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -68,8 +68,17 @@ namespace Microsoft.Quantum.IQSharp
             ["Microsoft.Quantum.Canon"] = null
         };
 
-        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService)
+        private readonly Task DependenciesInitialized;
+        private readonly ILogger? Logger;
+
+        // Note to future IQ# developers: This service should start ★fast★.
+        // Please bbe judicious when adding parameters to this constructor, and
+        // defer those dependencies to tasks if at all possible.
+        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService, IServiceProvider serviceProvider)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Logger = logger;
             if (options?.Value?.AutoOpenNamespaces is string namespaces)
             {
                 logger?.LogInformation(
@@ -89,20 +98,135 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
+            DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
+            Task.Run(async () =>
+            {
+                await DependenciesInitialized;
+                stopwatch.Stop();
+                logger?.LogInformation(
+                    "Initialized dependencies for compiler service {Elapsed} after service start.",
+                    stopwatch.Elapsed
+                );
+            });
         }
 
-        private CompilationLoader CreateTemporaryLoader(string source)
+        // We take references as a task so that it can load in the background
+        // without placing a hard dependency at the level of a constructor.
+        // That in turn allows this service to begin initializing sooner during
+        // kernel startup.
+        private async Task InitializeDependencies(Task<IReferences> referencesTask) => await
+            // Force types that we'll depend on later to initialize by
+            // calling trivial methods now.
+            Task.WhenAll(
+                Task.Run(
+                    () =>
+                    {
+                        CreateTemporaryLoader("");
+                    }
+                ),
+                Task.Run(
+                    async () =>
+                    {
+                        // See https://github.com/dotnet/roslyn/issues/46340
+                        // for why this works. We need to compile something
+                        // that actually depends on something in System so
+                        // that the assembly references we're trying to cache
+                        // don't get optimized away.
+                        var compilation = CSharpCompilation.Create(
+                            Path.GetRandomFileName(),
+                            syntaxTrees: new List<CodeAnalysis.SyntaxTree>
+                            {
+                                CSharpSyntaxTree.ParseText(@"
+                                    using System;
+                                    namespace Placeholder
+                                    {
+                                        public class Placeholder
+                                        {
+                                            public void DoSomething()
+                                            {
+                                                Console.WriteLine(""hi!"");
+                                            }
+                                        }
+                                    }
+                                ")
+                            },
+                            references: (await referencesTask).CompilerMetadata.RoslynMetadatas,
+                            options: new CSharpCompilationOptions(
+                                OutputKind.DynamicallyLinkedLibrary,
+                                optimizationLevel: OptimizationLevel.Release,
+                                allowUnsafe: true
+                            )
+                        );
+                        try
+                        {
+                            using var ms = new MemoryStream();
+                            var result = compilation.Emit(ms);
+                            if (!result.Success)
+                            {
+                                var failures = string.Join("\n",
+                                    result.Diagnostics
+                                    .Select(diag => diag.ToString())
+                                );
+                                Logger?.LogWarning(
+                                    "C# compilation failure or warnings while initializing Roslyn dependencies:\n{Failures}",
+                                    failures
+                                );
+                            }
+                            else
+                            {
+                                // Do nothing — the compilation worked, so we
+                                // should have initialized things correctly.
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Exceptions here are noncritical, but could have
+                            // perf impact, so log them accordingly.
+                            Logger?.LogWarning(ex, "Exception encountered while initializing Roslyn dependencies.");
+                        }
+                    }
+                ),
+                Task.Run(
+                    () =>
+                    {
+                        var codegenContext = CodegenContext.Create(ImmutableArray<QsNamespace>.Empty);
+                        SimulationCode.generate("foo", codegenContext);
+                    }
+                ),
+                Task.Run(
+                    () =>
+                    {
+                        try
+                        {
+                            var syntaxTree = new QsCompilation(
+                                ImmutableArray<QsNamespace>.Empty,
+                                ImmutableArray<QsQualifiedName>.Empty
+                            );
+                            using var serializedCompilation = new MemoryStream();
+                            CompilationLoader.WriteBinary(syntaxTree, serializedCompilation);
+                        }
+                        // Ignore errors, since we don't care about the result;
+                        // we just want to force static constructors to load.
+                        catch {}
+                    }
+                )
+            );
+
+        private CompilationLoader CreateTemporaryLoader(string source, ITaskReporter? perfTask = null)
         {
             var uri = new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs"));
             var sources = new Dictionary<Uri, string>() { { uri, $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {source} }}" } }.ToImmutableDictionary();
             var loadOptions = new CompilationLoader.Configuration();
+            perfTask?.ReportStatus("Ready to create compilation loader.", "ready-loader");
             return new CompilationLoader(_ => sources, _ => QsReferences.Empty, loadOptions);
         }
 
         /// <inheritdoc/>
-        public IEnumerable<QsNamespaceElement> IdentifyElements(string source)
+        public IEnumerable<QsNamespaceElement> IdentifyElements(string source, ITaskReporter? parent = null)
         {
-            var loader = CreateTemporaryLoader(source);
+            using var perfTask = parent?.BeginSubtask("Identifying namespace elements", "identify-elements");
+            var loader = CreateTemporaryLoader(source, perfTask);
+            perfTask?.ReportStatus("Created loader.", "created-loader");
             if (loader.VerifiedCompilation == null) { return ImmutableArray<QsNamespaceElement>.Empty; }
             return loader.VerifiedCompilation.SyntaxTree.TryGetValue(Snippets.SNIPPETS_NAMESPACE, out var tree)
                    ? tree.Elements
@@ -138,8 +262,11 @@ namespace Microsoft.Quantum.IQSharp
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            RuntimeCapability? runtimeCapability = null,
+            ITaskReporter? parent = null
+        )
         {
+            using var perfTask = parent?.BeginSubtask("Updating compilation", "update-compilation");
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
@@ -158,7 +285,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         /// <inheritdoc/>
-        public AssemblyInfo? BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        public async Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             RuntimeCapability? runtimeCapability = null, bool generateQir = false)
         {
             var signature = operation.Header.PrintSignature();
@@ -176,7 +303,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true, generateQir: generateQir);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true, generateQir: generateQir);
         }
 
         /// <summary>
@@ -184,9 +311,10 @@ namespace Microsoft.Quantum.IQSharp
         /// Each snippet code is wrapped inside the 'SNIPPETS_NAMESPACE' namespace and processed as a file
         /// with the same name as the snippet id.
         /// </summary>
-        public AssemblyInfo? BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+        public async Task<AssemblyInfo?> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+            RuntimeCapability? runtimeCapability = null, ITaskReporter? parent = null)
         {
+            using var perfTask = parent?.BeginSubtask("Building snippets.", "build-snippets");
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
                 entry => string.IsNullOrEmpty(entry.Value) 
                     ? $"open {entry.Key};"
@@ -205,7 +333,10 @@ namespace Microsoft.Quantum.IQSharp
             };
 
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
-            var assembly = BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            perfTask?.ReportStatus("About to build assembly.", "build-assembly");
+            var assembly = await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, 
+            executionTarget, runtimeCapability, parent: perfTask);
+            perfTask?.ReportStatus("Built assembly.", "built-assembly");
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
             return assembly;
@@ -214,11 +345,11 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        public AssemblyInfo? BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        public async Task<AssemblyInfo?> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             RuntimeCapability? runtimeCapability = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
         }
 
         /// <summary>
@@ -230,77 +361,90 @@ namespace Microsoft.Quantum.IQSharp
         ///     <paramref name="generateQir" /> is set. QIR generation requires at
         ///     least one valid entry point to be defined.
         /// </remarks>
-        private AssemblyInfo? BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
+        private async Task<AssemblyInfo?> BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
             string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false,
+            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false, ITaskReporter? parent = null,
             bool generateQir = false)
         {
+            using var perfTask = parent?.BeginSubtask("Building assembly.", "build-assembly");
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
             if (logger.HasErrors || qsCompilation == null) return null;
 
             try
             {
+                using var codeGenTask = perfTask?.BeginSubtask("Code generation", "code-generation");
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
-                var trees = new List<CodeAnalysis.SyntaxTree>();
+                var trees = new List<Task<CodeAnalysis.SyntaxTree>>();
                 var allSources = regenerateAll
                     ? GetSourceFiles.Apply(qsCompilation.Namespaces)
                     : sources.Keys.Select(
                         file => CompilationUnitManager.GetFileId(file)
                       );
+
                 foreach (var file in allSources)
                 {
-                    var codegenContext = string.IsNullOrEmpty(executionTarget)
-                        ? CodegenContext.Create(qsCompilation.Namespaces)
-                        : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
-                    var code = SimulationCode.generate(file, codegenContext);
-                    var tree = CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
-                    trees.Add(tree);
-                    logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
+                    trees.Add(Task.Run(() =>
+                    {
+                        codeGenTask?.ReportStatus($"Creating codegen context for file {file}", "generate-one-file");
+                        var codegenContext = string.IsNullOrEmpty(executionTarget)
+                            ? CodegenContext.Create(qsCompilation.Namespaces)
+                            : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
+                        codeGenTask?.ReportStatus($"Generating C# for file {file}", "generate-one-file");
+                        var code = SimulationCode.generate(file, codegenContext);
+                        codeGenTask?.ReportStatus($"Parsing generated C# for file {file}", "generate-one-file");
+                        logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
+                        return CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
+                    }));
                 }
 
                 // Compile the C# syntax trees:
-                var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
+                var compilation = Task.Run(async () =>
+                {
+                    var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
+                    var parsedTrees = await Task.WhenAll(trees);
+                    using var csCompileTask = codeGenTask?.BeginSubtask("Compiling generated C#.", "compile-csharp");
 
-                var compilation = CSharpCompilation.Create(
-                    Path.GetFileNameWithoutExtension(dllName),
-                    trees,
-                    metadata.RoslynMetadatas,
-                    options);
+                    return CSharpCompilation.Create(
+                        Path.GetFileNameWithoutExtension(dllName),
+                        parsedTrees,
+                        metadata.RoslynMetadatas,
+                        options);
+                });
 
                 var fromSources = regenerateAll
-                                  ? qsCompilation.Namespaces
-                                  : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
+                                ? qsCompilation.Namespaces
+                                : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
-                List<ResourceDescription>? manifestResources = null;
+                // In parallel, get manifest resources by writing syntax trees to memory.
+                Task<List<ResourceDescription>?> manifestResources = null;
                 Stream? qirStream = null;
                 if (string.IsNullOrEmpty(executionTarget) && !generateQir)
                 {
-                    // Generate the assembly from the C# compilation:
-                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
-
-                    using var serializedCompilation = new MemoryStream();
-                    if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                    manifestResources = Task.Run(() =>
                     {
-                        logger.LogError("IQS005", "Failed to write compilation to binary stream.");
-                        return null;
-                    }
-
-                    manifestResources = new List<ResourceDescription>()
-                    {
-                        new ResourceDescription(
-                            resourceName: DotnetCoreDll.SyntaxTreeResourceName,
-                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
-                            isPublic: true
-                        )
-                    };
-
-
+                        using var qstTask = codeGenTask?.BeginSubtask("Serializing Q# syntax tree.", "serialize-qs-ast");
+                        var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+                        using var serializedCompilation = new MemoryStream();
+                        if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                        {
+                            logger.LogError("IQS005", "Failed to write compilation to binary stream.");
+                            return null;
+                        }
+                        return new List<ResourceDescription>()
+                        {
+                            new ResourceDescription(
+                                resourceName: DotnetCoreDll.SyntaxTreeResourceName,
+                                dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                                isPublic: true
+                            )
+                        };
+                    });
                 }
                 else if (qsCompilation.EntryPoints.Any())
                 {
@@ -308,10 +452,8 @@ namespace Microsoft.Quantum.IQSharp
                     transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
                     transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
                     var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
-
                     using var generator = new Generator(transformed);
                     generator.Apply();
-
                     // Write generated QIR to disk.
                     var tempPath = Path.GetTempPath();
                     var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
@@ -326,8 +468,10 @@ namespace Microsoft.Quantum.IQSharp
                     return null;
                 }
 
+                // Generate the assembly from the C# compilation once we have
+                // both.
                 using var ms = new MemoryStream();
-                var result = compilation.Emit(ms, manifestResources: manifestResources);
+                var result = (await compilation).Emit(ms, manifestResources: await manifestResources);
 
                 if (!result.Success)
                 {

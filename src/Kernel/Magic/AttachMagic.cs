@@ -14,10 +14,15 @@ using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
+    /// <summary>
+    ///     Magic command to attach a debugger to the current IQ# session.
+    /// </summary>
     public class AttachMagic : AbstractMagic
     {
-        private ISnippets Snippets;
-
+        /// <summary>
+        ///     Creates an instance of the magic command using the given
+        ///     dependencies.
+        /// </summary>
         public AttachMagic(ILogger<AttachMagic> logger) : base(
             "attach",
             new Microsoft.Jupyter.Core.Documentation

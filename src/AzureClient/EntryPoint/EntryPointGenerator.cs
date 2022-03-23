@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
@@ -80,7 +81,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public IEntryPoint Generate(string operationName, string? executionTarget,
+        public async Task<IEntryPoint> Generate(string operationName, string? executionTarget,
             RuntimeCapability? runtimeCapability = null, bool generateQir = false)
         {
             Logger?.LogDebug($"Generating entry point: operationName={operationName}, executionTarget={executionTarget}");
@@ -104,7 +105,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 {
                     try
                     {
-                        workspaceAssemblies.Add(Compiler.BuildFiles(
+                        workspaceAssemblies.Add(await Compiler.BuildFiles(
                             project.SourceFiles.ToArray(),
                             compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
                             logger,
@@ -133,7 +134,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (snippets.Any())
             {
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
-                SnippetsAssemblyInfo = Compiler.BuildSnippets(
+                SnippetsAssemblyInfo = await Compiler.BuildSnippets(
                     snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
                 if (SnippetsAssemblyInfo == null || logger.HasErrors)
                 {
@@ -152,7 +153,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 throw new UnsupportedOperationException(operationName);
             }
 
-            EntryPointAssemblyInfo = Compiler.BuildEntryPoint(
+            EntryPointAssemblyInfo = await Compiler.BuildEntryPoint(
                 operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, runtimeCapability,
                 generateQir: generateQir);
             if (EntryPointAssemblyInfo == null || logger.HasErrors)

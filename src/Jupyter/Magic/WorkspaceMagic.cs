@@ -91,9 +91,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             var status = new Jupyter.TaskStatus($"Reloading workspace");
             var statusUpdater = channel.DisplayUpdatable(status);
             void Update() => statusUpdater.Update(status);
-            var task = Task.Run(() =>
+            var task = Task.Run(async () =>
             {
-                workspace.Reload((newStatus) =>
+                await workspace.Reload((newStatus) =>
                 {
                     status.Subtask = newStatus;
                     Update();

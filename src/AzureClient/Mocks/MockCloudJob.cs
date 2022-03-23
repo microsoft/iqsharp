@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 #nullable enable
+#pragma warning disable 1591 // Allow undocumented members in mock classes.
 
 using Microsoft.Azure.Quantum;
 using Azure.Quantum.Jobs.Models;
