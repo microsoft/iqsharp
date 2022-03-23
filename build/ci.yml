@@ -90,6 +90,7 @@ jobs:
   # Pack conda packages
   - script: |
       eval "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
+      conda activate conda_env
       conda info
       pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
@@ -119,14 +120,15 @@ jobs:
   steps:
   - template: steps-conda-env.yml
   # Pack conda packages
-  - script: |
+  - pwsh: |
       (& "C:\Users\cgran\Anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+      conda activate conda_env
       conda info
       pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   # Test conda packages
-  - script: |
+  - pwsh: |
       (& "C:\Users\cgran\Anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
       conda activate conda_env
       conda info
@@ -153,14 +155,15 @@ jobs:
   steps:
   - template: steps-conda-env.yml
   # Pack conda packages
-  - script: |
+  - pwsh: |
       (& "C:\Users\cgran\Anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+      conda activate conda_env
       conda info
       pwsh ./pack-conda.ps1
     displayName: "Packing IQ# packages"
     workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   # Test conda packages
-  - script: |
+  - pwsh: |
       (& "C:\Users\cgran\Anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
       conda activate conda_env
       conda info
