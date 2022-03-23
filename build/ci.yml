@@ -53,6 +53,9 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'ubuntu-latest'
+  variables:
+  - name: OperatingSystem
+    value: 'linux'
   steps:
   - template: steps-conda-env.yml
   # Pack conda packages
@@ -85,6 +88,9 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'macOS-latest'
+  variables:
+  - name: OperatingSystem
+    value: 'mac'
   steps:
   - template: steps-conda-env.yml
   # Pack conda packages
@@ -119,13 +125,15 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
+  variables:
+  - name: OperatingSystem
+    value: 'windows'
   steps:
   # Pre-reqs
   - task: DownloadBuildArtifacts@0
     inputs:
       artifactName: iqsharp
       downloadPath: '$(System.DefaultWorkingDirectory)/artifacts'
-
   - pwsh: Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
     displayName: "Move build artifacts to IQ# working directory"
   # Create conda environment
@@ -135,6 +143,10 @@ jobs:
   - pwsh: |
       conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
     displayName: Install Anaconda packages
+  - pwsh: |
+      'Write-Host "Running this job on $(OperatingSystem)"'
+    displayName: Print on Windows
+    condition: eq(variables.OperatingSystem, 'windows')
   # Pack conda packages
   - pwsh: |
       (& "C:\anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
