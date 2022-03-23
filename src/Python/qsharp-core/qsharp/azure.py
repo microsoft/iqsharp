@@ -131,8 +131,9 @@ def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
 def execute(op : qsharp.QSharpCallable, **params) -> Dict:
     """
     Submits a job to an Azure Quantum workspace and waits for completion.
-    Returns a dictionary with keys corresponding to the possible operation results and values
-    indicating the percentage of shots that resulted in that key value.
+    Returns a dictionary containing the results of the job. This dictionary will usually
+    have keys corresponding to the possible operation results and values indicating the
+    percentage of shots that resulted in that key value, but may vary depending on the job's target.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute for more details.
     """
     result = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, **params)
@@ -151,8 +152,9 @@ def status(jobId : str = '', **params) -> AzureJob:
 def output(jobId : str = '', **params) -> Dict:
     """
     Displays results for a job in the current Azure Quantum workspace.
-    Returns a dictionary with keys corresponding to the possible operation results and values
-    indicating the percentage of shots that resulted in that key value.
+    Returns a dictionary containing the results of the job. This dictionary will usually
+    have keys corresponding to the possible operation results and values indicating the
+    percentage of shots that resulted in that key value, but may vary depending on the job's target.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.output for more details.
     """
     result = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, **params)
