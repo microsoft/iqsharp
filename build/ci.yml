@@ -89,9 +89,9 @@ jobs:
   container:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
-  steps:
   variables:
   - name: OperatingSystem
     value: 'windows'
+  steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
