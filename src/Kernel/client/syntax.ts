@@ -34,7 +34,7 @@ export function defineQSharpMode() {
         },
         {
             token: "keyword",
-            regex: String.raw`(let|set|w\/|new|not|and|or|use|borrow|using|borrowing|newtype|mutable)\b`,
+            regex: String.raw`(let|set|w\/|new|not|and|or|use|borrow|using|borrowing|mutable|size)\b`,
             beginWord: true,
         },
         {
