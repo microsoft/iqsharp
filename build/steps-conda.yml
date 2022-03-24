@@ -53,7 +53,7 @@ steps:
 # Pack conda packages for each OS
 ##
 - script: |
-    eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+    eval "$('$(variables.CondaPath)' 'shell.bash' 'hook')"
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1

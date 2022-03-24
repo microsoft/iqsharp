@@ -54,8 +54,8 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   variables:
-  - name: OperatingSystem
-    value: 'linux'
+    OperatingSystem: 'linux'
+    CondaPath: '/usr/bin/conda'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
