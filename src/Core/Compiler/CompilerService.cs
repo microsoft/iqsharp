@@ -54,6 +54,16 @@ namespace Microsoft.Quantum.IQSharp
             ///     are opened. Aliases can be provided by using <c>=</c>.
             /// </summary>
             public string? AutoOpenNamespaces { get; set; }
+
+
+            /// <summary>
+            ///     If <c>true</c>, loads and caches compiler dependencies (e.g.: Roslyn
+            ///     and Q# code generation) on startup.
+            ///     This has a significant performance advantage, especially
+            ///     when a kernel is started in the background, but can cause
+            ///     more RAM to be used.
+            /// </summary>
+            public bool CacheCompilerDependencies { get; set; } = false;
         }
 
         /// <summary>
@@ -72,9 +82,14 @@ namespace Microsoft.Quantum.IQSharp
         private readonly ILogger? Logger;
 
         // Note to future IQ# developers: This service should start ★fast★.
-        // Please bbe judicious when adding parameters to this constructor, and
+        // Please be judicious when adding parameters to this constructor, and
         // defer those dependencies to tasks if at all possible.
-        public CompilerService(ILogger<CompilerService>? logger, IOptions<Settings>? options, IEventService? eventService, IServiceProvider serviceProvider)
+        public CompilerService(
+            ILogger<CompilerService>? logger,
+            IOptions<Settings>? options,
+            IEventService? eventService,
+            IServiceProvider serviceProvider
+        )
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -98,16 +113,23 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
-            DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
-            Task.Run(async () =>
+            if (options?.Value.CacheCompilerDependencies ?? false)
             {
-                await DependenciesInitialized;
-                stopwatch.Stop();
-                logger?.LogInformation(
-                    "Initialized dependencies for compiler service {Elapsed} after service start.",
-                    stopwatch.Elapsed
-                );
-            });
+                DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
+                Task.Run(async () =>
+                {
+                    await DependenciesInitialized;
+                    stopwatch.Stop();
+                    logger?.LogInformation(
+                        "Initialized dependencies for compiler service {Elapsed} after service start.",
+                        stopwatch.Elapsed
+                    );
+                });
+            }
+            else
+            {
+                DependenciesInitialized = Task.CompletedTask;
+            }
         }
 
         // We take references as a task so that it can load in the background
