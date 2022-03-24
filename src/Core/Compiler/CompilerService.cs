@@ -56,12 +56,13 @@ namespace Microsoft.Quantum.IQSharp
 
 
             /// <summary>
-            ///     If <c>true</c>, caches compiler services on startup.
+            ///     If <c>true</c>, caches compiler dependencies (e.g.: Roslyn
+            ///     and Q# code generation) on startup.
             ///     This has a significant performance advantage, especially
             ///     when a kernel is started in the background, but can cause
             ///     more RAM to be used.
             /// </summary>
-            public bool CacheCompilerServices { get; set; } = false;
+            public bool CacheCompilerDependencies { get; set; } = false;
         }
 
         /// <inheritdoc/>
@@ -106,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
-            if (options?.Value.CacheCompilerServices ?? false)
+            if (options?.Value.CacheCompilerDependencies ?? false)
             {
                 DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
                 Task.Run(async () =>
