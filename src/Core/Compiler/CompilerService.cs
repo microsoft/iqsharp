@@ -56,7 +56,7 @@ namespace Microsoft.Quantum.IQSharp
 
 
             /// <summary>
-            ///     If <c>true</c>, caches compiler dependencies (e.g.: Roslyn
+            ///     If <c>true</c>, loads and caches compiler dependencies (e.g.: Roslyn
             ///     and Q# code generation) on startup.
             ///     This has a significant performance advantage, especially
             ///     when a kernel is started in the background, but can cause
