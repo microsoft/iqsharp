@@ -22,16 +22,7 @@ steps:
   displayName: Create Anaconda environment
   condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
 
-# call conda with script
-- script: |
-    'Write-Host "$(CONDA)"'
-    $(CONDA)/scripts/conda.exe create --yes --quiet --name conda_env
-  displayName: Create Anaconda environment script
-  condition: eq(variables.OperatingSystem, 'windows')
-
-# call conda with pwsh
 - pwsh: |
-    'Write-Host "$(CONDA)"'
     $(CONDA)/scripts/conda.exe create --yes --quiet --name conda_env
   displayName: Create Anaconda environment pwsh
   condition: eq(variables.OperatingSystem, 'windows')
@@ -45,7 +36,8 @@ steps:
   condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
 
 - pwsh: |
-    conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    echo $(CONDA)
+    $(CONDA)/scripts/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
   condition: eq(variables.OperatingSystem, 'windows')
 
@@ -53,7 +45,7 @@ steps:
 # Pack conda packages for each OS
 ##
 - script: |
-    eval "$('$(variables.CondaPath)' 'shell.bash' 'hook')"
+    eval "$($(variables.CondaPath) 'shell.bash' 'hook')"
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
