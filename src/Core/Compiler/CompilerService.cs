@@ -426,8 +426,6 @@ namespace Microsoft.Quantum.IQSharp
                         : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
                     codeGenTask?.ReportStatus($"Generating C# for file {file}", "generate-one-file");
                     var code = SimulationCode.generate(file, codegenContext);
-                    var filename = Path.Combine(".", "obj", new FileInfo(file).Name + ".cs");
-                    File.WriteAllText(filename, code);
                     codeGenTask?.ReportStatus($"Parsing generated C# for file {file}", "generate-one-file");
                     logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
                     return CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
