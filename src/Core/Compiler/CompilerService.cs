@@ -483,6 +483,9 @@ namespace Microsoft.Quantum.IQSharp
             }
             catch (Exception e)
             {
+                // Log to the IQ# logger...
+                Logger?.LogError(e, $"Unexpected error compiling assembly.");
+                // ...and to the Q# compiler log.
                 logger.LogError("IQS002", $"Unexpected error compiling assembly: {e.Message}.");
                 return null;
             }

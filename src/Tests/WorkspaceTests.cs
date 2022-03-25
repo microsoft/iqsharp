@@ -25,7 +25,7 @@ namespace Tests.IQSharp
             // First time
             ws = Startup.Create<Workspace>("Workspace");
             await ws.Initialization;
-            Assert.IsFalse(ws.HasErrors);
+            Assert.That.Workspace(ws).DoesNotHaveErrors();
 
             var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
@@ -33,7 +33,7 @@ namespace Tests.IQSharp
             // On next reload:
             ws = Startup.Create<Workspace>("Workspace");
             await ws.Initialization;
-            Assert.IsFalse(ws.HasErrors);
+            Assert.That.Workspace(ws).DoesNotHaveErrors();
 
             op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.qss.NoOp");
             Assert.IsNotNull(op);
