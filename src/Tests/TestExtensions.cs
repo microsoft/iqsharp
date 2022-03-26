@@ -35,6 +35,21 @@ namespace Tests.IQSharp
             return (T)assert.Object;
         }
 
+        internal record class WorkspaceAssert(IWorkspace Workspace);
+
+        internal static WorkspaceAssert Workspace(this Assert assert, IWorkspace workspace) =>
+            new WorkspaceAssert(workspace);
+        internal static WorkspaceAssert DoesNotHaveErrors(this WorkspaceAssert assert)
+        {
+            var ws = assert.Workspace;
+            if (ws.HasErrors)
+            {
+                var msg = "Expected workspace initialization to succeed, but got errors:\n";
+                Assert.Fail(msg + string.Join("\n", ws.ErrorMessages.Select(err => $"- {err}")));
+            }
+            return assert;
+        }
+
         internal class InputAssert : UsingEngineAssert
         {
             internal string Code;
