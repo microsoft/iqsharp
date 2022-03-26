@@ -543,6 +543,13 @@ namespace Microsoft.Quantum.IQSharp
                 var projectCount = Projects.Count(project => !string.IsNullOrWhiteSpace(project.ProjectFile));
 
                 Logger?.LogInformation($"Reloading complete ({status}).");
+                if (HasErrors)
+                {
+                    Logger?.LogError(
+                        "Errors observed reloading workspace:\n{Errors}",
+                        string.Join("\n", ErrorMessages)
+                    );
+                }
                 Reloaded?.Invoke(this, new ReloadedEventArgs(Root, status, fileCount, projectCount, errorIds.ToArray(), duration.Elapsed));
             }
         }
