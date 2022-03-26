@@ -23,7 +23,7 @@ namespace Tests.IQSharp
             ws.Initialization.Wait();
             ws.GlobalReferences.AddPackage("mock.standard").Wait();
             await ws.Reload();
-            Assert.IsFalse(ws.HasErrors);
+            Assert.That.Workspace(ws).DoesNotHaveErrors();
             return ws;
         }
 
