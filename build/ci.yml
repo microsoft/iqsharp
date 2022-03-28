@@ -90,7 +90,7 @@ jobs:
     endpoint: qdkimages-acr
   variables:
   - name: OperatingSystem
-    value: 'windows'
+    value: 'windows-test'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')

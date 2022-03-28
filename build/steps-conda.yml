@@ -27,6 +27,11 @@ steps:
   displayName: Create Anaconda environment pwsh
   condition: eq(variables.OperatingSystem, 'windows')
 
+- pwsh: |
+    C:\Miniconda3\Scripts\conda.exe create --yes --quiet --name conda_env
+  displayName: Create Anaconda environment pwsh
+  condition: eq(variables.OperatingSystem, 'windows-test')
+
 ##
 # Install conda packages
 ##
@@ -39,6 +44,11 @@ steps:
     $(CONDA)/scripts/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
   condition: eq(variables.OperatingSystem, 'windows')
+
+- pwsh: |
+    C:\Miniconda3\Scripts\conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+  displayName: Install Anaconda packages
+  condition: eq(variables.OperatingSystem, 'windows-test')
 
 ##
 # Pack conda packages for each OS
@@ -70,6 +80,15 @@ steps:
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: eq(variables.OperatingSystem, 'windows')
 
+- pwsh: |
+    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    conda activate conda_env
+    conda info
+    pwsh ./pack-conda.ps1
+  displayName: "Packing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: eq(variables.OperatingSystem, 'windows-test')
+
 ##
 # Test conda packages for each OS
 ##
@@ -99,6 +118,15 @@ steps:
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'windows'))
+
+- pwsh: |
+    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    conda activate conda_env
+    conda info
+    pwsh ./test-conda.ps1
+  displayName: "Testing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'windows-test'))
 
 ##
 # Publish build artifacts.
