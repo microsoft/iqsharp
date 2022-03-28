@@ -401,43 +401,6 @@ namespace Microsoft.Quantum.IQSharp
             try
             {
                 using var codeGenTask = perfTask?.BeginSubtask("Code generation", "code-generation");
-                // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
-                var trees = new List<Task<CodeAnalysis.SyntaxTree>>();
-                var allSources = regenerateAll
-                    ? GetSourceFiles.Apply(qsCompilation.Namespaces)
-                    : sources.Keys.Select(
-                        file => CompilationUnitManager.GetFileId(file)
-                      );
-
-                foreach (var file in allSources)
-                {
-                    trees.Add(Task.Run(() =>
-                    {
-                        codeGenTask?.ReportStatus($"Creating codegen context for file {file}", "generate-one-file");
-                        var codegenContext = string.IsNullOrEmpty(executionTarget)
-                            ? CodegenContext.Create(qsCompilation.Namespaces)
-                            : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
-                        codeGenTask?.ReportStatus($"Generating C# for file {file}", "generate-one-file");
-                        var code = SimulationCode.generate(file, codegenContext);
-                        codeGenTask?.ReportStatus($"Parsing generated C# for file {file}", "generate-one-file");
-                        logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
-                        return CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
-                    }));
-                }
-
-                // Compile the C# syntax trees:
-                var compilation = Task.Run(async () =>
-                {
-                    var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
-                    var parsedTrees = await Task.WhenAll(trees);
-                    using var csCompileTask = codeGenTask?.BeginSubtask("Compiling generated C#.", "compile-csharp");
-
-                    return CSharpCompilation.Create(
-                        Path.GetFileNameWithoutExtension(dllName),
-                        parsedTrees,
-                        metadata.RoslynMetadatas,
-                        options);
-                });
 
                 var fromSources = regenerateAll
                                 ? qsCompilation.Namespaces
@@ -490,10 +453,42 @@ namespace Microsoft.Quantum.IQSharp
                     return null;
                 }
 
-                // Generate the assembly from the C# compilation once we have
+                // In the meanwhile...
+                // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
+                var allSources = regenerateAll
+                    ? GetSourceFiles.Apply(qsCompilation.Namespaces)
+                    : sources.Keys.Select(
+                        file => CompilationUnitManager.GetFileId(file)
+                      );
+
+                CodeAnalysis.SyntaxTree createTree(string file)
+                {
+                    codeGenTask?.ReportStatus($"Creating codegen context for file {file}", "generate-one-file");
+                    var codegenContext = string.IsNullOrEmpty(executionTarget)
+                        ? CodegenContext.Create(qsCompilation.Namespaces)
+                        : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
+                    codeGenTask?.ReportStatus($"Generating C# for file {file}", "generate-one-file");
+                    var code = SimulationCode.generate(file, codegenContext);
+                    codeGenTask?.ReportStatus($"Parsing generated C# for file {file}", "generate-one-file");
+                    logger.LogDebug($"Generated the following C# code for {file}:\n=============\n{code}\n=============\n");
+                    return CSharpSyntaxTree.ParseText(code, encoding: UTF8Encoding.UTF8);
+                }
+
+                var trees = allSources.Select(createTree).ToImmutableList();
+                var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Debug);
+                var parsedTrees = trees;
+                using var csCompileTask = codeGenTask?.BeginSubtask("Compiling generated C#.", "compile-csharp");
+
+                var compilation = CSharpCompilation.Create(
+                    Path.GetFileNameWithoutExtension(dllName),
+                    parsedTrees,
+                    metadata.RoslynMetadatas,
+                    options);
+
+                // Generate the assembly from the C# compilation and the manifestResources once we have
                 // both.
                 using var ms = new MemoryStream();
-                var result = (await compilation).Emit(ms, manifestResources: await manifestResources);
+                var result = compilation.Emit(ms, manifestResources: await manifestResources);
 
                 if (!result.Success)
                 {
@@ -530,6 +525,9 @@ namespace Microsoft.Quantum.IQSharp
             }
             catch (Exception e)
             {
+                // Log to the IQ# logger...
+                Logger?.LogError(e, $"Unexpected error compiling assembly.");
+                // ...and to the Q# compiler log.
                 logger.LogError("IQS002", $"Unexpected error compiling assembly: {e.Message}.");
                 return null;
             }
