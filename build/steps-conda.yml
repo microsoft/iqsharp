@@ -36,7 +36,6 @@ steps:
   condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
 
 - pwsh: |
-    echo $(CONDA)
     $(CONDA)/scripts/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
   condition: eq(variables.OperatingSystem, 'windows')
@@ -45,7 +44,7 @@ steps:
 # Pack conda packages for each OS
 ##
 - script: |
-    eval "$($(variables.CondaPath) 'shell.bash' 'hook')"
+    eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
@@ -63,7 +62,7 @@ steps:
   condition: eq(variables.OperatingSystem, 'mac')
 
 - pwsh: |
-    (& "C:\anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    (& "C:\Miniconda\scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
@@ -93,7 +92,7 @@ steps:
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'mac'))
 
 - pwsh: |
-    (& "C:\anaconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    (& "C:\Miniconda\scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate conda_env
     conda info
     pwsh ./test-conda.ps1
