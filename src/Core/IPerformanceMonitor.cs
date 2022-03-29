@@ -61,12 +61,67 @@ namespace Microsoft.Quantum.IQSharp
         ///      in the kernel process.
         /// </summary>
         public long ManagedRamUsed { get; }
-        
+
         /// <summary>
         ///      The approximate amount of RAM (in bytes) used by all code in
         ///      the IQ# kernel process.
         /// </summary>
         public long TotalRamUsed { get; }
+    }
+
+    public class TaskPerformanceArgs : EventArgs
+    {
+        public TaskPerformanceArgs(ITaskReporter task, string statusDescription, string statusId, TimeSpan timeSinceTaskStart)
+        {
+            this.Task = task;
+            this.StatusDescription = statusDescription;
+            this.StatusId = statusId;
+            this.TimeSinceTaskStart = timeSinceTaskStart;
+        }
+
+        public ITaskReporter Task { get; }
+        public string StatusDescription { get; }
+        public string StatusId { get; }
+        public TimeSpan TimeSinceTaskStart { get; }
+
+        public override string ToString() =>
+            $"[T+{TimeSinceTaskStart.TotalMilliseconds}ms] {Task.Description}: {StatusDescription}";
+    }
+
+    public class TaskCompleteArgs : EventArgs
+    {
+        public TaskCompleteArgs(ITaskReporter task, TimeSpan timeSinceTaskStart)
+        {
+            this.Task = task;
+            this.TimeSinceTaskStart = timeSinceTaskStart;
+        }
+
+        public ITaskReporter Task { get; }
+        public TimeSpan TimeSinceTaskStart { get; }
+
+        public override string ToString() =>
+            $"[T+{TimeSinceTaskStart.TotalMilliseconds}ms] {Task.Description} complete.";
+    }
+
+    /// <summary>
+    ///      An object that can be used to report progress through a given task.
+    ///      The task is considered complete when this object is disposed.
+    /// </summary>
+    public interface ITaskReporter : IDisposable
+    {
+        public ITaskReporter? Parent { get; }
+        public string Description { get; }
+        public string Id { get; }
+        public TimeSpan TimeSinceStart { get; }
+        public TimeSpan TotalTimeSinceStart { get; }
+
+        public void ReportStatus(string description, string id);
+        public ITaskReporter BeginSubtask(string description, string id);
+
+        public int Depth =>
+            Parent == null
+            ? 0
+            : 1 + Parent.Depth;
     }
 
     /// <summary>
@@ -95,11 +150,20 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
 
+        public event EventHandler<TaskPerformanceArgs>? OnTaskPerformanceAvailable;
+        public event EventHandler<TaskCompleteArgs>? OnTaskCompleteAvailable;
+
         /// <summary>
         ///      Begins performance monitoring. Does nothing if performance
         ///      monitoring has already been started.
         /// </summary>
         public void Start();
+
+        /// <summary>
+        ///      Returns an object that can be used to report progress through
+        ///      a given task.
+        /// </summary>
+        public ITaskReporter BeginTask(string description, string id);
 
     }
 }

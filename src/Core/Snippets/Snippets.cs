@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
@@ -24,7 +27,7 @@ namespace Microsoft.Quantum.IQSharp
     public class Snippets : ISnippets
     {
         // caches the Q# compiler metadata
-        private Lazy<CompilerMetadata> _metadata;
+        private Task<CompilerMetadata> _metadata;
 
         /// <summary>
         /// Namespace that all Snippets gets compiled into.
@@ -45,35 +48,26 @@ namespace Microsoft.Quantum.IQSharp
             AssemblyInfo = new AssemblyInfo(null);
             Items = new Snippet[0];
 
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-            Workspace.Reloaded += OnWorkspaceReloaded;
-            GlobalReferences.PackageLoaded += OnGlobalReferencesPackageLoaded; ;
+            Reset();
+            Debug.Assert(_metadata != null);
+
+            Workspace.Reloaded += (sender, args) => Reset();
+            GlobalReferences.PackageLoaded += (sender, args) => Reset();
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
             eventService?.TriggerServiceInitialized<ISnippets>(this);
         }
 
-        /// <summary>
-        /// Triggered when a new Package has been reloaded. Needs to reset the CompilerMetadata
-        /// </summary>
-        private void OnGlobalReferencesPackageLoaded(object sender, PackageLoadedEventArgs e)
+        private void Reset()
         {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
-        }
-
-        /// <summary>
-        /// Triggered when the Workspace has been reloaded. Needs to reset the CompilerMetadata
-        /// </summary>
-        private void OnWorkspaceReloaded(object sender, ReloadedEventArgs e)
-        {
-            _metadata = new Lazy<CompilerMetadata>(LoadCompilerMetadata);
+            _metadata = Task.Run(LoadCompilerMetadata);
         }
 
         /// <summary>
         /// This event is triggered when a Snippet finishes compilation.
         /// </summary>
-        public event EventHandler<SnippetCompiledEventArgs> SnippetCompiled;
+        public event EventHandler<SnippetCompiledEventArgs>? SnippetCompiled;
 
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
@@ -110,7 +104,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The list of Q# operations available across all snippets.
         /// </summary>
-        public IEnumerable<OperationInfo> Operations =>
+        public IEnumerable<OperationInfo>? Operations =>
             (Workspace == null || Workspace.HasErrors)
             ? AssemblyInfo?.Operations
             : AssemblyInfo?.Operations
@@ -123,10 +117,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Loads the compiler metadata, either from the GlobalReferences or includes the Workspace if available
         /// </summary>
-        private CompilerMetadata LoadCompilerMetadata() =>
-            Workspace.HasErrors
-                    ? GlobalReferences?.CompilerMetadata
-                    : GlobalReferences?.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+        private CompilerMetadata LoadCompilerMetadata()
+        {
+            Logger?.LogDebug("Loading compiler metadata.");
+            return Workspace.HasErrors
+                   ? GlobalReferences.CompilerMetadata
+                   : GlobalReferences.CompilerMetadata.WithAssemblies(Workspace.Assemblies.ToArray());
+        }
 
         /// <summary>
         /// Compiles the given code. 
@@ -140,20 +137,24 @@ namespace Microsoft.Quantum.IQSharp
         /// compilation and it will return a new Snippet with the warnings and Q# elements
         /// reported by the compiler.
         /// </summary>
-        public Snippet Compile(string code)
+        public async Task<Snippet> Compile(string code, ITaskReporter? parent = null)
         {
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
             var duration = Stopwatch.StartNew();
+            using var perfTask = parent?.BeginSubtask("Compiling snippets", "compile-snippets");
 
             // We add exactly one line of boilerplate code at the beginning of each snippet,
             // so tell the logger to subtract one from all displayed line numbers.
             var logger = new QSharpLogger(Logger, lineNrOffset: -1);
+            perfTask?.ReportStatus("Created logger.", "create-logger");
 
             try
             {
-                var snippets = SelectSnippetsToCompile(code).ToArray();
-                var assembly = Compiler.BuildSnippets(snippets, _metadata.Value, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"));
+                var snippets = SelectSnippetsToCompile(code, perfTask).ToArray();
+                perfTask?.ReportStatus("Selected snippets.", "selected-snippets");
+                var assembly = await Compiler.BuildSnippets(snippets, await _metadata, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
+                perfTask?.ReportStatus("Built snippets.", "built-snippets");
 
                 if (logger.HasErrors)
                 {
@@ -183,6 +184,7 @@ namespace Microsoft.Quantum.IQSharp
 
                 AssemblyInfo = assembly;
                 Items = snippets.Select(populate).ToArray();
+                perfTask?.ReportStatus("Populated snippets service with new snippets.", "populated-snippets");
 
                 return Items.Last();
             }
@@ -201,9 +203,9 @@ namespace Microsoft.Quantum.IQSharp
         /// - either because they have the same id, or because they previously defined an operation
         /// which is in the new Snippet - and replaces them with `newSnippet` itself.
         /// </summary>
-        private IEnumerable<Snippet> SelectSnippetsToCompile(string code)
+        private IEnumerable<Snippet> SelectSnippetsToCompile(string code, ITaskReporter? perfTask = null)
         {
-            var ops = Compiler.IdentifyElements(code).Select(Extensions.ToFullName).ToArray();
+            var ops = Compiler.IdentifyElements(code, perfTask).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
             return snippetsWithNoOverlap.Append(new Snippet { code = code });
@@ -213,16 +215,21 @@ namespace Microsoft.Quantum.IQSharp
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly Resolve(AssemblyLoadContext context, AssemblyName name)
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name)
         {
             if (name.Name == Path.GetFileNameWithoutExtension(this.AssemblyInfo?.Location))
             {
-                return this.AssemblyInfo.Assembly;
+                return this.AssemblyInfo?.Assembly;
             }
 
-            foreach (var asm in this.Workspace?.Assemblies)
+            if (this.Workspace == null)
             {
-                if (name.Name == Path.GetFileNameWithoutExtension(asm?.Location))
+                return null;
+            }
+
+            foreach (var asm in this.Workspace.Assemblies)
+            {
+                if (name.Name == Path.GetFileNameWithoutExtension(asm.Location))
                 {
                     return asm.Assembly;
                 }

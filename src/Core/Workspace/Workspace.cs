@@ -187,7 +187,7 @@ namespace Microsoft.Quantum.IQSharp
             logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
 
             // Initialize the workspace asynchronously
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 try
                 {
@@ -196,7 +196,7 @@ namespace Microsoft.Quantum.IQSharp
 
                     if (!LoadFromCache())
                     {
-                        DoReload();
+                        await DoReload();
                     }
                     else
                     {
@@ -312,9 +312,9 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
-        private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload();
+        private void OnFilesChanged(object source, FileSystemEventArgs e) => Reload().Wait();
 
-        private void OnFilesRenamed(object source, RenamedEventArgs e) => Reload();
+        private void OnFilesRenamed(object source, RenamedEventArgs e) => Reload().Wait();
 
         /// <summary>
         /// Tries to load the Workspace's information from cache. 
@@ -438,13 +438,13 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Reloads the workspace from disk.
         /// </summary>
-        public void Reload(Action<string> statusCallback = null)
+        public async Task Reload(Action<string> statusCallback = null)
         {
-            Initialization.Wait();
-            DoReload(statusCallback);
+            await Initialization;
+            await DoReload(statusCallback);
         }
 
-        private void DoReload(Action<string> statusCallback = null)
+        private async Task DoReload(Action<string> statusCallback = null)
         { 
             var duration = Stopwatch.StartNew();
             var fileCount = 0;
@@ -494,7 +494,7 @@ namespace Microsoft.Quantum.IQSharp
 
                         try
                         {
-                            project.AssemblyInfo = Compiler.BuildFiles(
+                            project.AssemblyInfo = await Compiler.BuildFiles(
                                 project.SourceFiles.ToArray(),
                                 GlobalReferences.CompilerMetadata.WithAssemblies(Assemblies.ToArray()),
                                 logger,
