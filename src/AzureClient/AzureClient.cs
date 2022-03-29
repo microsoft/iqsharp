@@ -523,18 +523,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return AvailableTargets.First(target => target.TargetId == ActiveTarget.TargetId).ToExecutionResult();
         }
 
-        private static IEnumerable<string> ReadAllLines(Stream stream)
-        {
-            using (var reader = new StreamReader(stream))
-            {
-                string line = "";
-                while ((line = reader.ReadLine()) != null)
-                {
-                    yield return line;
-                }
-            }
-        }
-
         /// <inheritdoc/>
         public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
         {
@@ -587,23 +575,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
                 if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
                 {
-                    var outputLines = ReadAllLines(responseStream).ToList();
-                    outputLines = outputLines.Select(line => line.Trim()).ToList();
-                    
-                    // ToDo: This is a hack to separate Messages from the result.
-                    var resultStartLine = outputLines.Count() - 1;
-                    if (outputLines[resultStartLine].EndsWith('"'))
-                    {
-                        while (!outputLines[resultStartLine].StartsWith('"'))
-                        {
-                            resultStartLine -= 1;
-                        }
-                    }
-                    
-                    var messages = String.Join('\n', outputLines.Take(resultStartLine));
+                    var (messages, result) = ParseSimulatorOutput(responseStream);
                     channel?.Stdout(messages);
-                    var result = String.Join(' ', outputLines.Skip(resultStartLine));
-
                     return result.ToExecutionResult();
                 }
                 else
@@ -617,6 +590,36 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
                 return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
+        }
+
+        private static (string Messages, string Result) ParseSimulatorOutput(Stream stream)
+        {
+            var outputLines = new List<string>();
+            using (var reader = new StreamReader(stream))
+            {
+                var line = String.Empty;
+                while ((line = reader.ReadLine()) != null)
+                {
+                     outputLines.Add(line.Trim());
+                }
+            }
+
+            // N.B. The current simulator output format is just text and it does not distinguish
+            // between the result of the operation and other kinds of output.
+            // Attempt to parse the output to distinguish the result from the rest of the output
+            // until the simulator output format makes it easy to do so.
+            var resultStartLine = outputLines.Count() - 1;
+            if (outputLines[resultStartLine].EndsWith('"'))
+            {
+                while (!outputLines[resultStartLine].StartsWith('"'))
+                {
+                    resultStartLine -= 1;
+                }
+            }
+
+            var messages = String.Join('\n', outputLines.Take(resultStartLine));
+            var result = String.Join(' ', outputLines.Skip(resultStartLine));
+            return (messages, result);
         }
 
         /// <inheritdoc/>
