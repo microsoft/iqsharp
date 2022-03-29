@@ -61,7 +61,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'jupyter_client',
+        'jupyter_client<7.0',
         'pyzmq<20.0.0'     # due to incompatibility of IQ# with pyzmq>=20.0.0
     ]
 )
