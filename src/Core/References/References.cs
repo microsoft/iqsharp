@@ -185,10 +185,13 @@ namespace Microsoft.Quantum.IQSharp
 
         private void Reset()
         {
+            var oldMetadata = _metadata;
             // Begin loading metadata in the background.
             _metadata = Task.Run(
-                () =>
+                async () =>
                 {
+                    // Don't run multiple assembly reference loads at a time.
+                    await oldMetadata;
                     using var perfTask = performanceMonitor.BeginTask("Resetting reference metadata.", "reset-refs-meta");
                     var result = new CompilerMetadata(this.Assemblies);
                     return result;
