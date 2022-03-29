@@ -190,7 +190,10 @@ namespace Microsoft.Quantum.IQSharp
                 async () =>
                 {
                     // Don't run multiple assembly reference loads at a time.
-                    await oldMetadata;
+                    if (oldMetadata != null)
+                    {
+                        await oldMetadata;
+                    }
                     using var perfTask = performanceMonitor.BeginTask("Resetting reference metadata.", "reset-refs-meta");
                     var result = new CompilerMetadata(this.Assemblies.Where(IsAssemblyPossiblyQSharpReference));
                     return result;
