@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
+using System.Collections.Concurrent;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -18,17 +19,17 @@ namespace Microsoft.Quantum.IQSharp
     {
         internal static readonly bool LoadFromCsharp = false; // todo: we should make this properly configurable
 
-        private IEnumerable<String> Paths { get; }
+        private IEnumerable<String> Paths { get; init; }
 
         /// <summary>
         /// The list of Assemblies and their dependencies in the format the C# compiler (Roslyn) expects them.
         /// </summary>
-        public IEnumerable<MetadataReference> RoslynMetadatas { get; }
+        public IEnumerable<MetadataReference> RoslynMetadatas { get; init; }
 
         /// <summary>
         ///  The list of Assemblies and their dependencies in the format the Q# compiler expects them.
         /// </summary>
-        public QsReferences QsMetadatas { get; }
+        public QsReferences QsMetadatas { get; init; }
 
         public CompilerMetadata(IEnumerable<AssemblyInfo> assemblies)
         {
@@ -82,14 +83,27 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        private static readonly IDictionary<string, MetadataReference> metadataReferenceCache
+            = new ConcurrentDictionary<string, MetadataReference>();
+
         /// <summary>
         /// Calculates Roslyn's MetadataReference for all the Assemblies and their dependencies.
         /// </summary>
-        private static ImmutableArray<MetadataReference> RoslynInit(IEnumerable<string> paths)
-        {
-            var mds = paths.Select(p => MetadataReference.CreateFromFile(p));
-            return mds.Select(a => a as MetadataReference).ToImmutableArray();
-        }
+        private static ImmutableArray<MetadataReference> RoslynInit(IEnumerable<string> paths) =>
+            paths.Select(p =>
+            {
+                if (metadataReferenceCache.TryGetValue(p, out var cached))
+                {
+                    return cached;
+                }
+                else
+                {
+                    var mdRef = MetadataReference.CreateFromFile(p);
+                    metadataReferenceCache[p] = mdRef;
+                    return mdRef;
+                }
+            })
+            .ToImmutableArray();
 
         /// <summary>
         /// Calculates Q# metadata needed for all the Assemblies and their dependencies.

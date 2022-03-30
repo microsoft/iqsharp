@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -572,10 +573,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 //                 cancellation token support.
                 var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
-                return responseStream.ToHistogram(
-                    Logger, 
-                    isSimulatorOutput: this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
-                .ToExecutionResult();
+                if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+                {
+                    var (messages, result) = ParseSimulatorOutput(responseStream);
+                    channel?.Stdout(messages);
+                    return result.ToExecutionResult();
+                }
+                else
+                {
+                    return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
+                }
             }
             catch (Exception e)
             {
@@ -583,6 +590,36 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
                 return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
+        }
+
+        private static (string Messages, string Result) ParseSimulatorOutput(Stream stream)
+        {
+            var outputLines = new List<string>();
+            using (var reader = new StreamReader(stream))
+            {
+                var line = String.Empty;
+                while ((line = reader.ReadLine()) != null)
+                {
+                     outputLines.Add(line.Trim());
+                }
+            }
+
+            // N.B. The current simulator output format is just text and it does not distinguish
+            // between the result of the operation and other kinds of output.
+            // Attempt to parse the output to distinguish the result from the rest of the output
+            // until the simulator output format makes it easy to do so.
+            var resultStartLine = outputLines.Count() - 1;
+            if (outputLines[resultStartLine].EndsWith('"'))
+            {
+                while (!outputLines[resultStartLine].StartsWith('"'))
+                {
+                    resultStartLine -= 1;
+                }
+            }
+
+            var messages = String.Join('\n', outputLines.Take(resultStartLine));
+            var result = String.Join(' ', outputLines.Skip(resultStartLine));
+            return (messages, result);
         }
 
         /// <inheritdoc/>
