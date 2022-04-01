@@ -51,7 +51,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-3.1=3.1.416-1 dotnet-sdk-6.0 && \
+    apt-get -y install dotnet-sdk-6.0 && \
     apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
