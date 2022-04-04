@@ -131,9 +131,6 @@ namespace Tests.IQSharp
             Assert.AreEqual($"Workspace is not ready. Try again.", response.Messages[0]);
         }
 
-/*
-        TODO: Reenable this test.
-        Test disabled due to migration to LSP 17.1
 
         [TestMethod]
         public async Task SimulateOnBrokenWorkspace()
@@ -147,7 +144,7 @@ namespace Tests.IQSharp
             Assert.IsNotNull(response.Messages.First(m => m.Contains("QS6301")));
             Assert.IsNotNull(response.Messages.First(m => m.Contains("QS5022")));
         }
-*/
+
 
         [TestMethod]
         public void JsonToDict()
