@@ -140,7 +140,7 @@ RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 # Ensure that the necessary NuGet packages are cached.
 ARG EXTRA_NUGET_PACKAGES=
 RUN echo "Adding standard packages..." && \
-    dotnet new console -n "foo" -lang Q# && \
+    dotnet new classlib -n "foo" -lang Q# && \
     echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
     for p in ${EXTRA_NUGET_PACKAGES}; do \
         dotnet add foo package $p --version ${IQSHARP_VERSION} && \
