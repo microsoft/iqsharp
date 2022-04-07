@@ -49,7 +49,7 @@ function Pack-CondaRecipe() {
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $PythonVersions | `
             ForEach-Object {
-                $PackagePath = (conda build (Resolve-Path $Path) --python=$_ --output);
+                $PackagePath = (conda build (Resolve-Path $Path) --python=$_ --output --debug);
                 Write-Host "##[debug]Expecting to find conda package at $PackagePath.";
                 if (Test-Path $PackagePath) {
                     Copy-Item `
