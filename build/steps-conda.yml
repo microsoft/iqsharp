@@ -81,11 +81,11 @@ steps:
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: eq(variables.OperatingSystem, 'windows')
 
-# (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
-- script: |
+- pwsh: |
+    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate base
     conda info
-    .\pack-conda.ps1
+    pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: eq(variables.OperatingSystem, 'windows-test')
