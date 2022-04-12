@@ -81,8 +81,8 @@ steps:
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
   condition: eq(variables.OperatingSystem, 'windows')
 
-- bash: |
-    (& "C:\Miniconda3\Scripts\conda.exe" "shell.bash" "hook") | Out-String | Invoke-Expression
+- script: |
+    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
