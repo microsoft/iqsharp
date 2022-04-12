@@ -91,7 +91,11 @@ class IQSharpClient(object):
 
     def start(self):
         logger.info("Starting IQ# kernel...")
-        self.kernel_manager.start_kernel(extra_arguments=["--user-agent", f"qsharp.py{_user_agent_extra}"])
+        # Pass along all environment variables except the user agent,
+        # as we'll override that to mark this as a Python session.
+        env = os.environ.copy()
+        env["IQSHARP_USER_AGENT"] = f"qsharp.py{_user_agent_extra}"
+        self.kernel_manager.start_kernel(env=env)
         self.kernel_client = self.kernel_manager.client()
         atexit.register(self.stop)
 
