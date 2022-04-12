@@ -18,6 +18,7 @@ steps:
 # Create conda environment
 ##
 - script: |
+    echo $(CONDA)
     conda create --yes --quiet --name conda_env
   displayName: Create Anaconda environment
   condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
@@ -28,6 +29,7 @@ steps:
   condition: eq(variables.OperatingSystem, 'windows')
 
 - pwsh: |
+    echo $(CONDA)
     C:\Miniconda3\Scripts\conda.exe create --yes --quiet --name conda_env
   displayName: Create Anaconda environment pwsh
   condition: eq(variables.OperatingSystem, 'windows-test')
