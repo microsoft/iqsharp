@@ -84,7 +84,7 @@ steps:
 # Test conda packages for each OS
 ##
 - script: |
-    eval $(CondaShellHook)
+    eval "$( '$(BinPath)/conda' 'shell.bash' 'hook')"
     conda activate conda_env
     conda info
     pwsh ./test-conda.ps1
