@@ -24,11 +24,7 @@ namespace Tests.IQSharp
         /// We use a known-good version to avoid breaking IQ# tests due to changes in Libraries
         /// also, to make sure an end-to-end QDK build does not have circular build dependencies
         /// between Libraries and IQ#.
-        ///
-        /// Note: Version '0.23.195531-beta' is temporary since it only exists in the Alpha feed.
-        ///       It should be replaced by another one that will remain available permanently.
-        ///
-        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.23.195531-beta");
+        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.24.201332");
 
         public NugetPackages Init()
         {

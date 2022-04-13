@@ -131,7 +131,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.23.198514-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.24.201332" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
@@ -140,9 +140,10 @@ RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 # Ensure that the necessary NuGet packages are cached.
 ARG EXTRA_NUGET_PACKAGES=
 RUN echo "Adding standard packages..." && \
-    python -c "import qsharp;" && \
+    dotnet new classlib -n "foo" -lang Q# && \
     echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
     for p in ${EXTRA_NUGET_PACKAGES}; do \
-        python -c "import qsharp; qsharp.packages.add('$p')" && \
+        dotnet add foo package $p --version ${IQSHARP_VERSION} && \
         echo "Added package: $p"; \
-    done
+    done && \
+    rm -Rdf foo
