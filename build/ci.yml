@@ -55,7 +55,7 @@ jobs:
     vmImage: 'ubuntu-latest'
   variables:
     OperatingSystem: 'linux'
-    BinPath: '/usr/bin/'
+    CondaShellHook: "$('/usr/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -66,6 +66,7 @@ jobs:
     vmImage: 'macOS-latest'
   variables:
     OperatingSystem: 'mac'
+    CondaShellHook: "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')

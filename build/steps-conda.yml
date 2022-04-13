@@ -84,22 +84,13 @@ steps:
 # Test conda packages for each OS
 ##
 - script: |
-    eval "$( '$(BinPath)/conda' 'shell.bash' 'hook')"
+    eval "$(CondaShellHook)"
     conda activate conda_env
     conda info
     pwsh ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'linux'))
-
-- script: |
-    eval "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
-    conda activate conda_env
-    conda info
-    pwsh ./test-conda.ps1
-  displayName: "Testing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'mac'))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac')))
 
 - pwsh: |
     (& "C:\Miniconda\scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
