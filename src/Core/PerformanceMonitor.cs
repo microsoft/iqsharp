@@ -25,6 +25,51 @@ namespace Microsoft.Quantum.IQSharp
 
     public class PerformanceMonitor : IPerformanceMonitor
     {
+        protected class TaskReporter : ITaskReporter
+        {
+            private readonly PerformanceMonitor monitor;
+            private readonly Stopwatch stopwatch = new Stopwatch();
+            private readonly TimeSpan startedAt;
+
+            internal TaskReporter(PerformanceMonitor monitor, ITaskReporter? parent, string description, string id)
+            {
+                this.monitor = monitor;
+                this.Parent = parent;
+                this.Description = description;
+                this.Id = id;
+
+                startedAt = parent?.TimeSinceStart ?? TimeSpan.Zero;
+
+                stopwatch.Start();
+            }
+
+            public string Description { get; }
+            public string Id { get; }
+            public ITaskReporter? Parent { get; }
+
+            public TimeSpan TimeSinceStart => stopwatch.Elapsed;
+            public TimeSpan TotalTimeSinceStart => TimeSinceStart + startedAt;
+
+            public ITaskReporter BeginSubtask(string description, string id) =>
+                new TaskReporter(monitor, this, description, id);
+
+            public void Dispose()
+            {
+                stopwatch.Stop();
+                monitor.OnTaskCompleteAvailable?.Invoke(this.monitor, new TaskCompleteArgs(
+                    this, ((ITaskReporter)this).TotalTimeSinceStart
+                ));
+            }
+
+            public void ReportStatus(string description, string id) =>
+                monitor.OnTaskPerformanceAvailable?.Invoke(this.monitor, new TaskPerformanceArgs(
+                    this,
+                    description,
+                    id,
+                    ((ITaskReporter)this).TotalTimeSinceStart
+                ));
+        }
+
         private bool alive = false;
         private Thread? thread = null;
 
@@ -71,6 +116,11 @@ namespace Microsoft.Quantum.IQSharp
                 logger?.LogInformation("Reporting device capabilities: {Capabilities}", args);
                 eventService?.Trigger<DeviceCapabilitiesEvent, DeviceCapabilitiesArgs>(args);
             }).Start();
+
+            OnTaskPerformanceAvailable += (sender, args) =>
+            {
+                logger?.LogDebug("[{TimeSinceStart}] {Task} / {Description}", args.TimeSinceTaskStart, args.Task.Description, args.StatusDescription);
+            };
         }
 
         /// <inheritdoc />
@@ -78,6 +128,8 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc />
         public event EventHandler<KernelPerformanceArgs>? OnKernelPerformanceAvailable;
+        public event EventHandler<TaskPerformanceArgs>? OnTaskPerformanceAvailable;
+        public event EventHandler<TaskCompleteArgs>? OnTaskCompleteAvailable;
 
         /// <inheritdoc />
         public void Report()
@@ -130,5 +182,7 @@ namespace Microsoft.Quantum.IQSharp
             this.OnSimulatorPerformanceAvailable?.Invoke(this, args);
         }
 
+        public ITaskReporter BeginTask(string description, string id) =>
+            new TaskReporter(this, null, description, id);
     }
 }
