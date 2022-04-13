@@ -555,7 +555,7 @@ namespace Tests.IQSharp
         {
             var snippets = Startup.Create<Snippets>("Workspace");
             await snippets.Workspace.Initialization;
-            snippets.Compile(SNIPPETS.HelloQ);
+            await snippets.Compile(SNIPPETS.HelloQ);
 
             var whoMagic = new WhoMagic(snippets, new UnitTestLogger<WhoMagic>());
             var channel = new MockChannel();
@@ -636,7 +636,7 @@ namespace Tests.IQSharp
         {
             var snippets = Startup.Create<Snippets>("Workspace");
             await snippets.Workspace.Initialization;
-            snippets.Compile(SNIPPETS.HelloQ);
+            await snippets.Compile(SNIPPETS.HelloQ);
 
             var resolver = new SymbolResolver(snippets);
 
