@@ -3,8 +3,9 @@ FROM python:3.7-slim-buster
 
 # install the notebook package
 # force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
+#       jinja2==3.0.3 due to incompatibility with nbconvert
 RUN pip install --no-cache --upgrade pip && \
-    pip install --no-cache notebook pyzmq==19.0.2
+    pip install --no-cache notebook pyzmq==19.0.2 jinja2==3.0.3
 
 # Install APT prerequisites.
 RUN apt-get update && \
@@ -130,7 +131,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.23.198514-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.24.201332" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
@@ -139,9 +140,10 @@ RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 # Ensure that the necessary NuGet packages are cached.
 ARG EXTRA_NUGET_PACKAGES=
 RUN echo "Adding standard packages..." && \
-    python -c "import qsharp;" && \
+    dotnet new classlib -n "foo" -lang Q# && \
     echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
     for p in ${EXTRA_NUGET_PACKAGES}; do \
-        python -c "import qsharp; qsharp.packages.add('$p')" && \
+        dotnet add foo package $p --version ${IQSHARP_VERSION} && \
         echo "Added package: $p"; \
-    done
+    done && \
+    rm -Rdf foo

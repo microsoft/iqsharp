@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System.Threading.Tasks;
 using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -41,7 +42,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="executionTarget">The intended execution target for the compiled entry point.</param>
         /// <param name="runtimeCapabilities">The runtime capabilities of the intended execution target.</param>
         /// <returns>The generated entry point.</returns>
-        public IEntryPoint Generate(string operationName, string? executionTarget,
+        public Task<IEntryPoint> Generate(string operationName, string? executionTarget,
             RuntimeCapability? runtimeCapabilities = null);
     }
 }

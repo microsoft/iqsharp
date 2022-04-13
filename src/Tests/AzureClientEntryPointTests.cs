@@ -40,13 +40,14 @@ namespace Tests.IQSharp
         public async Task FromSnippet()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
-            var entryPoint = entryPointGenerator.Generate("HelloQ", null);
+            var entryPoint = await entryPointGenerator.Generate("HelloQ", null);
 
             Assert.IsTrue(
-                entryPointGenerator.EntryPointAssemblyInfo.Operations.Count() >= 3,
+                entryPointGenerator.EntryPointAssemblyInfo?.Operations.Count() >= 3,
                 "Generated entry point assembly only had 0, 1, or 2 operations, but we expect at least three when C# code is properly regenerated."
             );
 
+            Assert.IsNotNull(entryPointGenerator.EntryPointAssemblyInfo);
             Assert.That.Assembly(entryPointGenerator.EntryPointAssemblyInfo)
                 // Check that snippets compiled from entry points have the
                 // syntax trees that we need to generate classical control from.
@@ -59,6 +60,7 @@ namespace Tests.IQSharp
 
             // We also want to make sure that all other relevant assemblies
             // have the right resource attached.
+            Assert.IsNotNull(entryPointGenerator.SnippetsAssemblyInfo);
             Assert.That.Assembly(entryPointGenerator.SnippetsAssemblyInfo).HasResource(DotnetCoreDll.SyntaxTreeResourceName);
             foreach (var refAsm in entryPointGenerator.References.Assemblies)
             {
@@ -82,10 +84,10 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void FromBrokenSnippet()
+        public async Task FromBrokenSnippet()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.TwoErrors });
-            Assert.ThrowsException<CompilationErrorsException>(() =>
+            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () => await
                 entryPointGenerator.Generate("TwoErrors", null));
         }
 
@@ -96,7 +98,7 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(
+            var job = await (await entryPoint).SubmitAsync(
                 new MockQuantumMachine(),
                 new AzureSubmissionContext()
                 {
@@ -107,27 +109,27 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void FromWorkspaceMissingArgument()
+        public async Task FromWorkspaceMissingArgument()
         {
             var entryPointGenerator = Init("Workspace");
-            var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
+            var entryPoint = await entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
             Assert.IsNotNull(entryPoint);
 
-            Assert.ThrowsException<ArgumentException>(() =>
-                entryPoint.SubmitAsync(
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+                await entryPoint.SubmitAsync(
                     new MockQuantumMachine(),
                     new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "2" } }));
         }
 
         [TestMethod]
-        public void FromWorkspaceIncorrectArgumentType()
+        public async Task FromWorkspaceIncorrectArgumentType()
         {
             var entryPointGenerator = Init("Workspace");
-            var entryPoint = entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
+            var entryPoint = await entryPointGenerator.Generate("Tests.qss.HelloAgain", null);
             Assert.IsNotNull(entryPoint);
 
-            Assert.ThrowsException<ArgumentException>(() =>
-                entryPoint.SubmitAsync(
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+                await entryPoint.SubmitAsync(
                     new MockQuantumMachine(),
                     new AzureSubmissionContext() { InputParameters = new Dictionary<string, string>() { ["count"] = "NaN", ["name"] = "test" } }));
         }
@@ -139,17 +141,17 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("Tests.ProjectReferences.MeasureSingleQubit", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(
+            var job = await (await entryPoint).SubmitAsync(
                 new MockQuantumMachine(),
                 new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 
         [TestMethod]
-        public void FromBrokenWorkspace()
+        public async Task FromBrokenWorkspace()
         {
             var entryPointGenerator = Init("Workspace.Broken");
-            Assert.ThrowsException<CompilationErrorsException>(() =>
+            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(() =>
                 entryPointGenerator.Generate("Tests.qss.HelloAgain", null));
         }
 
@@ -160,48 +162,48 @@ namespace Tests.IQSharp
             var entryPoint = entryPointGenerator.Generate("DependsOnWorkspace", null);
             Assert.IsNotNull(entryPoint);
 
-            var job = await entryPoint.SubmitAsync(
+            var job = await (await entryPoint).SubmitAsync(
                     new MockQuantumMachine(),
                     new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
 
         [TestMethod]
-        public void InvalidOperationName()
+        public async Task InvalidOperationName()
         {
             var entryPointGenerator = Init("Workspace");
-            Assert.ThrowsException<UnsupportedOperationException>(() =>
-                entryPointGenerator.Generate("InvalidOperationName", null));
+            await Assert.ThrowsExceptionAsync<UnsupportedOperationException>(async () =>
+                await entryPointGenerator.Generate("InvalidOperationName", null));
         }
 
         [TestMethod]
-        public void InvalidEntryPointOperation()
+        public async Task InvalidEntryPointOperation()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidEntryPoint });
-            Assert.ThrowsException<CompilationErrorsException>(() =>
-                entryPointGenerator.Generate("InvalidEntryPoint", null));
+            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
+                await entryPointGenerator.Generate("InvalidEntryPoint", null));
         }
 
         [TestMethod]
-        public void UnusedOperationInvalidForHardware()
+        public async Task UnusedOperationInvalidForHardware()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.UnusedClassicallyControlledOperation });
-            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
-            Assert.ThrowsException<CompilationErrorsException>(() =>
-                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
+                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
         }
 
         [TestMethod]
-        public void UnusedOperationInvalidForHardwareInWorkspace()
+        public async Task UnusedOperationInvalidForHardwareInWorkspace()
         {
             var entryPointGenerator = Init("Workspace.HardwareTarget");
-            var entryPoint = entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
-            Assert.ThrowsException<CompilationErrorsException>(() =>
-                entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
+                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
         }
     }
 }
