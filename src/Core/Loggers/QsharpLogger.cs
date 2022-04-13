@@ -73,15 +73,16 @@ namespace Microsoft.Quantum.IQSharp.Common
 
         public IEnumerable<string> ErrorIds =>
             Logs
-                .Where(m => m.Severity == VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error)
-                .Select(m => m.Code);
+                .Where(m => m.Severity == VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error && m.Code?.Second != null)
+                .Select(m => m.Code?.Second);
 
         protected override void Print(LSP.Diagnostic m)
         {
-            if (m.IsError() && ErrorCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
-            if (m.IsWarning() && WarningCodesToIgnore.Any(code => m.Code == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
+            string diagnosticCode = m.Code?.Second ?? "";
+            if (m.IsError() && ErrorCodesToIgnore.Any(code => diagnosticCode == QsCompiler.CompilationBuilder.Errors.Code(code))) return;
+            if (m.IsWarning() && WarningCodesToIgnore.Any(code => diagnosticCode == QsCompiler.CompilationBuilder.Warnings.Code(code))) return;
 
-            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", m.Code, m.Source, m.Range, m.Message);
+            Logger?.Log(MapLevel(m.Severity), "{Code} ({Source}:{Range}): {Message}", diagnosticCode, m.Source, m.Range, m.Message);
             Logs.Add(m);
         }
 
