@@ -1,17 +1,19 @@
-FROM mcr.microsoft.com/windows/servercore:1809 AS buildbase
+ARG CONDA_VER=latest
+ARG OS_TYPE=x86_64
+ARG PY_VER=3.9
 
-RUN powershell (New-Object System.Net.WebClient).DownloadFile('https://repo.anaconda.com/miniconda/Miniconda3-py37_4.11.0-Windows-x86_64.exe', 'Miniconda3.exe') && \
-    powershell (Get-FileHash .\Miniconda3.exe).Hash -eq 'b33797064593ab2229a0135dc69001bea05cb56a20c2f243b1231213642e260a' && \
-    powershell Unblock-File Miniconda3.exe && \
-    Miniconda3.exe /InstallationType=JustMe /RegisterPython=1 /S /D=C:\Miniconda3
+FROM ubuntu:latest
 
-FROM mcr.microsoft.com/powershell:lts-windowsservercore-1809
+RUN apt-get update && apt-get install -yq curl wget jq
 
-COPY --from=buildbase C:/Miniconda3 C:/Miniconda3
+ARG CONDA_VER
+ARG OS_TYPE
+# Install miniconda to /miniconda
+RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh"
+RUN bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b
+RUN rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
+ENV PATH=/miniconda/bin:${PATH}
+RUN conda update -y conda
 
-USER ContainerAdministrator
-
-RUN C:\Miniconda3\Library\bin\conda init && \
-    C:\Miniconda3\Library\bin\conda clean -afy
-
-CMD ["cmd"]
+ARG PY_VER
+RUN conda install -c anaconda -y python=${PY_VER}
