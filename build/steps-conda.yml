@@ -20,26 +20,27 @@ steps:
 - script: |
     conda create --yes --quiet --name conda_env
   displayName: Create Anaconda environment
-  condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
+  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
 - pwsh: |
     $(CondaPath)/conda.exe create --yes --quiet --name conda_env
   displayName: Create Anaconda environment pwsh
-  condition: or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test'))
+  condition: eq(variables.OS, 'windows')
 
 ##
 # Install conda packages
 ##
 - script: |
+    conda install --yes --quiet --name base conda-build=3.18.8
     conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
-  condition: or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac'))
+  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
 - pwsh: |
     $(CondaPath)/conda.exe install --yes --quiet --name base conda-build=3.18.8
     $(CondaPath)/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
-  condition: or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test'))
+  condition: or(eq(variables.OS, 'windows'))
 
 ##
 # Pack conda packages for each OS
@@ -49,9 +50,9 @@ steps:
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
-  displayName: "Testing IQ# packages"
+  displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac')))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
 
 - pwsh: |
     (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
@@ -60,7 +61,7 @@ steps:
     pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test'))
+  condition: eq(variables.OS, 'windows')
 
 ##
 # Test conda packages for each OS
@@ -72,7 +73,7 @@ steps:
     pwsh ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac')))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
 
 - pwsh: |
     (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
@@ -81,7 +82,7 @@ steps:
     pwsh ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test')))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OS, 'windows'))
 
 ##
 # Publish build artifacts.
