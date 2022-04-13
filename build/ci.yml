@@ -55,6 +55,7 @@ jobs:
     vmImage: 'ubuntu-latest'
   variables:
     OperatingSystem: 'linux'
+    CondaShellHook: "$('/usr/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -64,8 +65,7 @@ jobs:
   pool:
     vmImage: 'macOS-latest'
   variables:
-  - name: OperatingSystem
-    value: 'mac'
+    OperatingSystem: 'mac'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -75,10 +75,8 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   variables:
-  - name: OperatingSystem
-    value: 'windows'
-  - name: CondaPath
-    value: '$(CONDA)/scripts'
+    OperatingSystem: 'windows'
+    CondaPath: '$(CONDA)/scripts'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -91,10 +89,8 @@ jobs:
     image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
     endpoint: qdkimages-acr
   variables:
-  - name: OperatingSystem
-    value: 'windows-test'
-  - name: CondaPath
-    value: 'C:\Miniconda3\Scripts'
+    OperatingSystem: 'windows-test'
+    CondaPath: 'C:\Miniconda3\Scripts'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
