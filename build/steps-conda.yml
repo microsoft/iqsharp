@@ -45,40 +45,22 @@ steps:
 # Pack conda packages for each OS
 ##
 - script: |
-    eval "$('/usr/bin/conda' 'shell.bash' 'hook')"
+    eval "$(CondaShellHook)"
     conda activate conda_env
     conda info
     pwsh ./pack-conda.ps1
-  displayName: "Packing IQ# packages"
+  displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: eq(variables.OperatingSystem, 'linux')
-
-- script: |
-    eval "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
-    conda activate conda_env
-    conda info
-    pwsh ./pack-conda.ps1
-  displayName: "Packing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: eq(variables.OperatingSystem, 'mac')
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac')))
 
 - pwsh: |
-    (& "C:\Miniconda\scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate conda_env
-    conda info
-    pwsh ./pack-conda.ps1
-  displayName: "Packing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: eq(variables.OperatingSystem, 'windows')
-
-- pwsh: |
-    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
-    conda activate base
     conda info
     pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: eq(variables.OperatingSystem, 'windows-test')
+  condition: or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test'))
 
 ##
 # Test conda packages for each OS
@@ -93,22 +75,13 @@ steps:
   condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'linux'), eq(variables.OperatingSystem, 'mac')))
 
 - pwsh: |
-    (& "C:\Miniconda\scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
     conda activate conda_env
     conda info
     pwsh ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'windows'))
-
-- pwsh: |
-    (& "C:\Miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
-    conda activate conda_env
-    conda info
-    pwsh ./test-conda.ps1
-  displayName: "Testing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OperatingSystem, 'windows-test'))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OperatingSystem, 'windows'), eq(variables.OperatingSystem, 'windows-test')))
 
 ##
 # Publish build artifacts.
