@@ -189,7 +189,14 @@ namespace Microsoft.Quantum.IQSharp
             SkipAutoLoadProject = config?.Value.SkipAutoLoadProject ?? false;
             MonitorWorkspace = config?.Value.MonitorWorkspace ?? false;
 
-            logger?.LogInformation($"Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {metadata?.UserAgent ?? "<unknown>"}\nHosting environment: {metadata?.HostingEnvironment ?? "<unknown>"}\n----------------");
+            logger?.LogInformation(
+                "Starting IQ# Workspace:\n----------------\nRoot: {Root}\nCache folder:{CacheFolder}\nMonitoring changes: {MonitorWorkspace}\nUser agent: {UserAgent}\nHosting environment: {HostingEnvironment}\n----------------",
+                Root,
+                CacheFolder,
+                MonitorWorkspace,
+                metadata?.UserAgent ?? "<unknown>",
+                metadata?.HostingEnvironment ?? "<unknown>"
+            );
 
             // Initialize the workspace asynchronously
             Task.Run(async () =>
