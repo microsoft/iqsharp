@@ -49,17 +49,6 @@ jobs:
   - template: steps-selfcontained.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "pack_conda_linux"
-  dependsOn: "pack_selfcontained"
-  pool:
-    vmImage: 'ubuntu-latest'
-  variables:
-    OS: 'linux'
-    CondaShellHook: "$('/usr/bin/conda' 'shell.bash' 'hook')"
-  steps:
-  - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
 - job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
   pool:
@@ -71,18 +60,7 @@ jobs:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "pack_conda_win"
-  dependsOn: "pack_selfcontained"
-  pool:
-    vmImage: 'windows-2019'
-  variables:
-    OS: 'windows'
-    CondaPath: '$(CONDA)/scripts'
-  steps:
-  - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
-- job: "test_conda_linux"
+- job: "pack_conda_linux"
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'ubuntu-latest'
@@ -96,7 +74,7 @@ jobs:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "test_conda_windows"
+- job: "pack_conda_windows"
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-2019'
