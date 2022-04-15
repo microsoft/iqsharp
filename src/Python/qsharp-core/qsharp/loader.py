@@ -3,14 +3,17 @@
 ##
 # loader.py: Support for exposing Q# namespaces as Python modules.
 ##
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
 
+import os
 import sys
 from types import ModuleType, new_class
 import importlib
 from importlib.abc import MetaPathFinder, Loader
+import tempfile as tf
+
 import qsharp
 
 from typing import Iterable, List, Optional, Any, Dict, Tuple
@@ -114,6 +117,21 @@ class QSharpCallable(object):
         """
         return qsharp.client.trace(self, **kwargs)
 
+    def as_qir(self) -> bytes:
+        """
+        Returns the QIR bitcode representation of the callable,
+        assuming the callable is an entry point.
+        """
+        f = tf.NamedTemporaryFile(delete=False, suffix='.bc')
+        f.close()
+        qsharp.client.compile_to_qir(self, output=f.name)
+        with open(f.name, "rb") as bitcode_file:
+            bitcode = bitcode_file.read()
+        try:
+            os.unlink(f.name)
+        except:
+            pass
+        return bitcode
 
 class QSharpModule(ModuleType):
     _qs_name : str

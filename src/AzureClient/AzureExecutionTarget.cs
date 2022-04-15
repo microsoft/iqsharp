@@ -18,6 +18,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         //     workspaces and should still be supported.
         Honeywell,
         QCI,
+        Microsoft,
         Mock
     }
 
@@ -37,6 +38,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
             AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
             AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
+            AzureProvider.Microsoft  => "Microsoft.Quantum.Providers.Core",
             _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
         };
 
@@ -46,6 +48,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureProvider.Quantinuum => RuntimeCapability.BasicMeasurementFeedback,
             AzureProvider.Honeywell  => RuntimeCapability.BasicMeasurementFeedback,
             AzureProvider.QCI        => RuntimeCapability.BasicMeasurementFeedback,
+            AzureProvider.Microsoft  => RuntimeCapability.FullComputation,
             _                        => RuntimeCapability.FullComputation
         };
 
@@ -92,7 +95,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "quantinuum.qpu".
         /// </remarks>
-        protected static AzureProvider? GetProvider(string? targetId)
+        protected internal static AzureProvider? GetProvider(string? targetId)
         {
             if (targetId == null)
             {

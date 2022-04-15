@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
-using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 
 namespace Microsoft.Quantum.IQSharp
@@ -29,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
         Task<AssemblyInfo> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null);
+            RuntimeCapability? runtimeCapability = null, bool generateQir = false);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
