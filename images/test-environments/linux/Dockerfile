@@ -13,7 +13,6 @@ ARG OS_TYPE
 RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh" && \
     bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b && \
     rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
-ENV PATH=/miniconda/bin:${PATH}
 RUN conda update -y conda
 
 ARG PY_VER
