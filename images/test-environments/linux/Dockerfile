@@ -3,7 +3,7 @@ ARG UBUNTU_VER=20.04
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.7
 
-FROM ubuntu:latest
+FROM ubuntu:${UBUNTU_VER}
 
 RUN apt-get update && apt-get install -yq curl wget jq
 
@@ -13,11 +13,6 @@ ARG OS_TYPE
 RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh" && \
     bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b && \
     rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
-RUN conda update -y conda
-
-ARG PY_VER
-# Set Python version for conda
-RUN conda install -c anaconda -y python=${PY_VER}
 
 ARG UBUNTU_VER
 # Download the Microsoft repository GPG keys
@@ -25,9 +20,12 @@ RUN wget -q "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VER}/packages
 # Register the Microsoft repository GPG keys
 RUN dpkg -i packages-microsoft-prod.deb
 
+ARG DEBIAN_FRONTEND=noninteractive
 # Update the list of packages after we added packages.microsoft.com
-RUN apt-get update
-
-# Install powershell and git
-RUN apt-get install -y powershell
-RUN apt-get install -y git
+RUN apt-get update && \
+    apt-get -y install \
+        git \
+        powershell && \
+    # We clean the apt cache at the end of each apt command so that the caches
+    # don't get stored in each layer.
+    apt-get clean && rm -rf /var/lib/apt/lists/
