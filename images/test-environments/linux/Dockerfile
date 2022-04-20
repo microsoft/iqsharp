@@ -25,5 +25,10 @@ ARG UBUNTU_VER
 RUN wget -q "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VER}/packages-microsoft-prod.deb"
 # Register the Microsoft repository GPG keys
 RUN dpkg -i packages-microsoft-prod.deb
+
 # Update the list of packages after we added packages.microsoft.com
-RUN apt-get update && apt-get install -y powershell
+RUN apt-get update
+
+# Install powershell and git
+RUN apt-get install -y powershell
+RUN apt-get install -y git
