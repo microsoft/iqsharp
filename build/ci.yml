@@ -55,7 +55,6 @@ jobs:
     vmImage: 'macOS-latest'
   variables:
     OS: 'mac'
-    CondaPath: '/usr/local/bin'
     CondaShellHook: "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml

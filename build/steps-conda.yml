@@ -18,7 +18,8 @@ steps:
 # Create conda environment
 ##
 - script: |
-    $(CondaPath)/conda create --yes --quiet --name conda_env
+    eval "$(CondaShellHook)"
+    conda create --yes --quiet --name conda_env
   displayName: Create Anaconda environment
   condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
@@ -31,8 +32,9 @@ steps:
 # Install conda packages
 ##
 - script: |
-    $(CondaPath)/conda install --yes --quiet --name base conda-build=3.18.8
-    $(CondaPath)/conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+    eval "$(CondaShellHook)"
+    conda install --yes --quiet --name base conda-build=3.18.8
+    conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
   displayName: Install Anaconda packages
   condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
