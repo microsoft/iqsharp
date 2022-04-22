@@ -65,7 +65,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   container:
-    image: qdkimages.azurecr.io/internal/quantum/linux-test:latest
+    image: qdkimages.azurecr.io/public/quantum/linux-selfcontained:latest
     endpoint: qdkimages-acr
   variables:
     OS: 'linux'
@@ -78,9 +78,9 @@ jobs:
 - job: "pack_conda_windows"
   dependsOn: "pack_selfcontained"
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-latest'
   container:
-    image: qdkimages.azurecr.io/internal/quantum/windows-test:latest
+    image: qdkimages.azurecr.io/public/quantum/windows-selfcontained:latest
     endpoint: qdkimages-acr
   variables:
     OS: 'windows'
