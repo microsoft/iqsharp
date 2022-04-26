@@ -5,7 +5,7 @@ RUN powershell (New-Object System.Net.WebClient).DownloadFile('https://repo.anac
     powershell Unblock-File Miniconda3.exe && \
     Miniconda3.exe /InstallationType=JustMe /RegisterPython=1 /S /D=C:\Miniconda3
 
-FROM mcr.microsoft.com/powershell:lts-windowsservercore-1909
+FROM mcr.microsoft.com/powershell:windowsservercore-1909
 
 COPY --from=buildbase C:/Miniconda3 C:/Miniconda3
 
