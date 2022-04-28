@@ -11,7 +11,10 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
 
 # See https://github.com/conda/conda/issues/9903.
 if ($PSEdition -eq "Desktop" -or $IsWindows) {
-    conda install --yes brotli brotlipy
+    # Brotli is needed by conda install itself, so we use pip
+    # then force a reinstall.
+    pip install brotli
+    conda install --yes --force-reinstall brotli brotlipy
 }
 
 # Print conda-info and capture the current platform.
