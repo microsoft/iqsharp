@@ -9,6 +9,11 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
     Set-PSDebug -Trace 1;
 }
 
+# See https://github.com/conda/conda/issues/9903.
+if ($PSEdition -eq "Desktop" -or $IsWindows) {
+    conda install --yes brotli brotlipy
+}
+
 # Print conda-info and capture the current platform.
 (conda info --json) | Tee-Object -Variable condaInfo;
 $CondaPlatform = $condaInfo `
