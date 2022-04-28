@@ -9,7 +9,9 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
     Set-PSDebug -Trace 1;
 }
 
-$CondaPlatform = (conda info --json) `
+# Print conda-info and capture the current platform.
+(conda info --json) | Tee-Object -Variable condaInfo;
+$CondaPlatform = $condaInfo `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
 
