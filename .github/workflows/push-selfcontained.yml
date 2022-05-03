@@ -23,29 +23,32 @@ jobs:
       run: |
         $ImageTag = "${{ github.sha }}"
 
-        $LinuxRepoName = "public/quantum/linux-selfcontained"
-        $WindowsRepoName = "public/quantum/windows-selfcontained"
+        function Update-Image() {
+            param(
+                [string] $Path
+                [string] $RepoName,
+                [string] $LocalTag,
+            );
+            $fullRepoName = "public/quantum/$RepoName";
+            $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${RepoName}";
 
-        $LinuxLocalTag = "${LinuxRepoName}:${ImageTag}-linux"
-        $WindowsLocalTag = "${WindowsRepoName}:${ImageTag}-windows"
+            docker build $Path --tag $LocalTag;
 
-        $LinuxRemoteRepo = "${{ secrets.ACR_REGISTRY }}/${LinuxRepoName}"
-        $WindowsRemoteRepo = "${{ secrets.ACR_REGISTRY }}/${WindowsRepoName}"
+            docker tag $LocalTag "${remoteRepo}:${LocalTag}";
+            docker push "${remoteRepo}:${LocalTag}";
 
-        docker build images/test-environments/linux --tag $LinuxLocalTag
-        docker build images/test-environments/windows --tag $WindowsLocalTag
-
-        docker tag $LinuxLocalTag "${LinuxRemoteRepo}:${ImageTag}-linux"
-        docker tag $WindowsLocalTag "${WindowsRemoteRepo}:${ImageTag}-windows"
-
-        docker push "${LinuxRemoteRepo}:${ImageTag}-linux"
-        docker push "${WindowsRemoteRepo}:${ImageTag}-windows"
-
-        docker tag $LinuxLocalTag "${LinuxRemoteRepo}:latest"
-        docker tag $WindowsLocalTag "${WindowsRemoteRepo}:latest"
-
-        docker push "${LinuxRemoteRepo}:latest"
-        docker push "${WindowsRemoteRepo}:latest"
+            docker tag $LocalTag "${remoteRepo}:latest";
+            docker push "${remoteRepo}:latest";
+        }
+        Update-Image `
+            -RepoName "linux-selfcontained" `
+            -LocalTag "${ImageTag}-linux" `
+            -Path images/test-environments/linux;
+            
+        Update-Image `
+            -RepoName "windows-selfcontained" `
+            -LocalTag "${ImageTag}-windows" `
+            -Path images/test-environments/windows;
       shell: pwsh
     - name: Wait for images to publish
       run: |
