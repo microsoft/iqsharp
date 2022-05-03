@@ -64,9 +64,7 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'ubuntu-latest'
-  container:
-    image: qdkimages.azurecr.io/public/quantum/linux-selfcontained:latest
-    endpoint: qdkimages-acr
+  container: mcr.microsoft.com/quantum/linux-selfcontained:latest
   variables:
     OS: 'linux'
     CondaPath: '/miniconda/bin'
@@ -79,9 +77,7 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-latest'
-  container:
-    image: qdkimages.azurecr.io/public/quantum/windows-selfcontained:latest
-    endpoint: qdkimages-acr
+  container: mcr.microsoft.com/quantum/windows-selfcontained:latest
   variables:
     OS: 'windows'
     CondaPath: 'C:\Miniconda3\Scripts'
