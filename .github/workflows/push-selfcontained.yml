@@ -71,6 +71,7 @@ jobs:
         while (-not $LinuxImageAvailable -and -not $WindowsImageAvailable) {
           if (Test-Manifest -OS "linux" -and Test-Manifest -OS "windows") {
             Write-Host "##[info] Linux and Windows images $ImageTag now available on mcr.microsoft.com, proceeding.";
+  
             $LinuxImageAvailable = $true;
             $WindowsImageAvailable = $true;
           } else if (Test-Manifest -OS "linux") {
