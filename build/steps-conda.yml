@@ -1,9 +1,8 @@
 ##
-# Build and test IQ#.
+# Move build artifacts and create conda environment
 ##
 
 steps:
-
 ##
 # Pre-reqs
 ##
@@ -12,29 +11,87 @@ steps:
     artifactName: iqsharp
     downloadPath: '$(System.DefaultWorkingDirectory)/artifacts'
 
-- pwsh: |
-    Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
+- pwsh: Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifacts/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
   displayName: "Move build artifacts to IQ# working directory"
 
-- task: CondaEnvironment@1
-  inputs:
-    packageSpecs: "python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11 brotlipy"
-  displayName: 'Use conda environment w/ Python 3.7'
+##
+# Create conda environment
+##
+- script: |
+    eval "$(CondaShellHook)"
+    conda create --yes --quiet --name conda_env
+  displayName: Create Anaconda environment
+  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
+
+- pwsh: |
+    $(CondaPath)/conda.exe create --yes --quiet --name conda_env
+  displayName: Create Anaconda environment pwsh
+  condition: eq(variables.OS, 'windows')
 
 ##
-# Pack conda packages
+# Install conda packages
 ##
-- pwsh: .\pack-conda.ps1
+- script: |
+    eval "$(CondaShellHook)"
+    conda install --yes --quiet --name base conda-build=3.18.8
+    conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+  displayName: Install Anaconda packages
+  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
+
+- pwsh: |
+    $(CondaPath)/conda.exe install --yes --quiet --name base conda-build=3.18.8
+    $(CondaPath)/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
+  displayName: Install Anaconda packages
+  condition: eq(variables.OS, 'windows')
+
+##
+# Pack conda packages for each OS
+##
+- script: |
+    eval "$(CondaShellHook)"
+    conda activate conda_env
+    conda info
+    pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
+
+# Running pack-conda.ps1 from a new, independent instance of pwsh
+# prevents Azure Pipelines from interpreting the stderr stream from
+# conda-build as an exception stream, making it easier to capture
+# logging information without causing spurious failures.
+#
+# Note that any actual failures in conda-build can be detected by examining
+# exit codes and by testing the artifacts produced by pack-conda.ps1.
+- pwsh: |
+    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    conda activate conda_env
+    conda info
+    pwsh -NoProfile -Command ./pack-conda.ps1
+  displayName: "Packing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: eq(variables.OS, 'windows')
 
 ##
-# Test conda packages
+# Test conda packages for each OS
 ##
-- pwsh: .\test-conda.ps1
+- script: |
+    eval "$(CondaShellHook)"
+    conda activate conda_env
+    conda info
+    pwsh -NoProfile -Command ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
+
+- pwsh: |
+    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    conda activate conda_env
+    conda info
+    pwsh -NoProfile -Command ./test-conda.ps1
+  displayName: "Testing IQ# packages"
+  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OS, 'windows'))
 
 ##
 # Publish build artifacts.
