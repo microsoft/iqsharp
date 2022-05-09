@@ -2,23 +2,14 @@
 // Licensed under the MIT License.
 
 #nullable enable
+using Microsoft.Quantum.Experimental;
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+namespace Microsoft.Quantum.IQSharp.Jupyter;
 
-namespace Microsoft.Quantum.Experimental
+public record NoiseModelSource : INoiseModelSource
 {
-
-    public class NoiseModelSource : INoiseModelSource
-    {
-        public NoiseModel NoiseModel { get; set; } =
-            NoiseModel.TryGetByName("ideal", out var ideal)
-            ? ideal
-            : throw new Exception("Could not load ideal noise model.");
-    }
-
+    public NoiseModel NoiseModel { get; set; } =
+        NoiseModel.TryGetByName("ideal", out var ideal)
+        ? ideal
+        : throw new Exception("Could not load ideal noise model.");
 }

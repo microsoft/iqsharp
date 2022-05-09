@@ -5,14 +5,12 @@ namespace Microsoft.Quantum.IQSharp
 {
     /// <summary>
     /// A event to track when services get initialized.
-    /// This is useful for scenarios where we want to do something immediatly
+    /// This is useful for scenarios where we want to do something immediately
     /// after a specific service is initialized, for example subscribing to the 
     /// service events for telemetry purposes.
     /// </summary>
     /// <typeparam name="TService">The type (usually the interface) of the service</typeparam>
-    public class ServiceInitializedEvent<TService> : Event<TService>
-    {
-    }
+    public record ServiceInitializedEvent<TService> : Event<TService>;
 
     /// <summary>
     /// Extension methods to make it easy to consume and trigger ServiceInitialized events

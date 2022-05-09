@@ -187,6 +187,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public async Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
         {
+            Logger.LogDebug($"Asked to add NuGet package {package}.");
             if (string.IsNullOrWhiteSpace(package))
             {
                 throw new InvalidOperationException("Please provide a name of a package.");
@@ -205,12 +206,17 @@ namespace Microsoft.Quantum.IQSharp
         public async Task Add(PackageIdentity pkgId, Action<string>? statusCallback = null)
         {
             // Already added:
-            if (Items.Contains(pkgId)) return;
+            if (Items.Contains(pkgId))
+            {
+                Logger.LogInformation($"Skipping package {pkgId}, as it has already been added.");
+                return;
+            }
 
             using (var sourceCacheContext = new SourceCacheContext())
             {
                 statusCallback?.Invoke("getting dependencies");
-                var packages = await GetPackageDependencies(pkgId, sourceCacheContext);
+                var packages = (await GetPackageDependencies(pkgId, sourceCacheContext));
+                Logger.LogDebug($"Found {packages.Count()} dependencies of {pkgId}.");
 
                 await DownloadPackages(sourceCacheContext, packages, statusCallback);
 
@@ -439,6 +445,7 @@ namespace Microsoft.Quantum.IQSharp
                 the local folders.                
             */
             var uniquePackageIds = AvailablePackages.Select(pkg => pkg.Id).Distinct();
+            var globalPackagesSource = GlobalPackagesSource;
             var uniqueAvailablePackages = uniquePackageIds.SelectMany(
                     pkgId =>
                         LocalPackagesFinder.FindPackagesById(pkgId, Logger, CancellationToken.None)
@@ -454,7 +461,7 @@ namespace Microsoft.Quantum.IQSharp
                                                 .FirstOrDefault()
                                                 ?.Dependencies ?? new List<PackageDependency>(),
                                 listed: true,
-                                source: GlobalPackagesSource))
+                                source: globalPackagesSource))
                 );
             return uniqueAvailablePackages;
         }
@@ -467,7 +474,11 @@ namespace Microsoft.Quantum.IQSharp
             PackageIdentity package,
             SourceCacheContext context)
         {
-            if (AvailablePackages.Contains(package)) return;
+            if (AvailablePackages.Contains(package))
+            {
+                Logger?.LogDebug($"Package {package.Id}::{package.Version} was already available, skipping finding its dependencies.");
+                return;
+            }
 
             foreach (var repo in this.Repositories)
             {
@@ -478,6 +489,8 @@ namespace Microsoft.Quantum.IQSharp
 
                     var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETSTANDARD2_1, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
+
+                    Logger?.LogDebug($"Found package {package.Id}::{package.Version} in repository {repo.PackageSource.SourceUri}.");
 
                     AvailablePackages.Add(dependencyInfo);
 

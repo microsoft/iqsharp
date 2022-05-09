@@ -2,19 +2,11 @@
 // Licensed under the MIT License.
 
 #nullable enable
+using Microsoft.Quantum.Experimental;
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+namespace Microsoft.Quantum.IQSharp.Jupyter;
 
-namespace Microsoft.Quantum.Experimental
+public interface INoiseModelSource
 {
-
-    public interface INoiseModelSource
-    {
-        NoiseModel NoiseModel { get; set; }
-    }
-
+    NoiseModel NoiseModel { get; set; }
 }

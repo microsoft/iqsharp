@@ -44,9 +44,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///      An event raised when completions are provided in response to a
     ///      completion request.
     /// </summary>
-    public class CompletionEvent : Event<CompletionEventArgs>
-    {
-    }
+    public record CompletionEvent : Event<CompletionEventArgs>;
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.
