@@ -244,21 +244,21 @@ class IQSharpClient(object):
 
     def simulate_noise(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
-        return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
+        return self._execute_callable_magic('simulate_noise', op, **kwargs)
 
     def get_noise_model(self) -> str:
-        return self._execute(f'%experimental.noise_model')
+        return self._execute(f'%noise_model')
 
     def get_noise_model_by_name(self, name : str) -> None:
-        return self._execute(f'%experimental.noise_model --get-by-name {name}')
+        return self._execute(f'%noise_model --get-by-name {name}')
 
     def set_noise_model(self, json_data : str) -> None:
         # We assume json_data is already serialized, so that we skip the support
         # provided by _execute_magic and call directly.
-        return self._execute(f'%experimental.noise_model {json_data}')
+        return self._execute(f'%noise_model {json_data}')
 
     def set_noise_model_by_name(self, name : str) -> None:
-        return self._execute(f'%experimental.noise_model --load-by-name {name}')
+        return self._execute(f'%noise_model --load-by-name {name}')
 
 
     ## Internal-Use Methods ##

@@ -14,8 +14,6 @@ import numpy as np
 import os
 import pytest
 import qsharp
-import qsharp.experimental
-qsharp.experimental.enable_noisy_simulation()
 from .utils import set_environment_variables
 
 print ( qsharp.component_versions() )
@@ -352,7 +350,7 @@ class TestCaptureDiagnostics:
             }
         """)
 
-        qsharp.experimental.set_noise_model_by_name('ideal')
+        qsharp.set_noise_model_by_name('ideal')
         qsharp.config['experimental.simulators.nQubits'] = 2
         qsharp.config['experimental.simulators.representation'] = 'mixed'
 

@@ -185,13 +185,8 @@ namespace Tests.IQSharp
                     .Input("%sim", 3)
                         .CompletesTo(
                             "%simulate",
+                            "%simulate_noise",
                             "%simulate_sparse"
-                        )
-                    .Input("%experimental.", 14)
-                        .CompletesTo(
-                            "%experimental.build_info",
-                            "%experimental.simulate_noise",
-                            "%experimental.noise_model"
                         )
                     .Input("%ls", 3)
                         .CompletesTo(
