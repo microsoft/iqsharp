@@ -90,7 +90,7 @@ public class StabilizerStateToHtmlDisplayEncoder : IResultEncoder
                     <tr>
                         <th>State data</th>
                         <td>{
-                            config.ExperimentalSimulatorStabilizerStateVisualizationStyle switch
+                            config.NoisySimulatorStabilizerStateVisualizationStyle switch
                             {
                                 StabilizerStateVisualizationStyle.MatrixWithDestabilizers =>
                                     $@"$$\left(\begin{{array}}{{{colspec}}}{

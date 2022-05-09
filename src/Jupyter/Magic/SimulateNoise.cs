@@ -106,8 +106,8 @@ public class SimulateNoiseMagic : AbstractMagic
         if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 
         var qsim = new OpenSystemsSimulator(
-            ConfigurationSource.ExperimentalSimulatorCapacity,
-            ConfigurationSource.ExperimentalSimulatorRepresentation
+            ConfigurationSource.NoisySimulatorCapacity,
+            ConfigurationSource.NoisySimulatorRepresentation
         );
         if (NoiseModelSource.NoiseModel != null)
         {
