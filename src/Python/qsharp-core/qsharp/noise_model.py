@@ -41,7 +41,7 @@ __all__ = [
     "SequenceProcess",
 
     # Mixed pauli data model
-    "MixedPauli",
+    "MixedPauliProcess",
 
     # CHP decomposition data model
     "ChpDecompositionProcess",
