@@ -20,7 +20,7 @@ from collections import defaultdict
 from distutils.version import LooseVersion
 
 from qsharp.clients import _start_client
-from qsharp.clients.iqsharp import IQSharpError
+from qsharp.clients.iqsharp import IQSharpError, ExecutionFailedException
 from qsharp.loader import QSharpCallable, QSharpModuleFinder
 from qsharp.config import Config
 from qsharp.packages import Packages
@@ -40,7 +40,7 @@ __all__ = [
     'config',
     'packages',
     'projects',
-    'IQSharpError',
+    'IQSharpError', 'ExecutionFailedException',
     'Result', 'Pauli'
 ]
 
