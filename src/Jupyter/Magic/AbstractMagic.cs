@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
 // NB: The name `Documentation` can be ambiguous in this context,
@@ -74,6 +75,19 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         Logger?.LogWarning(agg, "Unhandled aggregate exception in magic command {Magic}, printing as stderr.", this.Name);
                         foreach (var e in agg.InnerExceptions) channel.Stderr(e?.Message);
+                        return ExecuteStatus.Error.ToExecutionResult();
+                    }
+                    catch (SimulationException e)
+                    {
+                        Logger?.LogWarning(e, "Unhandled native simulation exception in magic command {Magic}, printing as stderr.\nNative stacktrace: {Stacktrace}", this.Name, e.NativeBacktrace);
+                        channel.Stderr(e.Message);
+                        // When compiling in debug configuration, print out Rust-language backtraces as well.
+                        #if DEBUG
+                        if (e.NativeBacktrace is not null)
+                        {
+                            channel.Stderr(e.NativeBacktrace);
+                        }
+                        #endif
                         return ExecuteStatus.Error.ToExecutionResult();
                     }
                     catch (Exception e)

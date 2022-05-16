@@ -6,8 +6,13 @@ using Microsoft.Quantum.Experimental;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 
+/// <summary>
+///     A dependency injection service that stores a noise model for use in
+///     open systems simulation.
+/// </summary>
 public record NoiseModelSource : INoiseModelSource
 {
+    /// <inheritdoc />
     public NoiseModel NoiseModel { get; set; } =
         NoiseModel.TryGetByName("ideal", out var ideal)
         ? ideal

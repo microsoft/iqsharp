@@ -35,9 +35,9 @@ namespace Tests.IQSharp
 
             DeleteConfig();
 
+            var config = new ConfigurationSource() as IConfigurationSource;
             try
             {
-                var config = new ConfigurationSource() as IConfigurationSource;
                 Assert.IsNotNull(config);
                 Assert.IsFalse(File.Exists(ConfigurationSource.ConfigPath)); // Make sure the file is not created automatically.
                 Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian, config.BasisStateLabelingConvention);
@@ -49,7 +49,7 @@ namespace Tests.IQSharp
                 config.Configuration["dump.basisStateLabelingConvention"] = JToken.Parse("\"BigEndian\"");
                 config.Configuration["dump.truncateSmallAmplitudes"] = JToken.Parse("true");
                 config.Configuration["dump.measurementDisplayPrecision"] = JToken.Parse("2");
-                config.Configuration["simulators.noisy.representation"] = JToken.Parse("\"simple\"");
+                config.Configuration["simulators.noisy.representation"] = JToken.Parse("\"stabilizer\"");
 
                 // Save:
                 config.Persist();
@@ -60,11 +60,12 @@ namespace Tests.IQSharp
                 Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
                 Assert.AreEqual(true, config.TruncateSmallAmplitudes);
                 Assert.AreEqual(2, config.MeasurementDisplayPrecision);
-                Assert.AreEqual("simple", config.NoisySimulatorRepresentation);
+                Assert.AreEqual("stabilizer", config.NoisySimulatorRepresentation);
                 Assert.AreEqual(MeasurementDisplayStyle.BarAndNumber, config.MeasurementDisplayStyle);
             }
             finally
             {
+                config.Configuration["simulators.noisy.representation"] = JToken.Parse("\"mixed\"");
                 DeleteConfig();
             }
         }
@@ -83,13 +84,13 @@ namespace Tests.IQSharp
             System.Environment.SetEnvironmentVariable("DUMP_BASISSTATELABELINGCONVENTION", "BigEndian");
             System.Environment.SetEnvironmentVariable("IQSHARP_DUMP_TRUNCATESMALLAMPLITUDES", "true");
             System.Environment.SetEnvironmentVariable("DUMP_MEASUREMENTDISPLAYPRECISION", "2");
-            System.Environment.SetEnvironmentVariable("IQSHARP_SIMULATORS_NOISY_REPRESENTATION", "simple");
+            System.Environment.SetEnvironmentVariable("IQSHARP_SIMULATORS_NOISY_REPRESENTATION", "stabilizer");
 
             // Read values again, environment should be reflected:
             Assert.AreEqual(CommonNativeSimulator.BasisStateLabelingConvention.BigEndian, config.BasisStateLabelingConvention);
             Assert.AreEqual(true, config.TruncateSmallAmplitudes);
             Assert.AreEqual(2, config.MeasurementDisplayPrecision);
-            Assert.AreEqual("simple", config.NoisySimulatorRepresentation);
+            Assert.AreEqual("stabilizer", config.NoisySimulatorRepresentation);
             Assert.AreEqual(MeasurementDisplayStyle.BarAndNumber, config.MeasurementDisplayStyle);
 
             // Reset environment:
