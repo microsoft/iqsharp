@@ -8,6 +8,8 @@
 # Licensed under the MIT License.
 ##
 
+from __future__ import annotations
+from email import generator
 
 ## DESIGN NOTES ##
 
@@ -22,12 +24,11 @@
 
 ## IMPORTS ##
 
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple, Union, TYPE_CHECKING
 import qsharp
 import json
 import dataclasses
 
-from typing import Any, Union
 
 ## EXPORTS ##
 
@@ -37,19 +38,36 @@ __all__ = [
     "get_noise_model_by_name",
     "set_noise_model_by_name",
 
-    # SequenceProcess process data model
-    "SequenceProcess",
+    # State data model
+    "Stabilizer",
 
-    # Mixed pauli data model
+    # Process data model
+    "SequenceProcess",
     "MixedPauliProcess",
+    "ChpDecompositionProcess",
+    "UnsupportedProcess",
+
+    # Generator data model
+    "ExplicitEigenvalueDecomposition",
+    "UnsupportedGenerator",
+    "GeneratorCoset",
 
     # CHP decomposition data model
-    "ChpDecompositionProcess",
     "Hadamard",
     "Cnot",
     "Phase",
     "AdjointPhase"
 ]
+
+## TYPE DEFINITIONS ##
+
+if TYPE_CHECKING:
+    import qutip
+    import numpy as np
+    State = Union[qutip.Qobj, "Stabilizer"]
+    Process = Union[qutip.Qobj, "ChpDecompositionProcess", "MixedPauliProcess", "SequenceProcess"]
+    Instrument = Any # TODO
+    Generator = Union["ExplicitEigenvalueDecomposition", "UnsupportedGenerator"]
 
 ## PUBLIC FUNCTIONS ##
 
@@ -60,7 +78,7 @@ def get_noise_model():
     """
     noise_model = convert_to_arrays(qsharp.client.get_noise_model())
     # Convert {"Mixed": ...} and so forth to qobj.
-    return convert_to_qobjs(noise_model)
+    return NoiseModel(**convert_to_qobjs(noise_model))
 
 def get_noise_model_by_name(name: str):
     """
@@ -69,16 +87,17 @@ def get_noise_model_by_name(name: str):
     :param name: The name of the noise model to be returned (either `ideal`
         or `ideal_stabilizer`).
     """
-    noise_model = convert_to_arrays(qsharp.client.get_noise_model_by_name(name))
+    json_data = qsharp.client.get_noise_model_by_name(name)
+    noise_model = convert_to_arrays(json_data)
     # Convert {"Mixed": ...} and so forth to qobj.
-    return convert_to_qobjs(noise_model)
+    return NoiseModel(**convert_to_qobjs(noise_model))
 
-def set_noise_model(noise_model):
+def set_noise_model(noise_model: NoiseModel):
     """
     Sets the current noise model used in simulating Q# programs with the
     `.simulate_noise` method.
     """
-    json_data = dumps(convert_to_rust_style(noise_model))
+    json_data = dumps(convert_to_rust_style(noise_model._as_qobj()))
     qsharp.client.set_noise_model(json_data)
 
 def set_noise_model_by_name(name):
@@ -92,8 +111,115 @@ def set_noise_model_by_name(name):
     qsharp.client.set_noise_model_by_name(name)
 
 
-
 ## PUBLIC DATA MODEL ##
+
+@dataclasses.dataclass
+class NoiseModel:
+    initial_state: State
+    cnot: Process
+    i: Process
+    s: Process
+    s_adj: Process
+    t: Process
+    t_adj: Process
+    h: Process
+    x: Process
+    y: Process
+    z: Process
+    z_meas: Instrument
+    rx: GeneratorCoset
+    ry: GeneratorCoset
+    rz: GeneratorCoset
+
+    def _as_qobj(self):
+        return {
+            'initial_state': self.initial_state,
+            'cnot': self.cnot,
+            'i': self.i,
+            's': self.s,
+            's_adj': self.s_adj,
+            't': self.t,
+            't_adj': self.t_adj,
+            'h': self.h,
+            'x': self.x,
+            'y': self.y,
+            'z': self.z,
+            'z_meas': self.z_meas,
+            'rx': self.rx,
+            'ry': self.ry,
+            'rz': self.rz,
+        }
+
+@dataclasses.dataclass
+class Stabilizer:
+    n_qubits: int
+    table: np.ndarray
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': {
+                'Stabilizer': {
+                    'n_qubits': self.n_qubits,
+                    # We don't use arr_to_rust_style here, as that is designed
+                    # for complex arrays. Rather, we depend on the default
+                    # set in as_jobj, below.
+                    'table': self.table
+                }
+            }
+        }
+
+@dataclasses.dataclass
+class UnsupportedProcess():
+    n_qubits: int
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': 'Unsupported'
+        }
+
+@dataclasses.dataclass
+class ExplicitEigenvalueDecomposition():
+    values: Any
+    vectors: Any
+    n_qubits: int
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': {
+                'ExplicitEigenvalueDecomposition': {
+                    'values': arr_to_rust_style(self.values),
+                    'vectors': arr_to_rust_style(self.vectors)
+                }
+            }
+        }
+
+@dataclasses.dataclass
+class UnsupportedGenerator():
+    n_qubits: int
+
+    def _as_jobj(self):
+        return {
+            'n_qubits': self.n_qubits,
+            'data': 'Unsupported'
+        }
+
+@dataclasses.dataclass
+class GeneratorCoset():
+    generator: Generator
+    pre: Optional[Any]
+    post: Optional[Any]
+
+    def _as_jobj(self):
+        obj = {}
+        if self.pre is not None:
+            obj['pre'] = self.pre
+        if self.post is not None:
+            obj['post'] = self.post
+        obj['generator'] = self.generator._as_jobj()
+        return obj
 
 @dataclasses.dataclass
 class SequenceProcess():
@@ -149,6 +275,19 @@ class Cnot():
 class ChpDecompositionProcess():
     n_qubits: int
     operations: List[Union[Hadamard, Cnot, Phase, AdjointPhase]]
+
+    @classmethod
+    def _from_jobj(cls, obj):
+        return cls(n_qubits=obj['n_qubits'], operations=[
+            Hadamard(step['Hadamard'])
+            if 'Hadamard' in step else
+            Phase(step['Phase'])
+            if 'Phase' in step else
+            AdjointPhase(step['AdjointPhase'])
+            if 'AdjointPhase' in step else
+            Cnot(*step['Cnot'])
+            for step in obj['data']['ChpDecomposition']
+        ])
 
     def _as_jobj(self):
         return {
@@ -258,6 +397,26 @@ def arr_to_qobj(arr):
     import numpy as np
     return qt.Qobj(arr, dims=[[2] * int(np.log2(arr.shape[1]))] * 2)
 
+
+def jobj_to_generator(json_obj) -> GeneratorCoset:
+    generator = json_obj['generator']
+    if 'data' in generator:
+        if generator['data'] == "Unsupported":
+            generator = UnsupportedGenerator(generator['n_qubits'])
+        elif 'ExplicitEigenvalueDecomposition' in generator['data']:
+            generator = ExplicitEigenvalueDecomposition(
+                values=generator['data']['ExplicitEigenvalueDecomposition']['values'],
+                vectors=generator['data']['ExplicitEigenvalueDecomposition']['vectors'],
+                n_qubits=generator['n_qubits']
+            )
+
+    return GeneratorCoset(
+        generator=generator,
+        pre=convert_to_qobjs(json_obj['pre']) if 'pre' in json_obj else None,
+        post=convert_to_qobjs(json_obj['post']) if 'post' in json_obj else None
+    )
+
+
 def convert_to_qobjs(json_obj):
     import qutip as qt
     return (
@@ -266,6 +425,20 @@ def convert_to_qobjs(json_obj):
 
         arr_to_qobj(json_obj['data']['Unitary'])
         if 'data' in json_obj and 'Unitary' in json_obj['data'] else
+
+        jobj_to_generator(json_obj)
+        if 'generator' in json_obj else
+
+        Stabilizer(json_obj['n_qubits'], json_obj['data']['Stabilizer']['table'])
+        if 'data' in json_obj and 'Stabilizer' in json_obj['data'] else
+
+        ChpDecompositionProcess._from_jobj(json_obj)
+        if 'data' in json_obj and 'ChpDecomposition' in json_obj['data'] else
+
+        # Since we deserialized unsupported generators above, we know that
+        # this unsupported must be a process.
+        UnsupportedProcess(json_obj['n_qubits'])
+        if 'data' in json_obj and json_obj['data'] == "Unsupported" else
 
         qt.kraus_to_super([arr_to_qobj(op) for op in json_obj['data']['KrausDecomposition']])
         if 'data' in json_obj and 'KrausDecomposition' in json_obj['data'] else
