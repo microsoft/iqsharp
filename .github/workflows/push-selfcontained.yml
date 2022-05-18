@@ -5,7 +5,7 @@ on:
     branches:
     - main
     paths:
-    - 'images/test-environments/**/Dockerfile`
+    - 'images/test-environments/**/Dockerfile'
 
 jobs:
   build:
