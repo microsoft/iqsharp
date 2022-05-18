@@ -1,3 +1,5 @@
+'use strict';
+
 requirejs.config({
     bundles: {
         'bundle': ['kernel'],
