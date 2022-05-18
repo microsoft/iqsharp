@@ -24,8 +24,11 @@ function Pack-CondaRecipe() {
         [string[]] $PythonVersions = @("3.7", "3.8", "3.9")
     );
 
-    if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
-        Write-Host "##vso[task.logissue type=warning;] conda-build not installed. " + `
+    # We use mambabuild provided by boa here, as that can speed up creation
+    # of temporary environments during builds.
+    # https://boa-build.readthedocs.io/en/latest/mambabuild.html
+    if (-not (Get-Command conda-mambabuild -ErrorAction SilentlyContinue)) {
+        Write-Host "##vso[task.logissue type=warning;] conda-mambabuild not installed. " + `
                    "Will skip creation of conda package for $Path.";
         return;
     }
@@ -41,7 +44,7 @@ function Pack-CondaRecipe() {
                 Write-Host "##[info]Running: conda build $(Resolve-Path $Path) --python=$_"
                 # See https://stackoverflow.com/a/20950421/267841 for why this works to force conda
                 # to output all log messages to stdout instead of stderr.
-                conda build (Resolve-Path $Path) --no-test --python=$_ 2>&1 | ForEach-Object { "$_" };
+                conda mambabuild (Resolve-Path $Path) --no-test --python=$_ 2>&1 | ForEach-Object { "$_" };
             }
     } catch {
         Write-Host "##vso[task.logissue type=warning;]conda build error: $_";
@@ -51,7 +54,7 @@ function Pack-CondaRecipe() {
         New-Item -ItemType Directory -Path $TargetDir -Force -ErrorAction SilentlyContinue;
         $PythonVersions | `
             ForEach-Object {
-                $PackagePath = (conda build (Resolve-Path $Path) --python=$_ --output);
+                $PackagePath = (conda mambabuild (Resolve-Path $Path) --python=$_ --output);
                 Write-Host "##[debug]Expecting to find conda package at $PackagePath.";
                 if (Test-Path $PackagePath) {
                     Copy-Item `
