@@ -17,7 +17,6 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Microsoft.Quantum.Experimental;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -95,7 +94,7 @@ namespace Tests.IQSharp
             await engine.Initialized;
             var configSource = new ConfigurationSource(skipLoading: true);
             var noiseModelSource = new NoiseModelSource();
-            if (noiseModel != null)
+            if (noiseModel is not null)
             {
                 noiseModelSource.NoiseModel = noiseModel;
             }

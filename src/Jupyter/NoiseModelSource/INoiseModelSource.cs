@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 #nullable enable
-using Microsoft.Quantum.Experimental;
+using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 

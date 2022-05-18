@@ -6,7 +6,7 @@
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 
-namespace Microsoft.Quantum.Experimental;
+namespace Microsoft.Quantum.Simulation.Simulators;
 
 /// <summary>
 ///     Represents different styles for displaying the Q# execution path

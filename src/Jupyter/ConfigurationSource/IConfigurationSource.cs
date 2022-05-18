@@ -1,13 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-
-using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.Simulation.Simulators;
-
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
