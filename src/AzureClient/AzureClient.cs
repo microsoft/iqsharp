@@ -541,6 +541,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 // TODO @cgranade: Update to use HttpClient instead to get
                 //                 cancellation token support.
+                ServicePointManager.CheckCertificateRevocationList = true;
                 var request = WebRequest.Create(job.OutputDataUri);
                 using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
                 return responseStream.ToHistogram(Logger).ToExecutionResult();
