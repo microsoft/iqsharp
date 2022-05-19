@@ -5,8 +5,9 @@
 
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
-namespace Microsoft.Quantum.Simulation.Simulators;
+namespace Microsoft.Quantum.IQSharp.Jupyter;
 
 /// <summary>
 ///     Represents different styles for displaying the Q# execution path

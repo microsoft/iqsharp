@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.Simulation.Simulators;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 

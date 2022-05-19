@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Quantum.Simulation.Core;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Quantum.Simulation.Simulators;
+using DataModel = Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Quantum.IQSharp;
@@ -30,9 +30,9 @@ public static class JsonConverters
 
             // Make sure to use the base type for each open systems / CHP
             // state, since these are effectively a discriminated union.
-            new DelegatedConverter<Experimental.PureState, Experimental.State>(new Experimental.StateConverter()),
-            new DelegatedConverter<Experimental.MixedState, Experimental.State>(new Experimental.StateConverter()),
-            new DelegatedConverter<Experimental.StabilizerState, Experimental.State>(new Experimental.StateConverter())
+            new DelegatedConverter<DataModel.PureState, DataModel.State>(new DataModel.StateConverter()),
+            new DelegatedConverter<DataModel.MixedState, DataModel.State>(new DataModel.StateConverter()),
+            new DelegatedConverter<DataModel.StabilizerState, DataModel.State>(new DataModel.StateConverter())
         }
         .ToImmutableList();
         otherConverters = ImmutableList.Create<JsonConverter>(

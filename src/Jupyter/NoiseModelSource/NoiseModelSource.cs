@@ -4,7 +4,7 @@
 #nullable enable
 using Microsoft.Quantum.Experimental;
 
-namespace Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
 /// <summary>
 ///     A dependency injection service that stores a noise model for use in
