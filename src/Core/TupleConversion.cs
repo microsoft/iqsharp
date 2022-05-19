@@ -6,8 +6,9 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Quantum.Simulation.Core;
 using System.Diagnostics;
 using System.IO;
-using DataModel = Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Quantum.Simulation.Simulators;
+using DataModel = Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
 namespace Microsoft.Quantum.IQSharp;
 
