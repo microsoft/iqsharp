@@ -29,7 +29,6 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   steps:
-  - template: cache.yml
   - template: steps.yml
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
@@ -72,6 +71,7 @@ jobs:
     CondaPath: '/miniconda/bin'
     CondaShellHook: "$('/miniconda/bin/conda' 'shell.bash' 'hook')"
   steps:
+  - template: cache.yml
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
@@ -84,5 +84,6 @@ jobs:
     OS: 'windows'
     CondaPath: 'C:\Miniconda3\Scripts'
   steps:
+  - template: cache.yml
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')

@@ -13,6 +13,12 @@ steps:
 
   - script: |
       mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar cache
-    displayName: Docker save
-    condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar mcr.microsoft.com/quantum/windows-selfcontained:latest
+    displayName: Docker save windows
+    condition: and(eq(variables.OS, 'windows'), not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar mcr.microsoft.com/quantum/linux-selfcontained:latest
+    displayName: Docker save linux
+    condition: and(eq(variables.OS, 'linux'), not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
