@@ -15,6 +15,7 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
