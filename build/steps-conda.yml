@@ -34,15 +34,13 @@ steps:
 - script: |
     eval "$(CondaShellHook)"
     conda install --yes --quiet --name base conda-build=3.18.8
-    conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11 ripgrep
-    conda install --yes --quiet --name conda_env -c conda-forge boa
+    conda install --yes --quiet --name conda_env -c conda-forge python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11 ripgrep boa
   displayName: Install Anaconda packages
   condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
 - pwsh: |
     $(CondaPath)/conda.exe install --yes --quiet --name base conda-build=3.18.8
-    $(CondaPath)/conda.exe install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11 ripgrep
-    $(CondaPath)/conda.exe install --yes --quiet --name conda_env -c conda-forge boa
+    $(CondaPath)/conda.exe install --yes --quiet --name conda_env -c conda-forge python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11 ripgrep boa
   displayName: Install Anaconda packages
   condition: eq(variables.OS, 'windows')
 
