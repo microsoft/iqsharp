@@ -5,7 +5,8 @@ on:
     branches:
     - main
     paths:
-    - 'images/test-environments/**/Dockerfile`
+    - 'images/test-environments/**/Dockerfile'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,7 +22,7 @@ jobs:
       run: az acr login -n qdkimages
     - name: Build and push Docker image
       run: |
-        $ImageTag = "${{ github.sha }}"
+        $ImageTag = "${{ github.sha }}-$( Get-Date -Format FileDateTimeUniversal )"
 
         function Update-Image() {
             param(
