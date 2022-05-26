@@ -39,7 +39,7 @@
     <PackageReference Include="Microsoft.CSharp" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.24.201332" />
     <PackageReference Include="Microsoft.Quantum.CSharpGeneration" />
     <PackageReference Include="Microsoft.Quantum.Simulators" />
     <PackageReference Include="Microsoft.Quantum.QSharp.Core" />

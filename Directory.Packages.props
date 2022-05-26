@@ -14,7 +14,6 @@
     <ItemGroup>
         <PackageVersion Include="Microsoft.CSharp" Version="4.5.0" />
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
-        <PackageVersion Include="Microsoft.Quantum.Compiler" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Quantum.Simulators" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Quantum.QSharp.Core" Version="0.24.201332" />
