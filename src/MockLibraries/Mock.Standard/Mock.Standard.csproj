@@ -7,5 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Quantum.Simulators" />
+    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" />
   </ItemGroup>
 </Project>
