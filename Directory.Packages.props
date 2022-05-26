@@ -8,7 +8,6 @@
         <PackageVersion Include="Microsoft.Azure.Quantum.Client" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Rest.ClientRuntime" Version="2.3.23" />
         <PackageVersion Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
-        <PackageVersion Include="System.Reactive" Version="4.3.2" />
     </ItemGroup>
 
     <!-- Core.csproj -->
@@ -61,11 +60,10 @@
 
     <!-- Tests.Iqsharp.csproj & AzureClient.csproj -->
     <ItemGroup>
-        <PackageVersion Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3" />
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     </ItemGroup>
 
-    <!-- Jupyter.csproj & Kernel.csproj -->
+    <!-- Jupyter.csproj & Kernel.csproj & AzureClient.csproj -->
     <ItemGroup>
         <PackageVersion Include="System.Reactive" Version="4.3.2" />
     </ItemGroup>
