@@ -36,17 +36,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.24.201332" />
-    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.201332" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.24.201332" />
-    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.24.201332" />
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
-    <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
-    <PackageReference Include="System.DirectoryServices.Protocols" Version="5.0.1" />
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" />
+    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" />
+    <PackageReference Include="Microsoft.Quantum.QSharp.Core" />
+    <PackageReference Include="Microsoft.Windows.Compatibility" />
+    <PackageReference Include="NuGet.Resolver" />
+    <PackageReference Include="System.DirectoryServices.Protocols" />
+    <PackageReference Include="System.Runtime.Loader" />
   </ItemGroup>
 
 </Project>

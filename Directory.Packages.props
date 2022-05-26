@@ -3,11 +3,75 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
 
+    <!-- AzureClient.csproj -->
     <ItemGroup>
-        <PackageVersion Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3" />
         <PackageVersion Include="Microsoft.Azure.Quantum.Client" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Rest.ClientRuntime" Version="2.3.23" />
         <PackageVersion Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
         <PackageVersion Include="System.Reactive" Version="4.3.2" />
+    </ItemGroup>
+
+    <!-- Core.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.CSharp" Version="4.5.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.Quantum.Compiler" Version="0.24.201332" />
+        <PackageVersion Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.201332" />
+        <PackageVersion Include="Microsoft.Quantum.Simulators" Version="0.24.201332" />
+        <PackageVersion Include="Microsoft.Quantum.QSharp.Core" Version="0.24.201332" />
+        <PackageVersion Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
+        <PackageVersion Include="NuGet.Resolver" Version="5.1.0" />
+        <PackageVersion Include="System.DirectoryServices.Protocols" Version="5.0.1" />
+        <PackageVersion Include="System.Runtime.Loader" Version="4.3.0" />
+    </ItemGroup>
+
+    <!-- Tool.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
+        <PackageVersion Include="System.Net.Http" Version="4.3.4" />
+        <PackageVersion Include="System.Text.Json" Version="5.0.1" />
+        <PackageVersion Include="Serilog.Extensions.Logging.File" Version="2.0.0-dev-00039" />
+    </ItemGroup>
+
+    <!-- Web.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="System.Net.Http" Version="4.3.4" />
+    </ItemGroup>
+
+    <!-- Kernel.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="3.9.6">
+    </ItemGroup>
+
+    <!-- Jupyter.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.Jupyter.Core" Version="1.5.157285" />
+    </ItemGroup>
+
+    <!-- Tests.Iqsharp.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Flurl.Http" Version="2.4.2" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
+        <PackageVersion Include="MSTest.TestAdapter" Version="2.2.5" />
+        <PackageVersion Include="MSTest.TestFramework" Version="2.2.5" />
+    </ItemGroup>
+
+    <!-- Tests.Iqsharp.csproj & AzureClient.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3" />
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="3.0.0" />
+    </ItemGroup>
+
+    <!-- Jupyter.csproj & Kernel.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="System.Reactive" Version="4.3.2" />
+    </ItemGroup>
+
+    <!-- ExecutionPathTracer.csproj & Core.csproj & Mock.Standard.csproj & Mock.Chemistry.csproj -->
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.Quantum.Simulators" Version="0.24.201332" />
     </ItemGroup>
 </Project>

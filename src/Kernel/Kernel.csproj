@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="4.3.2" />
+    <PackageReference Include="System.Reactive" />
   </ItemGroup>
 
   <!-- TypeScript compilation -->
@@ -35,7 +35,7 @@
     <Content Include="tsconfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.6">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
