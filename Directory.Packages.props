@@ -16,6 +16,7 @@
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
         <PackageVersion Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Quantum.QSharp.Core" Version="0.24.201332" />
+        <PackageVersion Include="Microsoft.Quantum.Compiler" Version="0.24.201332" />
         <PackageVersion Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
         <PackageVersion Include="NuGet.Resolver" Version="5.1.0" />
         <PackageVersion Include="System.DirectoryServices.Protocols" Version="5.0.1" />
@@ -57,6 +58,7 @@
     <!-- Tests.Iqsharp.csproj & AzureClient.csproj -->
     <ItemGroup>
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="3.0.0" />
+        <PackageVersion Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3"/>
     </ItemGroup>
 
     <!-- Jupyter.csproj & Kernel.csproj & AzureClient.csproj -->
