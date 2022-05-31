@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal class MockQIRSubmitter : IQirSubmitter
+    internal class MockQirSubmitter : IQirSubmitter
     {
         public string Target => throw new NotImplementedException();
 
@@ -23,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// Creates a Mock QIR Submitter, with expected entry point arguments to the SubmitAsync method.
         /// </summary>
         /// <param name="expectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
-        public MockQIRSubmitter(IReadOnlyList<Argument> expectedArguments)
+        public MockQirSubmitter(IReadOnlyList<Argument> expectedArguments)
         {
             this.ExpectedArguments = expectedArguments;
         }
@@ -60,7 +60,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <summary>
-        /// Mocks a SubmitAsync call, checking that the given <c>arguments</c>c> are a match to the expected arguments for this mock submitter.
+        /// Mocks a SubmitAsync call, checking that the given <paramref name="arguments" /> are a match to the expected arguments for this mock submitter.
+        /// This method also asserts that arguments equal the expected arguments passed into the constructor.
         /// </summary>
         /// <param name="qir">The QIR stream for the entry point.</param>
         /// <param name="entryPoint">The name of the entry point.</param>

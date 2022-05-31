@@ -18,6 +18,7 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
+using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
@@ -569,26 +570,34 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                // TODO @cgranade: Update to use HttpClient instead to get
-                //                 cancellation token support.
-                var request = WebRequest.Create(job.OutputDataUri);
-                using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
-                if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
-                {
-                    var (messages, result) = ParseSimulatorOutput(responseStream);
-                    channel?.Stdout(messages);
-                    return result.ToExecutionResult();
-                }
-                else
-                {
-                    return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
-                }
+                return await CreateOutput(job, channel);
             }
             catch (Exception e)
             {
                 channel?.Stderr($"Failed to retrieve results for job ID {jobId}.");
                 Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
                 return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
+            }
+        }
+
+        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel)
+        {
+            // TODO @cgranade: Update to use HttpClient instead to get
+            //                 cancellation token support.
+            var request = WebRequest.Create(job.OutputDataUri);
+            using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
+            if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+            {
+                var (messages, result) = ParseSimulatorOutput(responseStream);
+                foreach (var message in messages)
+                {
+                    channel?.Stdout(message );
+                }
+                return result.ToExecutionResult();
+            }
+            else
+            {
+                return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
             }
         }
 

@@ -20,6 +20,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <inheritdoc/>
     internal class EntryPoint : IEntryPoint
     {
+        // The namespace must match the one found in the in CompilerService.cs in the Core project.
+        private const string EntryPointNamespaceName = "ENTRYPOINT";
+
         private object EntryPointInfo { get; }
         private Type InputType { get; }
         private Type OutputType { get; }
@@ -133,7 +136,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
                 }
 
-                string rawParameterValue = submissionContext.InputParameters[parameter.Name];
+                var rawParameterValue = submissionContext.InputParameters[parameter.Name];
 
                 try
                 {
@@ -182,13 +185,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
+            if (QirStream is null)
+            {
+                throw new ArgumentException($"A QIR stream is required when submitting using the IQirSubmitter interface.");
+            }
+
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
 
-            var options = SubmissionOptions.Default;
-            options = options.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
-
-            // The namespace must match the one found in the in CompilerService.cs in the Core project.
-            var entryPointNamespaceName = "ENTRYPOINT";
+            var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 
             // Find and invoke the method on IQirSubmitter that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)
@@ -201,8 +205,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[1].ParameterType == typeof(string)
                     && method.GetParameters()[2].ParameterType == typeof(IReadOnlyList<Argument>)
                     && method.GetParameters()[3].ParameterType == typeof(SubmissionOptions)
-                    );
-            var submitParameters = new object[] { QirStream!, $"{entryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
+                );
+            var submitParameters = new object[] { QirStream, $"{EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
             return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
         }
     }

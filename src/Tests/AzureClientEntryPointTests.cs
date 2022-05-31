@@ -93,7 +93,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }
@@ -119,7 +119,7 @@ namespace Tests.IQSharp
             };
 
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(validArguments.Select(x => x.Key).ToList()),
+                new MockQirSubmitter(validArguments.Select(x => x.Key).ToList()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = validArguments.ToDictionary(x => x.Key.Name, x => x.Value)
@@ -135,7 +135,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myBool", new ArgumentValue.Bool(true)) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myBool", new ArgumentValue.Bool(true)) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myBool"] = "\"true\"" }
@@ -151,7 +151,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myDouble", new ArgumentValue.Double(1.2)) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myDouble", new ArgumentValue.Double(1.2)) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myDouble"] = "\"1.2\"" }
@@ -167,7 +167,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myInt", new ArgumentValue.Int(2)) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myInt", new ArgumentValue.Int(2)) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myInt"] = "\"2\"" }
@@ -183,7 +183,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myStr", new ArgumentValue.String("\"Hello\"")) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myStr", new ArgumentValue.String("\"Hello\"")) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myStr"] = "\"Hello\"" }
@@ -199,7 +199,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myPauli"] = "\"PauliX\"" }
@@ -215,7 +215,7 @@ namespace Tests.IQSharp
 
             Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>() { new Argument("myResult", new ArgumentValue.Result(Result.One)) }),
+                new MockQirSubmitter(new List<Argument>() { new Argument("myResult", new ArgumentValue.Result(Result.One)) }),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myResult"] = "\"1\"" }
@@ -238,7 +238,7 @@ namespace Tests.IQSharp
             };
 
             var job = await entryPoint.SubmitAsync(
-                new MockQIRSubmitter(validArguments.Select(x => x.Key).ToList()),
+                new MockQirSubmitter(validArguments.Select(x => x.Key).ToList()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = validArguments.ToDictionary(x => x.Key.Name, x => x.Value)
@@ -254,7 +254,7 @@ namespace Tests.IQSharp
             var entryPoint = await entryPointGenerator.Generate("UseUnitType", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myUnit"] = "\"()\"" }
@@ -263,7 +263,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseUnitTypeFirst", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -277,7 +277,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseUnitTypeMiddle", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -291,7 +291,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseUnitTypeLast", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -311,7 +311,7 @@ namespace Tests.IQSharp
             var entryPoint = await entryPointGenerator.Generate("UseArrayType", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myArray"] = "\"[2, 4, 8]\"" }
@@ -320,7 +320,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseArrayTypeFirst", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -334,7 +334,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseArrayTypeMiddle", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -348,7 +348,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseArrayTypeLast", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -368,7 +368,7 @@ namespace Tests.IQSharp
             var entryPoint = await entryPointGenerator.Generate("UseRangeType", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string> { ["myRange"] = "\"0..2..10\"" }
@@ -377,7 +377,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseRangeTypeFirst", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -391,7 +391,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseRangeTypeMiddle", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
@@ -405,7 +405,7 @@ namespace Tests.IQSharp
             entryPoint = await entryPointGenerator.Generate("UseRangeTypeLast", null);
             Assert.IsNotNull(entryPoint);
             await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQIRSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>()),
                 new AzureSubmissionContext()
                 {
                     InputParameters = new Dictionary<string, string>
