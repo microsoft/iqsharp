@@ -28,7 +28,7 @@ jobs:
             param(
                 [string] $Path,
                 [string] $RepoName,
-                [string] $LocalTag,
+                [string] $LocalTag
             );
             $fullRepoName = "public/quantum/$RepoName";
             $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${RepoName}";
