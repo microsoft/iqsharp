@@ -26,7 +26,7 @@ jobs:
 
         function Update-Image() {
             param(
-                [string] $Path
+                [string] $Path,
                 [string] $RepoName,
                 [string] $LocalTag,
             );
