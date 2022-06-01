@@ -1,13 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 # Make sure to setup QuTiP as soon as possible, so as to avoid circular
 # dependencies. If QuTiP is not available, future import calls in forwarded
 # tests will fail with a simple ImportError.
 try:
-    import qutip
-except ImportError:
-    pass
+    import qutip as _qt
+    logging.info("Successfully imported QuTiP.")
+except ImportError as ex:
+    logging.error(f"Failed to import QuTiP with error \"{ex.msg}\". Skipping QuTiP-based tests.", exc_info=ex)
 
 import os
 
@@ -44,11 +48,12 @@ def test_user_agent_extra():
 
 # Forward tests from the unit testing modules.
 def _forward_tests(module_name) -> None:
+    logging.debug(f"Importing module {module_name} to forward tests...")
     module = import_module(module_name)
 
     for attr_name in dir(module):
         if attr_name.startswith("test_") or attr_name.startswith("Test"):
-            print(f"Forwarding {attr_name} from {module_name}.")
+            logging.debug(f"Forwarding {attr_name} from {module_name}.")
             globals()[attr_name] = getattr(module, attr_name)
 
 _forward_tests("qsharp.tests.test_iqsharp")
