@@ -10,6 +10,8 @@
 ## IMPORTS ##
 
 import json
+
+from qsharp.utils import try_import_qutip
 import numpy as np
 import os
 import pytest
@@ -26,10 +28,7 @@ print ( qsharp.component_versions() )
 def session_setup():
     set_environment_variables()
 
-try:
-    import qutip as qt
-except ImportError:
-    qt = None
+qt = try_import_qutip(warn=True, optional=True)
 
 skip_if_no_qutip = pytest.mark.skipif(qt is None, reason="Test requires QuTiP.")
 

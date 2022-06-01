@@ -10,10 +10,8 @@
 from enum import IntEnum
 import random
 
-try:
-    import qutip as qt
-except ImportError:
-    qt = None
+from qsharp.utils import try_import_qutip
+qt = try_import_qutip(optional=True)
 
 ## ENUMS ######################################################################
 
