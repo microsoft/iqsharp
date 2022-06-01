@@ -4,15 +4,6 @@
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Make sure to setup QuTiP as soon as possible, so as to avoid circular
-# dependencies. If QuTiP is not available, future import calls in forwarded
-# tests will fail with a simple ImportError.
-try:
-    import qutip as _qt
-    logging.info("Successfully imported QuTiP.")
-except ImportError as ex:
-    logging.error(f"Failed to import QuTiP with error \"{ex.msg}\". Skipping QuTiP-based tests.", exc_info=ex)
-
 import os
 
 import pytest
@@ -21,7 +12,6 @@ os.environ["QSHARP_PY_ISCONDA"] = "True"
 from importlib import import_module
 from attr import attr
 import qsharp
-
 
 def test_simple_compile():
     """
