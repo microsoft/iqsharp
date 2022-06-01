@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 import os
@@ -12,6 +13,13 @@ os.environ["QSHARP_PY_ISCONDA"] = "True"
 from importlib import import_module
 from attr import attr
 import qsharp
+
+# We also want to make sure that QuTiP is enabled for tests when running via
+# conda, even though these tests are optional for the qsharp wheel.
+# We use try_import_qutip to force a successful import to populate the same
+# cache of the import call used later by tests.
+from qsharp.utils import try_import_qutip
+try_import_qutip(optional=False)
 
 def test_simple_compile():
     """
