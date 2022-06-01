@@ -31,7 +31,7 @@ jobs:
                 [string] $LocalTag
             );
             $fullRepoName = "public/quantum/$RepoName";
-            $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${RepoName}";
+            $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${fullRepoName}";
 
             docker build $Path --tag $LocalTag;
 
