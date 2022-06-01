@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import logging
-
 logging.basicConfig(level=logging.DEBUG)
 
 import os
