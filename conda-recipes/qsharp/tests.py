@@ -1,6 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# Make sure to setup QuTiP as soon as possible, so as to avoid circular
+# dependencies. If QuTiP is not available, future import calls in forwarded
+# tests will fail with a simple ImportError.
+try:
+    import qutip
+except ImportError:
+    pass
+
 import os
 
 import pytest
@@ -9,6 +17,7 @@ os.environ["QSHARP_PY_ISCONDA"] = "True"
 from importlib import import_module
 from attr import attr
 import qsharp
+
 
 def test_simple_compile():
     """
