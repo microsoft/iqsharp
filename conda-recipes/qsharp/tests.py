@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 import os
 
 import pytest
@@ -35,11 +38,12 @@ def test_user_agent_extra():
 
 # Forward tests from the unit testing modules.
 def _forward_tests(module_name) -> None:
+    logging.debug(f"Importing module {module_name} to forward tests...")
     module = import_module(module_name)
 
     for attr_name in dir(module):
         if attr_name.startswith("test_") or attr_name.startswith("Test"):
-            print(f"Forwarding {attr_name} from {module_name}.")
+            logging.debug(f"Forwarding {attr_name} from {module_name}.")
             globals()[attr_name] = getattr(module, attr_name)
 
 _forward_tests("qsharp.tests.test_iqsharp")
