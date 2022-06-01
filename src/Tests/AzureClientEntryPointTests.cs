@@ -37,6 +37,27 @@ namespace Tests.IQSharp
             return services.GetService<IEntryPointGenerator>();
         }
 
+        internal async Task CheckValidParameter(
+            string snippetSource,
+            string operationName,
+            string argumentName,
+            ArgumentValue value,
+            string valueAsExpr
+        )
+        {
+            var entryPointGenerator = Init("Workspace", new[] { snippetSource });
+            var entryPoint = await entryPointGenerator.Generate(operationName, null, generateQir: true);
+
+            Assert.IsNotNull(entryPoint);
+            var job = await entryPoint.SubmitAsync(
+                new MockQirSubmitter(new List<Argument>() { new Argument(argumentName, value) }),
+                new AzureSubmissionContext()
+                {
+                    InputParameters = new Dictionary<string, string> { [argumentName] = valueAsExpr }
+                });
+            Assert.IsNotNull(job);
+        }
+
         [TestMethod]
         public async Task FromSnippet()
         {
@@ -128,100 +149,58 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task ValidBoolParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidBoolParameter });
-            var entryPoint = await entryPointGenerator.Generate("UseBoolType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myBool", new ArgumentValue.Bool(true)) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myBool"] = "\"true\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidBoolParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidBoolParameter,
+                "UseBoolType",
+                "myBool",
+                new ArgumentValue.Bool(true),
+                "\"true\"");
 
         [TestMethod]
-        public async Task ValidDoubleParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidDoubleParameter });
-            var entryPoint = await entryPointGenerator.Generate("UseDoubleType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myDouble", new ArgumentValue.Double(1.2)) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myDouble"] = "\"1.2\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidDoubleParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidDoubleParameter,
+                "UseDoubleType",
+                "myDouble",
+                new ArgumentValue.Double(1.2),
+                "\"1.2\"");
 
         [TestMethod]
-        public async Task ValidIntParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidIntParameter });
-            var entryPoint = await entryPointGenerator.Generate("UseIntType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myInt", new ArgumentValue.Int(2)) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myInt"] = "\"2\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidIntParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidIntParameter,
+                "UseIntType",
+                "myInt",
+                new ArgumentValue.Int(2),
+                "\"2\"");
 
         [TestMethod]
-        public async Task ValidStringParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidStringParameter });
-            var entryPoint = await entryPointGenerator.Generate("UseStringType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myStr", new ArgumentValue.String("\"Hello\"")) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myStr"] = "\"Hello\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidStringParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidStringParameter,
+                "UseStringType",
+                "myStr",
+                new ArgumentValue.String("\"Hello\""),
+                "\"Hello\"");
 
         [TestMethod]
-        public async Task ValidPauliParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidPauliParameter });
-            var entryPoint = await entryPointGenerator.Generate("UsePauliType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myPauli", new ArgumentValue.Pauli(Pauli.PauliX)) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myPauli"] = "\"PauliX\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidPauliParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidPauliParameter,
+                "UsePauliType",
+                "myPauli",
+                new ArgumentValue.Pauli(Pauli.PauliX),
+                "\"PauliX\"");
 
         [TestMethod]
-        public async Task ValidResultParameter()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.ValidResultParameter });
-            var entryPoint = await entryPointGenerator.Generate("UseResultType", null, generateQir: true);
-
-            Assert.IsNotNull(entryPoint);
-            var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>() { new Argument("myResult", new ArgumentValue.Result(Result.One)) }),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myResult"] = "\"1\"" }
-                });
-            Assert.IsNotNull(job);
-        }
+        public async Task ValidResultParameter() =>
+            await CheckValidParameter(
+                SNIPPETS.ValidResultParameter,
+                "UseResultType",
+                "myResult",
+                new ArgumentValue.Result(Result.One),
+                "\"1\"");
 
         [TestMethod]
         public async Task ValidTupleParameters()
@@ -237,6 +216,7 @@ namespace Tests.IQSharp
                 [new Argument("innerResult", new ArgumentValue.Result(Result.One))] = "\"1\"",
             };
 
+            Assert.IsNotNull(entryPoint);
             var job = await entryPoint.SubmitAsync(
                 new MockQirSubmitter(validArguments.Select(x => x.Key).ToList()),
                 new AzureSubmissionContext()
