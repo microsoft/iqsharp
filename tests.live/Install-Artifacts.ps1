@@ -19,10 +19,11 @@ function Install-PreReqs() {
     Push-Location (Join-Path $PSScriptRoot ..)
         "Running bootstrap" | Write-Verbose
         .\bootstrap.ps1
+    Pop-Location
 
+    Push-Location $PSScriptRoot
         "Installing Python Pre-reqs" | Write-Verbose
-        pip install `
-            notebook nbconvert jupyter_client pytest
+        pip install -r requirements.txt
     Pop-Location
 }
 

@@ -1,0 +1,11 @@
+ipython==7.33.0
+jupyter
+jupyter_client<7.0
+matplotlib
+nbclient<=0.6.3
+nbconvert
+notebook
+numpy
+pytest
+pyzmq==19.0.2
+setuptools
