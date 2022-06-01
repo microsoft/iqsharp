@@ -22,7 +22,7 @@ jobs:
       run: az acr login -n qdkimages
     - name: Build and push Docker image
       run: |
-        $ImageTag = "${{ github.sha }}-$( Get-Date -Format FileDateTimeUniversal )"
+        $ImageTag = "${{ github.sha }}-$( (Get-Date -Format FileDateTimeUniversal).ToLower() )"
 
         function Update-Image() {
             param(
