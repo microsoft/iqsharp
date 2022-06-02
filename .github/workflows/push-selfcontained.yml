@@ -7,6 +7,9 @@ on:
     paths:
     - 'images/test-environments/**/Dockerfile'
   workflow_dispatch:
+  schedule:
+    # set schedule to run at 2AM PT on Saturdays
+    - cron: '0 9 * * SAT'
 
 jobs:
   windows:

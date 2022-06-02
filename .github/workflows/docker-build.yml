@@ -44,10 +44,10 @@ jobs:
         docker tag $ImageTag "${remoteRepo}:latest";
         docker push "${remoteRepo}:latest";
 
-    - name: Wait for images to publish
+    - name: Wait for image to publish
       run: |
         function Test-Manifest {
-          param(
+          param (
             [string]$ImageTag
           );
 
