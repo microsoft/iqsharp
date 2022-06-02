@@ -31,7 +31,7 @@ jobs:
     - name: Build and push Docker image
       shell: pwsh
       run: |
-        $ImageTag = "${{ github.sha }}-${{ GITHUB_RUN_NUMBER }}-${{ inputs.tagSuffix }}"
+        $ImageTag = "${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
 
         $fullRepoName = "public/quantum/${{ inputs.repoName }};
         $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${fullRepoName}";
@@ -62,7 +62,7 @@ jobs:
           }
         }
 
-        $ImageTag = "${{ github.sha }}-${{ GITHUB_RUN_NUMBER }}-${{ inputs.tagSuffix }}"
+        $ImageTag = "${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
         $ImageAvailable = $false
         $CheckInterval = 30; # [seconds]
 
