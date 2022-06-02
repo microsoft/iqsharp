@@ -49,6 +49,7 @@ jobs:
       run: |
         function Test-Manifest {
           try {
+            Write-Host "https://mcr.microsoft.com/v2/quantum/samples/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
             $manifest = Invoke-RestMethod `
               "https://mcr.microsoft.com/v2/quantum/samples/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
               -ErrorAction Continue;
@@ -61,6 +62,7 @@ jobs:
 
         $ImageAvailable = $false
         $CheckInterval = 30; # [seconds]
+        $timeout = 2;
 
         while (-not $ImageAvailable) {
           if (Test-Manifest -ImageTag $ImageTag) {
@@ -70,5 +72,11 @@ jobs:
             Write-Host "##[info] Image is not available on mcr.microsoft.com, waiting $CheckInterval seconds.";
           }
 
-          Start-Sleep -Seconds $CheckInterval;
+          $timeout -= 1;
+          if ($timeout -g 0) {
+            Start-Sleep -Seconds $CheckInterval;
+          } else {
+            Write-Host "##[error] Timeout on waiting for image to publish.";
+            exit 1;
+          }
         }
