@@ -73,7 +73,7 @@ jobs:
           }
 
           $timeout -= 1;
-          if ($timeout -g 0) {
+          if ($timeout -gt 0) {
             Start-Sleep -Seconds $CheckInterval;
           } else {
             Write-Host "##[error] Timeout on waiting for image to publish.";
