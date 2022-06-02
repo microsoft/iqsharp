@@ -6,6 +6,7 @@
     <RootNamespace>Microsoft.Quantum.IQSharp.AzureClient</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.AzureClient</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -13,20 +13,10 @@ using System.Linq;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    internal class MockQirSubmitter : IQirSubmitter
+    /// <param name="ExpectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
+    internal record MockQirSubmitter(IReadOnlyList<Argument> ExpectedArguments) : IQirSubmitter
     {
         public string Target => throw new NotImplementedException();
-
-        private IReadOnlyList<Argument> ExpectedArguments = new List<Argument>();
-
-        /// <summary>
-        /// Creates a Mock QIR Submitter, with expected entry point arguments to the SubmitAsync method.
-        /// </summary>
-        /// <param name="expectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
-        public MockQirSubmitter(IReadOnlyList<Argument> expectedArguments)
-        {
-            this.ExpectedArguments = expectedArguments;
-        }
 
         private bool IsArgumentValueEqual(ArgumentValue fst, ArgumentValue snd) =>
             (fst, snd) switch

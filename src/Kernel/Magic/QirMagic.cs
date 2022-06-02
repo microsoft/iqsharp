@@ -25,19 +25,32 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "qir",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "TODO.",
+                Summary = "Compiles a given Q# entry point to QIR, then executes the program.",
                 Description = @"
-                    TODO
+                    This command takes the full name of a Q# entry point, and compiles the Q# from that entry point
+                    into QIR. The resulting program is then executed, and the output of the program is displayed.
 
                     #### Required parameters
 
                     - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
                     or function name that has been defined either in the notebook or in a Q# file in the same folder.
+                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
                 ".Dedent(),
                 Examples = new []
                 {
                     @"
-                        TODO
+                        Executes a Q# program with QIR starting at the entry point defined as `operation MyOperation() : Result`:
+                        ```
+                        In []: %qir MyEntryPoint
+                        Out[]: <The return value of the entry point>
+                        ```
+                    ".Dedent(),
+                    @"
+                        Executes a Q# program with QIR starting at the entry point defined as `operation MyOperation(a : Int, b : Int) : Result`:
+                        ```
+                        In []: %trace MyOperation a=5 b=10
+                        Out[]: <The return value of the entry point>
+                        ```
                     ".Dedent()
                 }
             }, logger)
