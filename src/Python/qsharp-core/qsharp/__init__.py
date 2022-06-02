@@ -26,6 +26,7 @@ from qsharp.config import Config
 from qsharp.packages import Packages
 from qsharp.projects import Projects
 from qsharp.types import Result, Pauli
+from qsharp.utils import ImportFailure, try_import_qutip
 try:
     from qsharp.version import __version__
 except:
@@ -171,13 +172,12 @@ def capture_diagnostics(passthrough: bool = False, as_qobj: bool = False) -> Lis
     # Before proceeding, check that if we were asked to convert to qobj data
     # that we can actually import qutip.
     if as_qobj:
-        try:
-            # We don't actually need QuTiP here, but are only importing to capture
-            # exceptions as early as possible so as to provide actionable error
-            # messages to the user.
-            import qutip as _
-        except ImportError as ex:
-            raise ImportError("as_qobj was set to `True`, but cannot convert captured diagnostics to QObj since QuTiP failed to import.") from ex
+        # We don't actually need QuTiP here, but are only importing to capture
+        # exceptions as early as possible so as to provide actionable error
+        # messages to the user.
+        qt = try_import_qutip()
+        if isinstance(qt, ImportFailure):
+            raise ImportError("as_qobj was set to `True`, but cannot convert captured diagnostics to QObj since QuTiP failed to import.") from qt.cause
 
         from qsharp.qobj import convert_diagnostic_to_qobj
 

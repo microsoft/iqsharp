@@ -21,6 +21,7 @@ variables:
   Build.Minor: 18
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
+  agent.preferPowerShellOnContainers: false
 
 jobs:
 - job: "iqsharp"
@@ -48,26 +49,38 @@ jobs:
   - template: steps-selfcontained.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "pack_conda_linux"
-  dependsOn: "pack_selfcontained"
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-  - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
 - job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'macOS-latest'
+  variables:
+    OS: 'mac'
+    CondaShellHook: "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "pack_conda_win"
+- job: "pack_conda_linux"
   dependsOn: "pack_selfcontained"
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'ubuntu-latest'
+  container: mcr.microsoft.com/quantum/linux-selfcontained:latest
+  variables:
+    OS: 'linux'
+    CondaPath: '/miniconda/bin'
+    CondaShellHook: "$('/miniconda/bin/conda' 'shell.bash' 'hook')"
+  steps:
+  - template: steps-conda.yml
+  condition: ne(variables['Enable.Conda'], 'false')
+
+- job: "pack_conda_windows"
+  dependsOn: "pack_selfcontained"
+  pool:
+    vmImage: 'windows-latest'
+  container: mcr.microsoft.com/quantum/windows-selfcontained:latest
+  variables:
+    OS: 'windows'
+    CondaPath: 'C:\Miniconda3\Scripts'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
