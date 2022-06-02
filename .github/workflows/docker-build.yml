@@ -42,9 +42,7 @@ jobs:
         docker push "${remoteRepo}:${ImageTag}";
 
         docker tag $ImageTag "${remoteRepo}:latest"
-        docker push "${remoteRepo}:latest"
-
-        Write-Host "Done"
+        docker push "${remoteRepo}:latest".
 
     - name: Wait for images to publish
       run: |
