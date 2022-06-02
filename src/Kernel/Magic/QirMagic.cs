@@ -25,7 +25,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             "qir",
             new Microsoft.Jupyter.Core.Documentation
             {
-                Summary = "Compiles a given Q# entry point to QIR, then executes the program.",
+                Summary = "Compiles a given Q# entry point to QIR, saving the resulting QIR to a given file.",
                 Description = @"
                     This command takes the full name of a Q# entry point, and compiles the Q# from that entry point
                     into QIR. The resulting program is then executed, and the output of the program is displayed.
@@ -34,22 +34,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
                     or function name that has been defined either in the notebook or in a Q# file in the same folder.
-                    - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
+                    - The file path for where to save the output QIR to, specified as `output=<file path>`.
                 ".Dedent(),
                 Examples = new []
                 {
                     @"
-                        Executes a Q# program with QIR starting at the entry point defined as `operation MyOperation() : Result`:
+                        Compiles a Q# program to QIR starting at the entry point defined as `operation MyOperation() : Result` and saves the result at MyProgram.ll:
                         ```
-                        In []: %qir MyEntryPoint
-                        Out[]: <The return value of the entry point>
-                        ```
-                    ".Dedent(),
-                    @"
-                        Executes a Q# program with QIR starting at the entry point defined as `operation MyOperation(a : Int, b : Int) : Result`:
-                        ```
-                        In []: %trace MyOperation a=5 b=10
-                        Out[]: <The return value of the entry point>
+                        In []: %qir MyEntryPoint output=MyProgram.ll
+                        Out[]: <There is no output printed to the notebook>
                         ```
                     ".Dedent()
                 }
