@@ -38,11 +38,13 @@ jobs:
 
         docker build ${{ inputs.path }} --tag ${ImageTag};
 
-        docker tag ${ImageTag} "${remoteRepo}:${ImageTag}";
+        docker tag $ImageTag "${remoteRepo}:${ImageTag}";
         docker push "${remoteRepo}:${ImageTag}";
 
-        docker tag ${ImageTag} "${remoteRepo}:latest";
+        docker tag $ImageTag "${remoteRepo}:latest"
         docker push "${remoteRepo}:latest"
+
+        Write-Host "Done"
 
     - name: Wait for images to publish
       run: |
