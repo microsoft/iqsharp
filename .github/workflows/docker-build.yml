@@ -28,7 +28,6 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Docker Login
       run: az acr login -n qdkimages
-    - name: Get timestamp
     - name: Build and push Docker image
       shell: pwsh
       run: |
@@ -44,7 +43,7 @@ jobs:
 
         docker tag ${{ inputs.localTag }} "${remoteRepo}:latest";
         docker push "${remoteRepo}:latest";
-              
+
     - name: Wait for images to publish
       run: |
         function Test-Manifest {

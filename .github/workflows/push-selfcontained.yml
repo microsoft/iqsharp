@@ -11,7 +11,7 @@ on:
 jobs:
   windows:
     name: "Build windows image"
-    uses: ./.github/workflows/docker-build.yml@anburton/fix-image-action
+    uses: ./.github/workflows/docker-build.yml
     with:
       os: "windows-latest"
       path: "images/test-environments/windows"
@@ -20,7 +20,7 @@ jobs:
 
   linux:
     name: "Build linux image"
-    uses: ./.github/workflows/docker-build.yml@anburton/fix-image-action
+    uses: ./.github/workflows/docker-build.yml
     with:
       os: "ubuntu-latest"
       path: "images/test-environments/linux"
