@@ -18,7 +18,6 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
-using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
@@ -34,9 +33,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <summary>
         /// Returns whether a target ID is meant for quantum execution since not all targets
-        /// exposed by providers are meant for that. More specifically, the Microsoft provider exposes
-        /// targets that are not meant for quantum execution and the only ones meant for that start
-        /// with "microsoft.simulator"
+        /// exposed by providers are meant for that, such as QIO targets. More
+        /// specifically, the Microsoft provider exposes targets that are not meant for
+        /// quantum execution and the only ones meant for that start with "microsoft.simulator".
         /// </summary>
         private static bool IsQuantumExecutionTarget(string targetId) =>
             AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
@@ -589,10 +588,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
             {
                 var (messages, result) = ParseSimulatorOutput(responseStream);
-                foreach (var message in messages)
-                {
-                    channel?.Stdout(message );
-                }
+                channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
             else
