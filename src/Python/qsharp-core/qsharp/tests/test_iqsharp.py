@@ -350,8 +350,8 @@ class TestCaptureDiagnostics:
         """)
 
         qsharp.set_noise_model_by_name('ideal')
-        qsharp.config['experimental.simulators.nQubits'] = 2
-        qsharp.config['experimental.simulators.representation'] = 'mixed'
+        qsharp.config['simulators.noisy.nQubits'] = 2
+        qsharp.config['simulators.noisy.representation'] = 'mixed'
 
         with qsharp.capture_diagnostics(as_qobj=True) as captured:
             dump_plus.simulate_noise()
