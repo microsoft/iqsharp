@@ -45,6 +45,7 @@ jobs:
         docker push "${remoteRepo}:latest";
 
     - name: Wait for image to publish
+      shell: pwsh
       run: |
         function Test-Manifest {
           param (
