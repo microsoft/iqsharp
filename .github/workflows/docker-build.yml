@@ -49,7 +49,6 @@ jobs:
       run: |
         function Test-Manifest {
           try {
-            Write-Host "https://mcr.microsoft.com/v2/quantum/${{ inputs.repoName }}/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
             $manifest = Invoke-RestMethod `
               "https://mcr.microsoft.com/v2/quantum/${{ inputs.repoName }}/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
               -ErrorAction Continue;
@@ -62,7 +61,7 @@ jobs:
 
         $ImageAvailable = $false
         $CheckInterval = 30; # [seconds]
-        $timeout = 2;
+        $timeout = 20;
 
         while (-not $ImageAvailable) {
           if (Test-Manifest -ImageTag $ImageTag) {
