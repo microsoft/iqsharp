@@ -1,0 +1,86 @@
+# Used by push-selfcontained.yml to build and push a single Docker image.
+# This is abstracted into a callable workflow so that images of various
+# operating systems can easily be built while minimizing duplication, by
+# parameterizing the needed agent. 
+
+name: Docker build
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      path:
+        required: true
+        type: string
+      repoName:
+        required: true
+        type: string
+      tagSuffix:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Azure Login
+      uses: Azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Docker Login
+      run: az acr login -n qdkimages
+    - name: Build and push Docker image
+      shell: pwsh
+      run: |
+        $ImageTag = "${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}";
+
+        $fullRepoName = "public/quantum/${{ inputs.repoName }}";
+        $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${fullRepoName}";
+
+        docker build ${{ inputs.path }} --tag ${ImageTag};
+
+        docker tag $ImageTag "${remoteRepo}:${ImageTag}";
+        docker push "${remoteRepo}:${ImageTag}";
+
+        docker tag $ImageTag "${remoteRepo}:latest";
+        docker push "${remoteRepo}:latest";
+
+    - name: Wait for image to publish
+      shell: pwsh
+      run: |
+        function Test-Manifest {
+          try {
+            $manifest = Invoke-RestMethod `
+              "https://mcr.microsoft.com/v2/quantum/${{ inputs.repoName }}/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
+              -ErrorAction Continue;
+            Write-Verbose $manifest;
+            return $true;
+          } catch {
+            return $false;
+          }
+        }
+
+        $ImageAvailable = $false
+        $CheckInterval = 30; # [seconds]
+        $timeout = 20;
+
+        while (-not $ImageAvailable) {
+          if (Test-Manifest -ImageTag $ImageTag) {
+            Write-Host "##[info] Image is now available on mcr.microsoft.com, proceeding.";
+            $ImageAvailable = $true;
+          } else {
+            Write-Host "##[info] Image is not available on mcr.microsoft.com, waiting $CheckInterval seconds.";
+          }
+
+          $timeout -= 1;
+          if ($timeout -gt 0) {
+            Start-Sleep -Seconds $CheckInterval;
+          } else {
+            Write-Host "##[error] Timeout on waiting for image to publish.";
+            exit 1;
+          }
+        }
