@@ -1,3 +1,9 @@
+# Leverages the callable workflow defined in docker-build.yml
+# to build the images used in conda tests. This is necessary
+# as the Windows and Linux images need to be built on agents
+# of those operating systems, respectively. Using a callable
+# workflow allows the agent's OS to be parameterized.
+
 name: Push Docker test images
 
 on:

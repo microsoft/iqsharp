@@ -1,3 +1,8 @@
+# Used by push-selfcontained.yml to build and push a single Docker image.
+# This is abstracted into a callable workflow so that images of various
+# operating systems can easily be built while minimizing duplication, by
+# parameterizing the needed agent. 
+
 name: Docker build
 
 on:
