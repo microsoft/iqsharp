@@ -49,9 +49,9 @@ jobs:
       run: |
         function Test-Manifest {
           try {
-            Write-Host "https://mcr.microsoft.com/v2/quantum/samples/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
+            Write-Host "https://mcr.microsoft.com/v2/quantum/${{ inputs.repoName }}/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
             $manifest = Invoke-RestMethod `
-              "https://mcr.microsoft.com/v2/quantum/samples/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
+              "https://mcr.microsoft.com/v2/quantum/${{ inputs.repoName }}/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
               -ErrorAction Continue;
             Write-Verbose $manifest;
             return $true;
