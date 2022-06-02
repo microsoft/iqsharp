@@ -48,13 +48,9 @@ jobs:
       shell: pwsh
       run: |
         function Test-Manifest {
-          param (
-            [string]$ImageTag
-          );
-
           try {
             $manifest = Invoke-RestMethod `
-              "https://mcr.microsoft.com/v2/quantum/samples/manifests/${ImageTag}" `
+              "https://mcr.microsoft.com/v2/quantum/samples/manifests/${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}" `
               -ErrorAction Continue;
             Write-Verbose $manifest;
             return $true;
@@ -63,13 +59,12 @@ jobs:
           }
         }
 
-        $ImageTag = "${{ github.sha }}-${{ github.run_number }}-${{ inputs.tagSuffix }}"
         $ImageAvailable = $false
         $CheckInterval = 30; # [seconds]
 
         while (-not $ImageAvailable) {
           if (Test-Manifest -ImageTag $ImageTag) {
-            Write-Host "##[info] $ImageTag now available on mcr.microsoft.com, proceeding.";
+            Write-Host "##[info] Image is now available on mcr.microsoft.com, proceeding.";
             $ImageAvailable = $true;
           } else {
             Write-Host "##[info] Image is not available on mcr.microsoft.com, waiting $CheckInterval seconds.";
