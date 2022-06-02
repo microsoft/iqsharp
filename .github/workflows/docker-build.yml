@@ -36,12 +36,12 @@ jobs:
         $fullRepoName = "public/quantum/${{ inputs.repoName }};
         $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${fullRepoName}";
 
-        docker build ${{ inputs.path }} --tag ${{ inputs.localTag }};
+        docker build ${{ inputs.path }} --tag ${ImageTag};
 
-        docker tag ${{ inputs.localTag }} "${remoteRepo}:${{ inputs.localTag }}";
-        docker push "${remoteRepo}:${{ inputs.localTag }}";
+        docker tag ${ImageTag} "${remoteRepo}:${ImageTag}";
+        docker push "${remoteRepo}:${ImageTag}";
 
-        docker tag ${{ inputs.localTag }} "${remoteRepo}:latest";
+        docker tag ${ImageTag} "${remoteRepo}:latest";
         docker push "${remoteRepo}:latest";
 
     - name: Wait for images to publish
