@@ -1,4 +1,4 @@
-name: Push self-contained images on Dockerfile change
+name: Push Docker test images
 
 on:
   push:
@@ -9,87 +9,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  windows:
+    name: "Build windows image"
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      os: "windows-latest"
+      path: "images/test-environments/windows"
+      repoName: "windows-selfcontained"
+      tagSuffix: "windows"
 
-    steps:
-    - uses: actions/checkout@v1
-    - name: Azure Login
-      uses: Azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Docker Login
-      run: az acr login -n qdkimages
-    - name: Build and push Docker image
-      run: |
-        $ImageTag = "${{ github.sha }}-$( (Get-Date -Format FileDateTimeUniversal).ToLower() )"
-
-        function Update-Image() {
-            param(
-                [string] $Path,
-                [string] $RepoName,
-                [string] $LocalTag
-            );
-            $fullRepoName = "public/quantum/$RepoName";
-            $remoteRepo = "${{ secrets.ACR_REGISTRY }}/${fullRepoName}";
-
-            docker build $Path --tag $LocalTag;
-
-            docker tag $LocalTag "${remoteRepo}:${LocalTag}";
-            docker push "${remoteRepo}:${LocalTag}";
-
-            docker tag $LocalTag "${remoteRepo}:latest";
-            docker push "${remoteRepo}:latest";
-        }
-        Update-Image `
-            -RepoName "linux-selfcontained" `
-            -LocalTag "${ImageTag}-linux" `
-            -Path images/test-environments/linux;
-            
-        Update-Image `
-            -RepoName "windows-selfcontained" `
-            -LocalTag "${ImageTag}-windows" `
-            -Path images/test-environments/windows;
-      shell: pwsh
-    - name: Wait for images to publish
-      run: |
-        function Test-Manifest {
-          param(
-            [string]$OS
-          );
-
-          try {
-            $manifest = Invoke-RestMethod `
-              "https://mcr.microsoft.com/v2/quantum/samples/manifests/${ImageTag}-$OS" `
-              -ErrorAction Continue;
-            Write-Verbose $manifest;
-            return $true;
-          } catch {
-            return $false;
-          }
-        }
-
-        $LinuxImageAvailable = $false;
-        $WindowsImageAvailable = $false;
-
-        $CheckInterval = 30; # [seconds]
-        while (-not $LinuxImageAvailable -and -not $WindowsImageAvailable) {
-          if (Test-Manifest -OS "linux" -and Test-Manifest -OS "windows") {
-            Write-Host "##[info] Linux and Windows images $ImageTag now available on mcr.microsoft.com, proceeding.";
-  
-            $LinuxImageAvailable = $true;
-            $WindowsImageAvailable = $true;
-          } else if (Test-Manifest -OS "linux") {
-            Write-Host "##[info] Linux image $ImageTag now available on mcr.microsoft.com, proceeding."
-            Write-Host "##[info] Windows image $ImageTag not yet available on mcr.microsoft.com, waiting $CheckInterval seconds.";
-            $LinuxImageAvailable = $true;
-          } else if (Test-Manifest -OS "windows") {
-            Write-Host "##[info] Windows image $ImageTag now available on mcr.microsoft.com, proceeding.";
-            Write-Host "##[info] Linux image $ImageTag not yet available on mcr.microsoft.com, waiting $CheckInterval seconds.";
-            $WindowsImageAvailable = $true;
-          } else {
-            Write-Host "##[info] Neither Linux nor Windows images are available on mcr.microsoft.com, waiting $CheckInterval seconds.";
-          }
-
-          Start-Sleep -Seconds $CheckInterval;
-        }
+  linux:
+    name: "Build linux image"
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      os: "ubuntu-latest"
+      path: "images/test-environments/linux"
+      repoName: "linux-selfcontained"
+      tagSuffix: "linux"
