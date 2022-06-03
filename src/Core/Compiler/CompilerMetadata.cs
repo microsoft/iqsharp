@@ -110,7 +110,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         private static QsReferences QsInit(IEnumerable<string> paths) =>
             new QsReferences(
-                ProjectManager.LoadReferencedAssembliesInParallel(
+                ProjectManager.LoadReferencedAssemblies(
                     paths,
                     ignoreDllResources: false
                 )
