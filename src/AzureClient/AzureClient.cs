@@ -363,7 +363,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 // Thus, we can branch on whether we need a QIR submitter or a translator,
                 // but can use the same task object to represent both return values.
                 Task<IQuantumMachineJob>? jobTask = null;
-                if (SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString) is IQirSubmitter submitter)
+                // ToDo: Find proper targetCapability string.
+                if (SubmitterFactory.QirSubmitter(this.ActiveTarget.TargetId, this.ActiveWorkspace, this.StorageConnectionString, this.ActiveTarget.RuntimeCapability.Name) is IQirSubmitter submitter)
                 {
                     jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
                 }
