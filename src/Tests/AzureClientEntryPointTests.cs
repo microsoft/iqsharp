@@ -188,22 +188,22 @@ namespace Tests.IQSharp
         public async Task UnusedOperationInvalidForHardware()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.UnusedClassicallyControlledOperation });
-            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
             await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
-                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality));
         }
 
         [TestMethod]
         public async Task UnusedOperationInvalidForHardwareInWorkspace()
         {
             var entryPointGenerator = Init("Workspace.HardwareTarget");
-            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality);
+            var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
             await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
-                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", RuntimeCapability.BasicQuantumFunctionality));
+                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality));
         }
     }
 }
