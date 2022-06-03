@@ -1,5 +1,7 @@
-# The same image used by mybinder.org
-FROM python:3.7-slim-buster
+# The same image used by mybinder.org. Select as argument
+# to allow for pulling the image from a different source.
+ARG $BASE_IMAGE = python:3.7-slim-buster
+FROM $BASE_IMAGE
 
 # install the notebook package
 # force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
