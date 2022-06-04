@@ -271,7 +271,7 @@ namespace Microsoft.Quantum.IQSharp
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null,
+            TargetCapability? capability = null,
             ITaskReporter? parent = null
         )
         {
@@ -282,7 +282,7 @@ namespace Microsoft.Quantum.IQSharp
                 LoadReferencesBasedOnGeneratedCsharp = false, // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
-                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
+                TargetCapability = capability ?? TargetCapabilityModule.FullComputation,
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -290,7 +290,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public async Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            TargetCapability? capability = null)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -307,7 +307,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, capability, regenerateAll: true);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the same name as the snippet id.
         /// </summary>
         public async Task<AssemblyInfo?> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null, ITaskReporter? parent = null)
+            TargetCapability? capability = null, ITaskReporter? parent = null)
         {
             using var perfTask = parent?.BeginSubtask("Building snippets.", "build-snippets");
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
@@ -339,7 +339,7 @@ namespace Microsoft.Quantum.IQSharp
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
             perfTask?.ReportStatus("About to build assembly.", "build-assembly");
             var assembly = await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, 
-            executionTarget, runtimeCapability, parent: perfTask);
+                executionTarget, capability, parent: perfTask);
             perfTask?.ReportStatus("Built assembly.", "built-assembly");
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
@@ -350,24 +350,24 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public async Task<AssemblyInfo?> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            TargetCapability? capability = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, capability);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
         private async Task<AssemblyInfo?> BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false, ITaskReporter? parent = null)
+            TargetCapability? capability = null, bool regenerateAll = false, ITaskReporter? parent = null)
         {
             using var perfTask = parent?.BeginSubtask("Building assembly.", "build-assembly");
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability, parent: perfTask);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
             if (logger.HasErrors || qsCompilation == null) return null;
