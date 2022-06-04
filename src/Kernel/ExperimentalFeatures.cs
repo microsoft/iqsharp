@@ -35,9 +35,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///     Event type for when a Python client enables an experimental
     ///     feature.
     /// </summary>
-    public class ExperimentalFeatureEnabledEvent : Event<ExperimentalFeatureContent>
-    {
-    }
+    public record ExperimentalFeatureEnabledEvent : Event<ExperimentalFeatureContent>;
 
     /// <summary>
     ///     Shell handler that allows for firing off events when a Python

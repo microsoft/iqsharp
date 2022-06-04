@@ -2,23 +2,19 @@
 // Licensed under the MIT License.
 
 #nullable enable
+using Microsoft.Quantum.Experimental;
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
-namespace Microsoft.Quantum.Experimental
+/// <summary>
+///     A dependency injection service that stores a noise model for use in
+///     open systems simulation.
+/// </summary>
+public record NoiseModelSource : INoiseModelSource
 {
-
-    public class NoiseModelSource : INoiseModelSource
-    {
-        public NoiseModel NoiseModel { get; set; } =
-            NoiseModel.TryGetByName("ideal", out var ideal)
-            ? ideal
-            : throw new Exception("Could not load ideal noise model.");
-    }
-
+    /// <inheritdoc />
+    public NoiseModel NoiseModel { get; set; } =
+        NoiseModel.TryGetByName("ideal", out var ideal)
+        ? ideal
+        : throw new Exception("Could not load ideal noise model.");
 }

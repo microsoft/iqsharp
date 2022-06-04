@@ -10,8 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Quantum.IQSharp
 {
-    public class DeviceCapabilitiesEvent : Event<DeviceCapabilitiesArgs>
-    {}
+    public record class DeviceCapabilitiesEvent : Event<DeviceCapabilitiesArgs>;
 
     #if NET5_0 || NET6_0 || NET5_0_OR_GREATER
     public record DeviceCapabilitiesArgs
