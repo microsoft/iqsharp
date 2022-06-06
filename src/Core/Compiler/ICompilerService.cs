@@ -28,19 +28,19 @@ namespace Microsoft.Quantum.IQSharp
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
         Task<AssemblyInfo> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null, bool generateQir = false);
+            TargetCapability? capability = null, bool generateQir = false);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
         Task<AssemblyInfo> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapabilities = null, ITaskReporter? parent = null);
+            TargetCapability? capability = null, ITaskReporter? parent = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         Task<AssemblyInfo> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null);
+            TargetCapability? capability = null);
 
         /// <summary>
         /// Returns the names of all declared callables and types. 

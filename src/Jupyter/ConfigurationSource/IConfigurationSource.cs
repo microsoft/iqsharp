@@ -1,13 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-
-using Microsoft.Quantum.Experimental;
 using Microsoft.Quantum.Simulation.Simulators;
-
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
@@ -189,24 +184,24 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
 
         /// <summary>
-        ///     Specifies the number of qubits that the experimental simulators
-        ///     support for use in running Q# programs.
+        ///     Specifies the number of qubits that the open systems simulator
+        ///     supports for use in running Q# programs.
         /// </summary>
-        public uint ExperimentalSimulatorCapacity =>
-            GetOptionOrDefault<uint>("experimental.simulators.nQubits", 3);
+        public uint NoisySimulatorCapacity =>
+            GetOptionOrDefault<uint>("simulators.noisy.nQubits", 3);
 
         /// <summary>
         ///     Specifies the representation to use for the initial state
-        ///     when simulating Q# programs with experimental simulators.
+        ///     when simulating Q# programs with open systems simulator.
         /// </summary>
-        public string ExperimentalSimulatorRepresentation =>
-            GetOptionOrDefault("experimental.simulators.representation", "mixed");
+        public string NoisySimulatorRepresentation =>
+            GetOptionOrDefault("simulators.noisy.representation", "mixed");
 
         /// <summary>
         ///     Specifies the format used in dumping stabilizer states.
         /// </summary>
-        public StabilizerStateVisualizationStyle ExperimentalSimulatorStabilizerStateVisualizationStyle =>
-            GetOptionOrDefault("experimental.simulators.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
+        public StabilizerStateVisualizationStyle NoisySimulatorStabilizerStateVisualizationStyle =>
+            GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
         /// <summary>
         ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.

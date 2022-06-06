@@ -42,14 +42,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
         };
 
-        public RuntimeCapability RuntimeCapability => GetProvider(TargetId) switch
+        public TargetCapability TargetCapability => GetProvider(TargetId) switch
         {
-            AzureProvider.IonQ       => RuntimeCapability.BasicQuantumFunctionality,
-            AzureProvider.Quantinuum => RuntimeCapability.BasicMeasurementFeedback,
-            AzureProvider.Honeywell  => RuntimeCapability.BasicMeasurementFeedback,
-            AzureProvider.QCI        => RuntimeCapability.BasicMeasurementFeedback,
-            AzureProvider.Microsoft  => RuntimeCapability.FullComputation,
-            _                        => RuntimeCapability.FullComputation
+            AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
+            AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
+            AzureProvider.Honeywell  => TargetCapabilityModule.BasicMeasurementFeedback,
+            AzureProvider.QCI        => TargetCapabilityModule.BasicMeasurementFeedback,
+            AzureProvider.Microsoft  => TargetCapabilityModule.FullComputation,
+            _                        => TargetCapabilityModule.FullComputation,
         };
 
         /// <summary>

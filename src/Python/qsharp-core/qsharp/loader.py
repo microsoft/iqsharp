@@ -116,6 +116,14 @@ class QSharpCallable(object):
         used to execute this operation.
         """
         return qsharp.client.trace(self, **kwargs)
+    
+    def simulate_noise(self, **kwargs) -> Any:
+        """
+        Executes this function or operation on the open systems simulator,
+        using the currently set noise model and returning its output as a
+        Python object.
+        """
+        return qsharp.client.simulate_noise(self, **kwargs)
 
     def as_qir(self) -> bytes:
         """
