@@ -507,7 +507,7 @@ public class Workspace : IWorkspace
                         logger.LogError(
                             "IQS003",
                             $"Error compiling project {project.ProjectFile}: {e.Message}");
-                        project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        project.AssemblyInfo = new AssemblyInfo(null, null, null, null);
                     }
 
                     ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
@@ -517,7 +517,7 @@ public class Workspace : IWorkspace
                 else
                 {
                     Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
-                    project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                    project.AssemblyInfo = new AssemblyInfo(null, null, null, null);
                 }
 
                 if (!string.IsNullOrWhiteSpace(project.ProjectFile))

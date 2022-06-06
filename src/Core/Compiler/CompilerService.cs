@@ -23,6 +23,8 @@ using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
+using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
+using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
 
 namespace Microsoft.Quantum.IQSharp
