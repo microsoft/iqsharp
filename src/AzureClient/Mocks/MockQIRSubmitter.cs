@@ -11,6 +11,11 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit { }
+}
+
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <param name="ExpectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
