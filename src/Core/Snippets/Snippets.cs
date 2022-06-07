@@ -3,16 +3,13 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 
 namespace Microsoft.Quantum.IQSharp
@@ -137,7 +134,7 @@ namespace Microsoft.Quantum.IQSharp
         /// compilation and it will return a new Snippet with the warnings and Q# elements
         /// reported by the compiler.
         /// </summary>
-        public async Task<Snippet> Compile(string code, ITaskReporter? parent = null)
+        public async Task<Snippet> Compile(string code, TargetCapability? capability = null, ITaskReporter? parent = null)
         {
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
@@ -153,7 +150,14 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var snippets = SelectSnippetsToCompile(code, perfTask).ToArray();
                 perfTask?.ReportStatus("Selected snippets.", "selected-snippets");
-                var assembly = await Compiler.BuildSnippets(snippets, await _metadata, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
+                var assembly = await Compiler.BuildSnippets(
+                    snippets,
+                    await _metadata,
+                    logger,
+                    Path.Combine(Workspace.CacheFolder, "__snippets__.dll"),
+                    capability: capability,
+                    parent: perfTask
+                );
                 perfTask?.ReportStatus("Built snippets.", "built-snippets");
 
                 if (logger.HasErrors)

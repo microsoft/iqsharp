@@ -23,9 +23,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         Mock
     }
 
-    internal record AzureExecutionTarget
+    public record AzureExecutionTarget
     {
-        protected AzureExecutionTarget(string? targetId)
+        internal protected AzureExecutionTarget(string? targetId)
         {
             this.TargetId = targetId ?? string.Empty;
         }
@@ -83,7 +83,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// is from a Mock, then it returns a Mock AzureExecutionTarget, otherwise it creates the instance 
         /// based on the corresponding target id.
         /// </summary>
-        public static AzureExecutionTarget? Create(TargetStatusInfo target) => target is MockTargetStatus
+        internal static AzureExecutionTarget? Create(TargetStatusInfo target) => target is MockTargetStatus
             ? MockAzureExecutionTarget.CreateMock(target)
             : Create(target?.TargetId);
 
@@ -96,7 +96,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     <param name="targetId" /> describes a target for a valid
         ///     provider, and <c>null</c> otherwise.
         /// </returns>
-        public static AzureExecutionTarget? Create(string? targetId) =>
+        internal static AzureExecutionTarget? Create(string? targetId) =>
             GetProvider(targetId) is null
             ? null
             : new AzureExecutionTarget(targetId);
@@ -115,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "quantinuum.qpu".
         /// </remarks>
-        protected internal static AzureProvider? GetProvider(string? targetId)
+        internal static AzureProvider? GetProvider(string? targetId)
         {
             if (targetId == null)
             {

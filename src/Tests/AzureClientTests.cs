@@ -158,7 +158,7 @@ namespace Tests.IQSharp
         public void TestManualTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // SetActiveTargetAsync with recognized target ID, but not yet connected
             ExpectError(AzureClientError.NotConnected, azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));

@@ -51,7 +51,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IAzureFactory AzureFactory { get; }
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string StorageConnectionString { get; set; } = string.Empty;
-        private AzureExecutionTarget? ActiveTarget { get; set; }
+        public AzureExecutionTarget? ActiveTarget { get; private set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatusInfo>? AvailableTargets =>

@@ -421,7 +421,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     type,
                     parentTaskName,
                     taskName,
-                    perfTask!.TimeSinceStart                    
+                    perfTask!.TimeSinceStart
                 ));
             }
 
@@ -448,8 +448,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     var snippets = this.Snippets!;
                     await workspace.Initialization;
                     perfTask.ReportStatus("Initialized workspace.", "init-workspace");
+                    var target = services.GetRequiredService<IAzureClient>().ActiveTarget;
 
-                    var code = await snippets.Compile(input, perfTask);
+                    var code = await snippets.Compile(input, target?.TargetCapability, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }
