@@ -4,9 +4,10 @@
 #nullable enable
 
 using System;
-
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.QsCompiler;
+using Microsoft.Quantum.Runtime.Submitters;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -22,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         Mock
     }
 
-    internal class AzureExecutionTarget
+    internal record AzureExecutionTarget
     {
         protected AzureExecutionTarget(string? targetId)
         {
@@ -51,6 +52,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureProvider.Microsoft  => TargetCapabilityModule.FullComputation,
             _                        => TargetCapabilityModule.FullComputation,
         };
+
+        public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
+        {
+            if (this.TargetId == null)
+            {
+                submitter = null;
+                return false;
+            }
+            if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.TargetCapability.Name) is IQirSubmitter qirSubmitter)
+            {
+                submitter = qirSubmitter;
+                return true;
+            }
+            else
+            {
+                submitter = null;
+                return false;
+            }
+        }
 
         /// <summary>
         /// Returns true, if the provider for the given target is a known provider 

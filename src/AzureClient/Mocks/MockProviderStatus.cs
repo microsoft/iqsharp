@@ -22,9 +22,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public override string ProviderId => _id;
 
         public override IEnumerable<TargetStatusInfo> Targets =>
-            new[] { 
+            new[]
+            {
                 new MockTargetStatus(_id.ToLower() + "." + "simulator"),
-                new MockTargetStatus(_id.ToLower() + "." + "mock")
+                new MockTargetStatus(_id.ToLower() + "." + "mock"),
+                new MockTargetStatus(_id.ToLower() + "." + "mock-qir")
             };
     }
 }
