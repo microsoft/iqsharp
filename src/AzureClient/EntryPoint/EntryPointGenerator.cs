@@ -209,8 +209,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 .Invoke(new object[] { entryPointOperationInfo.RoslynType });
 
             return new EntryPoint(
-                entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo, EntryPointAssemblyInfo.QirBitcode,
-                logger: ServiceProvider.GetService<ILogger<EntryPoint>>()
+                entryPointInfo, entryPointInputType, entryPointOutputType, entryPointOperationInfo,
+                logger: ServiceProvider.GetService<ILogger<EntryPoint>>(), EntryPointAssemblyInfo.QirBitcode
             );
         }
     }
