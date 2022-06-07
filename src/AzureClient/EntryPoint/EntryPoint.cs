@@ -92,7 +92,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             };
         }
 
-        private ArgumentValue GetArgumentValue(string parameterValue, System.Reflection.ParameterInfo parameter)
+        private ArgumentValue GetArgumentValue(System.Reflection.ParameterInfo parameter, string parameterValue)
         {
             var parameterType = parameter.ParameterType;
 
@@ -140,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 try
                 {
-                    var argument = new Argument(parameter.Name, GetArgumentValue(rawParameterValue, parameter));
+                    var argument = new Argument(parameter.Name, GetArgumentValue(parameter, rawParameterValue));
                     argumentList.Add(argument);
                 }
                 catch (Exception e)
