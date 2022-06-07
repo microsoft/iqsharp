@@ -400,8 +400,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (Exception e)
             {
-                channel?.Stderr($"Failed to submit Q# operation {submissionContext.OperationName} for execution.");
+                var msg = $"Failed to submit Q# operation {submissionContext.OperationName} for execution.";
+                Logger.LogError(e, msg);
+                channel?.Stderr(msg);
                 channel?.Stderr(e.InnerException?.Message ?? e.Message);
+                #if DEBUG
+                    channel?.Stderr("Stack trace:\n" + e.StackTrace);
+                #endif
                 return AzureClientError.JobSubmissionFailed.ToExecutionResult();
             }
 

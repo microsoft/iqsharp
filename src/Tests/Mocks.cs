@@ -163,7 +163,7 @@ namespace Tests.IQSharp
 
         public void Display(object displayable)
         {
-            
+
         }
 
         public IUpdatableDisplay DisplayUpdatable(object displayable)
@@ -173,9 +173,17 @@ namespace Tests.IQSharp
 
         public void SendIoPubMessage(Message message) => iopubMessages.Add(message);
 
-        public void Stderr(string message) => errors.Add(message);
+        public void Stderr(string message)
+        {
+            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage($"[EEE] {message}");
+            errors.Add(message);
+        }
 
-        public void Stdout(string message) => msgs.Add(message);
+        public void Stdout(string message)
+        {
+            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage($"[<--] {message}");
+            msgs.Add(message);
+        }
     }
 
     public class MockOperationResolver : IOperationResolver

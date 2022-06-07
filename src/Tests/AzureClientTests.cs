@@ -13,9 +13,11 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace Tests.IQSharp
 {
@@ -28,6 +30,22 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, result.Status);
             Assert.IsInstanceOfType(result.Output, typeof(T));
             return (T)result.Output;
+        }
+        private async Task<T> ExpectSuccess<T>(Func<IChannel, Task<ExecutionResult>> task)
+        {
+            var channel = new MockChannel();
+            try
+            {
+                var result = await task(channel);
+                Assert.AreEqual(ExecuteStatus.Ok, result.Status);
+                Assert.IsInstanceOfType(result.Output, typeof(T));
+                return (T)result.Output;
+            }
+            catch
+            {
+                Logger.LogMessage($"Task reported failure. Errors:\n{string.Join("\n", channel.errors)}");
+                throw;
+            }
         }
 
         private void ExpectError(AzureClientError expectedError, Task<ExecutionResult> task)
@@ -303,10 +321,11 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestRuntimeCapabilities()
+        public async Task TestRuntimeCapabilities()
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var packagesService = services.GetService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
@@ -329,7 +348,10 @@ namespace Tests.IQSharp
 
             // Verify that Quantinuum job can be successfully submitted (QPRGen1)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "quantinuum.mock"));
-            job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Logger.LogMessage(string.Join("\n", packagesService.Items.Select(item => $"{item.Id}::{item.Version}")));
+            job = await ExpectSuccess<CloudJob>(channel =>
+                azureClient.SubmitJobAsync(channel, submissionContext, CancellationToken.None)
+            );
             Assert.IsNotNull(job);
         }
 
