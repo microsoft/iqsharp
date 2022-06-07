@@ -179,7 +179,7 @@ namespace Tests.IQSharp
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
             // Above, we added 3 valid quantum execution targets, each of which contributes two targets (simulator and mock),
             // for a total of six targets.
-            Assert.That.Enumerable(targets).HasCount(6);
+            Assert.That.Enumerable(targets).HasCount(9);
 
             // GetActiveTargetAsync, but no active target set yet
             ExpectError(AzureClientError.NoTarget, azureClient.GetActiveTargetAsync(new MockChannel()));
