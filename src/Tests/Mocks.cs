@@ -175,13 +175,13 @@ namespace Tests.IQSharp
 
         public void Stderr(string message)
         {
-            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("[EEE] $s", message);
+            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("[EEE] {0}", message);
             errors.Add(message);
         }
 
         public void Stdout(string message)
         {
-            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("[<--] %s", message);
+            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("[<--] {0}", message);
             msgs.Add(message);
         }
     }
