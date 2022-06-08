@@ -40,7 +40,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.24.213922-beta" />
-	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.24.213922-beta" />
+    <PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.24.213922-beta" />
     <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.213922-beta" />
     <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.24.213922-beta" />
     <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.24.213922-beta" />

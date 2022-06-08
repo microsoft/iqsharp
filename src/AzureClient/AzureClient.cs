@@ -31,6 +31,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         private const string MicrosoftSimulator = "microsoft.simulator";
 
+        // ToDo: Use API provided by the Service, GitHub Issue: https://github.com/microsoft/iqsharp/issues/681 
         /// <summary>
         /// Returns whether a target ID is meant for quantum execution since not all targets
         /// exposed by providers are meant for that, such as QIO targets. More
