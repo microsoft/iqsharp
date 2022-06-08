@@ -55,6 +55,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IMetadataController MetadataController { get; }
         private IAzureFactory AzureFactory { get; }
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
+        private string GetCommandDisplayName(string name) => MetadataController?.CommandDisplayName(name) ?? name;
         private string StorageConnectionString { get; set; } = string.Empty;
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
@@ -749,9 +750,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             return quotas.ToExecutionResult();
         }
-
-        private string GetCommandDisplayName(string commandName) =>
-            IsPythonUserAgent ? $"qsharp.azure.{commandName}()" : $"%azure.{commandName}";
 
         /// <inheritdoc />
         public void ClearActiveTarget()

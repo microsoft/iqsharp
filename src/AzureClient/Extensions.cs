@@ -97,5 +97,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel?.Stderr(msg);
             channel?.Stderr(ex.Message);
         }
+
+        internal static bool IsPythonUserAgent(this IMetadataController? controller) =>
+            controller?.UserAgent?.StartsWith("qsharp.py") ?? false;
+
+
+        internal static string CommandDisplayName(this IMetadataController? controller, string commandName) =>
+            controller.IsPythonUserAgent()
+            ? $"qsharp.azure.{commandName}()".Replace("-", "_")
+            : $"%azure.{commandName}";
     }
 }

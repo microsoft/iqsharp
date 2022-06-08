@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
         /// <param name="logger">Logger instance for messages.</param>
-        public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger)
+        public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger, IMetadataController controller)
             : base(
                 azureClient,
                 "azure.target",
@@ -53,6 +53,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - {AzureClientError.NotConnected.ToMarkdown()}
                         - {AzureClientError.InvalidTarget.ToMarkdown()}
                         - {AzureClientError.NoTarget.ToMarkdown()}
+
+                        #### Target capabilities
+
+                        When setting a target, the target capability is set to
+                        the maximum capability level supported by the given
+                        target. You can restrict target capability levels
+                        further by using
+                        `{controller.CommandDisplayName("target-capability")}`.
                     ".Dedent(),
                     Examples = new[]
                     {
