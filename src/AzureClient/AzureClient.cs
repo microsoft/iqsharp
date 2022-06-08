@@ -55,6 +55,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IEntryPointGenerator EntryPointGenerator { get; }
         private IMetadataController MetadataController { get; }
         private IAzureFactory AzureFactory { get; }
+        private readonly IWorkspace Workspace;
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string GetCommandDisplayName(string name) => MetadataController?.CommandDisplayName(name) ?? name;
         private string StorageConnectionString { get; set; } = string.Empty;
@@ -88,13 +89,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IMetadataController metadataController,
             IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
-            IEventService eventService)
+            IEventService eventService,
+            IWorkspace workspace)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
             MetadataController = metadataController;
             AzureFactory = azureFactory;
             Logger = logger;
+            Workspace = workspace;
+
+            // If we're given a target capability, start with it set.
+            if (workspace.WorkspaceProject.TargetCapability is {} capability)
+            {
+                if (TrySetTargetCapability(null, capability) == ExecuteStatus.Error)
+                {
+                    logger.LogWarning("Could not set target capability level {Level} from workspace project.", capability);
+                }
+            }
 
             if (engine is BaseEngine baseEngine)
             {
@@ -120,7 +132,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(IChannel? channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
@@ -168,12 +180,45 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
 
-                if (ValidExecutionTargets.Count() == 0)
+                var targets = ValidExecutionTargets;
+                if (targets is null || targets.Count() == 0)
                 {
                     channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
+                    return ExecuteStatus.Error.ToExecutionResult();
                 }
 
-                result = ValidExecutionTargets.ToExecutionResult();
+                result = targets.ToExecutionResult();
+
+                // If the workspace project has an active target, set it now.
+                if (Workspace.WorkspaceProject.TargetId is {} targetId)
+                {
+                    var targetResult = await SetActiveTargetAsync(channel, targetId, cancellationToken);
+                    if (targetResult.Status == ExecuteStatus.Ok)
+                    {
+                        // Try to set the target capability as well.
+                        if (Workspace.WorkspaceProject.TargetCapability is {} capability)
+                        {
+                            if (TrySetTargetCapability(channel, capability) == ExecuteStatus.Ok)
+                            {
+                                return result.Value;
+                            }
+                            else
+                            {
+                                return ExecuteStatus.Error.ToExecutionResult();
+                            }
+
+                        }
+                        else
+                        {
+                            return result.Value;
+                        }
+                    }
+                    else
+                    {
+                        return targetResult;
+                    }
+                }
+
                 return result.Value;
             }
             finally
@@ -491,7 +536,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel? channel, string targetId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null || AvailableProviders == null)
             {
