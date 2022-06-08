@@ -1,21 +1,15 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Tests.IQSharp
 {
@@ -369,13 +363,14 @@ namespace Tests.IQSharp
         internal string WorkspaceName = string.Empty;
         internal string ConnectionString = string.Empty;
         internal string Location = string.Empty;
-        internal string ActiveTargetId = string.Empty;
         internal CredentialType CredentialType = CredentialType.Default;
         internal List<string> SubmittedJobs = new List<string>();
         internal List<string> ExecutedJobs = new List<string>();
         internal ImmutableDictionary<string, string> JobParams = ImmutableDictionary<string, string>.Empty;
 
-        string? IAzureClient.ActiveTargetId => "mock.mock";
+        string? IAzureClient.ActiveTargetId => ActiveTarget?.TargetId;
+        public AzureExecutionTarget? ActiveTarget { get; private set; } = AzureExecutionTarget.Create("mock.mock");
+        public TargetCapability? TargetCapability { get; private set; } = null;
 
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
@@ -383,13 +378,21 @@ namespace Tests.IQSharp
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token)
         {
             LastAction = AzureClientAction.SetActiveTarget;
-            ActiveTargetId = targetId;
+            ActiveTarget = MockAzureExecutionTarget.CreateMock(targetId);
+            TargetCapability = ActiveTarget?.MaximumCapability;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
+
+        public void ClearActiveTarget()
+        {
+            ActiveTarget = null;
+            TargetCapability = null;
+        }
+
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token)
         {
             LastAction = AzureClientAction.GetActiveTarget;
-            return ActiveTargetId.ToExecutionResult();
+            return (ActiveTarget?.TargetId).ToExecutionResult();
         }
 
         public async Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token)

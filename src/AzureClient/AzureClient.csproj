@@ -7,10 +7,12 @@
     <AssemblyName>Microsoft.Quantum.IQSharp.AzureClient</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
+    <Compile Include="../Common/GlobalUsings.cs" Link="Properties/Common/GlobalUsings.cs" />
   </ItemGroup>
 
   <ItemGroup>

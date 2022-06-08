@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
+    <Compile Include="../Common/GlobalUsings.cs" Link="Properties/Common/GlobalUsings.cs" />
   </ItemGroup>
 
   <ItemGroup>

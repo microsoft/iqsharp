@@ -4,6 +4,7 @@
 #nullable enable
 
 using Microsoft.Quantum.IQSharp;
+using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Simulation.Simulators;
 namespace Microsoft.Quantum.Experimental;
 

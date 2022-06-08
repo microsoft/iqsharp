@@ -3,14 +3,8 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -28,7 +22,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
         /// <param name="logger">Logger instance for messages.</param>
-        public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger, IMetadataController controller)
+        /// <param name="controller">
+        ///     Metadata controller used to identify Python versus standalone
+        ///     clients. If <c>null</c>, standalone notebooks are assumed.
+        /// </param>
+        public TargetMagic(IAzureClient azureClient, ILogger<TargetMagic> logger, IMetadataController? controller = null)
             : base(
                 azureClient,
                 "azure.target",

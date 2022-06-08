@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 #nullable enable
-using Microsoft.Quantum.Experimental;
-
 using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
+
+namespace Microsoft.Quantum.IQSharp.Jupyter;
 
 /// <summary>
 ///     A dependency injection service that stores a noise model for use in

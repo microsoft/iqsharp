@@ -14,16 +14,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     internal record MockAzureExecutionTarget : AzureExecutionTarget
     {
         MockAzureExecutionTarget(TargetStatusInfo target) 
-            : base(target?.TargetId)
+            : this(target?.TargetId)
+        { }
+
+        MockAzureExecutionTarget(string? targetId) 
+            : base(targetId)
         { }
 
         // We test using a non-QDK package name to avoid possible version conflicts.
         public override string PackageName => "Microsoft.Extensions.DependencyInjection";
 
         public static MockAzureExecutionTarget? CreateMock(TargetStatusInfo target) =>
-            IsValid(target)
-            ? new MockAzureExecutionTarget(target)
+            CreateMock(target?.TargetId);
+
+        public static MockAzureExecutionTarget? CreateMock(string? targetId) =>
+            IsValid(targetId)
+            ? new MockAzureExecutionTarget(targetId)
             : null;
+
 
         public override bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
         {
