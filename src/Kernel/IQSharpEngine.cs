@@ -199,20 +199,19 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Workspace = await serviceTasks.Workspace;
             var references = await serviceTasks.References;
 
-
-
             logger.LogDebug("Registering IQ# display and JSON encoders.");
-            RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
-            RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
-            RegisterDisplayEncoder(new TaskStatusToTextEncoder());
-            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new DataTableToHtmlEncoder());
-            RegisterDisplayEncoder(new DataTableToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
-            RegisterDisplayEncoder(new TaskProgressToHtmlEncoder());
+            RegisterDisplayEncoder<IQSharpSymbolToHtmlResultEncoder>();
+            RegisterDisplayEncoder<IQSharpSymbolToTextResultEncoder>();
+            RegisterDisplayEncoder<TaskStatusToTextEncoder>();
+            RegisterDisplayEncoder<StateVectorToHtmlResultEncoder>();
+            RegisterDisplayEncoder<StateVectorToTextResultEncoder>();
+            RegisterDisplayEncoder<DataTableToHtmlEncoder>();
+            RegisterDisplayEncoder<DataTableToTextEncoder>();
+            RegisterDisplayEncoder<DisplayableExceptionToHtmlEncoder>();
+            RegisterDisplayEncoder<DisplayableExceptionToTextEncoder>();
+            RegisterDisplayEncoder<DisplayableHtmlElementEncoder>();
+            RegisterDisplayEncoder<TaskProgressToHtmlEncoder>();
+            RegisterDisplayEncoder<TargetCapabilityToHtmlEncoder>();
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -260,6 +259,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Debug.Assert(initializedSuccessfully, "Was unable to complete initialization task.");
             #endif
         }
+
+        internal void RegisterDisplayEncoder<T>()
+        where T: IResultEncoder =>
+            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<T>(services));
 
         /// <inheritdoc />
         public override async Task<CompletionResult?> Complete(string code, int cursorPos)

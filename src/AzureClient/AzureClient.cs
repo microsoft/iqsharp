@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -48,7 +49,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         /// <inheritdoc />
         public AzureExecutionTarget? ActiveTarget { get; private set; }
-        public TargetCapability? TargetCapability { get; private set; }
+        public TargetCapability TargetCapability { get; private set; } = TargetCapabilityModule.Top;
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
@@ -102,7 +103,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // If we're given a target capability, start with it set.
             if (workspace.WorkspaceProject.TargetCapability is {} capability)
             {
-                if (TrySetTargetCapability(null, capability) == ExecuteStatus.Error)
+                if (!TrySetTargetCapability(null, capability, out _))
                 {
                     logger.LogWarning("Could not set target capability level {Level} from workspace project.", capability);
                 }
@@ -196,9 +197,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     if (targetResult.Status == ExecuteStatus.Ok)
                     {
                         // Try to set the target capability as well.
-                        if (Workspace.WorkspaceProject.TargetCapability is {} capability)
+                        if (Workspace.WorkspaceProject.TargetCapability is {} capabilityName)
                         {
-                            if (TrySetTargetCapability(channel, capability) == ExecuteStatus.Ok)
+                            if (TrySetTargetCapability(channel, capabilityName, out _))
                             {
                                 return result.Value;
                             }
@@ -801,27 +802,31 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public void ClearActiveTarget()
         {
             ActiveTarget = null;
-            TargetCapability = null;
+            TargetCapability = TargetCapabilityModule.Top;
         }
 
-        // TODO: Wire up to new magic command, wrap said command in new Python function.
-        public ExecuteStatus TrySetTargetCapability(IChannel? channel, string capabilityName)
+        // TODO: Wrap command in new Python function.
+        /// <inheritdoc />
+        public bool TrySetTargetCapability(IChannel? channel, string capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
         {
             var capability = TargetCapabilityModule.FromName(capabilityName);
             if (!FSharpOption<TargetCapability>.get_IsSome(capability))
             {
                 channel?.Stderr($"Could not parse target capability name \"{capabilityName}\".");
-                return ExecuteStatus.Error;
+                targetCapability = null;
+                return false;
             }
 
             if (ActiveTarget != null && !ActiveTarget.SupportsCapability(capability.Value))
             {
                 channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.MaximumCapability.Name}.");
-                return ExecuteStatus.Error;
+                targetCapability = null;
+                return false;
             }
 
             TargetCapability = capability.Value;
-            return ExecuteStatus.Ok;
+            targetCapability = capability.Value;
+            return true;
         }
     }
 }

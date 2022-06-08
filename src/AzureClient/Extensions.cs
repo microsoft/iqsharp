@@ -106,5 +106,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             controller.IsPythonUserAgent()
             ? $"qsharp.azure.{commandName}()".Replace("-", "_")
             : $"%azure.{commandName}";
+
+        internal static T? AsObj<T>(this FSharp.Core.FSharpOption<T> option)
+        where T: class =>
+            FSharp.Core.FSharpOption<T>.get_IsSome(option)
+            ? option.Value
+            : (T?)null;
     }
 }

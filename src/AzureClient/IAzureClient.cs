@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -196,15 +197,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         AzureExecutionTarget? ActiveTarget { get; }
 
         /// <summary>
-        ///     Returns the current target capability level if one is set, or
-        ///     <c>null</c> if no target capability level is set.
+        ///     Returns the current target capability level if one is set.
         /// </summary>
-        TargetCapability? TargetCapability { get; }
+        TargetCapability TargetCapability { get; }
 
         /// <summary>
         ///     Returns the active workspace connected to this client, or
         ///     <c>null</c> if none is set.
         /// </summary>
         Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; }
+
+        /// <summary>
+        ///     Attempts to set the current target capability given the name
+        ///     of the given capability.
+        /// </summary>
+        bool TrySetTargetCapability(IChannel? channel, string capabilityName, [NotNullWhen(true)] out TargetCapability? capability);
     }
 }
