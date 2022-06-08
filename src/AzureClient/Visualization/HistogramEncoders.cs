@@ -20,13 +20,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
     internal static class HistogramExtensions
     {
-        internal static Histogram ToHistogram(this Stream stream, ILogger? logger = null)
+        internal static Histogram ToHistogram(this Stream stream, IChannel? channel, ILogger? logger = null)
         {
             var output = new StreamReader(stream).ReadToEnd();
             var deserializedOutput = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(output);
 
             var histogram = new Histogram();
-            if (deserializedOutput["Histogram"] is JArray deserializedHistogram)
+            if (deserializedOutput?["Histogram"] is JArray deserializedHistogram)
             {
                 // We expect the histogram to have an even number of entries, organized as:
                 // [key, value, key, value, key, value, ...] 
@@ -34,6 +34,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 // a warning, since this indicates that the data was in an unexpected format.
                 if (deserializedHistogram.Count % 2 == 1)
                 {
+                    channel?.Stderr($"Expected even number of values in histogram, but found {deserializedHistogram.Count}.");
                     logger?.LogWarning($"Expected even number of values in histogram, but found {deserializedHistogram.Count}.");
                 }
 

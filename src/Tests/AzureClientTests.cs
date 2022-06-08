@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,9 +13,11 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace Tests.IQSharp
 {
@@ -29,6 +30,22 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, result.Status);
             Assert.IsInstanceOfType(result.Output, typeof(T));
             return (T)result.Output;
+        }
+        private async Task<T> ExpectSuccess<T>(Func<IChannel, Task<ExecutionResult>> task)
+        {
+            var channel = new MockChannel();
+            try
+            {
+                var result = await task(channel);
+                Assert.AreEqual(ExecuteStatus.Ok, result.Status);
+                Assert.IsInstanceOfType(result.Output, typeof(T));
+                return (T)result.Output;
+            }
+            catch
+            {
+                Logger.LogMessage($"Task reported failure. Errors:\n{string.Join("\n", channel.errors)}");
+                throw;
+            }
         }
 
         private void ExpectError(AzureClientError expectedError, Task<ExecutionResult> task)
@@ -162,7 +179,7 @@ namespace Tests.IQSharp
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
             // Above, we added 3 valid quantum execution targets, each of which contributes two targets (simulator and mock),
             // for a total of six targets.
-            Assert.That.Enumerable(targets).HasCount(6);
+            Assert.That.Enumerable(targets).HasCount(9);
 
             // GetActiveTargetAsync, but no active target set yet
             ExpectError(AzureClientError.NoTarget, azureClient.GetActiveTargetAsync(new MockChannel()));
@@ -188,7 +205,10 @@ namespace Tests.IQSharp
             // connect to mock workspace with all providers
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
             // 2 targets per provider: mock and simulator.
-            Assert.AreEqual(2 * Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
+
+            // TODO: uncomment once there is a microsoft.mock target
+            // GitHub Issue: https://github.com/microsoft/iqsharp/issues/609
+            //Assert.AreEqual(2 * Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
 
             // set each target, which will load the corresponding package
             foreach (var target in targets)
@@ -301,10 +321,11 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestRuntimeCapabilities()
+        public async Task TestRuntimeCapabilities()
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
             var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var packagesService = services.GetService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
@@ -327,7 +348,10 @@ namespace Tests.IQSharp
 
             // Verify that Quantinuum job can be successfully submitted (QPRGen1)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "quantinuum.mock"));
-            job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Logger.LogMessage(string.Join("\n", packagesService.Items.Select(item => $"{item.Id}::{item.Version}")));
+            job = await ExpectSuccess<CloudJob>(channel =>
+                azureClient.SubmitJobAsync(channel, submissionContext, CancellationToken.None)
+            );
             Assert.IsNotNull(job);
         }
 

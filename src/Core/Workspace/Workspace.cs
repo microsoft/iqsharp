@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -338,7 +339,7 @@ public class Workspace : IWorkspace
                 Logger?.LogDebug($"Loading cache assembly: {project.CacheDllPath}.");
                 var data = File.ReadAllBytes(project.CacheDllPath);
                 var assm = System.Reflection.Assembly.Load(data);
-                project.AssemblyInfo = new AssemblyInfo(assm, project.CacheDllPath, null);
+                project.AssemblyInfo = new AssemblyInfo(assm, project.CacheDllPath, null, null);
             }
 
             ErrorMessages = new string[0];
@@ -506,7 +507,7 @@ public class Workspace : IWorkspace
                         logger.LogError(
                             "IQS003",
                             $"Error compiling project {project.ProjectFile}: {e.Message}");
-                        project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                        project.AssemblyInfo = new AssemblyInfo(null, null, null, null);
                     }
 
                     ErrorMessages = ErrorMessages.Concat(logger.Errors.ToArray());
@@ -516,7 +517,7 @@ public class Workspace : IWorkspace
                 else
                 {
                     Logger?.LogDebug($"No files found in project {project.ProjectFile}. Using empty workspace.");
-                    project.AssemblyInfo = new AssemblyInfo(null, null, null);
+                    project.AssemblyInfo = new AssemblyInfo(null, null, null, null);
                 }
 
                 if (!string.IsNullOrWhiteSpace(project.ProjectFile))

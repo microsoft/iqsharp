@@ -4,9 +4,10 @@
 #nullable enable
 
 using System;
-
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.QsCompiler;
+using Microsoft.Quantum.Runtime.Submitters;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -18,10 +19,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         //     workspaces and should still be supported.
         Honeywell,
         QCI,
+        Microsoft,
         Mock
     }
 
-    internal class AzureExecutionTarget
+    internal record AzureExecutionTarget
     {
         protected AzureExecutionTarget(string? targetId)
         {
@@ -37,6 +39,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
             AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
             AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
+            AzureProvider.Microsoft  => "Microsoft.Quantum.Providers.Core",
             _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
         };
 
@@ -46,8 +49,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
             AzureProvider.Honeywell  => TargetCapabilityModule.BasicMeasurementFeedback,
             AzureProvider.QCI        => TargetCapabilityModule.BasicMeasurementFeedback,
+            AzureProvider.Microsoft  => TargetCapabilityModule.FullComputation,
             _                        => TargetCapabilityModule.FullComputation,
         };
+
+        public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
+        {
+            if (this.TargetId == null)
+            {
+                submitter = null;
+                return false;
+            }
+            if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.TargetCapability.Name) is IQirSubmitter qirSubmitter)
+            {
+                submitter = qirSubmitter;
+                return true;
+            }
+            else
+            {
+                submitter = null;
+                return false;
+            }
+        }
 
         /// <summary>
         /// Returns true, if the provider for the given target is a known provider 
@@ -92,7 +115,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Valid target IDs are structured as "provider.target".
         ///     For example, "ionq.simulator" or "quantinuum.qpu".
         /// </remarks>
-        protected static AzureProvider? GetProvider(string? targetId)
+        protected internal static AzureProvider? GetProvider(string? targetId)
         {
             if (targetId == null)
             {
