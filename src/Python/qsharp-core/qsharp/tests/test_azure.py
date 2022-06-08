@@ -146,6 +146,8 @@ def _test_workspace_job_execution():
     # Execute a workspace operation with parameters
     op = qsharp.QSharpCallable("Microsoft.Quantum.SanityTests.HelloAgain", None)
 
+    qsharp.azure.target('mock.mock')
+
     with pytest.raises(AzureError) as exception_info:
         qsharp.azure.execute(op)
     assert exception_info.value.error_name == "JobSubmissionFailed"
