@@ -17,9 +17,11 @@ using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
+using Microsoft.FSharp.Core;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Common;
@@ -43,6 +45,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
+        /// <inheritdoc />
+        public AzureExecutionTarget? ActiveTarget { get; private set; }
+        public TargetCapability? TargetCapability { get; private set; }
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
@@ -51,7 +56,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IAzureFactory AzureFactory { get; }
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
         private string StorageConnectionString { get; set; } = string.Empty;
-        public AzureExecutionTarget? ActiveTarget { get; private set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatusInfo>? AvailableTargets =>
@@ -336,7 +340,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = await EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.TargetCapability);
+                entryPoint = await EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability);
             }
             catch (TaskCanceledException tce)
             {
@@ -519,6 +523,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
+            TargetCapability = executionTarget.MaximumCapability;
 
             channel?.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
@@ -747,5 +752,32 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private string GetCommandDisplayName(string commandName) =>
             IsPythonUserAgent ? $"qsharp.azure.{commandName}()" : $"%azure.{commandName}";
+
+        /// <inheritdoc />
+        public void ClearActiveTarget()
+        {
+            ActiveTarget = null;
+            TargetCapability = null;
+        }
+
+        // TODO: Wire up to new magic command, wrap said command in new Python function.
+        public ExecuteStatus TrySetTargetCapability(IChannel? channel, string capabilityName)
+        {
+            var capability = TargetCapabilityModule.FromName(capabilityName);
+            if (!FSharpOption<TargetCapability>.get_IsSome(capability))
+            {
+                channel?.Stderr($"Could not parse target capability name \"{capabilityName}\".");
+                return ExecuteStatus.Error;
+            }
+
+            if (ActiveTarget != null && !ActiveTarget.SupportsCapability(capability.Value))
+            {
+                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.MaximumCapability.Name}.");
+                return ExecuteStatus.Error;
+            }
+
+            TargetCapability = capability.Value;
+            return ExecuteStatus.Ok;
+        }
     }
 }

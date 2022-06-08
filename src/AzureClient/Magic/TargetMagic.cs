@@ -56,6 +56,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     ".Dedent(),
                     Examples = new[]
                     {
+                        
                         @"
                             Set the current target for Q# job submission to `provider.qpu`:
                             ```
@@ -63,6 +64,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Out[]: Loading package Microsoft.Quantum.Providers.Provider and dependencies...
                                    Active target is now provider.qpu
                                    <detailed properties of active execution target>
+                            ```
+                        ".Dedent(),
+                        @"
+                            Clears the current target information:
+                            ```
+                            In []: %azure.target --clear
                             ```
                         ".Dedent(),
                         @"
@@ -87,7 +94,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameTargetId);
             if (inputParameters.ContainsKey(ParameterNameTargetId))
             {
-                string targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
+                var targetId = inputParameters.DecodeParameter<string>(ParameterNameTargetId);
+                if (targetId.Trim() == "--clear")
+                {
+                    AzureClient.ClearActiveTarget();
+                    return ExecuteStatus.Ok.ToExecutionResult();
+                }
                 return await AzureClient.SetActiveTargetAsync(channel, targetId, cancellationToken);
             }
 

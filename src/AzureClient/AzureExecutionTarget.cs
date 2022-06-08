@@ -43,7 +43,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
         };
 
-        public TargetCapability TargetCapability => GetProvider(TargetId) switch
+        /// <summary>
+        ///     Returns the maximum level of capability supported by this target.
+        ///     Any other target capability must be subsumed by this maximum
+        ///     in order to be supported by this target.
+        /// </summary>
+        public TargetCapability MaximumCapability => GetProvider(TargetId) switch
         {
             AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
             AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
@@ -53,6 +58,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             _                        => TargetCapabilityModule.FullComputation,
         };
 
+        public bool SupportsCapability(TargetCapability capability) =>
+            TargetCapabilityModule.Subsumes(this.MaximumCapability, capability);
+
         public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
         {
             if (this.TargetId == null)
@@ -60,7 +68,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 submitter = null;
                 return false;
             }
-            if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.TargetCapability.Name) is IQirSubmitter qirSubmitter)
+            if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.MaximumCapability.Name) is IQirSubmitter qirSubmitter)
             {
                 submitter = qirSubmitter;
                 return true;

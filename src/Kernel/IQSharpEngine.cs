@@ -448,9 +448,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     var snippets = this.Snippets!;
                     await workspace.Initialization;
                     perfTask.ReportStatus("Initialized workspace.", "init-workspace");
-                    var target = services.GetRequiredService<IAzureClient>().ActiveTarget;
+                    var capability = services.GetRequiredService<IAzureClient>().TargetCapability;
 
-                    var code = await snippets.Compile(input, target?.TargetCapability, perfTask);
+                    var code = await snippets.Compile(input, capability, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
                     foreach (var m in code.warnings) { channel.Stdout(m); }

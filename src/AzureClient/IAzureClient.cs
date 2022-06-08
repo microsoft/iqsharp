@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -132,6 +133,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token = default);
 
         /// <summary>
+        /// Clears the specified target for job submission.
+        /// </summary>
+        public void ClearActiveTarget();
+
+        /// <summary>
         /// Gets the currently specified target for job submission.
         /// </summary>
         /// <returns>
@@ -188,6 +194,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     <c>null</c> if no target is set.
         /// </summary>
         AzureExecutionTarget? ActiveTarget { get; }
+
+        /// <summary>
+        ///     Returns the current target capability level if one is set, or
+        ///     <c>null</c> if no target capability level is set.
+        /// </summary>
+        TargetCapability? TargetCapability { get; }
 
         /// <summary>
         ///     Returns the active workspace connected to this client, or
