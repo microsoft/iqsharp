@@ -11,12 +11,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient;
 /// <summary>
 ///     A magic command that can be used to view or set target information for an Azure Quantum workspace.
 /// </summary>
-public class CapabilityMAgic : AzureClientMagicBase
+public class CapabilityMagic : AzureClientMagicBase
 {
     private const string ParameterNameTargetCapability = "capability";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CapabilityMAgic"/> class.
+    /// Initializes a new instance of the <see cref="CapabilityMagic"/> class.
     /// </summary>
     /// <param name="azureClient">
     /// The <see cref="IAzureClient"/> object to use for Azure functionality.
@@ -26,7 +26,7 @@ public class CapabilityMAgic : AzureClientMagicBase
     ///     Metadata controller used to identify Python versus standalone
     ///     clients. If <c>null</c>, standalone notebooks are assumed.
     /// </param>
-    public CapabilityMAgic(IAzureClient azureClient, ILogger<TargetMagic> logger, IMetadataController? controller = null)
+    public CapabilityMagic(IAzureClient azureClient, ILogger<TargetMagic> logger, IMetadataController? controller = null)
         : base(
             azureClient,
             "azure.target-capability",
@@ -58,14 +58,21 @@ public class CapabilityMAgic : AzureClientMagicBase
         var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameTargetCapability);
         if (inputParameters.ContainsKey(ParameterNameTargetCapability))
         {
-            var capabilityName = inputParameters.DecodeParameter<string>(ParameterNameTargetCapability);
-            // TODO: Handle "--clear" here.
-            if (AzureClient.TrySetTargetCapability(channel, capabilityName, out var capability))
+            if (inputParameters.DecodeParameter<string>(ParameterNameTargetCapability) is {} capabilityName)
             {
-                return Task.FromResult(capability.ToExecutionResult());
+                // TODO: Handle "--clear" here.
+                if (AzureClient.TrySetTargetCapability(channel, capabilityName, out var capability))
+                {
+                    return Task.FromResult(capability.ToExecutionResult());
+                }
+                else
+                {
+                    return Task.FromResult(ExecuteStatus.Error.ToExecutionResult());
+                }
             }
             else
             {
+                channel.Stderr("Expected string for target capability name.");
                 return Task.FromResult(ExecuteStatus.Error.ToExecutionResult());
             }
         }

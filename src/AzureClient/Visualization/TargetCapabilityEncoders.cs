@@ -30,8 +30,11 @@ public class TargetCapabilityConverter : JsonConverter<TargetCapability>
         }
 
         writer.WriteStartObject();
-            writer.WritePropertyName(nameof(value.Name));
-            writer.WriteValue(Name(value));
+            if (Name(value).AsObj() is {} name)
+            {
+                writer.WritePropertyName(nameof(value.Name));
+                writer.WriteValue(name);
+            }
 
             writer.WritePropertyName(nameof(value.ClassicalCompute));
             writer.WriteValue(value.ClassicalCompute.ToString());
@@ -42,6 +45,10 @@ public class TargetCapabilityConverter : JsonConverter<TargetCapability>
     }
 }
 
+/// <summary>
+///     Formats target capability information for display in notebooks and
+///     other rich-text contexts.
+/// </summary>
 public class TargetCapabilityToHtmlEncoder : IResultEncoder
 {
     /// <inheritdoc/>
