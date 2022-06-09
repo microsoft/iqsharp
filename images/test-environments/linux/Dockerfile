@@ -2,8 +2,9 @@ ARG CONDA_VER=latest
 ARG UBUNTU_VER=20.04
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.7
+ARG SOURCE=""
 
-FROM ubuntu:${UBUNTU_VER}
+FROM ${SOURCE}ubuntu:${UBUNTU_VER}
 
 RUN apt-get update && apt-get install -yq curl wget jq
 
