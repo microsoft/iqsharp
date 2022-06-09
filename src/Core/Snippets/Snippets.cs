@@ -183,7 +183,8 @@ namespace Microsoft.Quantum.IQSharp
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
                             .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri))
-                            .ToArray()
+                            .ToArray(),
+                        Diagnostics = logger.Logs
                     };
 
                 AssemblyInfo = assembly;

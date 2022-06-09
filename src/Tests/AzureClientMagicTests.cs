@@ -10,6 +10,7 @@ using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Tests.IQSharp
 {
@@ -370,9 +371,16 @@ namespace Tests.IQSharp
 
         string? IAzureClient.ActiveTargetId => ActiveTarget?.TargetId;
         public AzureExecutionTarget? ActiveTarget { get; private set; } = AzureExecutionTarget.Create("mock.mock");
-        public TargetCapability? TargetCapability { get; private set; } = null;
+        public TargetCapability TargetCapability { get; private set; } = TargetCapabilityModule.Top;
 
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
+
+        public bool TrySetTargetCapability(IChannel? channel, string name, [NotNullWhen(true)] out TargetCapability? capability)
+        {
+            TargetCapability = TargetCapabilityModule.FromName(name).Value;
+            capability = TargetCapability;
+            return true;
+        }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token)

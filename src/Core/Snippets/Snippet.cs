@@ -7,6 +7,7 @@ using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.IQSharp.Common;
 
 using Newtonsoft.Json;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -16,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp
     ///  Each Snippet represents a single entry from the user.
     ///  During execution, a user may provide multiple Snippets.
     /// </summary>
-    public class Snippet
+    public record Snippet
     {
         /// <summary>
         /// An id of the snippet. This gives users control on whether they are updating
@@ -33,6 +34,8 @@ namespace Microsoft.Quantum.IQSharp
         /// Any compilation warnings trigger for this Snippet.
         /// </summary>
         public string[] warnings { get; set; }
+
+        public IEnumerable<Diagnostic> Diagnostics { get; init; }
 
         /// <summary>
         /// The Q# compiled version of the operations.
