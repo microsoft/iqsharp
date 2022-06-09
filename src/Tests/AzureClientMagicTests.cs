@@ -238,9 +238,9 @@ namespace Tests.IQSharp
             // jobParams argument
             Assert.IsTrue(azureClient.JobParams.IsEmpty);
             submitMagic.Test($"{operationName} jobParams={jobParams}");
-            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out string value1));
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out var value1));
             Assert.AreEqual(value1, jobParamsVal1);
-            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out string value2));
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out var value2));
             Assert.AreEqual(value2, jobParamsVal2);
         }
 
@@ -262,9 +262,9 @@ namespace Tests.IQSharp
             // jobParams argument
             Assert.IsTrue(azureClient.JobParams.IsEmpty);
             executeMagic.Test($"{operationName} jobParams={jobParams}");
-            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out string value1));
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey1, out var value1));
             Assert.AreEqual(value1, jobParamsVal1);
-            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out string value2));
+            Assert.IsTrue(azureClient.JobParams.TryGetValue(jobParamsKey2, out var value2));
             Assert.AreEqual(value2, jobParamsVal2);
         }
 
@@ -387,14 +387,14 @@ namespace Tests.IQSharp
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTarget = MockAzureExecutionTarget.CreateMock(targetId);
-            TargetCapability = ActiveTarget?.MaximumCapability;
+            TargetCapability = ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 
         public void ClearActiveTarget()
         {
             ActiveTarget = null;
-            TargetCapability = null;
+            TargetCapability = TargetCapabilityModule.Top;
         }
 
         public async Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token)

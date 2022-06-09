@@ -6,14 +6,15 @@
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 
+/// <summary>
+///      Magic command for querying, setting, and loading noise models.
+/// </summary>
 public class NoiseModelMagic : AbstractMagic
 {
-    private ILogger<NoiseModelMagic>? logger = null;
     private INoiseModelSource NoiseModelSource;
 
     /// <summary>
@@ -69,7 +70,7 @@ public class NoiseModelMagic : AbstractMagic
                     ```
                 ".Dedent()
             }
-        })
+        }, logger)
     {
         this.NoiseModelSource = noiseModelSource;
         if (engine is BaseEngine baseEngine)

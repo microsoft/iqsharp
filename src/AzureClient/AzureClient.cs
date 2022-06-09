@@ -3,15 +3,11 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Azure.Core;
 using Azure.Quantum;
@@ -19,12 +15,9 @@ using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
-using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient

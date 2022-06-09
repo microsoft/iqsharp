@@ -98,7 +98,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             channel?.Stderr(ex.Message);
         }
 
-        internal static bool IsPythonUserAgent(this IMetadataController? controller) =>
+        /// <summary>
+        ///      Uses the given metadata controller to check if the current
+        ///      client is known to be a Python user agent.
+        /// </summary>
+        public static bool IsPythonUserAgent(this IMetadataController? controller) =>
             controller?.UserAgent?.StartsWith("qsharp.py") ?? false;
 
 

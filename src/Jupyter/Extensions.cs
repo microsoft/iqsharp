@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;

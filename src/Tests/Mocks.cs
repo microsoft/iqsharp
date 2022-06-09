@@ -1,21 +1,19 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Microsoft.Quantum.IQSharp;
-using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Linq;
 using Newtonsoft.Json.Linq;
+
+// We allow for unused properties and events in this file, as some properties
+// must exist for mocking purposes but are not used in this context.
+#pragma warning disable CS0067
 
 namespace Tests.IQSharp
 {

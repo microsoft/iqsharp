@@ -3,16 +3,6 @@
 
 #nullable enable
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.AzureClient;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 using Microsoft.Extensions.Logging;
 
 using static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger;

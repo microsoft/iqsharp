@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -113,21 +110,21 @@ namespace Tests.IQSharp
         {
             var ws = Startup.Create<Workspace>("Workspace");
             await ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages ?? Enumerable.Empty<string>()));
 
             ws.AddProject("../Workspace.ProjectReferences.ProjectA/ProjectA.csproj");
             await ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages ?? Enumerable.Empty<string>()));
             
-            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            var operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Enumerable.Empty<OperationInfo>());
             Assert.IsFalse(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 
             ws.AddProject("../Workspace.ProjectReferences/Workspace.ProjectReferences.csproj");
             await ws.Reload();
-            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages));
+            Assert.IsFalse(ws.HasErrors, string.Join(Environment.NewLine, ws.ErrorMessages ?? Enumerable.Empty<string>()));
 
-            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations);
+            operations = ws.Projects.SelectMany(p => p.AssemblyInfo?.Operations ?? Enumerable.Empty<OperationInfo>());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.MeasureSingleQubit").Any());
             Assert.IsTrue(operations.Where(o => o.FullName == "Tests.ProjectReferences.ProjectA.RotateAndMeasure").Any());
 
@@ -153,7 +150,10 @@ namespace Tests.IQSharp
             await ws.Reload();
             Assert.IsFalse(ws.HasErrors);
 
-            var op = ws.AssemblyInfo.Operations.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
+            var op = ws
+                .AssemblyInfo
+                ?.Operations
+                ?.FirstOrDefault(o => o.FullName == "Tests.IQSharp.Chemistry.Samples.UseJordanWignerEncodingData");
             Assert.IsNotNull(op);
         }
     }

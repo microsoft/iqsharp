@@ -203,9 +203,16 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public StabilizerStateVisualizationStyle NoisySimulatorStabilizerStateVisualizationStyle =>
             GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
+        /// <summary>
+        ///      Specifies the format used for reporting Q# compilation errors.
+        /// </summary>
         public CompilationErrorStyle CompilationErrorStyle =>
             GetOptionOrDefault("errors.style", CompilationErrorStyle.Fancy);
 
+        /// <summary>
+        ///      Specifies how many lines of context should be displayed around
+        ///      errors and other Q# compilation diagnostics.
+        /// </summary>
         public int NContextLines =>
             GetOptionOrDefault("errors.nContextLines", 1);
 

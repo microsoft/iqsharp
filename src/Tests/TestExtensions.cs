@@ -3,12 +3,7 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
@@ -17,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests.IQSharp
 {
-    
+
     internal static class TestExtensions
     {
         internal class ObjectAssert
@@ -200,16 +195,10 @@ namespace Tests.IQSharp
             return input;
         }
 
-        internal class AssemblyAssert
-        {
-            internal AssemblyInfo AssemblyInfo;
-        }
+        internal record AssemblyAssert(AssemblyInfo AssemblyInfo);
 
         internal static AssemblyAssert Assembly(this Assert assert, AssemblyInfo info) =>
-            new AssemblyAssert
-            {
-                AssemblyInfo = info
-            };
+            new AssemblyAssert(info);
 
         internal static T HasResource<T>(this T assert, string resourceName)
         where T: AssemblyAssert
@@ -239,16 +228,10 @@ namespace Tests.IQSharp
 
         
 
-        internal class EnumerableAssert<T>
-        {
-            internal IEnumerable<T> Enumerable;
-        }
+        internal record EnumerableAssert<T>(IEnumerable<T> Enumerable);
 
         internal static EnumerableAssert<T> Enumerable<T>(this Assert assert, IEnumerable<T> enumerable) =>
-            new EnumerableAssert<T>
-            {
-                Enumerable = enumerable
-            };
+            new EnumerableAssert<T>(enumerable);
 
         internal static EnumerableAssert<T> HasCount<T>(this EnumerableAssert<T> enumerableAssert, int count)
         {
@@ -261,6 +244,9 @@ namespace Tests.IQSharp
             );
             return enumerableAssert;
         }
+
+        internal static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source) =>
+            source.Where(e => e is not null).Select(e => e!);
 
     }
 

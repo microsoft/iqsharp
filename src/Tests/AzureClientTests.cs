@@ -3,11 +3,7 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Azure.Quantum.Jobs.Models;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
@@ -108,7 +104,7 @@ namespace Tests.IQSharp
         public void TestJobStatus()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // not connected
             ExpectError(AzureClientError.NotConnected, azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_1"));
@@ -200,7 +196,7 @@ namespace Tests.IQSharp
         public void TestAllTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect to mock workspace with all providers
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
@@ -222,7 +218,7 @@ namespace Tests.IQSharp
         public void TestJobSubmission()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
             var submissionContext = new AzureSubmissionContext();
 
             // not yet connected
@@ -262,7 +258,7 @@ namespace Tests.IQSharp
         public void TestJobExecution()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -293,7 +289,7 @@ namespace Tests.IQSharp
         public void TestJobExecutionWithArrayInput()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -324,8 +320,8 @@ namespace Tests.IQSharp
         public async Task TestRuntimeCapabilities()
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
-            var packagesService = services.GetService<INugetPackages>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
+            var packagesService = services.GetRequiredService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
@@ -359,7 +355,7 @@ namespace Tests.IQSharp
         public void TestLocations()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // Locations with whitespace should be converted correctly
             _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
@@ -378,7 +374,7 @@ namespace Tests.IQSharp
         public void TestConnectedEvent()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             ConnectToWorkspaceEventArgs? lastArgs = null;
 

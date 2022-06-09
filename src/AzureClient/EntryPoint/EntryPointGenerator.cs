@@ -3,13 +3,9 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
@@ -105,11 +101,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 {
                     try
                     {
-                        workspaceAssemblies.Add(await Compiler.BuildFiles(
+                        var asm = await Compiler.BuildFiles(
                             project.SourceFiles.ToArray(),
                             compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
                             logger,
-                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}")));
+                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"));
+                        if (asm is not null)
+                        {
+                            workspaceAssemblies.Add(asm);
+                        }
+                        else
+                        {
+                            Logger.LogCritical("Got empty assembly when building entry point, but no compilation error was raised.");
+                        }
                     }
                     catch (Exception e)
                     {
