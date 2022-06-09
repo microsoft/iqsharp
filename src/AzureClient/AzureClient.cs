@@ -174,11 +174,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
 
-                var targets = ValidExecutionTargets;
-                if (targets is null || targets.Count() == 0)
+                var targets = ValidExecutionTargets ?? Enumerable.Empty<TargetStatusInfo>();
+                if (targets.Count() == 0)
                 {
                     channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
-                    return ExecuteStatus.Error.ToExecutionResult();
                 }
 
                 result = targets.ToExecutionResult();
