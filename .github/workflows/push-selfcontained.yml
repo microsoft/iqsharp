@@ -18,15 +18,15 @@ on:
     - cron: '0 9 * * SAT'
 
 jobs:
-  windows:
-    name: "Build windows image"
-    uses: ./.github/workflows/docker-build.yml
-    secrets: inherit
-    with:
-      os: "windows-latest"
-      path: "images/test-environments/windows"
-      repoName: "windows-selfcontained"
-      tagSuffix: "windows"
+  #windows:
+  #  name: "Build windows image"
+  #  uses: ./.github/workflows/docker-build.yml
+  #  secrets: inherit
+  #  with:
+  #    os: "windows-latest"
+  #    path: "images/test-environments/windows"
+  #    repoName: "windows-selfcontained"
+  #    tagSuffix: "windows"
 
   linux:
     name: "Build linux image"
