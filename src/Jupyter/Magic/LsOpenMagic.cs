@@ -57,9 +57,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
 
         /// <inheritdoc />
-        public override ExecutionResult Run(string? input, IChannel channel) => new Table<(string, string)>
+        public override ExecutionResult Run(string? input, IChannel channel) => new Table<(string, string?)>
         {
-            Columns = new List<(string, Func<(string, string), string>)>
+            Columns = new List<(string, Func<(string, string?), string>)>
             {
                 ("Namespace", item => item.Item1),
                 ("Alias", item => item.Item2 ?? "")

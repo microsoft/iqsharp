@@ -58,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
         /// </summary>
-        AssemblyInfo AssemblyInfo { get; }
+        AssemblyInfo? AssemblyInfo { get; }
 
         /// <summary>
         /// The list of currently available snippets.

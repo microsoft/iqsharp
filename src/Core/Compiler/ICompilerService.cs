@@ -3,9 +3,6 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
@@ -21,25 +18,34 @@ namespace Microsoft.Quantum.IQSharp
         /// Dictionary of auto-opened namespaces when compiling Q# snippets.
         /// Key is the full namespace name, value (if non-null) is the name under which the namespace is opened.
         /// </summary>
-        public IDictionary<string, string> AutoOpenNamespaces { get; set; }
+        public IDictionary<string, string?> AutoOpenNamespaces { get; set; }
 
         /// <summary>
         /// Builds an executable assembly with an entry point that invokes the Q# operation specified
         /// by the provided <see cref="OperationInfo"/> object.
         /// </summary>
-        Task<AssemblyInfo> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        /// <returns>
+        ///     The built assembly, or <c>null</c> if the compilation resulted in an error.
+        /// </returns>
+        Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             TargetCapability? capability = null, bool generateQir = false);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.
         /// </summary>
-        Task<AssemblyInfo> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        /// <returns>
+        ///     The built assembly, or <c>null</c> if the compilation resulted in an error.
+        /// </returns>
+        Task<AssemblyInfo?> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             TargetCapability? capability = null, ITaskReporter? parent = null);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
-        Task<AssemblyInfo> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
+        /// <returns>
+        ///     The built assembly, or <c>null</c> if the compilation resulted in an error.
+        /// </returns>
+        Task<AssemblyInfo?> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
             TargetCapability? capability = null);
 
         /// <summary>
@@ -54,6 +60,6 @@ namespace Microsoft.Quantum.IQSharp
         /// under which the namespace is opened.
         /// The compiler does this on a best effort basis, so it will return the elements even if the compilation fails. 
         /// </summary>
-        IDictionary<string, string> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
+        IDictionary<string, string?> IdentifyOpenedNamespaces(string source) => throw new NotImplementedException();
     }
 }

@@ -212,6 +212,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder<DisplayableHtmlElementEncoder>();
             RegisterDisplayEncoder<TaskProgressToHtmlEncoder>();
             RegisterDisplayEncoder<TargetCapabilityToHtmlEncoder>();
+            RegisterDisplayEncoder<FancyErrorToTextEncoder>();
+            RegisterDisplayEncoder<FancyErrorToHtmlEncoder>();
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -456,7 +458,15 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     var code = await snippets.Compile(input, capability, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
-                    foreach (var m in code.warnings) { channel.Stdout(m); }
+                    
+                    if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
+                    {
+                        foreach (var m in code.warnings) { channel.Stdout(m); }
+                    }
+                    else
+                    {
+                        foreach (var m in code.Diagnostics) channel.Display(new FancyError(input, m));
+                    }
 
                     // Gets the names of all the operations found for this snippet
                     var opsNames =
@@ -492,7 +502,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     else
                     {
-                        foreach (var m in c.Errors) channel.Stderr(m);
+                        if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
+                        {
+                            foreach (var m in c.Errors) channel.Stderr(m);
+                        }
+                        else
+                        {
+                            foreach (var m in c.Diagnostics) channel.Display(new FancyError(input, m));
+                        }
                     }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }

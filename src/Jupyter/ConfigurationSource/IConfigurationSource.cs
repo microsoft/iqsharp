@@ -204,7 +204,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
         public CompilationErrorStyle CompilationErrorStyle =>
-            GetOptionOrDefault("core.compilationErrorStyle", CompilationErrorStyle.Fancy);
+            GetOptionOrDefault("errors.style", CompilationErrorStyle.Fancy);
+
+        public int NContextLines =>
+            GetOptionOrDefault("errors.nContextLines", 1);
 
         /// <summary>
         ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.

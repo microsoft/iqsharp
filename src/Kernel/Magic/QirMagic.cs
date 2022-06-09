@@ -2,12 +2,9 @@
 // Licensed under the MIT License.
 
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.Kernel

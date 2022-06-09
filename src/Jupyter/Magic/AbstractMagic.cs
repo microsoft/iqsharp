@@ -69,7 +69,13 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     catch (AggregateException agg)
                     {
                         Logger?.LogWarning(agg, "Unhandled aggregate exception in magic command {Magic}, printing as stderr.", this.Name);
-                        foreach (var e in agg.InnerExceptions) channel.Stderr(e?.Message);
+                        foreach (var e in agg.InnerExceptions)
+                        {
+                            if (e?.Message is {} msg)
+                            {
+                                channel.Stderr(msg);
+                            }
+                        };
                         return ExecuteStatus.Error.ToExecutionResult();
                     }
                     catch (SimulationException e)

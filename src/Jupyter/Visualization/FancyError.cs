@@ -11,6 +11,10 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 
+/// <summary>
+///     Represents a diagnostic together with the source that generated that
+///     diagnostic.
+/// </summary>
 public record FancyError(string Source, Diagnostic Diagnostic)
 {
     private string UnderlineColor => Diagnostic.Severity switch
@@ -18,7 +22,8 @@ public record FancyError(string Source, Diagnostic Diagnostic)
         DiagnosticSeverity.Error => "red",
         DiagnosticSeverity.Information => "blue",
         DiagnosticSeverity.Warning => "orange",
-        DiagnosticSeverity.Hint => "black"
+        DiagnosticSeverity.Hint => "green",
+        _ => "black"
     };
 
     private static readonly Dictionary<SumType<int, string>?, Uri?> DocsUriCache = new();
@@ -31,6 +36,10 @@ public record FancyError(string Source, Diagnostic Diagnostic)
         }
         .ToImmutableDictionary();
 
+    /// <summary>
+    ///     Returns a user-friendly hint about this diagnostic if one exists,
+    ///     or <c>null</c> if no hint is available.
+    /// </summary>
     public string? Hint =>
         Diagnostic.Code is {} code
         ? Hints.TryGetValue(code, out var hint)
@@ -38,6 +47,14 @@ public record FancyError(string Source, Diagnostic Diagnostic)
           : null
         : null;
 
+    /// <summary>
+    ///     Attempts to get a link to a documentation page for this diagnostic.
+    /// </summary>
+    /// <returns>
+    ///     A URI that resolves to a page about this diagnostic if one exists
+    ///     and can be found within the timeout, or <c>null</c> if no such
+    ///     page exists, or if an exception was encountered.
+    /// </returns>
     public async Task<Uri?> TryGetDocumentationPage()
     {
         if (DocsUriCache.TryGetValue(Diagnostic.Code, out var cachedUri))
@@ -51,7 +68,7 @@ public record FancyError(string Source, Diagnostic Diagnostic)
             return null;
         }
 
-        // const string xrefLookupBase = "https://xref.docs.microsoft.com/query?uid=microsoft.quantum.qscompiler-diagnstics.";
+        // const string xrefLookupBase = "https://xref.docs.microsoft.com/query?uid=microsoft.quantum.qscompiler-diagnostics.";
         // var lookupUri = xrefLookupBase + (
         //     Diagnostic.Code.Value.TryGetFirst(out var intCode)
         //     ? intCode.ToString()
@@ -91,7 +108,7 @@ public record FancyError(string Source, Diagnostic Diagnostic)
         }
     }
 
-    public IEnumerable<(int? Number, string Line)> RelevantLines(int nContextLines = 1, bool html = false)
+    private IEnumerable<(int? Number, string Line)> RelevantLines(int nContextLines = 1, bool html = false)
     {
         var lines = Source.Split("\n");
         var startLine = System.Math.Max(Diagnostic.Range.Start.Line - nContextLines, 0);
@@ -109,7 +126,7 @@ public record FancyError(string Source, Diagnostic Diagnostic)
                     var prefix = line.Substring(0, Diagnostic.Range.Start.Character);
                     var highlight = line.Substring(Diagnostic.Range.Start.Character, Diagnostic.Range.End.Character - Diagnostic.Range.Start.Character);
                     var postfix = line.Substring(Diagnostic.Range.End.Character);
-                    var style = $"text-decoration: underline; text-decoration-style: wavy; text-decoration-color: {UnderlineColor}";
+                    var style = $"font-weight: bold; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: {UnderlineColor}";
                     yield return (
                         idxLine + 1,
                         WebUtility.HtmlEncode(prefix) +
@@ -135,37 +152,60 @@ public record FancyError(string Source, Diagnostic Diagnostic)
             }
         }
     }
+
+    /// <summary>
+    ///     Returns the source for this error, annotated with information from
+    ///     the diagnostic.
+    /// </summary>
+    /// <param name="nContextLines">
+    ///      The maximum number of lines of context above and below the
+    ///      diagnostic that should be included in the annotated source.
+    /// </param>
+    /// <param name="html">
+    ///     If <c>true</c>, formats annotated source as an HTML block element.
+    /// </param>
+    public string AnnotatedSource(int nContextLines = 1, bool html = false)
+    {
+        var lines = RelevantLines(nContextLines, html);
+        var lineNumWidth = lines
+            .Select(line => line.Number)
+            .Where(n => n.HasValue)
+            .Select(n => n!.Value)
+            .Max()
+            .ToString()
+            .Length;
+        var annotatedSource = string.Join(
+            "\n", lines.Select(
+                line => $@" {(
+                    line.Number is {} n
+                    ? n.ToString().PadLeft(lineNumWidth)
+                    : new string(' ', lineNumWidth)
+                )} | {line.Line}"
+            )
+        );
+        return html
+            ? $"<pre><code>{annotatedSource}</code></pre>"
+            : annotatedSource;
+    }
 }
 
-public class FancyErrorToTextEncoder : IResultEncoder
+/// <summary>
+///     Encodes fancy error diagnostics into plain text suitable for display
+///     at a command-line or other console.
+/// </summary>
+public record FancyErrorToTextEncoder(IConfigurationSource ConfigurationSource) : IResultEncoder
 {
+    /// <inheritdoc/>
     public string MimeType => MimeTypes.PlainText;
 
+    /// <inheritdoc/>
     public EncodedData? Encode(object displayable)
     {
         if (displayable is FancyError error)
         {
-            var lines = error.RelevantLines();
-            var lineNumWidth = lines
-                .Select(line => line.Number)
-                .Where(n => n.HasValue)
-                .Select(n => n.Value)
-                .Max()
-                .ToString()
-                .Length;
-            var annotedSource = string.Join(
-                "\n", lines.Select(
-                    line => $@" {(
-                        line.Number is {} n
-                        ? n.ToString().PadLeft(lineNumWidth)
-                        : new string(' ', lineNumWidth)
-                    )} | {line.Line}"
-                )
-            );
+            var annotedSource = error.AnnotatedSource(ConfigurationSource.NContextLines);
             var code = error.Diagnostic.Code is {} sumCode
-                ? sumCode.TryGetFirst(out var intCode)
-                  ? $" {intCode}"
-                  : $" {sumCode.Second}"
+                ? sumCode.Match(i => $" {i}", s => $" {s}")
                 : "";
             var hint = error.Hint is {} s
                 ? $"\nHint: {s}"
@@ -179,35 +219,23 @@ public class FancyErrorToTextEncoder : IResultEncoder
     }
 }
 
-public class FancyErrorToHtmlEncoder : IResultEncoder
+/// <summary>
+///     Encodes fancy error diagnostics into HTML suitable for inclusion in a
+///     notebook or other rich-text interface.
+/// </summary>
+public record FancyErrorToHtmlEncoder(IConfigurationSource ConfigurationSource) : IResultEncoder
 {
+    /// <inheritdoc/>
     public string MimeType => MimeTypes.Html;
 
+    /// <inheritdoc/>
     public EncodedData? Encode(object displayable)
     {
         if (displayable is FancyError error)
         {
-            var lines = error.RelevantLines(html: true);
-            var lineNumWidth = lines
-                .Select(line => line.Number)
-                .Where(n => n.HasValue)
-                .Select(n => n.Value)
-                .Max()
-                .ToString()
-                .Length;
-            var annotedSource = string.Join(
-                "\n", lines.Select(
-                    line => $@" {(
-                        line.Number is {} n
-                        ? n.ToString().PadLeft(lineNumWidth)
-                        : new string(' ', lineNumWidth)
-                    )} | {line.Line}"
-                )
-            );
+            var annotedSource = error.AnnotatedSource(ConfigurationSource.NContextLines, html: true);
             var code = error.Diagnostic.Code is {} sumCode
-                ? sumCode.TryGetFirst(out var intCode)
-                  ? $"{intCode}"
-                  : $"{sumCode.Second}"
+                ? sumCode.Match(i => $"{i}", s => $"{s}")
                 : "";
             var hint = error.Hint is {} s
                 ? $"\n<br><small><em>Hint</em>: {s}</small>"
@@ -215,7 +243,7 @@ public class FancyErrorToHtmlEncoder : IResultEncoder
             var moreInfo = error.TryGetDocumentationPage().Result is {} uri
                 ? $"\n<br><small>For more information, see the <a href=\"{uri}\">Azure Quantum documentation for {code}</a></small>."
                 : "";
-            return $"<strong>{error.Diagnostic.Severity}{(string.IsNullOrWhiteSpace(code) ? "" : " " + code)}</strong>: {error.Diagnostic.Message}\n<pre><code>{annotedSource}</code></pre>{hint}{moreInfo}".ToEncodedData();
+            return $"<strong>{error.Diagnostic.Severity}{(string.IsNullOrWhiteSpace(code) ? "" : " " + code)}</strong>: {error.Diagnostic.Message}\n{annotedSource}{hint}{moreInfo}".ToEncodedData();
         }
         else return null;
     }

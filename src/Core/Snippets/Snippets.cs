@@ -69,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
         /// </summary>
-        public AssemblyInfo AssemblyInfo { get; set; }
+        public AssemblyInfo? AssemblyInfo { get; set; }
 
         /// <summary>
         ///  The Workspace these Snippets depend on. Snippets may call operations

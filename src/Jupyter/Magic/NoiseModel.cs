@@ -98,7 +98,16 @@ public class NoiseModelMagic : AbstractMagic
         else if (command.Trim() == "--load")
         {
             var filename = parts[1];
-            NoiseModelSource.NoiseModel = JsonSerializer.Deserialize<NoiseModel>(File.ReadAllText(filename));
+            var noiseModel = JsonSerializer.Deserialize<NoiseModel>(File.ReadAllText(filename));
+            if (noiseModel is null)
+            {
+                channel.Stderr("Could not load noise model, JSON deserialization failed.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+            else
+            {
+                NoiseModelSource.NoiseModel = noiseModel;
+            }
         }
         else if (command.Trim() == "--get-by-name")
         {
@@ -127,7 +136,16 @@ public class NoiseModelMagic : AbstractMagic
         else if (input.Trim().StartsWith("{"))
         {
             // Parse the input as JSON.
-            NoiseModelSource.NoiseModel = JsonSerializer.Deserialize<NoiseModel>(input.Trim());
+            var noiseModel = JsonSerializer.Deserialize<NoiseModel>(input.Trim());
+            if (noiseModel is null)
+            {
+                channel.Stderr("Could not load noise model, JSON deserialization failed.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+            else
+            {
+                NoiseModelSource.NoiseModel = noiseModel;
+            }
         }
         else
         {

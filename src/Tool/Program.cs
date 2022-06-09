@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 using McMaster.Extensions.CommandLineUtils;
@@ -117,7 +117,7 @@ namespace Microsoft.Quantum.IQSharp
                         });
                     }
                 );
-                CommandOption userAgentOption = null;
+                CommandOption? userAgentOption = null;
 
                 AddWorkspaceOption(
                     app
@@ -130,6 +130,9 @@ namespace Microsoft.Quantum.IQSharp
                         );
                     })
                     .WithKernelArguments(() =>
+                        // We know that the closure above is called by the time
+                        // we get to this point, such that userAgentOption is
+                        // not null at this point.
                         userAgentOption!.HasValue()
                         ? new [] {"--user-agent-extra", userAgentOption!.Value()}
                         : Array.Empty<string>()
@@ -169,11 +172,16 @@ namespace Microsoft.Quantum.IQSharp
 
         public static IWebHost GetHttpServer(string[]? args)
         {
-           return WebHost.CreateDefaultBuilder(args)
+           var builder = WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
                 .UseUrls("http://localhost:8008")
-                .UseStartup<Startup>()
-                .UseConfiguration(Configuration)
-                .Build();
+                .UseStartup<Startup>();
+
+            if (Configuration is not null)
+            {
+                builder.UseConfiguration(Configuration);
+            }
+                
+            return builder.Build();
         }
 
         // Adds the Workspace settings to the "server" and "kernel" commands:

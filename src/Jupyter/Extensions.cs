@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
@@ -161,15 +162,22 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <param name="defaultValue">
         ///      The default value to be returned if no parameter with the
         ///      name <paramref name="parameterName"/> is present in the
-        ///      dictionary.
+        ///      dictionary. Cannot be <c>null</c>.
         /// </param>
-        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T defaultValue = default)
-        where T: notnull =>
+        public static T DecodeParameter<T>(this Dictionary<string, string> parameters, string parameterName, T? defaultValue = default)
+        where T: notnull
+        {
+            if (defaultValue == null)
+            {
+                throw new ArgumentNullException(nameof(defaultValue));
+            }
+
             // NB: We can assert that this is not null here, since the where
             //     clause ensures that T is not a nullable type, such that
             //     defaultValue cannot be null. This is not tracked by the
             //     return type of `object?`, such that we need to null-forgive.
-            (T)(parameters.DecodeParameter(parameterName, typeof(T), defaultValue)!);
+            return (T)(parameters.DecodeParameter(parameterName, typeof(T), defaultValue)!);
+        }
 
         /// <summary>
         ///      Retrieves and JSON-decodes the value for the given parameter name.
