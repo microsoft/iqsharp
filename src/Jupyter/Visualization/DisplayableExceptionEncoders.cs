@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Jupyter.Core;
@@ -18,11 +19,8 @@ using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp
 {
-    internal struct DisplayableException
+    internal record struct DisplayableException(Exception Exception, IEnumerable<StackFrame>? StackTrace)
     {
-        public Exception Exception;
-        public IEnumerable<StackFrame> StackTrace;
-
         public string Header =>
             $"Unhandled exception. {Exception.GetType().FullName}: {Exception.Message}";
     }
@@ -58,28 +56,31 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var rows = ex
                     .StackTrace
-                    .Select(frame => $@"
+                    ?.Select(frame => $@"
                         <tr>
                             <td>{frame.ToSourceLink()}</td>
                             <td>{frame.Callable.ToFriendlyName()}</td>
                         </tr>
                     ");
+                var stackTrace = rows is null ? $"<pre>{WebUtility.HtmlEncode(ex.Exception.StackTrace)}</pre>" : $@"
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Callable</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {String.Join("\n", rows)}
+                    </tbody>
+                ";
                 var table = $@"
                     <details>
                         <summary>
                             Unhandled exception of type {ex.Exception.GetType().FullName}: {ex.Exception.Message}
                         </summary>
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>Source</th>
-                                    <th>Callable</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {String.Join("\n", rows)}
-                            </tbody>
+                            {stackTrace}
                         </table>
                     </details>
                 ";
@@ -106,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
                 var builder = new StringBuilder();
                 builder.AppendLine(ex.Header);
                 var first = true;
-                foreach (var frame in ex.StackTrace)
+                foreach (var frame in ex.StackTrace ?? Enumerable.Empty<StackFrame>())
                 {
                     builder.AppendLine(
                         (first ? " ---> " : "   at ") +
