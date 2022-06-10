@@ -75,8 +75,11 @@ internal static class TestExtensions
     internal static UsingEngineAssert UsingEngine(this Assert _, IQSharpEngine engine) =>
         new UsingEngineAssert(engine);
 
-    internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert, Func<IServiceProvider, Task>? configure = null) =>
-        assert.UsingEngine(await IQSharpEngineTests.Init(configure: configure));
+    internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert) =>
+        assert.UsingEngine(await IQSharpEngineTests.Init("Workspace"));
+
+    internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert, Func<IServiceProvider, Task> configure) =>
+        assert.UsingEngine(await IQSharpEngineTests.Init("Workspace", configure: configure));
 
     internal static async Task<T> ExecutesWithStatus<T>(this Task<T> input, ExecuteStatus expected)
     where T: InputAssert =>

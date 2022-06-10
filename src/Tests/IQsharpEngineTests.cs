@@ -29,7 +29,18 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
-        public async static Task<IQSharpEngine> Init(string workspace = "Workspace", Func<IServiceProvider, Task>? configure = null)
+        public async static Task<IQSharpEngine> Init(string workspace = "Workspace", Action<IServiceProvider>? configure = null)
+        {
+            System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
+            var engine = Startup.Create<IQSharpEngine>(workspace, configure);
+            engine.Start();
+            await engine.Initialized;
+            Assert.IsNotNull(engine.Workspace);
+            await engine.Workspace!.Initialization;
+            return engine;
+        }
+
+        public async static Task<IQSharpEngine> Init(string workspace, Func<IServiceProvider, Task> configure)
         {
             System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
             var engine = await Startup.Create<IQSharpEngine>(workspace, configure);
@@ -470,6 +481,9 @@ namespace Tests.IQSharp
             var engine = await Init();
 
             var channel = new MockChannel();
+            await engine.Execute("%config errors.style = \"basic\"", channel, default);
+
+            channel = new MockChannel();
             var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
