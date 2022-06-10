@@ -57,9 +57,17 @@ namespace Tests.IQSharp
             return serviceProvider;
         }
 
-        internal static T Create<T>(string workspaceFolder)
+        internal static T Create<T>(string workspaceFolder, Action<IServiceProvider>? configure = null)
         {
             var serviceProvider = CreateServiceProvider(workspaceFolder);
+            configure?.Invoke(serviceProvider);
+            return ActivatorUtilities.CreateInstance<T>(serviceProvider);
+        }
+
+        internal async static Task<T> Create<T>(string workspaceFolder, Func<IServiceProvider, Task> configure)
+        {
+            var serviceProvider = CreateServiceProvider(workspaceFolder);
+            await configure.Invoke(serviceProvider);
             return ActivatorUtilities.CreateInstance<T>(serviceProvider);
         }
 
@@ -77,6 +85,12 @@ namespace Tests.IQSharp
         public static void AddTelemetry(this IServiceCollection services)
         {
             services.AddSingleton(typeof(ITelemetryService), TelemetryTests.TelemetryServiceType);
+        }
+
+        public static async Task<TOutput> Then<TInput, TOutput>(this Task<TInput> task, Func<TInput, Task<TOutput>> continuation)
+        {
+            var input = await task;
+            return await continuation(input);
         }
     }
 

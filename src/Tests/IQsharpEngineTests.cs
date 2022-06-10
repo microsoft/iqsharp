@@ -29,10 +29,10 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
-        public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
+        public async static Task<IQSharpEngine> Init(string workspace = "Workspace", Func<IServiceProvider, Task>? configure = null)
         {
             System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
-            var engine = Startup.Create<IQSharpEngine>(workspace);
+            var engine = await Startup.Create<IQSharpEngine>(workspace, configure);
             engine.Start();
             await engine.Initialized;
             Assert.IsNotNull(engine.Workspace);

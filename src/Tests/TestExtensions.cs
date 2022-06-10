@@ -97,8 +97,31 @@ namespace Tests.IQSharp
                 Engine = engine
             };
 
-        internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert) =>
-            assert.UsingEngine(await IQSharpEngineTests.Init());
+        internal static async Task<UsingEngineAssert> UsingEngine(this Assert assert, Func<IServiceProvider, Task>? configure = null) =>
+            assert.UsingEngine(await IQSharpEngineTests.Init(configure: configure));
+
+        internal static async Task<T> ExecutesWithStatus<T>(this Task<T> input, ExecuteStatus expected)
+        where T: InputAssert =>
+            await (await input).ExecutesWithStatus(expected);
+
+        internal static async Task<T> ExecutesWithStatus<T>(this T input, ExecuteStatus expected)
+        where T: InputAssert
+        {
+            var channel = new MockChannel();
+            var result = await input.Engine.Execute(input.Code, channel);
+            try
+            {
+                Assert.AreEqual(result.Status, expected);
+            }
+            catch (AssertFailedException ex)
+            {
+                var msg = $"Cell did not execute with status {expected}.\nOutput: \n{result.Output}\nStatus: {result.Status}\nException:\n{ex}\nCode:\n{input.Code}\n\nErrors:\n{string.Join("\n", channel.errors)}";
+                throw new AssertFailedException(msg, ex);
+            }
+
+            return input;
+        }
+
 
         internal static async Task<T> ExecutesSuccessfully<T>(this Task<T> input)
         where T: InputAssert =>

@@ -155,13 +155,15 @@ namespace Tests.IQSharp
         public List<string> errors = new List<string>();
         public List<string> msgs = new List<string>();
         public List<Message> iopubMessages = new List<Message>();
+        public ImmutableList<object> Displays { get; private set; } = ImmutableList<object>.Empty;
 
         private readonly ICommsRouter mockRouter = new MockCommsRouter(new MockShell());
         public ICommsRouter CommsRouter => mockRouter;
 
         public void Display(object displayable)
         {
-
+            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("[III] {0}", displayable);
+            Displays = Displays.Add(displayable);
         }
 
         public IUpdatableDisplay DisplayUpdatable(object displayable)

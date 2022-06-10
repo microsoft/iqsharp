@@ -1,22 +1,20 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Azure.Quantum.Jobs.Models;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace Tests.IQSharp
 {
@@ -29,6 +27,22 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Ok, result.Status);
             Assert.IsInstanceOfType(result.Output, typeof(T));
             return (T)result.Output;
+        }
+        private async Task<T> ExpectSuccess<T>(Func<IChannel, Task<ExecutionResult>> task)
+        {
+            var channel = new MockChannel();
+            try
+            {
+                var result = await task(channel);
+                Assert.AreEqual(ExecuteStatus.Ok, result.Status);
+                Assert.IsInstanceOfType(result.Output, typeof(T));
+                return (T)result.Output;
+            }
+            catch
+            {
+                Logger.LogMessage($"Task reported failure. Errors:\n{string.Join("\n", channel.errors)}");
+                throw;
+            }
         }
 
         private void ExpectError(AzureClientError expectedError, Task<ExecutionResult> task)
@@ -91,7 +105,7 @@ namespace Tests.IQSharp
         public void TestJobStatus()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // not connected
             ExpectError(AzureClientError.NotConnected, azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_1"));
@@ -141,7 +155,7 @@ namespace Tests.IQSharp
         public void TestManualTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // SetActiveTargetAsync with recognized target ID, but not yet connected
             ExpectError(AzureClientError.NotConnected, azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
@@ -160,9 +174,9 @@ namespace Tests.IQSharp
 
             // get connection status to verify list of targets
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
-            // Above, we added 3 valid quantum execution targets, each of which contributes two targets (simulator and mock),
-            // for a total of six targets.
-            Assert.That.Enumerable(targets).HasCount(6);
+            // Above, we added 3 valid quantum execution targets, each of which contributes three targets (simulator, mock, and mock-qir),
+            // for a total of nine targets.
+            Assert.That.Enumerable(targets).HasCount(9);
 
             // GetActiveTargetAsync, but no active target set yet
             ExpectError(AzureClientError.NoTarget, azureClient.GetActiveTargetAsync(new MockChannel()));
@@ -179,16 +193,62 @@ namespace Tests.IQSharp
             Assert.AreEqual("ionq.simulator", target.TargetId);
         }
 
+        [DataTestMethod]
+        [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
+        [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
+        [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
+        public async Task TestManualCapabilities(string targetId, string capabilityName, ExecuteStatus expectedResult) =>
+            await Assert.That
+                .UsingEngine(async services =>
+                {
+                    var client = services.GetRequiredService<IAzureClient>();
+                    await client.ConnectAsync(
+                        new MockChannel(),
+                        "TEST_SUBSCRIPTION_ID",
+                        "TEST_RESOURCE_GROUP_NAME",
+                        "TEST_WORKSPACE_NAME",
+                        "TEST_CONNECTION_STRING",
+                        "TEST_LOCATION",
+                        CredentialType.Environment);
+                    Assert.IsNotNull(client.ActiveWorkspace);
+                    ((MockAzureWorkspace)client.ActiveWorkspace)
+                        .AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
+                })
+                    .Input("%azure.connect " +
+                        "subscription=TEST_SUBSCRIPTION_ID " +
+                        "resourceGroup=TEST_RESOURCE_GROUP_NAME " +
+                        "workspace=TEST_WORKSPACE_NAME " +
+                        "location=TEST_LOCATION " +
+                        "credential=Environment"
+                    )
+                        .ExecutesSuccessfully()
+                    .Then(async input =>
+                    {
+                        // NB: This is not required, but provides some useful
+                        // diagnostics in output logs.
+                        var channel = new MockChannel();
+                        channel.Display((await input.Engine.Execute("%azure.target", channel, default)).Output);
+                        channel.Display((await input.Engine.Execute("%azure.target-capability", channel, default)).Output);
+                        return input;
+                    })
+                    .Input($"%azure.target {targetId}")
+                        .ExecutesSuccessfully()
+                    .Input($"%azure.target-capability {capabilityName}")
+                        .ExecutesWithStatus(expectedResult);
+
         [TestMethod]
         public void TestAllTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect to mock workspace with all providers
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
             // 2 targets per provider: mock and simulator.
-            Assert.AreEqual(2 * Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
+
+            // We subtract two due to microsoft not having a mock target. See:
+            // GitHub Issue: https://github.com/microsoft/iqsharp/issues/609
+            Assert.That.Enumerable(targets).HasCount(3 * Enum.GetNames(typeof(AzureProvider)).Length - 2);
 
             // set each target, which will load the corresponding package
             foreach (var target in targets)
@@ -202,7 +262,7 @@ namespace Tests.IQSharp
         public void TestJobSubmission()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
             var submissionContext = new AzureSubmissionContext();
 
             // not yet connected
@@ -242,7 +302,7 @@ namespace Tests.IQSharp
         public void TestJobExecution()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -273,7 +333,7 @@ namespace Tests.IQSharp
         public void TestJobExecutionWithArrayInput()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -301,10 +361,11 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestRuntimeCapabilities()
+        public async Task TestRuntimeCapabilities()
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
+            var packagesService = services.GetRequiredService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
@@ -327,7 +388,10 @@ namespace Tests.IQSharp
 
             // Verify that Quantinuum job can be successfully submitted (QPRGen1)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "quantinuum.mock"));
-            job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Logger.LogMessage(string.Join("\n", packagesService.Items.Select(item => $"{item.Id}::{item.Version}")));
+            job = await ExpectSuccess<CloudJob>(channel =>
+                azureClient.SubmitJobAsync(channel, submissionContext, CancellationToken.None)
+            );
             Assert.IsNotNull(job);
         }
 
@@ -335,7 +399,7 @@ namespace Tests.IQSharp
         public void TestLocations()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // Locations with whitespace should be converted correctly
             _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
@@ -354,7 +418,7 @@ namespace Tests.IQSharp
         public void TestConnectedEvent()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             ConnectToWorkspaceEventArgs? lastArgs = null;
 
