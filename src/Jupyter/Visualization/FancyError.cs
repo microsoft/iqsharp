@@ -108,6 +108,14 @@ public record FancyError(string Source, Diagnostic Diagnostic)
 
     private IEnumerable<(int? Number, string Line)> RelevantLines(int nContextLines = 1, bool html = false)
     {
+        // NB: Diagnostic.Range can be null, even though its nullability
+        //     metadata promises otherwise. If so, there's no relevant lines
+        //     we can quote here.
+        if (Diagnostic.Range is null)
+        {
+            yield break;
+        }
+
         var lines = Source.Split("\n");
         var startLine = System.Math.Max(Diagnostic.Range.Start.Line - nContextLines, 0);
         var stopLine = System.Math.Min(Diagnostic.Range.Start.Line + nContextLines + 1, lines.Count());
@@ -164,7 +172,12 @@ public record FancyError(string Source, Diagnostic Diagnostic)
     /// </param>
     public string AnnotatedSource(int nContextLines = 1, bool html = false)
     {
-        var lines = RelevantLines(nContextLines, html);
+        var lines = RelevantLines(nContextLines, html).ToList();
+        if (lines.Count == 0)
+        {
+            return "";
+        }
+
         var lineNumWidth = lines
             .Select(line => line.Number)
             .Where(n => n.HasValue)
