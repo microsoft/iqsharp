@@ -18,6 +18,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         private const string ParameterNameOperationName = "__operationName__";
         private const string ParameterNameOutputPath = "output";
 
+        /// <summary>
+        ///     Constructs the magic command from DI services.
+        /// </summary>
         public QirMagic(ISymbolResolver resolver, IEntryPointGenerator entryPointGenerator, ILogger<SimulateMagic> logger) : base(
             "qir",
             new Microsoft.Jupyter.Core.Documentation
@@ -54,7 +57,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         // TODO: EntryPointGenerator might should move out of the Azure Client
         //       project.
         // GitHub Issue: https://github.com/microsoft/iqsharp/issues/610
-        public IEntryPointGenerator EntryPointGenerator { get; }
+        private IEntryPointGenerator EntryPointGenerator { get; }
 
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel) =>
@@ -69,6 +72,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+            if (name == null) throw new InvalidOperationException($"No operation name provided.");
+
             var output = inputParameters.DecodeParameter<string>(ParameterNameOutputPath);
 
             IEntryPoint? entryPoint;

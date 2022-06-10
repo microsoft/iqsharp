@@ -35,7 +35,7 @@ internal static class TestExtensions
         if (ws.HasErrors)
         {
             var msg = "Expected workspace initialization to succeed, but got errors:\n";
-            Assert.Fail(msg + string.Join("\n", ws.ErrorMessages.Select(err => $"- {err}")));
+            Assert.Fail(msg + string.Join("\n", ws.ErrorMessages.OrEmpty().Select(err => $"- {err}")));
         }
         return assert;
     }
@@ -251,5 +251,8 @@ internal static class TestExtensions
 
     internal static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source) =>
         source.Where(e => e is not null).Select(e => e!);
+
+    internal static IEnumerable<T> OrEmpty<T>(this IEnumerable<T>? source) =>
+        source ?? System.Linq.Enumerable.Empty<T>();
 
 }

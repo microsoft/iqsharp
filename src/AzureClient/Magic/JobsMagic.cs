@@ -93,7 +93,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
             var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
             var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: CountDefaultValue);
-            return await AzureClient.GetJobListAsync(channel, filter, count, cancellationToken);
+            return await AzureClient.GetJobListAsync(channel, filter ?? "", count, cancellationToken);
         }
     }
 }

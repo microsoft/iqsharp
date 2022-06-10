@@ -42,6 +42,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
         /// <inheritdoc />
         public AzureExecutionTarget? ActiveTarget { get; private set; }
+        /// <inheritdoc />
         public TargetCapability TargetCapability { get; private set; } = TargetCapabilityModule.Top;
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
@@ -76,6 +77,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureFactory">A Factory class to create instance of Azure Quantum classes.</param>
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
+        /// <param name="workspace">The service for the active IQ# workspace.</param>
         public AzureClient(
             IExecutionEngine engine,
             IReferences references,

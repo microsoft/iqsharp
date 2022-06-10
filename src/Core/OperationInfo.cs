@@ -24,20 +24,20 @@ namespace Microsoft.Quantum.IQSharp
     /// </summary>
     public class OperationInfo
     {
-        private Lazy<Dictionary<string, string>> _params;
-        private Lazy<ParameterInfo[]> _roslynParams;
-        private Lazy<Type> _returnType;
+        private Lazy<Dictionary<string, string>?> _params;
+        private Lazy<ParameterInfo[]?> _roslynParams;
+        private Lazy<Type?> _returnType;
 
         internal OperationInfo(Type roslynType, CallableDeclarationHeader header)
         {
             this.Header = header ?? throw new ArgumentNullException(nameof(header));
             RoslynType = roslynType;
-            _roslynParams = new Lazy<ParameterInfo[]>(() => RoslynType?.GetMethod("Run").GetParameters().Skip(1).ToArray());
-            _returnType = new Lazy<Type>(() => RoslynType?.GetMethod("Run").ReturnType.GenericTypeArguments.Single());
-            _params = new Lazy<Dictionary<string, string>>(() => RoslynParameters?.ToDictionary(p => p.Name, p => p.ParameterType.Name));
+            _roslynParams = new Lazy<ParameterInfo[]?>(() => RoslynType?.GetMethod("Run").GetParameters().Skip(1).ToArray());
+            _returnType = new Lazy<Type?>(() => RoslynType?.GetMethod("Run").ReturnType.GenericTypeArguments.Single());
+            _params = new Lazy<Dictionary<string, string>?>(() => RoslynParameters?.ToDictionary(p => p.Name, p => p.ParameterType.Name));
         }
 
-        public string FullName => Header?.QualifiedName?.ToFullName().WithoutNamespace(Snippets.SNIPPETS_NAMESPACE);
+        public string? FullName => Header?.QualifiedName?.ToFullName().WithoutNamespace(Snippets.SNIPPETS_NAMESPACE);
 
         /// <summary>
         ///     The header containing all callable declaration metadata as
@@ -66,9 +66,9 @@ namespace Microsoft.Quantum.IQSharp
         /// The return type for the underlying compiled .NET Type for this Q# operation
         /// </summary>
         [JsonIgnore]
-        public Type ReturnType => _returnType.Value;
+        public Type? ReturnType => _returnType.Value;
 
-        public override string ToString() => FullName;
+        // public override string ToString() => FullName;
     }
 
     /// <summary>

@@ -436,14 +436,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
             }
 
-            void DisplayFancyDiagnostics(ISnippets snippets, IEnumerable<Diagnostic> diagnostics)
+            void DisplayFancyDiagnostics(ISnippets snippets, IEnumerable<Diagnostic>? diagnostics)
             {
                 var defaultPath = new Snippet().FileName;
                 var sources = snippets.Items.ToDictionary(
                     s => s.FileName,
                     s => s.Code
                 );
-                foreach (var m in diagnostics)
+                foreach (var m in diagnostics ?? Enumerable.Empty<Diagnostic>())
                 {
                     var source = m.Source is {} path
                         ? sources.TryGetValue(path, out var snippet)
@@ -481,7 +481,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
                     {
-                        foreach (var m in code.Warnings)
+                        foreach (var m in code.Warnings ?? Enumerable.Empty<string>())
                         {
                             channel.Stdout(m);
                         }

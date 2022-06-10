@@ -18,14 +18,14 @@ namespace Microsoft.Quantum.IQSharp.Common
     /// </summary>
     public class QSharpLogger : QsCompiler.Diagnostics.LogTracker
     {
-        public ILogger Logger { get; }
+        public ILogger? Logger { get; }
 
         public List<LSP.Diagnostic> Logs { get; }
 
         public List<QsCompiler.Diagnostics.ErrorCode> ErrorCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.ErrorCode>();
         public List<QsCompiler.Diagnostics.WarningCode> WarningCodesToIgnore { get; } = new List<QsCompiler.Diagnostics.WarningCode>();
 
-        public QSharpLogger(ILogger logger, int lineNrOffset = 0) :
+        public QSharpLogger(ILogger? logger, int lineNrOffset = 0) :
             base(lineNrOffset : lineNrOffset)
         {
             this.Logger = logger;
@@ -71,7 +71,7 @@ namespace Microsoft.Quantum.IQSharp.Common
                 .Where(m => m.Severity == LSP.DiagnosticSeverity.Warning)
                 .Select(Format);
 
-        public IEnumerable<string> ErrorIds =>
+        public IEnumerable<string?> ErrorIds =>
             Logs
                 .Where(m => m.Severity == VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error && m.Code?.Second != null)
                 .Select(m => m.Code?.Second);

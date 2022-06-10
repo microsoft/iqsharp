@@ -140,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = await Compiler.BuildSnippets(
                     snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
-                if (SnippetsAssemblyInfo == null || logger.HasErrors)
+                if (SnippetsAssemblyInfo is null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
                     throw new CompilationErrorsException(logger);
@@ -160,7 +160,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointAssemblyInfo = await Compiler.BuildEntryPoint(
                 operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, capability,
                 generateQir: generateQir);
-            if (EntryPointAssemblyInfo == null || logger.HasErrors)
+            if (EntryPointAssemblyInfo is null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
                 throw new CompilationErrorsException(logger);
@@ -206,7 +206,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 1 => parameterTypes.Single(),
                 _ => PartialMapper.TupleTypes[typeCount].MakeGenericType(parameterTypes)
             };
-            Type entryPointOutputType = entryPointOperationInfo.ReturnType;
+            var entryPointOutputType = entryPointOperationInfo.ReturnType;
 
             Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(new Type[] { entryPointInputType, entryPointOutputType });
             var entryPointInfo = entryPointInfoType.GetConstructor(new Type[] { typeof(Type) })

@@ -26,11 +26,11 @@ namespace Tests.IQSharp
 
             if (codeSnippets != null)
             {
-                var snippets = services.GetService<ISnippets>();
+                var snippets = services.GetRequiredService<ISnippets>();
                 snippets.Items = codeSnippets.Select(codeSnippet => new Snippet() { Code = codeSnippet });
             }
 
-            return services.GetService<IEntryPointGenerator>();
+            return services.GetRequiredService<IEntryPointGenerator>();
         }
 
         internal async Task CheckValidParameter(
