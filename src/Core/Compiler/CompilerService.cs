@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
@@ -338,7 +338,7 @@ namespace Microsoft.Quantum.IQSharp
                     : $"open {entry.Key} as {entry.Value};"
                 ));
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.code}\n}}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.Code}\n}}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 

@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Threading.Tasks;
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {

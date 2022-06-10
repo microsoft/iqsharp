@@ -172,11 +172,11 @@ namespace Microsoft.Quantum.IQSharp
 
                 // populate the original snippet with the results of the compilation:
                 Snippet populate(Snippet s) =>
-                    new Snippet()
+                    s with
                     {
-                        id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
-                        code = s.code,
-                        warnings = logger.Logs
+                        Id = string.IsNullOrWhiteSpace(s.Id) ? Guid.NewGuid().ToString() : s.Id,
+                        Code = s.Code,
+                        Warnings = logger.Logs
                             .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri))
                             .Select(logger.Format)
                             .ToArray(),
@@ -213,7 +213,7 @@ namespace Microsoft.Quantum.IQSharp
             var ops = Compiler.IdentifyElements(code, perfTask).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
-            return snippetsWithNoOverlap.Append(new Snippet { code = code });
+            return snippetsWithNoOverlap.Append(new Snippet { Code = code });
         }
 
         /// <summary>

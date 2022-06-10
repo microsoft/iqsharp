@@ -441,7 +441,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 var defaultPath = new Snippet().FileName;
                 var sources = snippets.Items.ToDictionary(
                     s => s.FileName,
-                    s => s.code
+                    s => s.Code
                 );
                 foreach (var m in diagnostics)
                 {
@@ -481,7 +481,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
                     if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
                     {
-                        foreach (var m in code.warnings)
+                        foreach (var m in code.Warnings)
                         {
                             channel.Stdout(m);
                         }

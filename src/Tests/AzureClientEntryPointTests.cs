@@ -27,7 +27,7 @@ namespace Tests.IQSharp
             if (codeSnippets != null)
             {
                 var snippets = services.GetService<ISnippets>();
-                snippets.Items = codeSnippets.Select(codeSnippet => new Snippet() { code = codeSnippet });
+                snippets.Items = codeSnippets.Select(codeSnippet => new Snippet() { Code = codeSnippet });
             }
 
             return services.GetService<IEntryPointGenerator>();

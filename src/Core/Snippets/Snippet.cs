@@ -23,17 +23,17 @@ namespace Microsoft.Quantum.IQSharp
         /// An id of the snippet. This gives users control on whether they are updating
         /// or creating a new Snippet.
         /// </summary>
-        public string? id { get; set; }
+        public string? Id { get; init; }
 
         /// <summary>
         /// The actual source code from the user.
         /// </summary>
-        public string? code { get; set; }
+        public string? Code { get; init; }
 
         /// <summary>
         /// Any compilation warnings trigger for this Snippet.
         /// </summary>
-        public string[]? warnings { get; set; }
+        public string[]? Warnings { get; init; }
 
         public IEnumerable<Diagnostic>? Diagnostics { get; init; }
 
@@ -43,7 +43,8 @@ namespace Microsoft.Quantum.IQSharp
         [JsonIgnore]
         public QsNamespaceElement[]? Elements { get; set; }
 
-        internal string? FileName => Path.GetFullPath(Path.Combine("/", $"snippet_{id}.qs"));
+        [JsonIgnore]
+        internal string? FileName => Path.GetFullPath(Path.Combine("/", $"snippet_{Id}.qs"));
 
         /// <summary>
         ///     The compiler needs an actual URI for each piece of Q# code
