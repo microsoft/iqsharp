@@ -68,14 +68,12 @@ public record FancyError(string Source, Diagnostic Diagnostic)
             return null;
         }
 
-        // const string xrefLookupBase = "https://xref.docs.microsoft.com/query?uid=microsoft.quantum.qscompiler-diagnostics.";
-        // var lookupUri = xrefLookupBase + (
-        //     Diagnostic.Code.Value.TryGetFirst(out var intCode)
-        //     ? intCode.ToString()
-        //     : Diagnostic.Code.Value.Second
-        // );
-        // Cheat...
-        var lookupUri = "https://xref.docs.microsoft.com/query?uid=System.String";
+        const string xrefLookupBase = "https://xref.docs.microsoft.com/query?uid=microsoft.quantum.qscompiler-diagnostics.";
+        var lookupUri = xrefLookupBase + (
+            Diagnostic.Code.Value.TryGetFirst(out var intCode)
+            ? intCode.ToString()
+            : Diagnostic.Code.Value.Second
+        );
         try
         {
             var client = new HttpClient();
