@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
 using System.Threading;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -435,37 +436,59 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
             }
 
+            void DisplayFancyDiagnostics(ISnippets snippets, IEnumerable<Diagnostic> diagnostics)
+            {
+                var defaultPath = new Snippet().FileName;
+                var sources = snippets.Items.ToDictionary(
+                    s => s.FileName,
+                    s => s.code
+                );
+                foreach (var m in diagnostics)
+                {
+                    var source = m.Source is {} path
+                        ? sources.TryGetValue(path, out var snippet)
+                            ? snippet
+                            : path == defaultPath
+                                ? input
+                                : null
+                        : null;
+                    channel.Display(new FancyError(source, m));
+                }
+            }
+
             return await Task.Run(async () =>
             {
+                // Since this method is only called once this.Initialized
+                // has completed, we know that Workspace
+                // and Snippets are both not-null.
+                Debug.Assert(
+                    this.Initialized.IsCompleted,
+                    "Engine was not initialized before call to ExecuteMundane. " +
+                    "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
+                );
+                perfTask.ReportStatus("Initialized engine.", "init-engine");
+
+                var workspace = this.Workspace!;
+                var snippets = this.Snippets!;
+                await workspace.Initialization;
                 try
                 {
-                    // Since this method is only called once this.Initialized
-                    // has completed, we know that Workspace
-                    // and Snippets are both not-null.
-                    Debug.Assert(
-                        this.Initialized.IsCompleted,
-                        "Engine was not initialized before call to ExecuteMundane. " +
-                        "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
-                    );
-                    perfTask.ReportStatus("Initialized engine.", "init-engine");
-
-                    var workspace = this.Workspace!;
-                    var snippets = this.Snippets!;
-                    await workspace.Initialization;
                     perfTask.ReportStatus("Initialized workspace.", "init-workspace");
                     var capability = services.GetRequiredService<IAzureClient>().TargetCapability;
 
                     var code = await snippets.Compile(input, capability, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
-                    
                     if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
                     {
-                        foreach (var m in code.warnings) { channel.Stdout(m); }
+                        foreach (var m in code.warnings)
+                        {
+                            channel.Stdout(m);
+                        }
                     }
                     else
                     {
-                        foreach (var m in code.Diagnostics) channel.Display(new FancyError(input, m));
+                        DisplayFancyDiagnostics(snippets, code.Diagnostics);
                     }
 
                     // Gets the names of all the operations found for this snippet
@@ -508,7 +531,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         }
                         else
                         {
-                            foreach (var m in c.Diagnostics) channel.Display(new FancyError(input, m));
+                           DisplayFancyDiagnostics(snippets, c.Diagnostics);
                         }
                     }
                     return ExecuteStatus.Error.ToExecutionResult();

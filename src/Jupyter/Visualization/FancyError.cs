@@ -15,7 +15,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter;
 ///     Represents a diagnostic together with the source that generated that
 ///     diagnostic.
 /// </summary>
-public record FancyError(string Source, Diagnostic Diagnostic)
+public record FancyError(string? Source, Diagnostic Diagnostic)
 {
     private string UnderlineColor => Diagnostic.Severity switch
     {
@@ -111,7 +111,7 @@ public record FancyError(string Source, Diagnostic Diagnostic)
         // NB: Diagnostic.Range can be null, even though its nullability
         //     metadata promises otherwise. If so, there's no relevant lines
         //     we can quote here.
-        if (Diagnostic.Range is null)
+        if (Diagnostic.Range is null || Source is null)
         {
             yield break;
         }

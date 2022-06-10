@@ -452,7 +452,7 @@ namespace Tests.IQSharp
 
             {
                 var channel = new MockChannel();
-                await engine.Execute("%config errors.style = \"basic\"", channel, default);
+                await engine.Execute("%config errors.style = \"Basic\"", channel, default);
                 channel = new MockChannel();
                 var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
                 PrintResult(response, channel);
