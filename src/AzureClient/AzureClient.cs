@@ -379,10 +379,36 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
+            
+            // QirSubmitter and CreateMachine have return types with different base types
+            // but both have a SubmitAsync method that returns an IQuantumMachineJob.
+            // Thus, we can branch on whether we need a QIR submitter or a translator,
+            // but can use the same task object to represent both return values.
+            Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
+            var generateCSharp = true;
+            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
+            {
+                jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
+                generateCSharp = false;
+            }
+            else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
+            {
+                jobTask = entryPoint => entryPoint.SubmitAsync(machine, submissionContext);
+            }
+            else
+            {
+                // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                return AzureClientError.InvalidTarget.ToExecutionResult();
+            }
+
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = await EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability);
+                entryPoint = await EntryPointGenerator.Generate(
+                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability,
+                    generateCSharp: generateCSharp
+                );
             }
             catch (TaskCanceledException tce)
             {
@@ -404,28 +430,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                // QirSubmitter and CreateMachine have return types with different base types
-                // but both have a SubmitAsync method that returns an IQuantumMachineJob.
-                // Thus, we can branch on whether we need a QIR submitter or a translator,
-                // but can use the same task object to represent both return values.
-                Task<IQuantumMachineJob>? jobTask = null;
-                if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
-                {
-                    jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
-                }
-                else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
-                {
-                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
-                }
-                else
-                {
-                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                    return AzureClientError.InvalidTarget.ToExecutionResult();
-                }
-
                 Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
-                var job = await jobTask;
+                var job = await jobTask(entryPoint);
                 channel?.Stdout($"Job successfully submitted.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
                 channel?.Stdout($"   Job ID: {job.Id}");

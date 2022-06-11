@@ -3,11 +3,13 @@
 
 #nullable enable
 
-using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Xml;
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime.Submitters;
+using Eval = Microsoft.Build.Evaluation;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient;
 
@@ -20,21 +22,34 @@ internal enum AzureProvider
     Honeywell,
     QCI,
     Microsoft,
+    Rigetti,
     Mock
 }
 
+/// <summary>
+///     An execution target for Q# jobs on Azure Quantum.
+/// </summary>
 public record AzureExecutionTarget
 {
+    /// <summary>
+    ///     Constructs an execution target from its target ID.
+    /// </summary>
     internal protected AzureExecutionTarget(string? targetId)
     {
         this.TargetId = targetId ?? string.Empty;
     }
 
+    /// <summary>
+    ///      A short string used to identify the target.
+    /// </summary>
     public string? TargetId { get; }
 
+    /// <summary>
+    ///     The name of the NuGet package required to compile against this
+    ///     target.
+    /// </summary>
     public virtual string PackageName => GetProvider(TargetId) switch
     {
-        
         AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
         AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
         AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
@@ -53,14 +68,23 @@ public record AzureExecutionTarget
         AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
         AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
         AzureProvider.Honeywell  => TargetCapabilityModule.BasicMeasurementFeedback,
-        AzureProvider.QCI        => TargetCapabilityModule.BasicMeasurementFeedback,
+        AzureProvider.QCI        => TargetCapabilityModule.AdaptiveExecution,
+        AzureProvider.Rigetti    => TargetCapabilityModule.BasicExecution,
         AzureProvider.Microsoft  => TargetCapabilityModule.FullComputation,
         _                        => TargetCapabilityModule.FullComputation,
     };
 
+    /// <summary>
+    ///     Returns <c>true</c> if this target supports a given capability
+    ///     level.
+    /// </summary>
     public bool SupportsCapability(TargetCapability capability) =>
         TargetCapabilityModule.Subsumes(this.MaximumCapability, capability);
 
+    /// <summary>
+    ///      Attempts to get a <see cref="IQirSubmitter"/> instance appropriate
+    ///      for use with this target.
+    /// </summary>
     public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
     {
         if (this.TargetId == null)
@@ -144,4 +168,5 @@ public record AzureExecutionTarget
 
         return null;
     }
+
 }

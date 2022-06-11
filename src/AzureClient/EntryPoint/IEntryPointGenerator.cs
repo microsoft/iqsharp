@@ -44,6 +44,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="generateQir">When <c>true</c>, uses QIR to generate the entry point.</param>
         /// <returns>The generated entry point.</returns>
         public Task<IEntryPoint> Generate(string operationName, string? executionTarget,
-            TargetCapability? capability = null, bool generateQir = false);
+            TargetCapability? capability = null, bool generateQir = false, bool generateCSharp = true);
     }
 }

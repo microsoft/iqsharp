@@ -28,7 +28,7 @@ namespace Microsoft.Quantum.IQSharp
         ///     The built assembly, or <c>null</c> if the compilation resulted in an error.
         /// </returns>
         Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            TargetCapability? capability = null, bool generateQir = false);
+            TargetCapability? capability = null, bool generateQir = false, bool generateCSharp = true);
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the code in the given Q# Snippets.

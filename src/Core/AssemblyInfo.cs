@@ -37,10 +37,10 @@ namespace Microsoft.Quantum.IQSharp
         ///     after this call will be that set by the <see cref="System.IO.Stream.CopyTo(Stream)"/>
         ///     method (generally, the end of the QIR bitcode stream).
         /// </remarks>
-        public AssemblyInfo(Assembly assembly, string? location, QsNamespace[]? syntaxTree, Stream? qirBitcode)
+        public AssemblyInfo(Assembly? assembly, string? location, QsNamespace[]? syntaxTree, Stream? qirBitcode)
         {
             Assembly = assembly;
-            Location = location ?? assembly.Location;
+            Location = location ?? assembly?.Location;
             SyntaxTree = syntaxTree;
             _operations = new Lazy<OperationInfo[]>(InitOperations);
 
@@ -58,12 +58,12 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The actual Assembly we're wrapping.
         /// </summary>
-        public Assembly Assembly { get; }
+        public Assembly? Assembly { get; }
 
         /// <summary>
         /// The path (location) in disk of this assembly.
         /// </summary>
-        public string Location { get; }
+        public string? Location { get; }
 
         /// <summary>
         /// For Q#-based assemblies, the corresponding SyntaxTree.
