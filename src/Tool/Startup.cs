@@ -8,6 +8,7 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using System;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Build.Locator;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -25,6 +26,7 @@ namespace Microsoft.Quantum.IQSharp
         // This method gets called by the runtime. Use this method to add services to the container.
         public virtual void ConfigureServices(IServiceCollection services)
         {
+            var vsi = MSBuildLocator.RegisterDefaults();
             services.Configure<Workspace.Settings>(Configuration);
             services.Configure<NugetPackages.Settings>(Configuration);
             services.Configure<References.Settings>(Configuration);
