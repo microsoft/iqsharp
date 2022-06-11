@@ -4,12 +4,9 @@
 #nullable enable
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Xml;
 using Microsoft.Azure.Quantum;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime.Submitters;
-using Eval = Microsoft.Build.Evaluation;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient;
 
