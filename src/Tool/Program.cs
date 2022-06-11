@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp
         public class LoggingOptions
         {
             public string? LogPath { get; set; }
+            public LogLevel? FileLogLevel { get; set; }
         }
 
         public static bool TelemetryOptOut
@@ -77,6 +78,7 @@ namespace Microsoft.Quantum.IQSharp
                             ["USER_AGENT_EXTRA"] = "UserAgentExtra",
                             ["HOSTING_ENV"] = "HostingEnvironment",
                             ["LOG_PATH"] = "LogPath",
+                            ["FILE_LOG_LEVEL"] = "FileLogLevel",
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
@@ -98,7 +100,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             loggingBuilder.AddFile(
                                 options.LogPath,
-                                minimumLevel: LogLevel.Debug
+                                minimumLevel: options.FileLogLevel ?? LogLevel.Debug
                             );
                         }
                     }
