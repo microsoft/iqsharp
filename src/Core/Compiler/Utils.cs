@@ -95,7 +95,9 @@ public partial class CompilerService
             return null;
         }
 
-        var loggers = new Build.Framework.ILogger[] { new MSBuildLogger(this) };
+        var binLogger = new Microsoft.Build.Logging.BinaryLogger();
+        binLogger.Parameters = "iqsharp.binlog";
+        var loggers = new Microsoft.Build.Framework.ILogger[] { new MSBuildLogger(this), binLogger };
         var properties = new Dictionary<string, string>();
 
         // restore project (requires reloading the project after for the restore to take effect)
