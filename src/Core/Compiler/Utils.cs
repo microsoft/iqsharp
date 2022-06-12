@@ -96,7 +96,9 @@ public partial class CompilerService
         }
 
         var binLogger = new Microsoft.Build.Logging.BinaryLogger();
-        binLogger.Parameters = "iqsharp.binlog";
+        var binLogPath =Path.GetFullPath("iqsharp.binlog");
+        binLogger.Parameters = binLogPath;
+        Logger?.LogDebug("Writing MSBuild binlog to {BinLogPath}.", binLogPath);
         var loggers = new Microsoft.Build.Framework.ILogger[] { new MSBuildLogger(this), binLogger };
         var properties = new Dictionary<string, string>();
 
