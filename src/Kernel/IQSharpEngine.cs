@@ -145,6 +145,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
+        private void RegisterDisplayEncoder<T>()
+        where T: IResultEncoder =>
+            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<T>(services));
+
+
         private async Task StartAsync()
         {
             base.Start();
@@ -202,11 +207,11 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
 
             logger.LogDebug("Registering IQ# display and JSON encoders.");
-            RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
-            RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
+            RegisterDisplayEncoder<IQSharpSymbolToHtmlResultEncoder>();
+            RegisterDisplayEncoder<IQSharpSymbolToTextResultEncoder>();
             RegisterDisplayEncoder(new TaskStatusToTextEncoder());
-            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
+            RegisterDisplayEncoder<StateVectorToHtmlResultEncoder>();
+            RegisterDisplayEncoder<StateVectorToTextResultEncoder>();
             RegisterDisplayEncoder(new DataTableToHtmlEncoder());
             RegisterDisplayEncoder(new DataTableToTextEncoder());
             RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());

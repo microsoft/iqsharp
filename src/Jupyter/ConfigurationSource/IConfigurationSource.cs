@@ -227,18 +227,28 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         public string WorkspaceName =>
             GetOptionOrDefault("azure.quantum.workspace.name", string.Empty);
 
-        /// <summary>
-        ///      If set to <c>true</c>, shows additional performance breakdowns
-        ///      from within the notebook.
-        /// </summary>
-        public bool InternalShowPerf =>
-            GetOptionOrDefault("internal.showPerf", false);
+        // We also want to support some internal-only options that are disabled
+        // in release builds, making it easier to diagnose some internals
+        // during local development. When in release mode, we'll disable setting
+        // these options and always use defaults.
 
-        /// <summary>
-        ///      If set to <c>true</c>, shows additional performance breakdowns
-        ///      forwarded from the Q# compiler.
-        /// </summary>
-        public bool InternalShowCompilerPerf =>
-            GetOptionOrDefault("internal.showCompilerPerf", false);
+        #if DEBUG
+            public TEnum GetInternalOptionOrDefault<TEnum>(string optionName, TEnum defaultValue) where TEnum : struct =>
+                GetOptionOrDefault("internal." + optionName, defaultValue, Enum.Parse<TEnum>);
+            public string GetInternalOptionOrDefault(string optionName, string defaultValue) =>
+                GetOptionOrDefault("internal." + optionName, defaultValue, e => e);
+            public bool GetInternalOptionOrDefault(string optionName, bool defaultValue) =>
+                GetOptionOrDefault("internal." + optionName, defaultValue, bool.Parse);
+        #else
+            public string GetInternalOptionOrDefault(string optionName, string defaultValue) =>
+                defaultValue;
+            public TEnum GetInternalOptionOrDefault<TEnum>(string optionName, TEnum defaultValue) where TEnum : struct =>
+                defaultValue;
+            public bool GetInternalOptionOrDefault(string optionName, bool defaultValue) =>
+                defaultValue;
+        #endif
+
+        public bool InternalHelpShowAllAttributes =>
+            GetInternalOptionOrDefault("help.showAllAttributes", false);
     }
 }

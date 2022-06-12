@@ -259,6 +259,7 @@ namespace Tests.IQSharp
             var logger = GetAppLogger(services);
 
             var snippets = services.GetService<ISnippets>();
+
             // Filter out device capabilities, since they may only be sent
             // well after we initialize the workspace.
             Func<EventProperties, bool> filter = 
@@ -376,6 +377,7 @@ namespace Tests.IQSharp
             var logger = GetAppLogger(services);
 
             var ws = services.GetService<IWorkspace>();
+
 
             // Filter out device capabilities, since they may only be sent
             // well after we initialize the workspace.

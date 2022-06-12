@@ -72,7 +72,16 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <summary>
         /// </summary>
         [JsonProperty("inputs", NullValueHandling=NullValueHandling.Ignore)]
-        public ImmutableDictionary<string?, string?>? Inputs { get; private set; } = null;
+        public ImmutableDictionary<string?, string?> Inputs { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty("examples", NullValueHandling=NullValueHandling.Ignore)]
+        public ImmutableList<string?> Examples { get; private set; }
+
+        
+        [JsonProperty("type_parameters", NullValueHandling=NullValueHandling.Ignore)]
+        public ImmutableDictionary<string?, string?> TypeParameters { get; private set; }
 
         // TODO: continue exposing documentation here.
 
@@ -94,12 +103,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 .Operation
                 .GetStringAttributes("Description")
                 .SingleOrDefault();
-            var inputs = this
+            this.Inputs = this
                 .Operation
-                .GetDictionaryAttributes("Input");
-            this.Inputs = inputs.Count >= 0
-                ? inputs.ToImmutableDictionary()
-                : null;
+                .GetDictionaryAttributes("Input")
+                .ToImmutableDictionary();
+            this.TypeParameters = this
+                .Operation
+                .GetDictionaryAttributes("TypeParameter")
+                .ToImmutableDictionary();
+            this.Examples = this
+                .Operation
+                .GetStringAttributes("Example")
+                .Where(ex => ex != null)
+                .ToImmutableList();
+            
         }
     }
 
