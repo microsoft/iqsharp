@@ -66,7 +66,7 @@ export function defineQSharpMode() {
         {
             // Azure magic commands
             token: "builtin",
-            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target))\b`,
+            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target|target\-capability))\b`,
             beginWord: true,
         },
         {
