@@ -3,15 +3,10 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.Azure.Quantum.Authentication;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -153,7 +148,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job result corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? token = default);
+        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string? jobId, CancellationToken? token = default);
 
         /// <summary>
         /// Gets the status of a specified job.
@@ -162,7 +157,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job status corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? token = default);
+        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string? jobId, CancellationToken? token = default);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.

@@ -16,12 +16,8 @@ namespace Tests.IQSharp
 {
     static class Startup
     {
-
         internal static ServiceProvider CreateServiceProvider(string workspaceFolder)
         {
-            // NB: MSBuildLocator must be used as early as possible, so we
-            //     run it as services are being configured.
-            var vsi = MSBuildLocator.RegisterDefaults();
 
             var dict = new Dictionary<string, string> { { "Workspace", Path.GetFullPath(workspaceFolder) } };
 
@@ -31,7 +27,7 @@ namespace Tests.IQSharp
                 .Build();
 
             var services = new ServiceCollection();
-            if (vsi is not null)
+            if (AssemblyInitialize.vsi is {} vsi)
             {
                 services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
                     Version: vsi.Version,
