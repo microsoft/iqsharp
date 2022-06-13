@@ -42,14 +42,14 @@ namespace Microsoft.Quantum.IQSharp
         ///     Settings for controlling how the compiler service creates
         ///     assemblies from snippets.
         /// </summary>
-        public class Settings
+        public record Settings
         {
             /// <summary>
             ///     A list of namespaces to be automatically opened in snippets,
             ///     separated by <c>,</c>. If <c>"$null"</c>, then no namespaces
             ///     are opened. Aliases can be provided by using <c>=</c>.
             /// </summary>
-            public string? AutoOpenNamespaces { get; set; }
+            public string? AutoOpenNamespaces { get; init; } = null;
 
 
             /// <summary>
@@ -59,7 +59,13 @@ namespace Microsoft.Quantum.IQSharp
             ///     when a kernel is started in the background, but can cause
             ///     more RAM to be used.
             /// </summary>
-            public bool CacheCompilerDependencies { get; set; } = false;
+            public bool CacheCompilerDependencies { get; init; } = false;
+
+            /// <summary>
+            ///      If set to a non-null and non-empty string, enables binlogs
+            ///      when building temporary projects.
+            /// </summary>
+            public string? MSBuildBinlogPath { get; init; } = null;
         }
 
         /// <summary>
@@ -76,6 +82,8 @@ namespace Microsoft.Quantum.IQSharp
 
         private readonly Task DependenciesInitialized;
         private readonly ILogger? Logger;
+        private readonly Settings settings;
+        private readonly IServiceProvider services;
 
         // Note to future IQ# developers: This service should start ★fast★.
         // Please be judicious when adding parameters to this constructor, and
@@ -89,8 +97,10 @@ namespace Microsoft.Quantum.IQSharp
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            this.settings = options?.Value ?? new();
             Logger = logger;
-            if (options?.Value?.AutoOpenNamespaces is string namespaces)
+            this.services = serviceProvider;
+            if (settings.AutoOpenNamespaces is string namespaces)
             {
                 logger?.LogInformation(
                     "Auto-open namespaces overridden by startup options: \"{0}\"",
@@ -109,7 +119,7 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
-            if (options?.Value.CacheCompilerDependencies ?? false)
+            if (settings.CacheCompilerDependencies)
             {
                 DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
                 Task.Run(async () =>

@@ -73,15 +73,21 @@ namespace Microsoft.Quantum.IQSharp
                         Prefix = "IQSHARP_",
                         Aliases = new Dictionary<string, string>
                         {
-                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
-                            ["USER_AGENT"] = "UserAgent",
-                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
-                            ["HOSTING_ENV"] = "HostingEnvironment",
-                            ["LOG_PATH"] = "LogPath",
-                            ["FILE_LOG_LEVEL"] = "FileLogLevel",
+                            // Package and project load settings
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
+
+                            // Telemetry and metadata settings
+                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
+                            ["HOSTING_ENV"] = "HostingEnvironment",
+                            ["USER_AGENT"] = "UserAgent",
+                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
+
+                            // Logging settings
+                            ["LOG_PATH"] = "LogPath",
+                            ["FILE_LOG_LEVEL"] = "FileLogLevel",
+                            ["BINLOG_PATH"] = "MSBuildBinlogPath",
                         }
                     })
                     .Build();
