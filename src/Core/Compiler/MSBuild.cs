@@ -21,6 +21,12 @@ namespace Microsoft.Quantum.IQSharp;
 
 public partial class CompilerService
 {
+    public record MSBuildMetadata(
+        Version Version,
+        string RootPath,
+        string Name,
+        string Path
+    );
 
     /// <summary>
     ///      Used to map <see cref="Microsoft.Build.Framework.ILogger" /> calls
@@ -175,6 +181,16 @@ public partial class CompilerService
     /// </remarks>
     internal IEnumerable<string> TargetPackageAssemblyPaths(string? targetId, string? targetCapability = null)
     {
+        // See if MSBuild was registered at startup and give some logging information either way.
+        if (services.GetService<MSBuildMetadata>() is {} msBuild)
+        {
+            Logger.LogInformation("Using MSBuild instance: {MSBuildInstance}", msBuild);
+        }
+        else
+        {
+            Logger.LogError("No MSBuild instance was found during kernel startup, building the temporary project for finding target packages is likely to fail.");
+        }
+
         var xmlDoc = new XmlDocument();
         var root = xmlDoc.CreateElement("Project");
         var version = ((AssemblyInformationalVersionAttribute)(typeof(QsCompiler.AssemblyLoader)
