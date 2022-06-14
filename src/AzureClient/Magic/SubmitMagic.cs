@@ -3,12 +3,8 @@
 
 #nullable enable
 
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {

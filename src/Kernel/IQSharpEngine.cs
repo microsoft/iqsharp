@@ -229,6 +229,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             RegisterDisplayEncoder<TargetCapabilityToHtmlEncoder>();
             RegisterDisplayEncoder<FancyErrorToTextEncoder>();
             RegisterDisplayEncoder<FancyErrorToHtmlEncoder>();
+            // Allow objects to display themselves using IDisplayable.
+            RegisterDisplayEncoder(new DisplayableEncoder(MimeTypes.Html));
+            RegisterDisplayEncoder(new DisplayableEncoder(MimeTypes.PlainText));
 
             // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
             // that expected the application/json MIME type for the JSON data.
@@ -503,25 +506,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
             }
 
-            void DisplayFancyDiagnostics(ISnippets snippets, IEnumerable<Diagnostic>? diagnostics)
-            {
-                var defaultPath = new Snippet().FileName;
-                var sources = snippets.Items.ToDictionary(
-                    s => s.FileName,
-                    s => s.Code
-                );
-                foreach (var m in diagnostics ?? Enumerable.Empty<Diagnostic>())
-                {
-                    var source = m.Source is {} path
-                        ? sources.TryGetValue(path, out var snippet)
-                            ? snippet
-                            : path == defaultPath
-                                ? input
-                                : null
-                        : null;
-                    channel.Display(new FancyError(source, m));
-                }
-            }
+
 
             return await Task.Run(async () =>
             {
@@ -555,7 +540,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     else
                     {
-                        DisplayFancyDiagnostics(snippets, code.Diagnostics);
+                        channel.DisplayFancyDiagnostics(code.Diagnostics, snippets, input);
                     }
 
                     // Gets the names of all the operations found for this snippet
@@ -598,7 +583,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                         }
                         else
                         {
-                           DisplayFancyDiagnostics(snippets, c.Diagnostics);
+                           channel.DisplayFancyDiagnostics(c.Diagnostics, snippets, input);
                         }
                     }
                     return ExecuteStatus.Error.ToExecutionResult();
