@@ -12,6 +12,7 @@ using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
 using System.Threading;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using System.IO;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -42,6 +43,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
+
+        /// <summary>
+        ///      Settings for the IQ# execution engine that are set only at launch.
+        /// </summary>
+        public record Settings
+        {
+            public string? SessionRecordPath { get; init; } = null;
+        }
+
+        private readonly Settings settings;
+
         private readonly IPerformanceMonitor performanceMonitor;
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
@@ -80,6 +92,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public IQSharpEngine(
             IShellServer shell,
             IOptions<KernelContext> context,
+            IOptions<Settings> settings,
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
@@ -109,6 +122,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.metadataController = metadataController;
             this.commsRouter = commsRouter;
             this.eventService = eventService;
+            this.settings = settings.Value ?? new();
 
             // Start comms routers as soon as possible, so that they can
             // be responsive during kernel startup.
@@ -376,6 +390,42 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
+        private record SessionLogRecord(string Input, ExecuteStatus Status, object Output)
+        {
+            public List<object>? Displays { get; init; } = new();
+            public List<string>? Stderrs { get; init; } = new();
+            public List<string>? Stdouts { get; init; } = new();
+        }
+        private record RecordingChannel(IChannel BaseChannel) : IChannel
+        {
+            public readonly List<object> Displays = new List<object>();
+            public readonly List<string> Stderrs = new List<string>();
+            public readonly List<string> Stdouts = new List<string>();
+
+            public void Display(object displayable)
+            {
+                Displays.Add(displayable);
+                BaseChannel.Display(displayable);
+            }
+
+            public void Stderr(string message)
+            {
+                Stderrs.Add(message);
+                BaseChannel.Stderr(message);
+            }
+
+            public void Stdout(string message)
+            {
+                Stdouts.Add(message);
+                BaseChannel.Stdout(message);
+            }
+
+            ICommsRouter? IChannel.CommsRouter => BaseChannel.CommsRouter;
+            IUpdatableDisplay IChannel.DisplayUpdatable(object displayable) =>
+                BaseChannel.DisplayUpdatable(displayable);
+            void IChannel.SendIoPubMessage(Microsoft.Jupyter.Core.Protocol.Message message) =>
+                BaseChannel.SendIoPubMessage(message);
+        }
         /// <inheritdoc />
         public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
         {
@@ -399,7 +449,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             try
             {
-                return await base.Execute(input, channel, token);
+                if (!string.IsNullOrEmpty(settings.SessionRecordPath))
+                {
+                    var recordingChannel = new RecordingChannel(channel);
+                    var result = await base.Execute(input, recordingChannel, token);
+                    var sessionRecord = new SessionLogRecord(input, result.Status, result.Output)
+                    {
+                        Displays = recordingChannel.Displays,
+                        Stderrs = recordingChannel.Stderrs,
+                        Stdouts = recordingChannel.Stdouts
+                    };
+                    using var stream = File.AppendText(settings.SessionRecordPath.Trim());
+                    stream.Write(JsonConvert.SerializeObject(sessionRecord, JsonConverters.AllConverters) + System.Environment.NewLine);
+                    return result;
+                }
+                else
+                {
+                    return await base.Execute(input, channel, token);
+                }
             }
             finally
             {

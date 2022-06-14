@@ -18,6 +18,15 @@ namespace Microsoft.Quantum.IQSharp
     public class Startup
     {
         private readonly IConfiguration Configuration;
+
+        // We need to make sure that MSBuild is located exactly once; either
+        // failing to call `.RegisterDefaults` or calling it twice will cause
+        // an exception.
+        private static readonly Lazy<VisualStudioInstance?> visualStudioInstance = new(() =>
+            MSBuildLocator.RegisterDefaults()
+        );
+        public static VisualStudioInstance? VisualStudioInstance => visualStudioInstance.Value;
+
         public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
@@ -28,8 +37,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             // NB: MSBuildLocator must be used as early as possible, so we
             //     run it as services are being configured.
-            var vsi = MSBuildLocator.RegisterDefaults();
-            if (vsi is not null)
+            if (VisualStudioInstance is {} vsi)
             {
                 services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
                     Version: vsi.Version,
@@ -43,6 +51,7 @@ namespace Microsoft.Quantum.IQSharp
             services.Configure<NugetPackages.Settings>(Configuration);
             services.Configure<References.Settings>(Configuration);
             services.Configure<CompilerService.Settings>(Configuration);
+            services.Configure<IQSharpEngine.Settings>(Configuration);
             services.Configure<ClientInformation>(Configuration);
 
             services.AddSingleton(typeof(ITelemetryService), GetTelemetryServiceType());

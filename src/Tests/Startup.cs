@@ -18,7 +18,6 @@ namespace Tests.IQSharp
     {
         internal static ServiceProvider CreateServiceProvider(string workspaceFolder)
         {
-
             var dict = new Dictionary<string, string> { { "Workspace", Path.GetFullPath(workspaceFolder) } };
 
             var config = new ConfigurationBuilder()
@@ -27,7 +26,7 @@ namespace Tests.IQSharp
                 .Build();
 
             var services = new ServiceCollection();
-            if (AssemblyInitialize.vsi is {} vsi)
+            if (Microsoft.Quantum.IQSharp.Startup.VisualStudioInstance is {} vsi)
             {
                 services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
                     Version: vsi.Version,

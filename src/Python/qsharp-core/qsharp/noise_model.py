@@ -323,6 +323,10 @@ class NoiseModel:
                     </tr>
                     {gates}
                     {cont_gates}
+                    <tr>
+                        <td>$Z$-measurement</td>
+                        <td>{try_repr(self.z_meas)}</td>
+                    </tr>
                 </tbody>
             </table>
         """
