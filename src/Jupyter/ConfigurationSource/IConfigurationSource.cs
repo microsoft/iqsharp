@@ -204,6 +204,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
         /// <summary>
+        ///      Specifies whether hints are shown for kernel error messages.
+        /// </summary>
+        public bool ShowHintsOnErrors =>
+            GetOptionOrDefault("errors.showHints", true);
+
+        /// <summary>
         ///      Specifies the format used for reporting Q# compilation errors.
         /// </summary>
         public CompilationErrorStyle CompilationErrorStyle =>
