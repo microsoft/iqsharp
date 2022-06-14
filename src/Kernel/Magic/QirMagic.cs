@@ -23,7 +23,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         ///     Constructs the magic command from DI services.
         /// </summary>
-        public QirMagic(ISymbolResolver resolver, IEntryPointGenerator entryPointGenerator, ILogger<SimulateMagic> logger, IAzureClient azureClient) : base(
+        public QirMagic(
+            ISymbolResolver resolver,
+            IEntryPointGenerator entryPointGenerator,
+            ILogger<SimulateMagic> logger,
+            IAzureClient azureClient,
+            ISymbolResolver symbolResolver,
+            IConfigurationSource configurationSource
+        ) : base(
             "qir",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -53,9 +60,13 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.EntryPointGenerator = entryPointGenerator;
             this.Logger = logger;
             this.AzureClient = azureClient;
+            this.SymbolResolver = symbolResolver;
+            this.ConfigurationSource = configurationSource;
         }
 
-        private IAzureClient AzureClient { get;}
+        private IAzureClient AzureClient { get; }
+        private IConfigurationSource ConfigurationSource { get; }
+        private ISymbolResolver SymbolResolver { get; }
 
         private ILogger? Logger { get; }
 
@@ -113,10 +124,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             if (name == null) throw new InvalidOperationException($"No operation name provided.");
+            var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
+            if (symbol == null)
+            {
+                new CommonMessages.NoSuchOperation(name).Report(channel, ConfigurationSource);
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
 
             var output = inputParameters.DecodeParameter<string>(ParameterNameOutputPath);
 
-            IEntryPoint? entryPoint;
+            IEntryPoint entryPoint;
             try
             {
                 var capability = this.AzureClient.TargetCapability;
@@ -144,7 +161,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     .ToExecutionResult(ExecuteStatus.Error);
             }
 
-            if (entryPoint.QirStream == null)
+            if (entryPoint.QirStream is null)
             {
                 return "Internal error: generated entry point does not contain a QIR bitcode stream, but no compilation errors were returned."
                     .ToExecutionResult(ExecuteStatus.Error);
