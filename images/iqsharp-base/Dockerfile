@@ -4,8 +4,9 @@ FROM python:3.7-slim-buster
 # install the notebook package
 # force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
 #       jinja2==3.0.3 due to incompatibility with nbconvert
+#       nbclient==0.6.3 and ipython=7.33.0 to avoid race conditions (see #520)
 RUN pip install --no-cache --upgrade pip && \
-    pip install --no-cache notebook pyzmq==19.0.2 jinja2==3.0.3
+    pip install --no-cache notebook pyzmq==19.0.2 jinja2==3.0.3 nbclient==0.6.3 ipython==7.33.0
 
 # Install APT prerequisites.
 RUN apt-get update && \
