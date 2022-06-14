@@ -67,8 +67,6 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         [JsonIgnore]
         public Type? ReturnType => _returnType.Value;
-
-        // public override string ToString() => FullName;
     }
 
     /// <summary>

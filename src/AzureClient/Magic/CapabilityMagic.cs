@@ -44,7 +44,29 @@ public class CapabilityMagic : AzureClientMagicBase
                 ".Dedent(),
                 Examples = new string[]
                 {
-                    // TODO
+                    @"
+                        Sets the current target capability to full computation
+                        (no restrictions), if allowed by the current execution
+                        target.
+                        ```
+                        In []: %azure.target-capability FullComputation
+                        ```
+                    ".Dedent(),
+                    @"
+                        Displays the current target capability level.
+                        ```
+                        In []: %azure.target-capability
+                        ```
+                    ".Dedent(),
+                    @"
+                        Resets the current target capability level to either
+                        the maximum supported by the current execution target,
+                        or to full computation if no execution target is
+                        currently set.
+                        ```
+                        In []: %azure.target-capability --clear
+                        ```
+                    ".Dedent()
                 },
             },
             logger)
@@ -60,8 +82,7 @@ public class CapabilityMagic : AzureClientMagicBase
         {
             if (inputParameters.DecodeParameter<string>(ParameterNameTargetCapability) is {} capabilityName)
             {
-                // TODO: Handle "--clear" here.
-                if (AzureClient.TrySetTargetCapability(channel, capabilityName, out var capability))
+                if (AzureClient.TrySetTargetCapability(channel, capabilityName.Trim() == "--clear" ? null : capabilityName, out var capability))
                 {
                     return Task.FromResult(capability.ToExecutionResult());
                 }

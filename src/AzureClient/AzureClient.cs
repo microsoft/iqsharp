@@ -805,11 +805,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             TargetCapability = TargetCapabilityModule.Top;
         }
 
-        // TODO: Wrap command in new Python function.
         /// <inheritdoc />
-        public bool TrySetTargetCapability(IChannel? channel, string capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
+        public bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
         {
-            var capability = TargetCapabilityModule.FromName(capabilityName);
+            var capability = capabilityName is null
+                ? ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top
+                : TargetCapabilityModule.FromName(capabilityName);
             if (!FSharpOption<TargetCapability>.get_IsSome(capability))
             {
                 channel?.Stderr($"Could not parse target capability name \"{capabilityName}\".");

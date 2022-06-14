@@ -206,6 +206,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         ///     Attempts to set the current target capability given the name
         ///     of the given capability.
         /// </summary>
-        bool TrySetTargetCapability(IChannel? channel, string capabilityName, [NotNullWhen(true)] out TargetCapability? capability);
+        bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? capability);
     }
 }

@@ -75,10 +75,10 @@ public class QirMagic : AbstractMagic
             Examples = new []
             {
                 @"
-                    Compiles a Q# program to QIR starting at the entry point defined as `operation MyOperation() : Result` and saves the result at MyProgram.ll:
+                    Compiles a Q# program to QIR starting at the entry point defined as
+                    `operation RunMain() : Result` and display the resulting LLVM IR:
                     ```
-                    In []: %qir MyEntryPoint output=MyProgram.ll
-                    Out[]: <There is no output printed to the notebook>
+                    In []: %qir RunMain
                     ```
                 ".Dedent()
             }

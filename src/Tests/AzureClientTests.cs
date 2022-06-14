@@ -194,6 +194,7 @@ namespace Tests.IQSharp
         }
 
         [DataTestMethod]
+        [DataRow("--clear", "--clear", ExecuteStatus.Ok)]
         [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
         [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
         [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]

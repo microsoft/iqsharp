@@ -56,15 +56,21 @@ public class TargetMagic : AzureClientMagicBase
 
                     When setting a target, the target capability is set to
                     the maximum capability level supported by the given
-                    target. You can restrict target capability levels
+                    target, such that all capabilities allowed by the target
+                    are allowed in subsequent Q# compilation functions and
+                    operations.
+
+                    You can restrict target capability levels
                     further by using
                     `{controller.CommandDisplayName("target-capability")}`.
+                    This may be useful, for instance, when comparing
+                    functionality between different targets.
                 ".Dedent(),
                 Examples = new[]
                 {
                     
                     @"
-                        Set the current target for Q# job submission to `provider.qpu`:
+                        Sets the current target for Q# job submission to `provider.qpu`:
                         ```
                         In []: %azure.target provider.qpu
                         Out[]: Loading package Microsoft.Quantum.Providers.Provider and dependencies...
@@ -79,7 +85,7 @@ public class TargetMagic : AzureClientMagicBase
                         ```
                     ".Dedent(),
                     @"
-                        Display the current target and all available targets in the current Azure Quantum workspace:
+                        Displays the current target and all available targets in the current Azure Quantum workspace:
                         ```
                         In []: %azure.target
                         Out[]: Current execution target: provider.qpu

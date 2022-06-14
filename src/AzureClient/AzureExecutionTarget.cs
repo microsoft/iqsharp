@@ -84,11 +84,12 @@ public record AzureExecutionTarget
     /// </summary>
     public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
     {
-        if (this.TargetId == null)
+        if (this.TargetId == null || this.TargetId.EndsWith(".mock"))
         {
             submitter = null;
             return false;
         }
+
         if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.MaximumCapability.Name) is IQirSubmitter qirSubmitter)
         {
             submitter = qirSubmitter;
