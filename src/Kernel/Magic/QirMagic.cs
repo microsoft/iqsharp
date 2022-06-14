@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.IO;
+using LlvmBindings;
+using LlvmBindings.Interop;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
@@ -21,7 +23,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <summary>
         ///     Constructs the magic command from DI services.
         /// </summary>
-        public QirMagic(ISymbolResolver resolver, IEntryPointGenerator entryPointGenerator, ILogger<SimulateMagic> logger) : base(
+        public QirMagic(ISymbolResolver resolver, IEntryPointGenerator entryPointGenerator, ILogger<SimulateMagic> logger, IAzureClient azureClient) : base(
             "qir",
             new Microsoft.Jupyter.Core.Documentation
             {
@@ -50,7 +52,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         {
             this.EntryPointGenerator = entryPointGenerator;
             this.Logger = logger;
+            this.AzureClient = azureClient;
         }
+
+        private IAzureClient AzureClient { get;}
 
         private ILogger? Logger { get; }
 
@@ -62,6 +67,41 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         /// <inheritdoc />
         public override ExecutionResult Run(string input, IChannel channel) =>
             RunAsync(input, channel).Result;
+
+        private static unsafe bool TryParseBitcode(string path, out LLVMModuleRef outModule, out string outMessage)
+        {
+            LLVMMemoryBufferRef handle;
+            sbyte* msg;
+            if (LLVM.CreateMemoryBufferWithContentsOfFile(path.AsMarshaledString(), (LLVMOpaqueMemoryBuffer**)&handle, &msg) != 0)
+            {
+                var span = new ReadOnlySpan<byte>(msg, int.MaxValue);
+                var errTxt = span.Slice(0, span.IndexOf((byte)'\0')).AsString();
+                LLVM.DisposeMessage(msg);
+                throw new InternalCodeGeneratorException(errTxt);
+            }
+
+            fixed (LLVMModuleRef* pOutModule = &outModule)
+            {
+                sbyte* pMessage = null;
+                var result = LLVM.ParseBitcodeInContext(
+                    LLVM.ContextCreate(),
+                    handle,
+                    (LLVMOpaqueModule**)pOutModule,
+                    &pMessage);
+
+                if (pMessage == null)
+                {
+                    outMessage = string.Empty;
+                }
+                else
+                {
+                    var span = new ReadOnlySpan<byte>(pMessage, int.MaxValue);
+                    outMessage = span.Slice(0, span.IndexOf((byte)'\0')).AsString();
+                }
+
+                return result == 0;
+            }
+        }
 
         /// <summary>
         ///     Simulates an operation given a string with its name and a JSON
@@ -79,7 +119,9 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = await EntryPointGenerator.Generate(name, null, TargetCapabilityModule.FullComputation, generateQir: true);
+                var capability = this.AzureClient.TargetCapability;
+                var target = this.AzureClient.ActiveTarget?.TargetId;
+                entryPoint = await EntryPointGenerator.Generate(name, target, capability, generateQir: true);
             }
             catch (TaskCanceledException tce)
             {
@@ -107,11 +149,29 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     .ToExecutionResult(ExecuteStatus.Error);
             }
 
-            using (var outStream = File.OpenWrite(output))
+            var bitcodeFile = Path.ChangeExtension(output ?? Path.GetRandomFileName(), ".bc");
+            using (var outStream = File.OpenWrite(bitcodeFile))
             {
                 entryPoint.QirStream.CopyTo(outStream);
             }
 
+            // TODO: what if this fails?
+            var loaded = TryParseBitcode(bitcodeFile, out var moduleRef, out var parseErr);
+            if (string.IsNullOrWhiteSpace(output) || output.Trim().EndsWith(".ll"))
+            {
+                File.Delete(bitcodeFile);
+            }
+
+            var llFile = Path.ChangeExtension(bitcodeFile, ".ll");
+            moduleRef.TryPrintToFile(llFile, out var writeErr);
+            var llvmIR = File.ReadAllText(llFile);
+
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                File.Delete(llFile);
+            }
+
+            channel?.Stdout(llvmIR);
             return ExecuteStatus.Ok.ToExecutionResult();
         }
     }
