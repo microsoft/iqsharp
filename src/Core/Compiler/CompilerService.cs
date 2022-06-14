@@ -321,7 +321,7 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public async Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            TargetCapability? capability = null, bool generateQir = false, bool generateCSharp = true)
+            TargetCapability? capability = null, bool generateQir = false)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
@@ -338,7 +338,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, capability, regenerateAll: true, generateQir: generateQir, generateCSharp: generateCSharp);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, capability, regenerateAll: true, generateQir: generateQir);
         }
 
         /// <summary>
@@ -399,8 +399,7 @@ namespace Microsoft.Quantum.IQSharp
         private async Task<AssemblyInfo?> BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
             string dllName, bool compileAsExecutable, string? executionTarget,
             TargetCapability? capability = null, bool regenerateAll = false, ITaskReporter? parent = null,
-            bool generateQir = false,
-            bool generateCSharp = true)
+            bool generateQir = false)
         {
             using var perfTask = parent?.BeginSubtask("Building assembly.", "build-assembly");
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
@@ -468,12 +467,6 @@ namespace Microsoft.Quantum.IQSharp
                     // any valid entry points.
                     logger.LogError("IQS006", "QIR generation was enabled, but no entry points were defined.");
                     return null;
-                }
-
-                // TODO before merging! Undo introducing generateCSharp param.
-                if (false && !generateCSharp)
-                {
-                    return new AssemblyInfo(null, dllName, fromSources.ToArray(), qirStream);
                 }
 
                 // In the meanwhile...
