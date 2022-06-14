@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 
 using Azure.Core;
@@ -385,11 +386,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Thus, we can branch on whether we need a QIR submitter or a translator,
             // but can use the same task object to represent both return values.
             Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
-            var generateCSharp = true;
             if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
             {
                 jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
-                generateCSharp = false;
             }
             else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
             {
@@ -406,8 +405,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             try
             {
                 entryPoint = await EntryPointGenerator.Generate(
-                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability,
-                    generateCSharp: generateCSharp
+                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability
                 );
             }
             catch (TaskCanceledException tce)
@@ -627,7 +625,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                return await CreateOutput(job, channel);
+                return await CreateOutput(job, channel, cancellationToken ?? default);
             }
             catch (Exception e)
             {
@@ -637,12 +635,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel)
+        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
-            // TODO @cgranade: Update to use HttpClient instead to get
-            //                 cancellation token support.
-            var request = WebRequest.Create(job.OutputDataUri);
-            using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
+            var client = new HttpClient();
+            var request = await client.GetAsync(job.OutputDataUri, cancellationToken);
+            using var responseStream = await request.Content.ReadAsStreamAsync();
             if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
             {
                 var (messages, result) = ParseSimulatorOutput(responseStream);
