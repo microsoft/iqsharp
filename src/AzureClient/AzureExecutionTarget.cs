@@ -12,13 +12,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient;
 
 internal enum AzureProvider
 {
+    Microsoft,
     IonQ,
     Quantinuum,
     // NB: This provider name is deprecated, but may exist in older
     //     workspaces and should still be supported.
     Honeywell,
     QCI,
-    Microsoft,
     Rigetti,
     Mock
 }
