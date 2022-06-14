@@ -138,6 +138,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 var capability = this.AzureClient.TargetCapability;
                 var target = this.AzureClient.ActiveTarget?.TargetId;
+                // TODO: make sure we end up with a nice error if the operation with that name is not found.
                 entryPoint = await EntryPointGenerator.Generate(name, target, capability, generateQir: true);
             }
             catch (TaskCanceledException tce)

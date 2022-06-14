@@ -452,8 +452,8 @@ namespace Microsoft.Quantum.IQSharp
                     transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
                     var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
                     transformed = capability != null // TODO: this is very ad-hoc. Revise once we have aligned output processing better
-                        ? AddOutputRecording.Apply(qsCompilation, useRuntimeAPI: true, alwaysCreateWrapper: true)
-                        : qsCompilation;
+                        ? AddOutputRecording.Apply(transformed, useRuntimeAPI: true, alwaysCreateWrapper: true)
+                        : transformed;
                     using var generator = new Generator(transformed, capability);
                     generator.Apply();
                     // Write generated QIR to disk.
