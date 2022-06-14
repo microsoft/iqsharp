@@ -582,7 +582,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string? jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -686,7 +686,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobStatusAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel? channel, string? jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {

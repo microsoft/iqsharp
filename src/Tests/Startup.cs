@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,6 +18,7 @@ namespace Tests.IQSharp
     {
         internal static ServiceProvider CreateServiceProvider(string workspaceFolder)
         {
+
             var dict = new Dictionary<string, string> { { "Workspace", Path.GetFullPath(workspaceFolder) } };
 
             var config = new ConfigurationBuilder()
@@ -27,6 +27,15 @@ namespace Tests.IQSharp
                 .Build();
 
             var services = new ServiceCollection();
+            if (AssemblyInitialize.vsi is {} vsi)
+            {
+                services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
+                    Version: vsi.Version,
+                    RootPath: vsi.VisualStudioRootPath,
+                    Name: vsi.Name,
+                    Path: vsi.MSBuildPath
+                ));
+            }
 
             services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
             services.AddSingleton<IConfiguration>(config);

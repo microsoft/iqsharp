@@ -66,12 +66,14 @@ namespace Tests.IQSharp
                 if (CurrentScope != null)
                 {
                     LogMessage(
+                        "{0}",
                         $"[{CurrentScope} | {eventId}: {logLevel} // {CategoryName}] {formatter(state, exception)}"
                     );
                 }
                 else
                 {
                     LogMessage(
+                        "{0}",
                         $"[{eventId}: {logLevel} // {CategoryName}] {formatter(state, exception)}"
                     );
                 }

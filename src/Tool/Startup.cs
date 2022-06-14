@@ -26,7 +26,19 @@ namespace Microsoft.Quantum.IQSharp
         // This method gets called by the runtime. Use this method to add services to the container.
         public virtual void ConfigureServices(IServiceCollection services)
         {
+            // NB: MSBuildLocator must be used as early as possible, so we
+            //     run it as services are being configured.
             var vsi = MSBuildLocator.RegisterDefaults();
+            if (vsi is not null)
+            {
+                services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
+                    Version: vsi.Version,
+                    RootPath: vsi.VisualStudioRootPath,
+                    Name: vsi.Name,
+                    Path: vsi.MSBuildPath
+                ));
+            }
+
             services.Configure<Workspace.Settings>(Configuration);
             services.Configure<NugetPackages.Settings>(Configuration);
             services.Configure<References.Settings>(Configuration);
