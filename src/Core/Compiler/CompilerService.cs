@@ -451,7 +451,7 @@ namespace Microsoft.Quantum.IQSharp
                     transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
                     transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
                     var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
-                    transformed = capability != null // TODO: this is very ad-hoc. Revise once we have aligned output processing better
+                    transformed = capability is not null && capability.ClassicalCompute != ClassicalComputeModule.Full // todo: should be removed once the Azure simulator works like other QIR backends
                         ? AddOutputRecording.Apply(transformed, useRuntimeAPI: true, alwaysCreateWrapper: true)
                         : transformed;
                     using var generator = new Generator(transformed, capability);

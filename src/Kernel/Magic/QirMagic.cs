@@ -157,6 +157,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             }
 
             // TODO: what if this fails?
+            // FIXME: if a user specifies the output file, and runs the command more the once with the same output file
+            // then the second time fails due to the file being locked. I think we should just remove the option to specify an outfile. 
             var loaded = TryParseBitcode(bitcodeFile, out var moduleRef, out var parseErr);
             if (string.IsNullOrWhiteSpace(output) || output.Trim().EndsWith(".ll"))
             {
