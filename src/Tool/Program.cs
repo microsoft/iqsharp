@@ -88,6 +88,7 @@ namespace Microsoft.Quantum.IQSharp
                             ["LOG_PATH"] = "LogPath",
                             ["FILE_LOG_LEVEL"] = "FileLogLevel",
                             ["BINLOG_PATH"] = "MSBuildBinlogPath",
+                            ["SESSION_RECORD_PATH"] = "SessionRecordPath",
                         }
                     })
                     .Build();

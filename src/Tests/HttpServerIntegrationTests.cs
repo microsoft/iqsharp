@@ -35,6 +35,7 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task CompileAndSimulateViaApi()
         {
+            var vsi = Microsoft.Quantum.IQSharp.Startup.VisualStudioInstance;
             var args = new string[] { "server" };
 
             // Set the same configuration that Program.cs is using.

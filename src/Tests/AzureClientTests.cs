@@ -360,8 +360,11 @@ namespace Tests.IQSharp
             Assert.IsNotNull(histogram);
         }
 
-        [TestMethod]
-        public async Task TestRuntimeCapabilities()
+        [DataTestMethod]
+        [DataRow("ionq.mock", AzureClientError.InvalidEntryPoint)]
+        [DataRow("honeywell.mock", null)]
+        [DataRow("quantinuum.mock", null)]
+        public async Task TestRuntimeCapabilities(string targetId, AzureClientError? expectedError)
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
             var azureClient = services.GetRequiredService<IAzureClient>();
@@ -378,21 +381,17 @@ namespace Tests.IQSharp
             azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum");
 
             // Verify that IonQ job fails to compile (QPRGen0)
-            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));
-            ExpectError(AzureClientError.InvalidEntryPoint, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
-
-            // Verify that Honeywell job can be successfully submitted (QPRGen1)
-            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "honeywell.mock"));
-            var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
-            Assert.IsNotNull(job);
-
-            // Verify that Quantinuum job can be successfully submitted (QPRGen1)
-            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "quantinuum.mock"));
-            Logger.LogMessage(string.Join("\n", packagesService.Items.Select(item => $"{item.Id}::{item.Version}")));
-            job = await ExpectSuccess<CloudJob>(channel =>
-                azureClient.SubmitJobAsync(channel, submissionContext, CancellationToken.None)
-            );
-            Assert.IsNotNull(job);
+            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), targetId));
+            var task = azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None);
+            if (expectedError is {} error)
+            {
+                ExpectError(error, task);
+            }
+            else
+            {
+                var job = ExpectSuccess<CloudJob>(task);
+                Assert.IsNotNull(job);
+            }
         }
 
         [TestMethod]
