@@ -630,25 +630,32 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             catch (Exception e)
             {
                 channel?.Stderr($"Failed to retrieve results for job ID {jobId}.");
-                Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
+                Logger.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
                 return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
         }
 
         private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
-            var client = new HttpClient();
-            var request = await client.GetAsync(job.OutputDataUri, cancellationToken);
-            using var responseStream = await request.Content.ReadAsStreamAsync();
+            async Task<Stream> ReadHttp()
+            {
+                var client = new HttpClient();
+                var request = await client.GetAsync(job.OutputDataUri, cancellationToken);
+                return await request.Content.ReadAsStreamAsync();
+            }
+
+            using var stream = job.OutputDataUri.IsFile
+                ? File.OpenRead(job.OutputDataUri.LocalPath)
+                : await ReadHttp();
             if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
             {
-                var (messages, result) = ParseSimulatorOutput(responseStream);
+                var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
             else
             {
-                return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
+                return stream.ToHistogram(channel, Logger).ToExecutionResult();
             }
         }
 
