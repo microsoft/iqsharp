@@ -233,7 +233,13 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.AreEqual(1, channel.errors.Count);
-            Assert.AreEqual(ChannelWithNewLines.Format($"Invalid operation name: _snippet_.HelloQ"), channel.errors[0]);
+            Assert.AreEqual(
+                ChannelWithNewLines.Format(
+                    "No Q# operation with name `_snippet_.HelloQ` has been defined.\n" +
+                    "Hint: You may have misspelled the name `_snippet_.HelloQ`, or you may have forgotten to run a cell above."
+                ),
+                channel.errors[0]
+            );
 
             // Compile it:
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
