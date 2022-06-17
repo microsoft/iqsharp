@@ -13,19 +13,11 @@ requirements:
     - python
     - setuptools
     - jupyter
-    - jupyter_client<7.0
     - iqsharp={{ version }}
 
   run:
     - python
-    - pyzmq
     - iqsharp={{ version }}
-
-  run_constrained:
-    # We forbid SciPy version 1.8.1 due to incompatibilities with some versions
-    # of PyZMQ and GCC, leading to runtime dynamic link failures of the form
-    # "version `GLIBCXX_3.4.30' not found (required by /miniconda/lib/python3.9/site-packages/scipy/fft/_pocketfft/pypocketfft.cpython-39-x86_64-linux-gnu.so)"
-    - scipy!=1.8.1 # [linux]
 
 build:
   script: |
@@ -34,7 +26,6 @@ build:
 test:
   requires:
     - python
-    - pyzmq
     - iqsharp={{ version }}
     - pytest
 

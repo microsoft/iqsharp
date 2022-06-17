@@ -25,16 +25,12 @@ requirements:
 
   run:
     - python
-    - jupyter_client
-    - pyzmq
+    - jupyter_client>=7.3.4
 
 test:
   requires:
     - notebook
-    - python>=3.6
-    # See microsoft/iqsharp#515, jupyter/jupyter_kernel_test#56.
-    - jupyter_client==6.1.12
-    - pyzmq
+    - python>=3.9
     - pip
 
   source_files:
@@ -42,7 +38,7 @@ test:
     - src/conda-recipes/iqsharp/test.py
 
   commands:
-    - pip install jupyter_kernel_test==0.3
+    - pip install jupyter_kernel_test
     - powershell -NoProfile src/conda-recipes/iqsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/iqsharp/test.ps1 # [not win]
 
