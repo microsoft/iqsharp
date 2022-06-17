@@ -209,11 +209,12 @@ public class QirMagic : AbstractMagic
             entryPoint.QirStream.CopyTo(outStream);
         }
 
-        // TODO: what if this fails?
         if (!TryParseBitcode(bitcodeFile, out var moduleRef, out var parseErr))
         {
-            return "Internal error: Could not parse generated QIR bitcode."
-                .ToExecutionResult(ExecuteStatus.Error);
+            var msg = $"Internal error: Could not parse generated QIR bitcode.\nLLVM returned error message: {parseErr}";
+            channel.Stderr(msg);
+            Logger.LogError(msg);
+            return ExecuteStatus.Error.ToExecutionResult();
         }
 
         var llFile = Path.ChangeExtension(bitcodeFile, ".ll");
