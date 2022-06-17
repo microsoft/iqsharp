@@ -203,7 +203,7 @@ public class QirMagic : AbstractMagic
                 .ToExecutionResult(ExecuteStatus.Error);
         }
 
-        var bitcodeFile = Path.ChangeExtension(Path.GetRandomFileName(), ".bc");
+        var bitcodeFile = Path.ChangeExtension(Path.GetTempFileName(), ".bc");
         using (var outStream = File.OpenWrite(bitcodeFile))
         {
             entryPoint.QirStream.CopyTo(outStream);

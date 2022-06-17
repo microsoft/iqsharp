@@ -446,10 +446,10 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 else if (qsCompilation.EntryPoints.Any())
                 {
-                    var tempPath = Path.GetTempPath();
-                    var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
+                    var tempPath = Path.GetTempFileName();
+                    var bcFile = CompilationLoader.GeneratedFile(tempPath, Path.GetDirectoryName(tempPath), ".bc", "");
                     var diagnostics = new List<IRewriteStep.Diagnostic>();
-                    CompilationSteps.GenerateLlvmIR(qsCompilation, capability, bcFile, diagnostics: diagnostics);
+                    CompilationSteps.GenerateBitcode(qsCompilation, capability, bcFile, diagnostics: diagnostics);
                     foreach (var diagnostic in diagnostics)
                     {
                         Logger?.Log(
