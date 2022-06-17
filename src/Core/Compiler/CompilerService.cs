@@ -446,26 +446,20 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 else if (qsCompilation.EntryPoints.Any())
                 {
+                    // TODO: Deduplicate and replace with call to CompilationSteps.GenerateLlvmIR.
+                    var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
+                    transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
+                    transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
+                    var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
+                    transformed = capability is not null && capability.ClassicalCompute != ClassicalComputeModule.Full // todo: should be removed once the Azure simulator works like other QIR backends
+                        ? AddOutputRecording.Apply(transformed, useRuntimeAPI: true, alwaysCreateWrapper: true)
+                        : transformed;
+                    using var generator = new Generator(transformed, capability);
+                    generator.Apply();
+                    // Write generated QIR to disk.
                     var tempPath = Path.GetTempPath();
                     var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
-                    var diagnostics = new List<IRewriteStep.Diagnostic>();
-                    CompilationSteps.GenerateLlvmIR(qsCompilation, capability, bcFile, diagnostics: diagnostics);
-                    foreach (var diagnostic in diagnostics)
-                    {
-                        Logger?.Log(
-                            diagnostic.Severity switch
-                            {
-                                DiagnosticSeverity.Warning => LogLevel.Warning,
-                                DiagnosticSeverity.Error => LogLevel.Error,
-                                _ => LogLevel.Information
-                            },
-                            "IRewriteStep diagnostic during QIR generation: {Source} {Range} {Stage} {Message}",
-                            diagnostic.Source,
-                            diagnostic.Range,
-                            diagnostic.Stage,
-                            diagnostic.Message
-                        );
-                    }
+                    generator.Emit(bcFile, emitBitcode: true);
                     qirStream = File.OpenRead(bcFile);
                 }
                 else if (generateQir)
