@@ -79,5 +79,8 @@
     <PackageReference Include="Microsoft.Build" Version="17.2" Condition="'$(PackAsTool)' == 'false'" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.2" Condition="'$(PackAsTool)' == 'false'" />
   </ItemGroup>
+  <PropertyGroup>
+    <DisableMSBuildAssemblyCopyCheck Condition="'$(PackAsTool)' == 'false'">true</DisableMSBuildAssemblyCopyCheck>
+  </PropertyGroup>
 
 </Project>
