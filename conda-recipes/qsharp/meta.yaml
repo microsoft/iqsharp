@@ -11,7 +11,7 @@ source:
 requirements:
   build:
     - python
-    - setuptools
+    - setuptools==62.6.0
     - jupyter
     - iqsharp={{ version }}
 
