@@ -23,8 +23,17 @@ namespace Microsoft.Quantum.IQSharp
         // failing to call `.RegisterDefaults` or calling it twice will cause
         // an exception.
         private static readonly Lazy<VisualStudioInstance?> visualStudioInstance = new(() =>
-            MSBuildLocator.RegisterDefaults()
-        );
+        {
+            try
+            {
+                return MSBuildLocator.RegisterDefaults();
+            }
+            catch
+            {
+                return null;
+            }
+        });
+
         public static VisualStudioInstance? VisualStudioInstance => visualStudioInstance.Value;
 
         public Startup(IConfiguration configuration)

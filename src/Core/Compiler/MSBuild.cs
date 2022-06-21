@@ -7,14 +7,21 @@
 
 #nullable enable
 
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Xml;
+using System.Xml.XPath;
+using System.Xml.Linq;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
+using NuGet.Packaging.Core;
+using NuGet.Protocol;
 using Eval = Microsoft.Build.Evaluation;
 
 namespace Microsoft.Quantum.IQSharp;
@@ -170,6 +177,91 @@ public partial class CompilerService
         });
     }
 
+    internal IEnumerable<string> TargetPackageAssemblyPaths(string? targetId, string? targetCapability = null)
+    {
+        // See if MSBuild was registered at startup and give some logging information either way.
+        if (services.GetService<MSBuildMetadata>() is {} msBuild)
+        {
+            Logger.LogInformation("Using MSBuild instance: {MSBuildInstance}", msBuild);
+            return TargetPackageAssemblyPathsFromMSBuild(targetId, targetCapability);
+        }
+        else
+        {
+            Logger.LogWarning("No MSBuild instance was found during kernel startup, trying to use best-known values for self-contained development.");
+            return TargetPackageAssemblyPathsFromHeuristics(targetId, targetCapability).Collect().Result;
+
+        }
+    }
+
+    internal string? GuessProviderPackageForTarget(string? targetId, string? targetCapability = null)
+    {
+        var capability = TargetCapabilityModule.FromName(targetCapability).AsObj();
+        if (targetId is {} target)
+        {
+            bool Matches(string pattern) =>
+                target?.Contains(pattern, StringComparison.InvariantCultureIgnoreCase) ?? false;
+
+            if (Matches("quantinuum") || Matches("honeywell") && capability is { ClassicalCompute: var classical } && classical != ClassicalComputeModule.Full)
+            {
+                return "Microsoft.Quantum.Type1.Core";
+            }
+            else if (Matches("qci"))
+            {
+                return "Microsoft.Quantum.Type3.Core";
+            }
+            else if (Matches("rigetti"))
+            {
+                return "Microsoft.Quantum.Type4.Core";
+            }
+        }
+
+        return null;
+    }
+
+
+    internal async IAsyncEnumerable<string> TargetPackageAssemblyPathsFromHeuristics(string? targetId, string? targetCapability = null)
+    {
+        var targetPackage = GuessProviderPackageForTarget(targetId, targetCapability);
+        if (targetPackage is null)
+        {
+            yield break;
+        }
+        var version = ((AssemblyInformationalVersionAttribute)(typeof(QsCompiler.AssemblyLoader)
+            .Assembly
+            .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
+            .Single()))
+            .InformationalVersion;
+        var targetPackageIdentity = new PackageIdentity(targetPackage, new NuGet.Versioning.NuGetVersion(version));
+
+        var packages = services.GetRequiredService<INugetPackages>();
+        await packages.Get(
+            targetPackageIdentity,
+            (msg) => Logger.LogDebug("NuGet message while using target pkg heuristics: {Message}", msg)
+        );
+
+        var localPackagesFinder =
+            packages.GlobalPackagesSource.GetResource<FindLocalPackagesResource>();
+        var downloaded = localPackagesFinder.GetPackage(targetPackageIdentity, new NuGetLogger(Logger), default);
+        var packageReader = downloaded.GetReader();
+
+        // Look for props files that could tell us what target packages we need.
+        var xmlNsManager = new XmlNamespaceManager(new NameTable());
+        xmlNsManager.AddNamespace("msb", "http://schemas.microsoft.com/developer/msbuild/2003");
+        var buildItems = packageReader.GetBuildItems();
+        foreach (var buildItem in buildItems.SelectMany(items => items.Items))
+        {
+            var path = Path.Join(Path.GetDirectoryName(downloaded.Path), buildItem);
+            using var stream = File.OpenText(path);
+            var xmlDoc = XDocument.Load(stream);
+            var expectedName = "QscRef_" + targetPackage.Replace(".", "_");
+            var node = xmlDoc.XPathSelectElements($"//msb:{expectedName}", xmlNsManager)
+                .Select(e => e.Value)
+                .Single()
+                .Replace("$(MSBuildThisFileDirectory)", Path.GetDirectoryName(path));
+            yield return node;
+        }
+    }
+
     /// <summary>
     ///      Enumerates over all assembly files contained in target packages
     ///      for the given execution target and target capabilities.
@@ -179,17 +271,10 @@ public partial class CompilerService
     ///      a result, depends on being able to write temporary files to disk
     ///      and on being able to call into Microsoft.Build assemblies.
     /// </remarks>
-    internal IEnumerable<string> TargetPackageAssemblyPaths(string? targetId, string? targetCapability = null)
+    internal IEnumerable<string> TargetPackageAssemblyPathsFromMSBuild(string? targetId, string? targetCapability = null)
     {
         // See if MSBuild was registered at startup and give some logging information either way.
-        if (services.GetService<MSBuildMetadata>() is {} msBuild)
-        {
-            Logger.LogInformation("Using MSBuild instance: {MSBuildInstance}", msBuild);
-        }
-        else
-        {
-            Logger.LogError("No MSBuild instance was found during kernel startup, building the temporary project for finding target packages is likely to fail.");
-        }
+        Debug.Assert(services.GetService<MSBuildMetadata>() is {} msBuild);
 
         var xmlDoc = new XmlDocument();
         var root = xmlDoc.CreateElement("Project");

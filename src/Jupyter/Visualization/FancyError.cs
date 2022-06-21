@@ -57,6 +57,11 @@ public record FancyError(string? Source, Diagnostic Diagnostic)
     /// </returns>
     public async Task<Uri?> TryGetDocumentationPage()
     {
+        if (Diagnostic.Code == null)
+        {
+            return null;
+        }
+
         if (DocsUriCache.TryGetValue(Diagnostic.Code, out var cachedUri))
         {
             return cachedUri;
