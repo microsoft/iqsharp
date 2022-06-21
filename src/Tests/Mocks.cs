@@ -10,6 +10,9 @@ using Microsoft.Quantum.IQSharp;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using Newtonsoft.Json.Linq;
+using NuGet.Protocol.Core.Types;
+using NuGet.Configuration;
+using System.IO;
 
 // We allow for unused properties and events in this file, as some properties
 // must exist for mocking purposes but are not used in this context.
@@ -222,6 +225,16 @@ namespace Tests.IQSharp
         
         public IReadOnlyDictionary<string, NuGetVersion> DefaultVersions => new Dictionary<string, NuGetVersion>();
 
+        private readonly Lazy<SourceRepository> globalPackagesSource = new(() =>
+            Repository.CreateSource(
+                Repository.Provider.GetCoreV3(),
+                SettingsUtility.GetGlobalPackagesFolder(
+                    NuGet.Configuration.Settings.LoadDefaultSettings(Directory.GetCurrentDirectory())
+                )
+            )
+        );
+        public SourceRepository GlobalPackagesSource => globalPackagesSource.Value;
+
         public Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
         {
             if (package == "microsoft.invalid.quantum")
@@ -232,6 +245,11 @@ namespace Tests.IQSharp
             var pkg = new PackageIdentity(package, NuGetVersion.Parse("0.0.0"));
             _items.Add(pkg);
             return Task.FromResult(pkg);
+        }
+
+        public async Task<IEnumerable<SourcePackageDependencyInfo>> Get(PackageIdentity pkgId, Action<string>? statusCallback = null)
+        {
+            return Enumerable.Empty<SourcePackageDependencyInfo>();
         }
     }
 }
