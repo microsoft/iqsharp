@@ -10,7 +10,7 @@ steps:
 ##
 - task: CondaEnvironment@1
   inputs:
-    packageSpecs: "python=3.7 pip setuptools brotlipy"
+    packageSpecs: "python=3.9 pip setuptools brotlipy"
   displayName: 'Use conda environment w/ Python 3.'
 
 - pwsh: pip install -r ./test-selenium-requirements.txt
