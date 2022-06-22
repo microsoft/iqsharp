@@ -1,14 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -20,6 +16,7 @@ using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
+using Microsoft.Quantum.QsCompiler.QIR;
 using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
@@ -29,7 +26,6 @@ using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
 using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
 using Microsoft.Quantum.QsCompiler.Transformations.Targeting;
 using QsReferences = Microsoft.Quantum.QsCompiler.CompilationBuilder.References;
-using System.Threading.Tasks;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -64,6 +60,11 @@ namespace Microsoft.Quantum.IQSharp
             /// </summary>
             public bool CacheCompilerDependencies { get; set; } = false;
         }
+
+        /// <summary>
+        /// The name of the generated namespace for the entry point.
+        /// </summary>
+        private static readonly string EntryPointNamespaceName = "ENTRYPOINT";
 
         /// <inheritdoc/>
         public IDictionary<string, string?> AutoOpenNamespaces { get; set; } = new Dictionary<string, string?>
@@ -278,7 +279,7 @@ namespace Microsoft.Quantum.IQSharp
             QSharpLogger? logger = null,
             bool compileAsExecutable = false,
             string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null,
+            TargetCapability? capability = null,
             ITaskReporter? parent = null
         )
         {
@@ -289,7 +290,12 @@ namespace Microsoft.Quantum.IQSharp
                 LoadReferencesBasedOnGeneratedCsharp = false, // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
                 AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
-                RuntimeCapability = runtimeCapability ?? RuntimeCapability.FullComputation
+                TargetCapability = capability ?? TargetCapabilityModule.FullComputation,
+                // ToDo: The logic for determining if we should generate QIR should live in the SubmitterFactory as a
+                // static function, `TargetSupportsQir`. We should then be calling that static function here for
+                // PrepareQirGeneration instead of this logic.
+                // GitHub Issue: https://github.com/microsoft/qsharp-runtime/issues/968
+                PrepareQirGeneration = executionTarget?.StartsWith("microsoft.simulator") ?? false
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
             return loaded.CompilationOutput;
@@ -297,13 +303,13 @@ namespace Microsoft.Quantum.IQSharp
 
         /// <inheritdoc/>
         public async Task<AssemblyInfo?> BuildEntryPoint(OperationInfo operation, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            TargetCapability? capability = null, bool generateQir = false)
         {
             var signature = operation.Header.PrintSignature();
             var argumentTuple = SyntaxTreeToQsharp.ArgumentTuple(operation.Header.ArgumentTuple, type => type.ToString(), symbolsOnly: true);
 
             var entryPointUri = new Uri(Path.GetFullPath(Path.Combine("/", $"entrypoint.qs")));
-            var entryPointSnippet = @$"namespace ENTRYPOINT
+            var entryPointSnippet = @$"namespace {EntryPointNamespaceName}
                 {{
                     open {operation.Header.QualifiedName.Namespace};
                     @{BuiltIn.EntryPoint.FullName}()
@@ -314,7 +320,7 @@ namespace Microsoft.Quantum.IQSharp
                 }}";
 
             var sources = new Dictionary<Uri, string>() {{ entryPointUri, entryPointSnippet }}.ToImmutableDictionary();
-            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, runtimeCapability, regenerateAll: true);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: true, executionTarget, capability, regenerateAll: true, generateQir: generateQir);
         }
 
         /// <summary>
@@ -323,7 +329,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the same name as the snippet id.
         /// </summary>
         public async Task<AssemblyInfo?> BuildSnippets(Snippet[] snippets, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null, ITaskReporter? parent = null)
+            TargetCapability? capability = null, ITaskReporter? parent = null)
         {
             using var perfTask = parent?.BeginSubtask("Building snippets.", "build-snippets");
             string openStatements = string.Join("", AutoOpenNamespaces.Select(
@@ -346,7 +352,7 @@ namespace Microsoft.Quantum.IQSharp
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Add(code));
             perfTask?.ReportStatus("About to build assembly.", "build-assembly");
             var assembly = await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, 
-            executionTarget, runtimeCapability, parent: perfTask);
+                executionTarget, capability, parent: perfTask);
             perfTask?.ReportStatus("Built assembly.", "built-assembly");
             warningCodesToIgnore.ForEach(code => logger.WarningCodesToIgnore.Remove(code));
 
@@ -357,24 +363,32 @@ namespace Microsoft.Quantum.IQSharp
         /// Builds the corresponding .net core assembly from the code in the given files.
         /// </summary>
         public async Task<AssemblyInfo?> BuildFiles(string[] files, CompilerMetadata metadatas, QSharpLogger logger, string dllName, string? executionTarget = null,
-            RuntimeCapability? runtimeCapability = null)
+            TargetCapability? capability = null)
         {
             var sources = ProjectManager.LoadSourceFiles(files, d => logger?.Log(d), ex => logger?.Log(ex));
-            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, runtimeCapability);
+            return await BuildAssembly(sources, metadatas, logger, dllName, compileAsExecutable: false, executionTarget, capability);
         }
 
         /// <summary>
         /// Builds the corresponding .net core assembly from the Q# syntax tree.
         /// </summary>
-        private async Task<AssemblyInfo?> BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, string dllName, bool compileAsExecutable, string? executionTarget,
-            RuntimeCapability? runtimeCapability = null, bool regenerateAll = false, ITaskReporter? parent = null)
+        /// <remarks>
+        ///     The resulting assembly info will contain QIR instead of a Q#
+        ///     syntax if <paramref name="executionTarget" /> is non-null or
+        ///     <paramref name="generateQir" /> is set. QIR generation requires at
+        ///     least one valid entry point to be defined.
+        /// </remarks>
+        private async Task<AssemblyInfo?> BuildAssembly(ImmutableDictionary<Uri, string> sources, CompilerMetadata metadata, QSharpLogger logger, 
+            string dllName, bool compileAsExecutable, string? executionTarget,
+            TargetCapability? capability = null, bool regenerateAll = false, ITaskReporter? parent = null,
+            bool generateQir = false)
         {
             using var perfTask = parent?.BeginSubtask("Building assembly.", "build-assembly");
             logger.LogDebug($"Compiling the following Q# files: {string.Join(",", sources.Keys.Select(f => f.LocalPath))}");
 
             // Ignore any @EntryPoint() attributes found in libraries.
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, runtimeCapability, parent: perfTask);
+            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
             if (logger.HasErrors || qsCompilation == null) return null;
@@ -387,28 +401,52 @@ namespace Microsoft.Quantum.IQSharp
                                 ? qsCompilation.Namespaces
                                 : qsCompilation.Namespaces.Select(ns => FilterBySourceFile.Apply(ns, s => s.EndsWith(".qs")));
 
-                // Async, get manifest resources by writing syntax trees to memory.
-                var manifestResources = Task.Run(() =>
+                // In parallel, get manifest resources by writing syntax trees to memory.
+                Task<List<ResourceDescription>?> manifestResources = Task.FromResult<List<ResourceDescription>?>(null);
+                Stream? qirStream = null;
+                if (string.IsNullOrEmpty(executionTarget) && !generateQir)
                 {
-                    using var qstTask = codeGenTask?.BeginSubtask("Serializing Q# syntax tree.", "serialize-qs-ast");
-                    var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
-
-                    using var serializedCompilation = new MemoryStream();
-                    if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                    manifestResources = Task.Run(() =>
                     {
-                        logger.LogError("IQS005", "Failed to write compilation to binary stream.");
-                        return null;
-                    }
-
-                    return new List<ResourceDescription>()
-                    {
-                        new ResourceDescription(
-                            resourceName: DotnetCoreDll.SyntaxTreeResourceName,
-                            dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
-                            isPublic: true
-                        )
-                    };
-                });
+                        using var qstTask = codeGenTask?.BeginSubtask("Serializing Q# syntax tree.", "serialize-qs-ast");
+                        var syntaxTree = new QsCompilation(fromSources.ToImmutableArray(), qsCompilation.EntryPoints);
+                        using var serializedCompilation = new MemoryStream();
+                        if (!CompilationLoader.WriteBinary(syntaxTree, serializedCompilation))
+                        {
+                            logger.LogError("IQS005", "Failed to write compilation to binary stream.");
+                            return null;
+                        }
+                        return new List<ResourceDescription>()
+                        {
+                            new ResourceDescription(
+                                resourceName: DotnetCoreDll.SyntaxTreeResourceName,
+                                dataProvider: () => new MemoryStream(serializedCompilation.ToArray()),
+                                isPublic: true
+                            )
+                        };
+                    });
+                }
+                else if (qsCompilation.EntryPoints.Any())
+                {
+                    var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
+                    transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
+                    transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
+                    var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
+                    using var generator = new Generator(transformed);
+                    generator.Apply();
+                    // Write generated QIR to disk.
+                    var tempPath = Path.GetTempPath();
+                    var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
+                    generator.Emit(bcFile, emitBitcode: true);
+                    qirStream = File.OpenRead(bcFile);
+                }
+                else if (generateQir)
+                {
+                    // If we made it here, QIR was enabled, but we didn't have
+                    // any valid entry points.
+                    logger.LogError("IQS006", "QIR generation was enabled, but no entry points were defined.");
+                    return null;
+                }
 
                 // In the meanwhile...
                 // Generate C# simulation code from Q# syntax tree and convert it into C# syntax trees:
@@ -476,7 +514,8 @@ namespace Microsoft.Quantum.IQSharp
                         logger.LogError("IQS001", $"Unable to save assembly cache: {e.Message}.");
                     }
 
-                    return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray());
+                    qirStream?.Seek(0, SeekOrigin.Begin);
+                    return new AssemblyInfo(Assembly.Load(data), dllName, fromSources.ToArray(), qirStream);
                 }
             }
             catch (Exception e)

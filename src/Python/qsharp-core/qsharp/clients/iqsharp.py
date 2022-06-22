@@ -203,6 +203,9 @@ class IQSharpClient(object):
     def trace(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('trace', op, _quiet_ = True, **kwargs)
 
+    def compile_to_qir(self, op, output: str) -> None:
+        return self._execute_callable_magic('qir', op, output=output)
+
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """
         Returns a dictionary from components of the IQ# kernel to their
@@ -242,29 +245,23 @@ class IQSharpClient(object):
         finally:
             self.display_data_callback = old_callback
 
-    ## Experimental Methods ##
-    # These methods expose experimental functionality that may be removed without
-    # warning. To communicate to users that these are not reliable, we mark
-    # these methods as private, and will re-export them in the
-    # qsharp.experimental submodule.
-
-    def _simulate_noise(self, op, **kwargs) -> Any:
+    def simulate_noise(self, op, **kwargs) -> Any:
         kwargs.setdefault('_timeout_', None)
-        return self._execute_callable_magic('experimental.simulate_noise', op, **kwargs)
+        return self._execute_callable_magic('simulate_noise', op, **kwargs)
 
-    def _get_noise_model(self) -> str:
-        return self._execute(f'%experimental.noise_model')
+    def get_noise_model(self) -> str:
+        return self._execute(f'%noise_model')
 
-    def _get_noise_model_by_name(self, name : str) -> None:
-        return self._execute(f'%experimental.noise_model --get-by-name {name}')
+    def get_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%noise_model --get-by-name {name}')
 
-    def _set_noise_model(self, json_data : str) -> None:
+    def set_noise_model(self, json_data : str) -> None:
         # We assume json_data is already serialized, so that we skip the support
         # provided by _execute_magic and call directly.
-        return self._execute(f'%experimental.noise_model {json_data}')
+        return self._execute(f'%noise_model {json_data}')
 
-    def _set_noise_model_by_name(self, name : str) -> None:
-        return self._execute(f'%experimental.noise_model --load-by-name {name}')
+    def set_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%noise_model --load-by-name {name}')
 
 
     ## Internal-Use Methods ##

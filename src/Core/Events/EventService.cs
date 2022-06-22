@@ -13,9 +13,9 @@ namespace Microsoft.Quantum.IQSharp
     /// A typed Event, similar to EventHandler<> but without actually being a delegate
     /// </summary>
     /// <typeparam name="TArgs">The type of the arguments</typeparam>
-    public class Event<TArgs>
+    public record class Event<TArgs>
     {
-        public TArgs Args { get; set; }
+        public TArgs Args { get; init; }
     }
 
     /// <summary>

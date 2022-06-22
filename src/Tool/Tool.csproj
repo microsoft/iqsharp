@@ -24,7 +24,22 @@
     <ContentTargetFolders>\</ContentTargetFolders>
     <ApplicationIcon />
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))"
+                      Include="libLLVM.runtime.win-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('OSX'))"
+                      Include="libLLVM.runtime.osx-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' == '18.04'"
+                      Include="libLLVM.runtime.ubuntu.18.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' != '18.04'"
+                      Include="libLLVM.runtime.ubuntu.20.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
   </ItemGroup>
@@ -49,11 +64,12 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Applications.Events.Server.Core2" Version="0.92.6" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Text.Json" Version="5.0.1" />
+    <PackageReference Include="System.Text.Json" Version="6.0.3" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0-dev-00039" />
   </ItemGroup>
 

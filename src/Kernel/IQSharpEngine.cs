@@ -1,22 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
-using System.Linq;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
-using Microsoft.Jupyter.Core.Protocol;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
 using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
@@ -44,9 +34,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     ///      An event raised when completions are provided in response to a
     ///      completion request.
     /// </summary>
-    public class CompletionEvent : Event<CompletionEventArgs>
-    {
-    }
+    public record CompletionEvent : Event<CompletionEventArgs>;
 
     /// <summary>
     ///  The IQsharpEngine, used to expose Q# as a Jupyter kernel.

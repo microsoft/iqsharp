@@ -45,6 +45,10 @@ __all__ = [
     'Result', 'Pauli'
 ]
 
+from qsharp.noise_model import *
+import qsharp.noise_model
+__all__ += qsharp.noise_model.__all__
+
 ## FUNCTIONS ##
 
 def compile(code : str) -> Union[None, QSharpCallable, List[QSharpCallable]]:

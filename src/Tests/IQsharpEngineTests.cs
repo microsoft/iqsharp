@@ -15,9 +15,9 @@ using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
+using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Microsoft.Quantum.Experimental;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -31,6 +31,7 @@ namespace Tests.IQSharp
     {
         public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
         {
+            System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
             var engine = Startup.Create<IQSharpEngine>(workspace);
             engine.Start();
             await engine.Initialized;
@@ -89,14 +90,19 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        public static async Task<string?> AssertNoisySimulate(IQSharpEngine engine, string snippetName, NoiseModel? noiseModel, params string[] messages)
+        public static async Task<string?> AssertNoisySimulate(IQSharpEngine engine, string snippetName, string? representation, NoiseModel? noiseModel, params string[] messages)
         {
             await engine.Initialized;
             var configSource = new ConfigurationSource(skipLoading: true);
             var noiseModelSource = new NoiseModelSource();
-            if (noiseModel != null)
+            if (noiseModel is not null)
             {
                 noiseModelSource.NoiseModel = noiseModel;
+            }
+
+            if (representation is not null)
+            {
+                configSource.Configuration["simulators.noisy.representation"] = representation;
             }
 
             var simMagic = new SimulateNoiseMagic(
@@ -185,13 +191,8 @@ namespace Tests.IQSharp
                     .Input("%sim", 3)
                         .CompletesTo(
                             "%simulate",
+                            "%simulate_noise",
                             "%simulate_sparse"
-                        )
-                    .Input("%experimental.", 14)
-                        .CompletesTo(
-                            "%experimental.build_info",
-                            "%experimental.simulate_noise",
-                            "%experimental.noise_model"
                         )
                     .Input("%ls", 3)
                         .CompletesTo(
@@ -296,7 +297,6 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        [TestCategory("Experimental")]
         public async Task NoisySimulateWithTwoQubitOperation()
         {
             var engine = await Init();
@@ -307,11 +307,10 @@ namespace Tests.IQSharp
 
             // Try running again:
             // Note that noiseModel: null sets the noise model to be ideal.
-            await AssertNoisySimulate(engine, "SimpleDebugOperation", noiseModel: null);
+            await AssertNoisySimulate(engine, "SimpleDebugOperation", representation: "mixed", noiseModel: null);
         }
 
         [TestMethod]
-        [TestCategory("Experimental")]
         public async Task NoisySimulateWithFailIfOne()
         {
             var engine = await Init();
@@ -322,11 +321,10 @@ namespace Tests.IQSharp
 
             // Try running again:
             // Note that noiseModel: null sets the noise model to be ideal.
-            await AssertNoisySimulate(engine, "FailIfOne", noiseModel: null);
+            await AssertNoisySimulate(engine, "FailIfOne", representation: "mixed", noiseModel: null);
         }
 
         [TestMethod]
-        [TestCategory("Experimental")]
         public async Task NoisySimulateWithTrivialOperation()
         {
             var engine = await Init();
@@ -336,7 +334,7 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            await AssertNoisySimulate(engine, "HelloQ", noiseModel: null, "Hello from quantum world!");
+            await AssertNoisySimulate(engine, "HelloQ", representation: "mixed", noiseModel: null, "Hello from quantum world!");
         }
 
         [TestMethod]
