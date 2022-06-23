@@ -22,6 +22,6 @@ if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("
 
 
 if ($Env:ENABLE_PYTHON -ne "false") {
-    $requirements = Join-Path $PSScriptRoot 'requirements.txt'
+    $requirements = Join-Path $PSScriptRoot '..\src\Python\requirements.txt'
     pip install -r  $requirements
 }
