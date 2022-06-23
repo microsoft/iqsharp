@@ -8,15 +8,6 @@ steps:
 ##
 # Pre-reqs
 ##
-- task: CondaEnvironment@1
-  inputs:
-    packageSpecs: "python=3.9 pip setuptools"
-  displayName: 'Use conda environment w/ Python 3.'
-
-- pwsh: pip install -r ./test-selenium-requirements.txt
-  displayName: 'Install Selenium and Jupyter Notebook'
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK 6.0.100'
   inputs:
