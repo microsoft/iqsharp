@@ -1,8 +1,10 @@
+ipython==8.4.0      # to avoid high-severity issue.
 jupyter==1.0.0
 nbconvert==6.5.0
 notebook==6.4.12
 numpy==1.21.6
 pytest==7.1.2
+pygments==2.12.90   # to avoid high-severity issue.
 qutip==4.7.0
 selenium==4.2.0
 setuptools==62.6.0
