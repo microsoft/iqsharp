@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-using Microsoft.Jupyter.Core;
+using System.Text;
 
 #nullable enable
 

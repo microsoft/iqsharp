@@ -60,13 +60,13 @@ export function defineQSharpMode() {
         {
             // built-in magic commands
             token: "builtin",
-            regex: String.raw`(%(config|debug|estimate|lsmagic|package|performance|simulate|toffoli|trace|version|who|workspace))\b`,
+            regex: String.raw`(%(config|debug|estimate|lsmagic|package|performance|simulate|toffoli|trace|version|who|workspace|qir))\b`,
             beginWord: true,
         },
         {
             // Azure magic commands
             token: "builtin",
-            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target))\b`,
+            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target|target\-capability))\b`,
             beginWord: true,
         },
         {

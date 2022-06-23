@@ -204,6 +204,25 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
 
         /// <summary>
+        ///      Specifies whether hints are shown for kernel error messages.
+        /// </summary>
+        public bool ShowHintsOnErrors =>
+            GetOptionOrDefault("errors.showHints", true);
+
+        /// <summary>
+        ///      Specifies the format used for reporting Q# compilation errors.
+        /// </summary>
+        public CompilationErrorStyle CompilationErrorStyle =>
+            GetOptionOrDefault("errors.style", CompilationErrorStyle.Fancy);
+
+        /// <summary>
+        ///      Specifies how many lines of context should be displayed around
+        ///      errors and other Q# compilation diagnostics.
+        /// </summary>
+        public int NContextLines =>
+            GetOptionOrDefault("errors.nContextLines", 1);
+
+        /// <summary>
         ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.
         /// </summary>
         public string SubscriptionId =>

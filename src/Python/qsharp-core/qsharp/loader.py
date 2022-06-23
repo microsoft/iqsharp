@@ -127,19 +127,11 @@ class QSharpCallable(object):
 
     def as_qir(self) -> bytes:
         """
-        Returns the QIR bitcode representation of the callable,
+        Returns the QIR representation of the callable,
         assuming the callable is an entry point.
         """
-        f = tf.NamedTemporaryFile(delete=False, suffix='.bc')
-        f.close()
-        qsharp.client.compile_to_qir(self, output=f.name)
-        with open(f.name, "rb") as bitcode_file:
-            bitcode = bitcode_file.read()
-        try:
-            os.unlink(f.name)
-        except:
-            pass
-        return bitcode
+        data = qsharp.client.compile_to_qir(self)
+        return data['Text']
 
 class QSharpModule(ModuleType):
     _qs_name : str

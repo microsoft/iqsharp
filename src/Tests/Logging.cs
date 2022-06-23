@@ -3,16 +3,6 @@
 
 #nullable enable
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp;
-using Microsoft.Quantum.IQSharp.AzureClient;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 using Microsoft.Extensions.Logging;
 
 using static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger;
@@ -64,7 +54,7 @@ namespace Tests.IQSharp
         public bool IsEnabled(LogLevel logLevel) =>
             logLevel == Config.LogLevel;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (!IsEnabled(logLevel))
             {
@@ -76,12 +66,14 @@ namespace Tests.IQSharp
                 if (CurrentScope != null)
                 {
                     LogMessage(
+                        "{0}",
                         $"[{CurrentScope} | {eventId}: {logLevel} // {CategoryName}] {formatter(state, exception)}"
                     );
                 }
                 else
                 {
                     LogMessage(
+                        "{0}",
                         $"[{eventId}: {logLevel} // {CategoryName}] {formatter(state, exception)}"
                     );
                 }

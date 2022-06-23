@@ -6,14 +6,15 @@
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Quantum.Simulation.Simulators;
 using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter;
 
+/// <summary>
+///      Magic command for querying, setting, and loading noise models.
+/// </summary>
 public class NoiseModelMagic : AbstractMagic
 {
-    private ILogger<NoiseModelMagic>? logger = null;
     private INoiseModelSource NoiseModelSource;
 
     /// <summary>
@@ -69,7 +70,7 @@ public class NoiseModelMagic : AbstractMagic
                     ```
                 ".Dedent()
             }
-        })
+        }, logger)
     {
         this.NoiseModelSource = noiseModelSource;
         if (engine is BaseEngine baseEngine)
@@ -98,7 +99,16 @@ public class NoiseModelMagic : AbstractMagic
         else if (command.Trim() == "--load")
         {
             var filename = parts[1];
-            NoiseModelSource.NoiseModel = JsonSerializer.Deserialize<NoiseModel>(File.ReadAllText(filename));
+            var noiseModel = JsonSerializer.Deserialize<NoiseModel>(File.ReadAllText(filename));
+            if (noiseModel is null)
+            {
+                channel.Stderr("Could not load noise model, JSON deserialization failed.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+            else
+            {
+                NoiseModelSource.NoiseModel = noiseModel;
+            }
         }
         else if (command.Trim() == "--get-by-name")
         {
@@ -127,7 +137,16 @@ public class NoiseModelMagic : AbstractMagic
         else if (input.Trim().StartsWith("{"))
         {
             // Parse the input as JSON.
-            NoiseModelSource.NoiseModel = JsonSerializer.Deserialize<NoiseModel>(input.Trim());
+            var noiseModel = JsonSerializer.Deserialize<NoiseModel>(input.Trim());
+            if (noiseModel is null)
+            {
+                channel.Stderr("Could not load noise model, JSON deserialization failed.");
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
+            else
+            {
+                NoiseModelSource.NoiseModel = noiseModel;
+            }
         }
         else
         {

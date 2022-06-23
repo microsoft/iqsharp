@@ -20,7 +20,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         private IEnumerable<AssemblyInfo> RelevantAssemblies()
         {
-            if (EntryPointGenerator.SnippetsAssemblyInfo != null) yield return EntryPointGenerator.SnippetsAssemblyInfo;
+            if (EntryPointGenerator.SnippetsAssemblyInfo is not null) yield return EntryPointGenerator.SnippetsAssemblyInfo;
             foreach (var asm in EntryPointGenerator.WorkspaceAssemblies) yield return asm;
             foreach (var asm in EntryPointGenerator.References.Assemblies) yield return asm;
         }

@@ -3,25 +3,22 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Azure.Core;
 using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
+using Microsoft.FSharp.Core;
 using Microsoft.Quantum.IQSharp.Common;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
-using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -44,15 +41,20 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
+        /// <inheritdoc />
+        public AzureExecutionTarget? ActiveTarget { get; private set; }
+        /// <inheritdoc />
+        public TargetCapability TargetCapability { get; private set; } = TargetCapabilityModule.Top;
         private TokenCredential? Credential { get; set; }
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
         private IMetadataController MetadataController { get; }
         private IAzureFactory AzureFactory { get; }
+        private readonly IWorkspace Workspace;
         private bool IsPythonUserAgent => MetadataController?.UserAgent?.StartsWith("qsharp.py") ?? false;
+        private string GetCommandDisplayName(string name) => MetadataController?.CommandDisplayName(name) ?? name;
         private string StorageConnectionString { get; set; } = string.Empty;
-        private AzureExecutionTarget? ActiveTarget { get; set; }
         private string MostRecentJobId { get; set; } = string.Empty;
         private IEnumerable<ProviderStatusInfo>? AvailableProviders { get; set; }
         private IEnumerable<TargetStatusInfo>? AvailableTargets =>
@@ -76,6 +78,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureFactory">A Factory class to create instance of Azure Quantum classes.</param>
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
+        /// <param name="workspace">The service for the active IQ# workspace.</param>
         public AzureClient(
             IExecutionEngine engine,
             IReferences references,
@@ -83,13 +86,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IMetadataController metadataController,
             IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
-            IEventService eventService)
+            IEventService eventService,
+            IWorkspace workspace)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
             MetadataController = metadataController;
             AzureFactory = azureFactory;
             Logger = logger;
+            Workspace = workspace;
+
+            // If we're given a target capability, start with it set.
+            if (workspace.WorkspaceProject.TargetCapability is {} capability)
+            {
+                if (!TrySetTargetCapability(null, capability, out _))
+                {
+                    logger.LogWarning("Could not set target capability level {Level} from workspace project.", capability);
+                }
+            }
 
             if (engine is BaseEngine baseEngine)
             {
@@ -115,7 +129,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public event EventHandler<ConnectToWorkspaceEventArgs>? ConnectToWorkspace;
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> ConnectAsync(IChannel channel,
+        public async Task<ExecutionResult> ConnectAsync(IChannel? channel,
             string subscriptionId,
             string resourceGroupName,
             string workspaceName,
@@ -163,12 +177,44 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                 channel?.Stdout($"Connected to Azure Quantum workspace {ActiveWorkspace.WorkspaceName} in location {ActiveWorkspace.Location}.");
 
-                if (ValidExecutionTargets.Count() == 0)
+                var targets = ValidExecutionTargets ?? Enumerable.Empty<TargetStatusInfo>();
+                if (targets.Count() == 0)
                 {
                     channel?.Stderr($"No valid quantum computing execution targets found in Azure Quantum workspace {ActiveWorkspace.WorkspaceName}.");
                 }
 
-                result = ValidExecutionTargets.ToExecutionResult();
+                result = targets.ToExecutionResult();
+
+                // If the workspace project has an active target, set it now.
+                if (Workspace.WorkspaceProject.TargetId is {} targetId)
+                {
+                    var targetResult = await SetActiveTargetAsync(channel, targetId, cancellationToken);
+                    if (targetResult.Status == ExecuteStatus.Ok)
+                    {
+                        // Try to set the target capability as well.
+                        if (Workspace.WorkspaceProject.TargetCapability is {} capabilityName)
+                        {
+                            if (TrySetTargetCapability(channel, capabilityName, out _))
+                            {
+                                return result.Value;
+                            }
+                            else
+                            {
+                                return ExecuteStatus.Error.ToExecutionResult();
+                            }
+
+                        }
+                        else
+                        {
+                            return result.Value;
+                        }
+                    }
+                    else
+                    {
+                        return targetResult;
+                    }
+                }
+
                 return result.Value;
             }
             finally
@@ -334,10 +380,33 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return connectionResult;
             }
 
+            
+            // QirSubmitter and CreateMachine have return types with different base types
+            // but both have a SubmitAsync method that returns an IQuantumMachineJob.
+            // Thus, we can branch on whether we need a QIR submitter or a translator,
+            // but can use the same task object to represent both return values.
+            Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
+            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
+            {
+                jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
+            }
+            else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
+            {
+                jobTask = entryPoint => entryPoint.SubmitAsync(machine, submissionContext);
+            }
+            else
+            {
+                // We should never get here, since ActiveTarget should have already been validated at the time it was set.
+                channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
+                return AzureClientError.InvalidTarget.ToExecutionResult();
+            }
+
             IEntryPoint? entryPoint;
             try
             {
-                entryPoint = await EntryPointGenerator.Generate(submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.TargetCapability);
+                entryPoint = await EntryPointGenerator.Generate(
+                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability
+                );
             }
             catch (TaskCanceledException tce)
             {
@@ -359,28 +428,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                // QirSubmitter and CreateMachine have return types with different base types
-                // but both have a SubmitAsync method that returns an IQuantumMachineJob.
-                // Thus, we can branch on whether we need a QIR submitter or a translator,
-                // but can use the same task object to represent both return values.
-                Task<IQuantumMachineJob>? jobTask = null;
-                if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
-                {
-                    jobTask = entryPoint.SubmitAsync(submitter, submissionContext);
-                }
-                else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
-                {
-                    jobTask = entryPoint.SubmitAsync(machine, submissionContext);
-                }
-                else
-                {
-                    // We should never get here, since ActiveTarget should have already been validated at the time it was set.
-                    channel?.Stderr($"Unexpected error while preparing job for execution on target {ActiveTarget.TargetId}.");
-                    return AzureClientError.InvalidTarget.ToExecutionResult();
-                }
-
                 Logger.LogDebug("About to submit entry point for {OperationName}.", submissionContext.OperationName);
-                var job = await jobTask;
+                var job = await jobTask(entryPoint);
                 channel?.Stdout($"Job successfully submitted.");
                 channel?.Stdout($"   Job name: {submissionContext.FriendlyName}");
                 channel?.Stdout($"   Job ID: {job.Id}");
@@ -486,7 +535,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> SetActiveTargetAsync(IChannel? channel, string targetId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null || AvailableProviders == null)
             {
@@ -520,6 +569,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
+            TargetCapability = executionTarget.MaximumCapability;
 
             channel?.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
@@ -530,7 +580,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobResultAsync(IChannel? channel, string? jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -575,31 +625,37 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                return await CreateOutput(job, channel);
+                return await CreateOutput(job, channel, cancellationToken ?? default);
             }
             catch (Exception e)
             {
                 channel?.Stderr($"Failed to retrieve results for job ID {jobId}.");
-                Logger?.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
+                Logger.LogError(e, $"Failed to download the job output for the specified Azure Quantum job: {e.Message}");
                 return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
         }
 
-        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel)
+        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
-            // TODO @cgranade: Update to use HttpClient instead to get
-            //                 cancellation token support.
-            var request = WebRequest.Create(job.OutputDataUri);
-            using var responseStream = (await request.GetResponseAsync()).GetResponseStream();
+            async Task<Stream> ReadHttp()
+            {
+                var client = new HttpClient();
+                var request = await client.GetAsync(job.OutputDataUri, cancellationToken);
+                return await request.Content.ReadAsStreamAsync();
+            }
+
+            using var stream = job.OutputDataUri.IsFile
+                ? File.OpenRead(job.OutputDataUri.LocalPath)
+                : await ReadHttp();
             if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
             {
-                var (messages, result) = ParseSimulatorOutput(responseStream);
+                var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
             else
             {
-                return responseStream.ToHistogram(channel, Logger).ToExecutionResult();
+                return stream.ToHistogram(channel, Logger).ToExecutionResult();
             }
         }
 
@@ -634,7 +690,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         }
 
         /// <inheritdoc/>
-        public async Task<ExecutionResult> GetJobStatusAsync(IChannel? channel, string jobId, CancellationToken? cancellationToken = default)
+        public async Task<ExecutionResult> GetJobStatusAsync(IChannel? channel, string? jobId, CancellationToken? cancellationToken = default)
         {
             if (ActiveWorkspace == null)
             {
@@ -746,7 +802,36 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             return quotas.ToExecutionResult();
         }
 
-        private string GetCommandDisplayName(string commandName) =>
-            IsPythonUserAgent ? $"qsharp.azure.{commandName}()" : $"%azure.{commandName}";
+        /// <inheritdoc />
+        public void ClearActiveTarget()
+        {
+            ActiveTarget = null;
+            TargetCapability = TargetCapabilityModule.Top;
+        }
+
+        /// <inheritdoc />
+        public bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
+        {
+            var capability = capabilityName is null
+                ? ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top
+                : TargetCapabilityModule.FromName(capabilityName);
+            if (!FSharpOption<TargetCapability>.get_IsSome(capability))
+            {
+                channel?.Stderr($"Could not parse target capability name \"{capabilityName}\".");
+                targetCapability = null;
+                return false;
+            }
+
+            if (ActiveTarget != null && !ActiveTarget.SupportsCapability(capability.Value))
+            {
+                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.MaximumCapability.Name}.");
+                targetCapability = null;
+                return false;
+            }
+
+            TargetCapability = capability.Value;
+            targetCapability = capability.Value;
+            return true;
+        }
     }
 }

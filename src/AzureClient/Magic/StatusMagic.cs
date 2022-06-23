@@ -81,7 +81,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
-            string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
+            var jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
             return await AzureClient.GetJobStatusAsync(channel, jobId, cancellationToken);
         }
     }

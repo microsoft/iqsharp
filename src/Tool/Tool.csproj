@@ -71,6 +71,8 @@
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.Json" Version="6.0.3" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0-dev-00039" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" />
+    <PackageReference Include="NuGet.ProjectModel" Version="6.2.0" />
   </ItemGroup>
 
 </Project>

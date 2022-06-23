@@ -3,13 +3,9 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
@@ -105,11 +101,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 {
                     try
                     {
-                        workspaceAssemblies.Add(await Compiler.BuildFiles(
+                        var asm = await Compiler.BuildFiles(
                             project.SourceFiles.ToArray(),
                             compilerMetadata.WithAssemblies(workspaceAssemblies.ToArray()),
                             logger,
-                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}")));
+                            Path.Combine(Workspace.CacheFolder, $"__entrypoint{project.CacheDllName}"));
+                        if (asm is not null)
+                        {
+                            workspaceAssemblies.Add(asm);
+                        }
+                        else
+                        {
+                            Logger.LogCritical("Got empty assembly when building entry point, but no compilation error was raised.");
+                        }
                     }
                     catch (Exception e)
                     {
@@ -136,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 Logger?.LogDebug($"{snippets.Length} items found in snippets. Compiling.");
                 SnippetsAssemblyInfo = await Compiler.BuildSnippets(
                     snippets, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__snippets__.dll"));
-                if (SnippetsAssemblyInfo == null || logger.HasErrors)
+                if (SnippetsAssemblyInfo is null || logger.HasErrors)
                 {
                     Logger?.LogError($"Error compiling snippets.");
                     throw new CompilationErrorsException(logger);
@@ -156,7 +160,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             EntryPointAssemblyInfo = await Compiler.BuildEntryPoint(
                 operationInfo, compilerMetadata, logger, Path.Combine(Workspace.CacheFolder, "__entrypoint__.dll"), executionTarget, capability,
                 generateQir: generateQir);
-            if (EntryPointAssemblyInfo == null || logger.HasErrors)
+            if (EntryPointAssemblyInfo is null || logger.HasErrors)
             {
                 Logger?.LogError($"Error compiling entry point for operation {operationName}.");
                 throw new CompilationErrorsException(logger);
@@ -202,7 +206,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 1 => parameterTypes.Single(),
                 _ => PartialMapper.TupleTypes[typeCount].MakeGenericType(parameterTypes)
             };
-            Type entryPointOutputType = entryPointOperationInfo.ReturnType;
+            var entryPointOutputType = entryPointOperationInfo.ReturnType;
 
             Type entryPointInfoType = typeof(EntryPointInfo<,>).MakeGenericType(new Type[] { entryPointInputType, entryPointOutputType });
             var entryPointInfo = entryPointInfoType.GetConstructor(new Type[] { typeof(Type) })

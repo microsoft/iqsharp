@@ -3,14 +3,11 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.Azure.Quantum.Authentication;
-using Microsoft.Jupyter.Core;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -104,7 +101,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The list of execution targets available in the Azure Quantum workspace,
         /// or an error if the Azure Quantum workspace connection has not yet been created.
         /// </returns>
-        public Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? token);
+        public Task<ExecutionResult> GetConnectionStatusAsync(IChannel channel, CancellationToken? token = default);
 
         /// <summary>
         /// Submits the specified Q# operation as a job to the currently active target.
@@ -112,7 +109,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Details of the submitted job, or an error if submission failed.
         /// </returns>
-        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token);
+        public Task<ExecutionResult> SubmitJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token = default);
 
         /// <summary>
         /// Executes the specified Q# operation as a job to the currently active target
@@ -121,7 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// The result of the executed job, or an error if execution failed.
         /// </returns>
-        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token);
+        public Task<ExecutionResult> ExecuteJobAsync(IChannel channel, AzureSubmissionContext submissionContext, CancellationToken? token = default);
 
         /// <summary>
         /// Sets the specified target for job submission.
@@ -129,7 +126,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// Success if the target is valid, or an error if the target cannot be set.
         /// </returns>
-        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token);
+        public Task<ExecutionResult> SetActiveTargetAsync(IChannel channel, string targetId, CancellationToken? token = default);
+
+        /// <summary>
+        /// Clears the specified target for job submission.
+        /// </summary>
+        public void ClearActiveTarget();
 
         /// <summary>
         /// Gets the currently specified target for job submission.
@@ -137,7 +139,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <returns>
         /// The target ID.
         /// </returns>
-        public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token);
+        public Task<ExecutionResult> GetActiveTargetAsync(IChannel channel, CancellationToken? token = default);
 
         /// <summary>
         /// Gets the result of a specified job.
@@ -146,7 +148,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job result corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string jobId, CancellationToken? token);
+        public Task<ExecutionResult> GetJobResultAsync(IChannel channel, string? jobId, CancellationToken? token = default);
 
         /// <summary>
         /// Gets the status of a specified job.
@@ -155,7 +157,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The job status corresponding to the given job ID,
         /// or for the most recently-submitted job if no job ID is provided.
         /// </returns>
-        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string jobId, CancellationToken? token);
+        public Task<ExecutionResult> GetJobStatusAsync(IChannel channel, string? jobId, CancellationToken? token = default);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.
@@ -165,7 +167,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count, CancellationToken? token);
+        public Task<ExecutionResult> GetJobListAsync(IChannel channel, string filter, int? count = default, CancellationToken? token = default);
 
         /// <summary>
         /// Gets a list of all jobs in the current Azure Quantum workspace.
@@ -175,7 +177,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// to jobs with fields containing <c>filter</c> using a case-insensitive
         /// comparison.
         /// </returns>
-        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token);
+        public Task<ExecutionResult> GetQuotaListAsync(IChannel channel, CancellationToken? token = default);
 
         /// <summary>
         ///      Returns a string indicating the current target ID if one is
@@ -184,9 +186,26 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         string? ActiveTargetId { get; }
 
         /// <summary>
+        ///     Returns the current execution target if one is set, or
+        ///     <c>null</c> if no target is set.
+        /// </summary>
+        AzureExecutionTarget? ActiveTarget { get; }
+
+        /// <summary>
+        ///     Returns the current target capability level if one is set.
+        /// </summary>
+        TargetCapability TargetCapability { get; }
+
+        /// <summary>
         ///     Returns the active workspace connected to this client, or
         ///     <c>null</c> if none is set.
         /// </summary>
         Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; }
+
+        /// <summary>
+        ///     Attempts to set the current target capability given the name
+        ///     of the given capability.
+        /// </summary>
+        bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? capability);
     }
 }

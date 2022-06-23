@@ -3,10 +3,7 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
@@ -102,45 +99,58 @@ namespace Microsoft.Quantum.IQSharp
         internal readonly string CacheFolder;
         internal readonly IEnumerable<FileSystemWatcher> Watchers;
 
+        internal XDocument? Document =>
+            string.IsNullOrEmpty(ProjectFile)
+            ? null
+            : XDocument.Load(ProjectFile);
+        internal string? Property(string name) =>
+            // TODO: Use MSBuild to expand logical project.
+            Document
+            ?.XPathSelectElements($"//{name}")
+            ?.Select(e => e.Value)
+            ?.SingleOrDefault()
+            ?? null;
+
         /// <summary>
         /// Creates and returns <see cref="Project"/> objects corresponding to each
         /// <c>ProjectReference</c> element in the .csproj referenced by <see cref="ProjectFile"/>.
         /// </summary>
         internal IEnumerable<Project> ProjectReferences =>
-            string.IsNullOrEmpty(ProjectFile)
-            ? Enumerable.Empty<Project>()
-            : XDocument.Load(ProjectFile)
-                .XPathSelectElements("//ProjectReference")
-                .Select(element => element.Attribute("Include")?.Value)
-                .Where(include => !string.IsNullOrEmpty(include))
-                .Select(include => Path.GetFullPath(
-                    include!.Replace('\\', Path.DirectorySeparatorChar),
-                    Path.GetDirectoryName(ProjectFile)))
-                .Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder));
+            Document
+            ?.XPathSelectElements("//ProjectReference")
+            ?.Select(element => element.Attribute("Include")?.Value)
+            ?.Where(include => !string.IsNullOrEmpty(include))
+            ?.Select(include => Path.GetFullPath(
+                include!.Replace('\\', Path.DirectorySeparatorChar),
+                Path.GetDirectoryName(ProjectFile)))
+            ?.Select(projectFile => Project.FromProjectFile(projectFile, CacheFolder))
+            ?? Enumerable.Empty<Project>();
 
         /// <summary>
         /// Creates and returns <see cref="PackageReference"/> objects corresponding to each
         /// <c>PackageReference</c> element in the .csproj referenced by <see cref="ProjectFile"/>.
         /// </summary>
         internal IEnumerable<PackageReference> PackageReferences =>
-            string.IsNullOrEmpty(ProjectFile)
-            ? Enumerable.Empty<PackageReference>()
-            : XDocument.Load(ProjectFile)
-                .XPathSelectElements("//PackageReference")
-                .Select(element => new PackageReference(
-                    new PackageIdentity(
-                        id: element.Attribute("Include")?.Value,
-                        version: new NuGetVersion(element.Attribute("Version")?.Value)),
-                    NuGetFramework.AnyFramework));
+            Document
+            ?.XPathSelectElements("//PackageReference")
+            ?.Select(element => new PackageReference(
+                new PackageIdentity(
+                    id: element.Attribute("Include")?.Value,
+                    version: new NuGetVersion(element.Attribute("Version")?.Value)),
+                NuGetFramework.AnyFramework))
+            ?? Enumerable.Empty<PackageReference>();
 
         internal string Sdk =>
-            string.IsNullOrEmpty(ProjectFile)
-            ? string.Empty
-            : XDocument.Load(ProjectFile)
-                .XPathSelectElements("//Project")
-                .Select(element => element.Attribute("Sdk")?.Value)
-                .FirstOrDefault()
+            Document
+            ?.XPathSelectElements("//Project")
+            ?.Select(element => element.Attribute("Sdk")?.Value)
+            ?.FirstOrDefault()
             ?? string.Empty;
+
+        public string? TargetId =>
+            Property("ExecutionTarget");
+        public string? TargetCapability =>
+            Property("TargetCapability");
 
         internal bool UsesQuantumSdk =>
             Sdk.StartsWith("Microsoft.Quantum.Sdk");
@@ -151,10 +161,7 @@ namespace Microsoft.Quantum.IQSharp
             get 
             {
                 if (string.IsNullOrEmpty(ProjectFile)) return false;
-                var elementValue = XDocument.Load(ProjectFile)
-                    .XPathSelectElements($"//{AutoLoadPropertyName}")
-                    .Select(element => element.Value)
-                    .FirstOrDefault();
+                var elementValue = Property(AutoLoadPropertyName);
                 if (string.IsNullOrWhiteSpace(elementValue)) return null;
                 if (Boolean.TryParse(elementValue, out var shouldAutoLoad)) return shouldAutoLoad;
                 return null;

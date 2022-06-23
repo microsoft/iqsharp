@@ -3,16 +3,13 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CompilationBuilder;
 
 namespace Microsoft.Quantum.IQSharp
@@ -72,7 +69,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
         /// </summary>
-        public AssemblyInfo AssemblyInfo { get; set; }
+        public AssemblyInfo? AssemblyInfo { get; set; }
 
         /// <summary>
         ///  The Workspace these Snippets depend on. Snippets may call operations
@@ -137,7 +134,7 @@ namespace Microsoft.Quantum.IQSharp
         /// compilation and it will return a new Snippet with the warnings and Q# elements
         /// reported by the compiler.
         /// </summary>
-        public async Task<Snippet> Compile(string code, ITaskReporter? parent = null)
+        public async Task<Snippet> Compile(string code, TargetCapability? capability = null, ITaskReporter? parent = null)
         {
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentNullException(nameof(code));
 
@@ -153,7 +150,14 @@ namespace Microsoft.Quantum.IQSharp
             {
                 var snippets = SelectSnippetsToCompile(code, perfTask).ToArray();
                 perfTask?.ReportStatus("Selected snippets.", "selected-snippets");
-                var assembly = await Compiler.BuildSnippets(snippets, await _metadata, logger, Path.Combine(Workspace.CacheFolder, "__snippets__.dll"), parent: perfTask);
+                var assembly = await Compiler.BuildSnippets(
+                    snippets,
+                    await _metadata,
+                    logger,
+                    Path.Combine(Workspace.CacheFolder, "__snippets__.dll"),
+                    capability: capability,
+                    parent: perfTask
+                );
                 perfTask?.ReportStatus("Built snippets.", "built-snippets");
 
                 if (logger.HasErrors)
@@ -168,18 +172,19 @@ namespace Microsoft.Quantum.IQSharp
 
                 // populate the original snippet with the results of the compilation:
                 Snippet populate(Snippet s) =>
-                    new Snippet()
+                    s with
                     {
-                        id = string.IsNullOrWhiteSpace(s.id) ? Guid.NewGuid().ToString() : s.id,
-                        code = s.code,
-                        warnings = logger.Logs
+                        Id = string.IsNullOrWhiteSpace(s.Id) ? Guid.NewGuid().ToString() : s.Id,
+                        Code = s.Code,
+                        Warnings = logger.Logs
                             .Where(m => m.Source == CompilationUnitManager.GetFileId(s.Uri))
                             .Select(logger.Format)
                             .ToArray(),
                         Elements = assembly?.SyntaxTree?
                             .SelectMany(ns => ns.Elements)
                             .Where(c => c.SourceFile() == CompilationUnitManager.GetFileId(s.Uri))
-                            .ToArray()
+                            .ToArray(),
+                        Diagnostics = logger.Logs
                     };
 
                 AssemblyInfo = assembly;
@@ -208,7 +213,7 @@ namespace Microsoft.Quantum.IQSharp
             var ops = Compiler.IdentifyElements(code, perfTask).Select(Extensions.ToFullName).ToArray();
             var snippetsWithNoOverlap = Items.Where(s => !s.Elements.Select(Extensions.ToFullName).Intersect(ops).Any());
 
-            return snippetsWithNoOverlap.Append(new Snippet { code = code });
+            return snippetsWithNoOverlap.Append(new Snippet { Code = code });
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 using McMaster.Extensions.CommandLineUtils;
@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp
         public class LoggingOptions
         {
             public string? LogPath { get; set; }
+            public LogLevel? FileLogLevel { get; set; }
         }
 
         public static bool TelemetryOptOut
@@ -72,14 +73,22 @@ namespace Microsoft.Quantum.IQSharp
                         Prefix = "IQSHARP_",
                         Aliases = new Dictionary<string, string>
                         {
-                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
-                            ["USER_AGENT"] = "UserAgent",
-                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
-                            ["HOSTING_ENV"] = "HostingEnvironment",
-                            ["LOG_PATH"] = "LogPath",
+                            // Package and project load settings
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
+
+                            // Telemetry and metadata settings
+                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
+                            ["HOSTING_ENV"] = "HostingEnvironment",
+                            ["USER_AGENT"] = "UserAgent",
+                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
+
+                            // Logging settings
+                            ["LOG_PATH"] = "LogPath",
+                            ["FILE_LOG_LEVEL"] = "FileLogLevel",
+                            ["BINLOG_PATH"] = "MSBuildBinlogPath",
+                            ["SESSION_RECORD_PATH"] = "SessionRecordPath",
                         }
                     })
                     .Build();
@@ -98,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             loggingBuilder.AddFile(
                                 options.LogPath,
-                                minimumLevel: LogLevel.Debug
+                                minimumLevel: options.FileLogLevel ?? LogLevel.Debug
                             );
                         }
                     }
@@ -117,7 +126,7 @@ namespace Microsoft.Quantum.IQSharp
                         });
                     }
                 );
-                CommandOption userAgentOption = null;
+                CommandOption? userAgentOption = null;
 
                 AddWorkspaceOption(
                     app
@@ -130,6 +139,9 @@ namespace Microsoft.Quantum.IQSharp
                         );
                     })
                     .WithKernelArguments(() =>
+                        // We know that the closure above is called by the time
+                        // we get to this point, such that userAgentOption is
+                        // not null at this point.
                         userAgentOption!.HasValue()
                         ? new [] {"--user-agent-extra", userAgentOption!.Value()}
                         : Array.Empty<string>()
@@ -169,11 +181,16 @@ namespace Microsoft.Quantum.IQSharp
 
         public static IWebHost GetHttpServer(string[]? args)
         {
-           return WebHost.CreateDefaultBuilder(args)
+           var builder = WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
                 .UseUrls("http://localhost:8008")
-                .UseStartup<Startup>()
-                .UseConfiguration(Configuration)
-                .Build();
+                .UseStartup<Startup>();
+
+            if (Configuration is not null)
+            {
+                builder.UseConfiguration(Configuration);
+            }
+                
+            return builder.Build();
         }
 
         // Adds the Workspace settings to the "server" and "kernel" commands:

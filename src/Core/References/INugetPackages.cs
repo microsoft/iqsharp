@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using NuGet.Packaging.Core;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
 namespace Microsoft.Quantum.IQSharp
@@ -32,9 +33,13 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         IReadOnlyDictionary<string, NuGetVersion> DefaultVersions { get; }
 
+        SourceRepository GlobalPackagesSource { get; }
+
         /// <summary>
         /// Add a package.
         /// </summary>
         Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null);
+
+        Task<IEnumerable<SourcePackageDependencyInfo>> Get(PackageIdentity pkgId, Action<string>? statusCallback = null);
     }
 }

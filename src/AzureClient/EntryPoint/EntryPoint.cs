@@ -3,14 +3,9 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Quantum.IQSharp.Jupyter;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Core;
@@ -192,22 +187,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
 
+            Logger?.LogInformation("Submitting job {FriendlyName} with {NShots} shots.", submissionContext.FriendlyName, submissionContext.Shots);
             var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 
             // Find and invoke the method on IQirSubmitter that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)
-            var submitMethod = typeof(IQirSubmitter)
-                .GetMethods()
-                .Single(method =>
-                    method.Name == "SubmitAsync"
-                    && method.GetParameters().Length == 4
-                    && method.GetParameters()[0].ParameterType == typeof(Stream)
-                    && method.GetParameters()[1].ParameterType == typeof(string)
-                    && method.GetParameters()[2].ParameterType == typeof(IReadOnlyList<Argument>)
-                    && method.GetParameters()[3].ParameterType == typeof(SubmissionOptions)
-                );
-            var submitParameters = new object[] { QirStream, $"{EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options };
-            return (Task<IQuantumMachineJob>)submitMethod.Invoke(submitter, submitParameters);
+            return submitter.SubmitAsync(QirStream, $"{EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options);
         }
     }
 }

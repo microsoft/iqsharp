@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Reflection;
 
 using Microsoft.CodeAnalysis;
@@ -89,7 +85,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Calculates Roslyn's MetadataReference for all the Assemblies and their dependencies.
         /// </summary>
-        private static ImmutableArray<MetadataReference> RoslynInit(IEnumerable<string> paths) =>
+        internal static ImmutableArray<MetadataReference> RoslynInit(IEnumerable<string> paths) =>
             paths.Select(p =>
             {
                 if (metadataReferenceCache.TryGetValue(p, out var cached))

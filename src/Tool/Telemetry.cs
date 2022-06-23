@@ -258,6 +258,7 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("KernelInstanceId".WithTelemetryNamespace(), KernelInstanceId);
             evt.SetProperty("ExecutionCount".WithTelemetryNamespace(), TelemetryService.baseEngine?.ExecutionCount?.ToString());
             evt.SetProperty("CurrentTarget".WithTelemetryNamespace(), TelemetryService.client?.ActiveTargetId);
+            evt.SetProperty("CurrentTargetCapability".WithTelemetryNamespace(), TelemetryService.client?.TargetCapability?.ToString());
             evt.SetProperty("CurrentSubscription".WithTelemetryNamespace(), (TelemetryService.client as AzureClient.AzureClient)?.ActiveWorkspace?.SubscriptionId, PiiKind.GenericData);
             evt.SetProperty(
                 "TimeSinceStart".WithTelemetryNamespace(),

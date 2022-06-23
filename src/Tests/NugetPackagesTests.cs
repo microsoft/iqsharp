@@ -1,11 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NuGet.Configuration;
@@ -133,9 +129,9 @@ namespace Tests.IQSharp
                 var pkg = new PackageIdentity(pkgName, pkgVersion);
                 var localPkg = LocalFolderUtility.GetPackageV3(SettingsUtility.GetGlobalPackagesFolder(mgr.NugetSettings), pkg, mgr.Logger);
 
-                if (localPkg != null)
+                if (localPkg != null && Path.GetDirectoryName(localPkg.Path) is {} localPath)
                 {
-                    Directory.Delete(Path.GetDirectoryName(localPkg.Path), true);
+                    Directory.Delete(localPath, true);
                 }
             }
 
