@@ -68,7 +68,7 @@ function Test-Python {
 
     Write-Host "##[info]Installing IQ# kernel"
     Push-Location (Join-Path $PSScriptRoot '../src/Tool')
-        dotnet run -c $Env:BUILD_CONFIGURATION --no-build -- install --user
+        dotnet run -c $Env:BUILD_CONFIGURATION --no-build -- install --user --log-level Debug
     Pop-Location
 
     Write-Host "##[info]Testing Python inside $testFolder"    
