@@ -1,5 +1,4 @@
 jupyter==1.0.0
-matplotlib==3.5.2
 nbconvert==6.5.0
 notebook==6.4.12
 numpy==1.21.6
