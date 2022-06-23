@@ -4,5 +4,5 @@ nbconvert==6.5.0
 notebook==6.4.12
 numpy==1.22.4
 pytest==7.1.2
-qutip==4.12.0
+qutip==4.7.0
 setuptools==62.6.0
