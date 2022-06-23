@@ -1,3 +1,0 @@
-pytest==7.1.2
-notebook==6.4.12
-selenium==4.2.0

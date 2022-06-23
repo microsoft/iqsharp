@@ -2,7 +2,7 @@ jupyter==1.0.0
 matplotlib==3.5.2
 nbconvert==6.5.0
 notebook==6.4.12
-numpy==1.22.4
+numpy==1.21.6
 pytest==7.1.2
 qutip==4.7.0
 selenium==4.2.0
