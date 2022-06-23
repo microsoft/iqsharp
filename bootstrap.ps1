@@ -22,15 +22,6 @@ if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("
 
 
 if ($Env:ENABLE_PYTHON -ne "false") {
-    $venv = Join-Path  $PSScriptRoot '../.venv'
-    if (Test-Path -Path $venv) {
-        Write-Host "##[info]Activating Python virtual environment"
-        . $venv\Scripts\activate.ps1
-    } else {
-        Write-Host "##[info]Creating Python virtual environment"
-        python -m venv $venv
-        . $venv/Scripts/activate.ps1
-        $requirements = Join-Path $PSScriptRoot 'requirements.txt'
-        pip install -r  $requirements
-    }
+    $requirements = Join-Path $PSScriptRoot 'requirements.txt'
+    pip install -r  $requirements
 }
