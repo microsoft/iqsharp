@@ -59,6 +59,9 @@ public partial class CompilerService
             eventSource.WarningRaised += (sender, e) =>
                 Logger.LogWarning("MSBuild warning: {Code} {Message}", e.Code, e.Message);
 
+            eventSource.ErrorRaised += (sender, e) =>
+                Logger.LogError("MSBuild error: {Code} {Message}", e.Code, e.Message);
+
             eventSource.ProjectStarted += (sender, e) =>
             {
                 var scope = Logger.BeginScope("Starting to build project {Project}.", e.ProjectFile);
@@ -182,8 +185,16 @@ public partial class CompilerService
         // See if MSBuild was registered at startup and give some logging information either way.
         if (services.GetService<MSBuildMetadata>() is {} msBuild)
         {
-            Logger.LogInformation("Using MSBuild instance: {MSBuildInstance}", msBuild);
-            return TargetPackageAssemblyPathsFromMSBuild(targetId, targetCapability);
+            Logger.LogInformation("Found MSBuild instance: {MSBuildInstance}", msBuild);
+            if (settings.ForceTargetingHeuristics)
+            {
+                Logger.LogInformation("Configured to bypass MSBuild and use heuristics to compute targeting packages.");
+                return TargetPackageAssemblyPathsFromHeuristics(targetId, targetCapability).Collect().Result;
+            }
+            else
+            {
+                return TargetPackageAssemblyPathsFromMSBuild(targetId, targetCapability);
+            }
         }
         else
         {

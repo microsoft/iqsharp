@@ -51,7 +51,6 @@ namespace Microsoft.Quantum.IQSharp
             /// </summary>
             public string? AutoOpenNamespaces { get; init; } = null;
 
-
             /// <summary>
             ///     If <c>true</c>, loads and caches compiler dependencies (e.g.: Roslyn
             ///     and Q# code generation) on startup.
@@ -66,6 +65,12 @@ namespace Microsoft.Quantum.IQSharp
             ///      when building temporary projects.
             /// </summary>
             public string? MSBuildBinlogPath { get; init; } = null;
+
+            /// <summary>
+            ///      If <c>true</c>, will always use heuristics to compute target
+            ///      package assemblies rather than using MSBuild and SDK packages.
+            /// </summary>
+            public bool ForceTargetingHeuristics { get; init; } = false;
         }
 
         /// <summary>

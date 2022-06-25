@@ -77,6 +77,7 @@ namespace Microsoft.Quantum.IQSharp
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
+                            ["FORCE_TARGETING_HEURISTICS"] = "ForceTargetingHeuristics",
 
                             // Telemetry and metadata settings
                             ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
