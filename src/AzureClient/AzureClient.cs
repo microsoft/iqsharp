@@ -639,7 +639,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             async Task<Stream> ReadHttp()
             {
-                var client = new HttpClient();
+                var handler = new HttpClientHandler();
+                handler.CheckCertificateRevocationList = true;
+                var client = new HttpClient(handler);
                 var request = await client.GetAsync(job.OutputDataUri, cancellationToken);
                 return await request.Content.ReadAsStreamAsync();
             }
