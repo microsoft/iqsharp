@@ -14,6 +14,11 @@ steps:
     packageType: sdk
     useGlobalJson: true
 
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: 3.9
+  displayName: 'Use Python 3.9'
+
 - pwsh: ./bootstrap.ps1
   displayName: "Bootstrap"
   workingDirectory: '$(System.DefaultWorkingDirectory)'

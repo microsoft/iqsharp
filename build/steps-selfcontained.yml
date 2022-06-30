@@ -7,6 +7,17 @@ steps:
 ##
 # Pre-reqs
 ##
+- task: UseDotNet@2
+  displayName: 'Use .NET SDK'
+  inputs:
+    packageType: sdk
+    useGlobalJson: true
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: 3.9
+  displayName: 'Use Python 3.9'
+
 - task: DownloadBuildArtifacts@0
   inputs:
     artifactName: iqsharp
@@ -15,12 +26,6 @@ steps:
 - pwsh: |
     Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
   displayName: "Copy build artifacts to IQ# working directory"
-
-- task: UseDotNet@2
-  displayName: 'Use .NET Core SDK 6.0.100'
-  inputs:
-    packageType: sdk
-    version: '6.0.x'
 
 ##
 # Pack
