@@ -23,8 +23,9 @@ if (($Env:ASSEMBLY_CONSTANTS -ne $null) -and ($Env:ASSEMBLY_CONSTANTS.Contains("
 
 # Install Python requirements for building/testing
 if ($Env:ENABLE_PYTHON -ne "false") {
+    $pythonVersion = python --version
     $requirements = Join-Path $PSScriptRoot 'src\Python\requirements.txt'
-    "##[info]Installing requirements from $requirements" | Write-Host
+    "##[info]Installing requirements from '$requirements' using version: '{$pythonVersion}'" | Write-Host
     pip install -r  $requirements | Write-Host
     "==> pip install complete <==" | Write-Host
 }
