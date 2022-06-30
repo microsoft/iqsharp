@@ -1,13 +1,6 @@
 ##
 # Move build artifacts and create conda environment
 ##
-variables:
-  ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
-    CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
-  ${{ if eq(variables['Agent.OS'], 'Darwin') }}:
-    CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
-  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
-    CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
 
 steps:
 ##

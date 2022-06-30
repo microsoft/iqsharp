@@ -22,6 +22,12 @@ variables:
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
   agent.preferPowerShellOnContainers: false
+  ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
+    CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+  ${{ if eq(variables['Agent.OS'], 'Darwin') }}:
+    CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+    CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
 
 jobs:
 - job: "iqsharp"
