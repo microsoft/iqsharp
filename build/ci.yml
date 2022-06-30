@@ -53,9 +53,6 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'macOS-latest'
-  variables:
-    OS: 'mac'
-    CondaShellHook: "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -65,10 +62,6 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   container: mcr.microsoft.com/quantum/linux-selfcontained:latest
-  variables:
-    OS: 'linux'
-    CondaPath: '/miniconda/bin'
-    CondaShellHook: "$('/miniconda/bin/conda' 'shell.bash' 'hook')"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -78,9 +71,6 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   container: mcr.microsoft.com/quantum/windows-selfcontained:latest
-  variables:
-    OS: 'windows'
-    CondaPath: 'C:\Miniconda3\Scripts'
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')

@@ -1,6 +1,13 @@
 ##
 # Move build artifacts and create conda environment
 ##
+variables:
+  ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
+    CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+  ${{ if eq(variables['Agent.OS'], 'Darwin') }}:
+    CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+    CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
 
 steps:
 ##
@@ -28,45 +35,31 @@ steps:
 ##
 # Create conda environment
 ##
-- script: |
-    eval "$(CondaShellHook)"
+- pwsh: |
+    $(CondaShellHook)
     conda create --yes --quiet --name conda_env
-  displayName: Create Anaconda environment
-  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
-
-- pwsh: |
-    $(CondaPath)/conda.exe create --yes --quiet --name conda_env
   displayName: Create Anaconda environment pwsh
-  condition: eq(variables.OS, 'windows')
 
 ##
-# Install conda packages
+# Install packages
 ##
-- script: |
-    eval "$(CondaShellHook)"
+- pwsh: |
+    $(CondaShellHook)
     conda install --yes --quiet --name base conda-build=4.13.0
-    conda install --yes --quiet --name conda_env python=3.9 pip setuptools pytest  jupyter numpy conda-build conda-package-handling
+    conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
   displayName: Install Anaconda packages
-  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
 
 - pwsh: |
-    $(CondaPath)/conda.exe install --yes --quiet --name base conda-build=4.13.0
-    $(CondaPath)/conda.exe install --yes --quiet --name conda_env python=3.9 pip setuptools pytest jupyter numpy conda-build conda-package-handling
-  displayName: Install Anaconda packages
-  condition: eq(variables.OS, 'windows')
+    $(CondaShellHook)
+    conda activate conda_env
+    conda info
+    $requirements = Join-Path 'src' 'Python' 'requirements.txt'
+    pip install -r $requirements
+  displayName: Install pypi packages
 
 ##
 # Pack conda packages for each OS
 ##
-- script: |
-    eval "$(CondaShellHook)"
-    conda activate conda_env
-    conda info
-    pwsh -NoProfile -Command ./pack-conda.ps1
-  displayName: "Packing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
-
 # Running pack-conda.ps1 from a new, independent instance of pwsh
 # prevents Azure Pipelines from interpreting the stderr stream from
 # conda-build as an exception stream, making it easier to capture
@@ -75,34 +68,25 @@ steps:
 # Note that any actual failures in conda-build can be detected by examining
 # exit codes and by testing the artifacts produced by pack-conda.ps1.
 - pwsh: |
-    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    $(CondaShellHook)
     conda activate conda_env
     conda info
     pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: eq(variables.OS, 'windows')
+
 
 ##
 # Test conda packages for each OS
 ##
-- script: |
-    eval "$(CondaShellHook)"
-    conda activate conda_env
-    conda info
-    pwsh -NoProfile -Command ./test-conda.ps1
-  displayName: "Testing IQ# packages"
-  workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac')))
-
 - pwsh: |
-    (& "$(CondaPath)/conda.exe" "shell.powershell" "hook") | Out-String | Invoke-Expression
+    $(CondaShellHook)
     conda activate conda_env
     conda info
     pwsh -NoProfile -Command ./test-conda.ps1
   displayName: "Testing IQ# packages"
   workingDirectory: '$(System.DefaultWorkingDirectory)/build'
-  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'), eq(variables.OS, 'windows'))
+  condition: and(succeeded(), ne(variables['Skip.Tests'], 'true'))
 
 ##
 # Publish build artifacts.
