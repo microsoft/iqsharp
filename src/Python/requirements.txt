@@ -8,3 +8,4 @@ pygments==2.12.0   # to avoid high-severity issue.
 qutip==4.7.0
 selenium==4.2.0
 setuptools==62.6.0
+wheel==0.37.1
