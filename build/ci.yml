@@ -34,7 +34,7 @@ jobs:
       windows:
         imageName: 'windows-latest'
   variables:
-    CondaShellHook: (& $(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression
+    CondaEnvironmentName: conda_env
   pool: 
     vmImage: $(imageName)
   steps:
@@ -42,34 +42,37 @@ jobs:
     inputs:
       versionSpec: 3.9
     displayName: 'Use Python 3.9'
-  - pwsh: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-    displayName: Add conda to PATH
+  - pwsh: |
+      $env:PATH="$env:CONDA\Scripts;$env:PATH"
+      $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+      $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      
+      "##vso[task.setvariable variable=one]$CondaLocation" | Write-Host
+      "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
+      "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
+    displayName: Add Conda variables to environment
   # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
   # We need to take ownership if we want to update conda or install packages globally
   - bash: sudo chown -R $USER $CONDA
     displayName: Take ownership of conda installation
     condition: eq(variables['Agent.OS'], 'Darwin')
   - pwsh: |
-      "CondaPath: " | Write-Host
-      Get-Command conda  | Write-Host
-      "CondaShellHook: $(CondaShellHook)" | Write-Host
-      $(CondaShellHook)
-      conda create --yes --quiet --name conda_env
-    displayName: Create Anaconda environment pwsh
+      "##[info]Conda environment variables" | Write-Host
+      Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
+
+      "##[info]Creating conda environment" | Write-Host
+      conda create --yes --quiet --name $(CondaEnvironmentName)
+
+      "##[info]Installing conda packages" | Write-Host
+      conda install --yes --quiet --name $(CondaEnvironmentName) python=3.9 pip conda-build conda-package-handling
+    displayName: Create and setup $(CondaEnvironmentName)
   - pwsh: |
-      "CondaShellHook: $(CondaShellHook)" | Write-Host
       $(CondaShellHook)
-      conda install --yes --quiet --name base conda-build=4.13.0
-      conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
-    displayName: Install Anaconda packages
-  - pwsh: |
-      "CondaShellHook: $(CondaShellHook)" | Write-Host
-      $(CondaShellHook)
-      conda activate conda_env
+      conda activate $(CondaEnvironmentName)
       conda info
       $requirements = Join-Path 'src' 'Python' 'requirements.txt'
       pip install -r $requirements
-    displayName: Install pypi packages
+    displayName: Install PyPI packages
 
 - job: "iqsharp"
   pool:
