@@ -29,13 +29,13 @@ jobs:
     matrix:
       linux:
         imageName: 'ubuntu-18.04'
-        CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+        CondaShellHook: (& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
       mac:
         imageName: 'macOS-latest'
-        CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+        CondaShellHook: (& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
       windows:
         imageName: 'windows-latest'
-        CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+        CondaShellHook: (& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   pool: 
     vmImage: $(imageName)
   steps:
