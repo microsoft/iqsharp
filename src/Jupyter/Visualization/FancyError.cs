@@ -81,7 +81,9 @@ public record FancyError(string? Source, Diagnostic Diagnostic)
         );
         try
         {
-            var client = new HttpClient();
+            var handler = new HttpClientHandler();
+            handler.CheckCertificateRevocationList = true;
+            var client = new HttpClient(handler);
             var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(TimeSpan.FromSeconds(2));
             var resp = await client.GetAsync(lookupUri, tokenSource.Token);
