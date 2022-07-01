@@ -33,8 +33,6 @@ jobs:
         imageName: 'macOS-latest'
       windows:
         imageName: 'windows-latest'
-  variables:
-    CondaShellHook: (& $(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   pool: 
     vmImage: $(imageName)
   steps:
@@ -42,20 +40,22 @@ jobs:
     inputs:
       versionSpec: 3.9
     displayName: 'Use Python 3.9'
+  - pwsh: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: Add conda to PATH
+  # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+  # We need to take ownership if we want to update conda or install packages globally
+  - bash: sudo chown -R $USER $CONDA
+    displayName: Take ownership of conda installation
+    condition: eq($(Agent.OS), 'Darwin')
   - pwsh: |
       "CondaPath: " | Write-Host
       Get-Command conda  | Write-Host
-      "CondaShellHook: $(CondaShellHook)" | Write-Host
-      $(CondaShellHook)
-      conda create --yes --quiet --name conda_env
+      conda create --yes --name conda_env
     displayName: Create Anaconda environment pwsh
   - pwsh: |
-      $(CondaShellHook)
-      conda install --yes --quiet --name base conda-build=4.13.0
-      conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
+      conda install --yes --name conda_env python=3.9 pip conda-build conda-package-handling
     displayName: Install Anaconda packages
   - pwsh: |
-      $(CondaShellHook)
       conda activate conda_env
       conda info
       $requirements = Join-Path 'src' 'Python' 'requirements.txt'
