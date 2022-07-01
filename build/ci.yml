@@ -29,13 +29,12 @@ jobs:
     matrix:
       linux:
         imageName: 'ubuntu-18.04'
-        CondaShellHook: (& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
       mac:
         imageName: 'macOS-latest'
-        CondaShellHook: (& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
       windows:
         imageName: 'windows-latest'
-        CondaShellHook: (& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
+  variables:
+    CondaShellHook: (& $(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   pool: 
     vmImage: $(imageName)
   steps:
@@ -44,6 +43,9 @@ jobs:
       versionSpec: 3.9
     displayName: 'Use Python 3.9'
   - pwsh: |
+      "CondaPath: " | Write-Host
+      Get-Command conda  | Write-Host
+      "CondaShellHook: $(CondaShellHook)" | Write-Host
       $(CondaShellHook)
       conda create --yes --quiet --name conda_env
     displayName: Create Anaconda environment pwsh
