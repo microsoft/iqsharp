@@ -63,8 +63,8 @@ jobs:
 - job: "iqsharp"
   pool:
     vmImage: 'ubuntu-latest'
-    steps:
-    - template: steps.yml
+  steps:
+  - template: steps.yml
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
     inputs:
