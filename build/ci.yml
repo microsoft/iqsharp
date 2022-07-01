@@ -22,19 +22,49 @@ variables:
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
   agent.preferPowerShellOnContainers: false
-  ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
-    CondaShellHook: (& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
-  ${{ if eq(variables['Agent.OS'], 'Darwin') }}:
-    CondaShellHook: (& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
-  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
-    CondaShellHook: (& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
 
 jobs:
+- job: "prototype"
+  strategy:
+    matrix:
+      linux:
+        imageName: 'ubuntu-18.04'
+        CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      mac:
+        imageName: 'macOS-latest'
+        CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      windows:
+        imageName: 'windows-latest'
+        CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+  pool: 
+    vmImage: $(imageName)
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+    displayName: 'Use Python 3.9'
+  - pwsh: |
+      $(CondaShellHook)
+      conda create --yes --quiet --name conda_env
+    displayName: Create Anaconda environment pwsh
+  - pwsh: |
+      $(CondaShellHook)
+      conda install --yes --quiet --name base conda-build=4.13.0
+      conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
+    displayName: Install Anaconda packages
+  - pwsh: |
+      $(CondaShellHook)
+      conda activate conda_env
+      conda info
+      $requirements = Join-Path 'src' 'Python' 'requirements.txt'
+      pip install -r $requirements
+    displayName: Install pypi packages
+
 - job: "iqsharp"
   pool:
     vmImage: 'ubuntu-latest'
-  steps:
-  - template: steps.yml
+    steps:
+    - template: steps.yml
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
     inputs:
@@ -59,6 +89,8 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'macOS-latest'
+  variables:
+    CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -67,6 +99,8 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'ubuntu-latest'
+  variables:
+    CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
   container: mcr.microsoft.com/quantum/linux-selfcontained:latest
   steps:
   - template: steps-conda.yml
@@ -76,6 +110,8 @@ jobs:
   dependsOn: "pack_selfcontained"
   pool:
     vmImage: 'windows-latest'
+  variables:
+    CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
   container: mcr.microsoft.com/quantum/windows-selfcontained:latest
   steps:
   - template: steps-conda.yml
