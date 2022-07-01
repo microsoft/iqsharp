@@ -90,7 +90,7 @@ jobs:
   pool:
     vmImage: 'macOS-latest'
   variables:
-    CondaShellHook: "(& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    CondaShellHook: (& '/usr/local/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   steps:
   - template: steps-conda.yml
   condition: ne(variables['Enable.Conda'], 'false')
@@ -100,7 +100,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   variables:
-    CondaShellHook: "(& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    CondaShellHook: (& '/miniconda/bin/conda' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   container: mcr.microsoft.com/quantum/linux-selfcontained:latest
   steps:
   - template: steps-conda.yml
@@ -111,7 +111,7 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   variables:
-    CondaShellHook: "(& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    CondaShellHook: (& 'C:\Miniconda3\Scripts\conda.exe' 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   container: mcr.microsoft.com/quantum/windows-selfcontained:latest
   steps:
   - template: steps-conda.yml
