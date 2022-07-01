@@ -17,6 +17,22 @@ steps:
     versionSpec: 3.9
   displayName: 'Use Python 3.9'
 
+- pwsh: |
+    $env:PATH="$env:CONDA\Scripts;$env:PATH"
+    $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+    $CondaShellHook="(`& `$CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    
+    "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
+    "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
+    "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
+  displayName: Prepare shell environment for Conda
+
+# On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+# We need to take ownership if we want to update conda or install packages globally
+- bash: sudo chown -R $USER $CONDA
+  displayName: Take ownership of conda installation
+  condition: eq(variables['Agent.OS'], 'Darwin')
+  
 - task: DownloadBuildArtifacts@0
   inputs:
     artifactName: iqsharp
@@ -26,29 +42,29 @@ steps:
   displayName: "Move build artifacts to IQ# working directory"
 
 ##
-# Create conda environment
+# Create and prepare conda environment
 ##
 - pwsh: |
-    $(CondaShellHook)
-    conda create --yes --quiet --name conda_env
-  displayName: Create Anaconda environment pwsh
+    "##[info]Conda environment variables" | Write-Host
+    Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
 
-##
-# Install packages
-##
-- pwsh: |
-    $(CondaShellHook)
-    conda install --yes --quiet --name base conda-build=4.13.0
-    conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
-  displayName: Install Anaconda packages
+    "##[info]Creating conda environment" | Write-Host
+    conda create --yes --name $(CondaEnvironmentName)
+
+    "##[info]Installing conda packages" | Write-Host
+    conda install --yes --name $(CondaEnvironmentName) python=3.9 pip conda-build conda-package-handling
+  displayName: Create and setup $(CondaEnvironmentName)
 
 - pwsh: |
+    "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
     $(CondaShellHook)
-    conda activate conda_env
+    conda activate $(CondaEnvironmentName)
     conda info
+
     $requirements = Join-Path 'src' 'Python' 'requirements.txt'
+    "##[info]Install requirements from: $requirements" | Write-Host
     pip install -r $requirements
-  displayName: Install pypi packages
+  displayName: Install PyPI packages
 
 ##
 # Pack conda packages for each OS
@@ -61,8 +77,9 @@ steps:
 # Note that any actual failures in conda-build can be detected by examining
 # exit codes and by testing the artifacts produced by pack-conda.ps1.
 - pwsh: |
+    "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
     $(CondaShellHook)
-    conda activate conda_env
+    conda activate $(CondaEnvironmentName)
     conda info
     pwsh -NoProfile -Command ./pack-conda.ps1
   displayName: "Packing IQ# packages"
@@ -73,8 +90,9 @@ steps:
 # Test conda packages for each OS
 ##
 - pwsh: |
+    "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
     $(CondaShellHook)
-    conda activate conda_env
+    conda activate $(CondaEnvironmentName)
     conda info
     pwsh -NoProfile -Command ./test-conda.ps1
   displayName: "Testing IQ# packages"
