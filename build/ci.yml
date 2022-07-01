@@ -24,56 +24,6 @@ variables:
   agent.preferPowerShellOnContainers: false
 
 jobs:
-- job: "prototype"
-  strategy:
-    matrix:
-      linux:
-        imageName: 'ubuntu-18.04'
-      mac:
-        imageName: 'macOS-latest'
-      windows:
-        imageName: 'windows-latest'
-  variables:
-    CondaEnvironmentName: conda_env
-  pool: 
-    vmImage: $(imageName)
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.9
-    displayName: 'Use Python 3.9'
-  - pwsh: |
-      $env:PATH="$env:CONDA\Scripts;$env:PATH"
-      $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
-      $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
-      
-      "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
-      "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
-      "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
-    displayName: Add Conda variables to environment
-  # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-  # We need to take ownership if we want to update conda or install packages globally
-  - bash: sudo chown -R $USER $CONDA
-    displayName: Take ownership of conda installation
-    condition: eq(variables['Agent.OS'], 'Darwin')
-  - pwsh: |
-      "##[info]Conda environment variables" | Write-Host
-      Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
-
-      "##[info]Creating conda environment" | Write-Host
-      conda create --yes --quiet --name $(CondaEnvironmentName)
-
-      "##[info]Installing conda packages" | Write-Host
-      conda install --yes --quiet --name $(CondaEnvironmentName) python=3.9 pip conda-build conda-package-handling
-    displayName: Create and setup $(CondaEnvironmentName)
-  - pwsh: |
-      $(CondaShellHook)
-      conda activate $(CondaEnvironmentName)
-      conda info
-      $requirements = Join-Path 'src' 'Python' 'requirements.txt'
-      pip install -r $requirements
-    displayName: Install PyPI packages
-
 - job: "iqsharp"
   pool:
     vmImage: 'ubuntu-latest'
