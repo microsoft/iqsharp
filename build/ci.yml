@@ -47,7 +47,7 @@ jobs:
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
       $CondaShellHook="(`& `$CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
       
-      "##vso[task.setvariable variable=one]$CondaLocation" | Write-Host
+      "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
       "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
       "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
     displayName: Add Conda variables to environment
