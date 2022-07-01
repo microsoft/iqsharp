@@ -54,7 +54,7 @@ steps:
 
     "##[info]Installing conda packages" | Write-Host
     conda install --yes --name $(CondaEnvironmentName) python=3.9 pip conda-build=3.21.9 conda-package-handling=1.8.1
-  displayName: Create and setup $(CondaEnvironmentName)
+  displayName: Create and setup conda environment
 
 - pwsh: |
     "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
