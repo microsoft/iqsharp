@@ -33,6 +33,8 @@ jobs:
         imageName: 'macOS-latest'
       windows:
         imageName: 'windows-latest'
+  variables:
+    CondaShellHook: (& $(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression
   pool: 
     vmImage: $(imageName)
   steps:
@@ -50,12 +52,19 @@ jobs:
   - pwsh: |
       "CondaPath: " | Write-Host
       Get-Command conda  | Write-Host
-      conda create --yes --name conda_env
+      "CondaShellHook: $(CondaShellHook)" | Write-Host
+      $(CondaShellHook)
+      conda create --yes --quiet --name conda_env
     displayName: Create Anaconda environment pwsh
   - pwsh: |
-      conda install --yes --name conda_env python=3.9 pip conda-build conda-package-handling
+      "CondaShellHook: $(CondaShellHook)" | Write-Host
+      $(CondaShellHook)
+      conda install --yes --quiet --name base conda-build=4.13.0
+      conda install --yes --quiet --name conda_env python=3.9 pip conda-build conda-package-handling
     displayName: Install Anaconda packages
   - pwsh: |
+      "CondaShellHook: $(CondaShellHook)" | Write-Host
+      $(CondaShellHook)
       conda activate conda_env
       conda info
       $requirements = Join-Path 'src' 'Python' 'requirements.txt'
