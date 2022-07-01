@@ -46,7 +46,7 @@ jobs:
   # We need to take ownership if we want to update conda or install packages globally
   - bash: sudo chown -R $USER $CONDA
     displayName: Take ownership of conda installation
-    condition: eq($(Agent.OS), 'Darwin')
+    condition: eq(variables['Agent.OS'], 'Darwin')
   - pwsh: |
       "CondaPath: " | Write-Host
       Get-Command conda  | Write-Host
