@@ -45,7 +45,7 @@ jobs:
   - pwsh: |
       $env:PATH="$env:CONDA\Scripts;$env:PATH"
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
-      $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      $CondaShellHook="(`& `$CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
       
       "##vso[task.setvariable variable=one]$CondaLocation" | Write-Host
       "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
