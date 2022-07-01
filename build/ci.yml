@@ -99,24 +99,28 @@ jobs:
   - template: steps-selfcontained.yml
   condition: ne(variables['Enable.Conda'], 'false')
 
-- job: "pack_conda"
+- job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
-  condition: ne(variables['Enable.Conda'], 'false')
-  strategy:
-    matrix:
-      linux:
-        imageName: 'ubuntu-latest'
-        containerName: mcr.microsoft.com/quantum/linux-selfcontained:latest
-      mac:
-        imageName: 'macOS-latest'
-        containerName: ''
-      windows:
-        imageName: 'windows-latest'
-        containerName: mcr.microsoft.com/quantum/windows-selfcontained:latest
-  variables:
-    CondaEnvironmentName: conda_env
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
-    vmImage: $(imageName)
-  container: $(containerName)
+    vmImage: 'macOS-latest'
+  steps:
+  - template: steps-conda.yml
+  
+- job: "pack_conda_linux"
+  dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
+  pool:
+    vmImage: 'ubuntu-latest'
+  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+  steps:
+  - template: steps-conda.yml
+  
+- job: "pack_conda_windows"
+  dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
+  pool:
+    vmImage: 'windows-latest'
+  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
   steps:
   - template: steps-conda.yml
