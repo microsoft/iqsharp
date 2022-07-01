@@ -20,7 +20,7 @@ steps:
 - pwsh: |
     $env:PATH="$env:CONDA\Scripts;$env:PATH"
     $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
-    $CondaShellHook="(`& `$CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    $CondaShellHook="(`& `$env:CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
     
     "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
     "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
