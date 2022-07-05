@@ -29,7 +29,7 @@ jobs:
     CondaEnvironmentName: conda_env
   pool: 
     vmImage: 'ubuntu-18.04'
-  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
+  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET SDK'
@@ -83,7 +83,7 @@ jobs:
     CondaEnvironmentName: conda_env
   pool: 
     vmImage: 'windows-latest'
-  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET SDK'
