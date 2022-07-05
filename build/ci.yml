@@ -36,8 +36,8 @@ jobs:
   variables:
     CondaEnvironmentName: conda_env
   pool: 
-    vmImage: $(containerName)
-  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+    vmImage: $(imageName)
+  container: $(containerName)
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET SDK'
