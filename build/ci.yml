@@ -27,7 +27,7 @@ jobs:
 - job: "prototype_linux"
   variables:
     CondaEnvironmentName: conda_env
-    CondaPath:  /usr/bin
+    CondaPath:  /miniconda/bin/
   pool: 
     vmImage: 'ubuntu-18.04'
   container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
@@ -82,7 +82,7 @@ jobs:
 - job: "prototype_windows"
   variables:
     CondaEnvironmentName: conda_env
-    CondaPath: C:\Miniconda\Scripts\
+    CondaPath: C:\Miniconda3\Scripts
   pool: 
     vmImage: 'windows-latest'
   container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
