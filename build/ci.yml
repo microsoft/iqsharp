@@ -24,20 +24,66 @@ variables:
   agent.preferPowerShellOnContainers: false
 
 jobs:
-- job: "prototype"
-  strategy:
-    matrix:
-      linux:
-        imageName: 'ubuntu-18.04'
-        containerName: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
-      windows:
-        imageName: 'windows-latest'
-        containerName: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+- job: "prototype_linux"
   variables:
     CondaEnvironmentName: conda_env
   pool: 
-    vmImage: $(imageName)
-  container: $(containerName)
+    vmImage: 'ubuntu-18.04'
+  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK'
+    inputs:
+      packageType: sdk
+      useGlobalJson: true
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+    displayName: 'Use Python 3.9'
+
+  - pwsh: |
+      $env:PATH="$env:CONDA\Scripts;$env:PATH"
+      $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+      $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      
+      "##vso[task.setvariable variable=CondaEnvironmentName]conda_env" | Write-Host
+      "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
+      "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
+      "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
+    displayName: Prepare shell environment for Conda
+
+  ##
+  # Create and prepare conda environment
+  ##
+  - pwsh: |
+      "##[info]Conda environment variables" | Write-Host
+      Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
+
+      "##[info]Creating conda environment" | Write-Host
+      conda create --yes --name $(CondaEnvironmentName)
+
+      "##[info]Installing conda packages" | Write-Host
+      conda install --yes --name $(CondaEnvironmentName) python=3.9 pip conda-build=3.21.9 conda-package-handling=1.8.1
+    displayName: Create and setup conda environment
+
+  - pwsh: |
+      "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
+      $(CondaShellHook)
+      conda activate $(CondaEnvironmentName)
+      conda info
+
+      $requirements = Join-Path 'src' 'Python' 'requirements.txt'
+      "##[info]Install requirements from: $requirements" | Write-Host
+      pip install -r $requirements
+    displayName: Install PyPI packages
+
+- job: "prototype_windows"
+  variables:
+    CondaEnvironmentName: conda_env
+  pool: 
+    vmImage: 'windows-latest'
+  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET SDK'
