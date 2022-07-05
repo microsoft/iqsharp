@@ -27,6 +27,7 @@ jobs:
 - job: "prototype_linux"
   variables:
     CondaEnvironmentName: conda_env
+    CondaPath:  /usr/bin
   pool: 
     vmImage: 'ubuntu-18.04'
   container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
@@ -43,7 +44,7 @@ jobs:
     displayName: 'Use Python 3.9'
 
   - pwsh: |
-      $env:PATH="$env:CONDA\Scripts;$env:PATH"
+      $env:PATH="$env:CondaPath;$env:PATH"
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
       $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
       
@@ -81,6 +82,7 @@ jobs:
 - job: "prototype_windows"
   variables:
     CondaEnvironmentName: conda_env
+    CondaPath: C:\Miniconda\Scripts\
   pool: 
     vmImage: 'windows-latest'
   container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
@@ -97,7 +99,7 @@ jobs:
     displayName: 'Use Python 3.9'
 
   - pwsh: |
-      $env:PATH="$env:CONDA\Scripts;$env:PATH"
+      $env:PATH="$env:CondaPath;$env:PATH"
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
       $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
       
