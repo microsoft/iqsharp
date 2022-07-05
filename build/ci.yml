@@ -32,6 +32,7 @@ jobs:
     vmImage: 'ubuntu-18.04'
   container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
   steps:
+
   - task: UseDotNet@2
     displayName: 'Use .NET SDK'
     inputs:
@@ -44,14 +45,18 @@ jobs:
     displayName: 'Use Python 3.9'
 
   - pwsh: |
-      $env:PATH="$env:CondaPath;$env:PATH"
+      "CondaPath: $(CondaPath)" | Write-Host
+      "##vso[task.prependpath]$(CondaPath)" | Write-Host
+    displayName: Add Conda to Path
+
+  - pwsh: |
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+      "CondaLocation: $CondaLocation" | Write-Host
       $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      "CondaShellHook: $CondaShellHook" | Write-Host
       
-      "##vso[task.setvariable variable=CondaEnvironmentName]conda_env" | Write-Host
       "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
       "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
-      "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
     displayName: Prepare shell environment for Conda
 
   ##
@@ -99,14 +104,18 @@ jobs:
     displayName: 'Use Python 3.9'
 
   - pwsh: |
-      $env:PATH="$env:CondaPath;$env:PATH"
+      "CondaPath: $(CondaPath)" | Write-Host
+      "##vso[task.prependpath]$(CondaPath)" | Write-Host
+    displayName: Add Conda to Path
+
+  - pwsh: |
       $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+      "CondaLocation: $CondaLocation" | Write-Host
       $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+      "CondaShellHook: $CondaShellHook" | Write-Host
       
-      "##vso[task.setvariable variable=CondaEnvironmentName]conda_env" | Write-Host
       "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
       "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
-      "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
     displayName: Prepare shell environment for Conda
 
   ##
