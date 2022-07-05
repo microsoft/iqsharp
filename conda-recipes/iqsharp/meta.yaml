@@ -20,12 +20,11 @@ build:
 requirements:
   build:
     - python
-    - setuptools==62.6.0
     - jupyter
 
   run:
     - python
-    - jupyter_client>=7.3.4
+    - jupyter_client
 
 test:
   requires:
