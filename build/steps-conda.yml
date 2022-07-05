@@ -18,15 +18,34 @@ steps:
   displayName: 'Use Python 3.9'
 
 - pwsh: |
-    $env:PATH="$env:CONDA\Scripts;$env:PATH"
+    "CondaPath: $(CondaPath)" | Write-Host
+    "##vso[task.prependpath]$(CondaPath)" | Write-Host
+  displayName: Add Conda to Path
+
+##
+# Create and prepare conda environment
+##
+- pwsh: |
+    "##[info]Conda environment variables" | Write-Host
+    Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
+
     $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
-    $CondaShellHook="(`& `$(Get-Command conda | Select-Object -ExpandProperty Source) 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
-    
-    "##vso[task.setvariable variable=CondaEnvironmentName]conda_env" | Write-Host
+    "##[info]CondaLocation: $CondaLocation" | Write-Host
     "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
+
+    $CondaShellHook="(`& $CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    "##[info]CondaShellHook: $CondaShellHook" | Write-Host
     "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
-    "##vso[task.prependpath]$env:CONDA\Scripts" | Write-Host
-  displayName: Prepare shell environment for Conda
+
+    $CondaEnvironmentName=conda_env
+    "##vso[task.setvariable variable=CondaEnvironmentName]$CondaEnvironmentName" | Write-Host
+
+    "##[info]Creating conda environment" | Write-Host
+    conda create --yes --name $CondaEnvironmentName
+
+    "##[info]Installing conda packages" | Write-Host
+    conda install --yes --name $CondaEnvironmentName python=3.9 pip conda-build=3.21.9 conda-package-handling=1.8.1
+  displayName: Create and setup conda environment
 
 # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
 # We need to take ownership if we want to update conda or install packages globally

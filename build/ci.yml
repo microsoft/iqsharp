@@ -172,6 +172,8 @@ jobs:
   condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
     vmImage: 'macOS-latest'
+  variables:
+    CondaPath: /usr/local/bin/
   steps:
   - template: steps-conda.yml
   
@@ -181,6 +183,8 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+  variables:
+    CondaPath:  /miniconda/bin/
   steps:
   - template: steps-conda.yml
   
@@ -190,5 +194,7 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
+  variables:
+    CondaPath: C:\Miniconda3\Scripts
   steps:
   - template: steps-conda.yml
