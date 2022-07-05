@@ -37,7 +37,7 @@ steps:
     "##[info]CondaShellHook: $CondaShellHook" | Write-Host
     "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
 
-    $CondaEnvironmentName=conda_env
+    $CondaEnvironmentName='conda_env'
     "##vso[task.setvariable variable=CondaEnvironmentName]$CondaEnvironmentName" | Write-Host
 
     "##[info]Creating conda environment" | Write-Host
