@@ -26,7 +26,6 @@ test:
   requires:
     - python
     - iqsharp={{ version }}
-    - pytest
 
   source_files:
     - src/conda-recipes/qsharp/test.ps1
