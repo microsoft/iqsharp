@@ -298,6 +298,8 @@ class IQSharpClient(object):
         )
 
     def _handle_message(self, msg, handlers=None, error_callback=None, fallback_hook=None):
+        logger.debug(f"_handle_message:\n{msg}")
+
         if handlers is None:
             handlers = {}
         if fallback_hook is None:
