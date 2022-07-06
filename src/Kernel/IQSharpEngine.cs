@@ -11,6 +11,8 @@ using System.Collections.Immutable;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.QsCompiler.BondSchemas;
 using System.Threading;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
+using System.IO;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -41,6 +43,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
     /// </summary>
     public class IQSharpEngine : BaseEngine
     {
+
+        /// <summary>
+        ///      Settings for the IQ# execution engine that are set only at launch.
+        /// </summary>
+        public record Settings
+        {
+            public string? SessionRecordPath { get; init; } = null;
+        }
+
+        private readonly Settings settings;
+
         private readonly IPerformanceMonitor performanceMonitor;
         private readonly IConfigurationSource configurationSource;
         private readonly IServiceProvider services;
@@ -79,6 +92,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         public IQSharpEngine(
             IShellServer shell,
             IOptions<KernelContext> context,
+            IOptions<Settings> settings,
             ILogger<IQSharpEngine> logger,
             IServiceProvider services,
             IConfigurationSource configurationSource,
@@ -108,6 +122,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.metadataController = metadataController;
             this.commsRouter = commsRouter;
             this.eventService = eventService;
+            this.settings = settings.Value ?? new();
 
             // Start comms routers as soon as possible, so that they can
             // be responsive during kernel startup.
@@ -199,30 +214,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             this.Workspace = await serviceTasks.Workspace;
             var references = await serviceTasks.References;
 
-
-
             logger.LogDebug("Registering IQ# display and JSON encoders.");
-            RegisterDisplayEncoder(new IQSharpSymbolToHtmlResultEncoder());
-            RegisterDisplayEncoder(new IQSharpSymbolToTextResultEncoder());
-            RegisterDisplayEncoder(new TaskStatusToTextEncoder());
-            RegisterDisplayEncoder(new StateVectorToHtmlResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new StateVectorToTextResultEncoder(configurationSource));
-            RegisterDisplayEncoder(new DataTableToHtmlEncoder());
-            RegisterDisplayEncoder(new DataTableToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToHtmlEncoder());
-            RegisterDisplayEncoder(new DisplayableExceptionToTextEncoder());
-            RegisterDisplayEncoder(new DisplayableHtmlElementEncoder());
-            RegisterDisplayEncoder(new TaskProgressToHtmlEncoder());
-
-            // For back-compat with older versions of qsharp.py <= 0.17.2105.144881
-            // that expected the application/json MIME type for the JSON data.
-            var userAgentVersion = metadataController.GetUserAgentVersion();
-            logger.LogInformation($"userAgentVersion: {userAgentVersion}");
-            var jsonMimeType = metadataController?.UserAgent?.StartsWith("qsharp.py") == true
-                ? userAgentVersion != null && userAgentVersion > new Version(0, 17, 2105, 144881)
-                    ? "application/x-qsharp-data"
-                    : "application/json"
-                : "application/x-qsharp-data";
+            RegisterDisplayEncoder<IQSharpSymbolToHtmlResultEncoder>();
+            RegisterDisplayEncoder<IQSharpSymbolToTextResultEncoder>();
+            RegisterDisplayEncoder<TaskStatusToTextEncoder>();
+            RegisterDisplayEncoder<StateVectorToHtmlResultEncoder>();
+            RegisterDisplayEncoder<StateVectorToTextResultEncoder>();
+            RegisterDisplayEncoder<DataTableToHtmlEncoder>();
+            RegisterDisplayEncoder<DataTableToTextEncoder>();
+            RegisterDisplayEncoder<DisplayableExceptionToHtmlEncoder>();
+            RegisterDisplayEncoder<DisplayableExceptionToTextEncoder>();
+            RegisterDisplayEncoder<DisplayableHtmlElementEncoder>();
+            RegisterDisplayEncoder<TaskProgressToHtmlEncoder>();
+            RegisterDisplayEncoder<TargetCapabilityToHtmlEncoder>();
+            RegisterDisplayEncoder<FancyErrorToTextEncoder>();
+            RegisterDisplayEncoder<FancyErrorToHtmlEncoder>();
+            // Allow objects to display themselves using IDisplayable.
+            RegisterDisplayEncoder(new DisplayableEncoder(MimeTypes.Html));
+            RegisterDisplayEncoder(new DisplayableEncoder(MimeTypes.PlainText));
 
             // Register JSON encoders, and make sure that Newtonsoft.Json
             // doesn't throw exceptions on reference loops.
@@ -230,7 +239,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             };
-            RegisterJsonEncoder(jsonMimeType,
+            RegisterJsonEncoder("application/x-qsharp-data",
                 JsonConverters.AllConverters
                 .Concat(AzureClient.JsonConverters.AllConverters)
                 .ToArray());
@@ -260,6 +269,10 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 Debug.Assert(initializedSuccessfully, "Was unable to complete initialization task.");
             #endif
         }
+
+        internal void RegisterDisplayEncoder<T>()
+        where T: IResultEncoder =>
+            RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<T>(services));
 
         /// <inheritdoc />
         public override async Task<CompletionResult?> Complete(string code, int cursorPos)
@@ -370,6 +383,42 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             };
         }
 
+        private record SessionLogRecord(string Input, ExecuteStatus Status, object Output)
+        {
+            public List<object>? Displays { get; init; } = new();
+            public List<string>? Stderrs { get; init; } = new();
+            public List<string>? Stdouts { get; init; } = new();
+        }
+        private record RecordingChannel(IChannel BaseChannel) : IChannel
+        {
+            public readonly List<object> Displays = new List<object>();
+            public readonly List<string> Stderrs = new List<string>();
+            public readonly List<string> Stdouts = new List<string>();
+
+            public void Display(object displayable)
+            {
+                Displays.Add(displayable);
+                BaseChannel.Display(displayable);
+            }
+
+            public void Stderr(string message)
+            {
+                Stderrs.Add(message);
+                BaseChannel.Stderr(message);
+            }
+
+            public void Stdout(string message)
+            {
+                Stdouts.Add(message);
+                BaseChannel.Stdout(message);
+            }
+
+            ICommsRouter? IChannel.CommsRouter => BaseChannel.CommsRouter;
+            IUpdatableDisplay IChannel.DisplayUpdatable(object displayable) =>
+                BaseChannel.DisplayUpdatable(displayable);
+            void IChannel.SendIoPubMessage(Microsoft.Jupyter.Core.Protocol.Message message) =>
+                BaseChannel.SendIoPubMessage(message);
+        }
         /// <inheritdoc />
         public override async Task<ExecutionResult> Execute(string input, IChannel channel, CancellationToken token)
         {
@@ -393,7 +442,24 @@ namespace Microsoft.Quantum.IQSharp.Kernel
 
             try
             {
-                return await base.Execute(input, channel, token);
+                if (!string.IsNullOrEmpty(settings.SessionRecordPath))
+                {
+                    var recordingChannel = new RecordingChannel(channel);
+                    var result = await base.Execute(input, recordingChannel, token);
+                    var sessionRecord = new SessionLogRecord(input, result.Status, result.Output)
+                    {
+                        Displays = recordingChannel.Displays,
+                        Stderrs = recordingChannel.Stderrs,
+                        Stdouts = recordingChannel.Stdouts
+                    };
+                    using var stream = File.AppendText(settings.SessionRecordPath.Trim());
+                    stream.Write(JsonConvert.SerializeObject(sessionRecord, JsonConverters.AllConverters) + System.Environment.NewLine);
+                    return result;
+                }
+                else
+                {
+                    return await base.Execute(input, channel, token);
+                }
             }
             finally
             {
@@ -421,7 +487,7 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     type,
                     parentTaskName,
                     taskName,
-                    perfTask!.TimeSinceStart                    
+                    perfTask!.TimeSinceStart
                 ));
             }
 
@@ -430,29 +496,42 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 QsCompiler.Diagnostics.PerformanceTracking.CompilationTaskEvent += ForwardCompilerTask;
             }
 
+
+
             return await Task.Run(async () =>
             {
+                // Since this method is only called once this.Initialized
+                // has completed, we know that Workspace
+                // and Snippets are both not-null.
+                Debug.Assert(
+                    this.Initialized.IsCompleted,
+                    "Engine was not initialized before call to ExecuteMundane. " +
+                    "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
+                );
+                perfTask.ReportStatus("Initialized engine.", "init-engine");
+
+                var workspace = this.Workspace!;
+                var snippets = this.Snippets!;
+                await workspace.Initialization;
                 try
                 {
-                    // Since this method is only called once this.Initialized
-                    // has completed, we know that Workspace
-                    // and Snippets are both not-null.
-                    Debug.Assert(
-                        this.Initialized.IsCompleted,
-                        "Engine was not initialized before call to ExecuteMundane. " +
-                        "This is an internal error; if you observe this message, please file a bug report at https://github.com/microsoft/iqsharp/issues/new."
-                    );
-                    perfTask.ReportStatus("Initialized engine.", "init-engine");
-
-                    var workspace = this.Workspace!;
-                    var snippets = this.Snippets!;
-                    await workspace.Initialization;
                     perfTask.ReportStatus("Initialized workspace.", "init-workspace");
+                    var capability = services.GetRequiredService<IAzureClient>().TargetCapability;
 
-                    var code = await snippets.Compile(input, perfTask);
+                    var code = await snippets.Compile(input, capability, perfTask);
                     perfTask.ReportStatus("Compiled snippets.", "compiled-snippets");
 
-                    foreach (var m in code.warnings) { channel.Stdout(m); }
+                    if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
+                    {
+                        foreach (var m in code.Warnings ?? Enumerable.Empty<string>())
+                        {
+                            channel.Stdout(m);
+                        }
+                    }
+                    else
+                    {
+                        channel.DisplayFancyDiagnostics(code.Diagnostics, snippets, input);
+                    }
 
                     // Gets the names of all the operations found for this snippet
                     var opsNames =
@@ -488,7 +567,14 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     }
                     else
                     {
-                        foreach (var m in c.Errors) channel.Stderr(m);
+                        if (metadataController.IsPythonUserAgent() || configurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
+                        {
+                            foreach (var m in c.Errors) channel.Stderr(m);
+                        }
+                        else
+                        {
+                           channel.DisplayFancyDiagnostics(c.Diagnostics, snippets, input);
+                        }
                     }
                     return ExecuteStatus.Error.ToExecutionResult();
                 }

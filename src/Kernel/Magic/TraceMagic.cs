@@ -156,6 +156,8 @@ public class TraceMagic : AbstractMagic
         var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
 
         var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
+        if (name == null) throw new InvalidOperationException($"Expected operation name.");
+
         var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
         if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
 

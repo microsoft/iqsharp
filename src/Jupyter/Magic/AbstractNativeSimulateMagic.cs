@@ -65,7 +65,11 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
             var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
             var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
-            if (symbol == null) throw new InvalidOperationException($"Invalid operation name: {name}");
+            if (symbol == null)
+            {
+                new CommonMessages.NoSuchOperation(name).Report(channel, ConfigurationSource);
+                return ExecuteStatus.Error.ToExecutionResult();
+            }
 
             var maxNQubits = 0L;
 

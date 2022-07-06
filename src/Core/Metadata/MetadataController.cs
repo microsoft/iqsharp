@@ -183,7 +183,7 @@ namespace Microsoft.Quantum.IQSharp
         )
         {
             UserAgent =
-                clientInformation.Value.UserAgent
+                clientInformation.Value.UserAgent ?? ""
                 + (string.IsNullOrWhiteSpace(clientInformation.Value.UserAgentExtra) ? "" : $"({clientInformation.Value.UserAgentExtra})");
             HostingEnvironment = clientInformation.Value.HostingEnvironment;
             TelemetryOptOut = clientInformation.Value.IsTelemetryOptOut;

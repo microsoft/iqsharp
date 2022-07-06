@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
+    <Compile Include="../Common/GlobalUsings.cs" Link="Properties/Common/GlobalUsings.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,15 +40,20 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.24.213922-beta" />
-    <PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.24.213922-beta" />
-    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.213922-beta" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.24.213922-beta" />
-    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.24.213922-beta" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.24.216242-beta" />
+    <PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.24.216242-beta" />
+    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.24.216242-beta" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.24.216242-beta" />
+    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.24.216242-beta" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
     <PackageReference Include="NuGet.Resolver" Version="5.1.0" />
     <PackageReference Include="System.DirectoryServices.Protocols" Version="5.0.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+      <PackageReference Include="Microsoft.Build" Version="17.2" ExcludeAssets="runtime" />
+      <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.2" ExcludeAssets="runtime" />
   </ItemGroup>
 
 </Project>

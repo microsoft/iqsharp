@@ -218,15 +218,23 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             var location = inputParameters.DecodeParameter<string>(ParameterNameLocation, defaultValue: config?.WorkspaceLocation ?? string.Empty);
             var storageAccountConnectionString = inputParameters.DecodeParameter<string>(ParameterNameStorageAccountConnectionString, defaultValue: string.Empty);
             var credentialType = inputParameters.DecodeParameter<CredentialType>(ParameterNameCredential, defaultValue: CredentialType.Default);
-            return await AzureClient.ConnectAsync(
-                channel,
-                subscriptionId,
-                resourceGroupName,
-                workspaceName,
-                storageAccountConnectionString,
-                location,
-                credentialType,
-                cancellationToken);
+            var updatableDisplay = channel.DisplayUpdatable("Connecting to Azure Quantum...");
+            try
+            {
+                return await AzureClient.ConnectAsync(
+                    channel,
+                    subscriptionId,
+                    resourceGroupName,
+                    workspaceName,
+                    storageAccountConnectionString,
+                    location,
+                    credentialType,
+                    cancellationToken);
+            }
+            finally
+            {
+                updatableDisplay.Update("");
+            }
         }
     }
 }

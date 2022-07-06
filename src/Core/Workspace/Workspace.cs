@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#nullable enable
+
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,8 +33,8 @@ public class Workspace : IWorkspace
     /// </summary>
     public class Settings
     {
-        private string _workspace;
-        private string _cacheFolder;
+        private string? _workspace;
+        private string? _cacheFolder;
 
         /// <summary>
         /// The Workspace's root folder
@@ -67,12 +68,12 @@ public class Workspace : IWorkspace
     /// <summary>
     /// This event is triggered whenever the workspace is reloaded.
     /// </summary>
-    public event EventHandler<ReloadedEventArgs> Reloaded;
+    public event EventHandler<ReloadedEventArgs>? Reloaded;
 
     /// <summary>
     /// This event is triggered whenever a project is loaded into the workspace.
     /// </summary>
-    public event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
+    public event EventHandler<ProjectLoadedEventArgs>? ProjectLoaded;
 
     /// <summary>
     /// Logger instance used for .net core logging.
@@ -122,7 +123,7 @@ public class Workspace : IWorkspace
     public IEnumerable<string> SourceFiles => Projects.SelectMany(p => p.SourceFiles).Distinct();
 
     /// <inheritdoc/>
-    public AssemblyInfo AssemblyInfo =>
+    public AssemblyInfo? AssemblyInfo =>
         Projects
             .Where(p => string.IsNullOrEmpty(p.ProjectFile))
             .Select(p => p.AssemblyInfo)
@@ -130,12 +131,15 @@ public class Workspace : IWorkspace
 
     /// <inheritdoc/>
     public IEnumerable<AssemblyInfo> Assemblies =>
-        Projects.Select(p => p.AssemblyInfo).Where(asm => asm != null);
+        Projects
+        .Select(p => p.AssemblyInfo)
+        .Where(asm => asm != null)
+        .Select(e => e!);
 
     /// <summary>
     /// The compilation errors, if any.
     /// </summary>
-    public IEnumerable<string> ErrorMessages { get; set; }
+    public IEnumerable<string>? ErrorMessages { get; set; }
 
     /// <summary>
     /// If any of the files in the workspace had any compilation errors.
@@ -154,6 +158,17 @@ public class Workspace : IWorkspace
 
     /// <inheritdoc/>
     public Task Initialization => Task.Run(() => initialized.WaitOne());
+
+    // Will be non-null after `Initialization` completes.
+    private Project? workspaceProject = null;
+    public Project WorkspaceProject
+    {
+        get
+        {
+            Initialization.Wait();
+            return workspaceProject!;
+        }
+    }
 
     /// <summary>
     /// Main constructor that accepts ILogger and IReferences as dependencies.
@@ -174,8 +189,8 @@ public class Workspace : IWorkspace
         NugetPackages = packages;
         Logger = logger;
 
-        Root = config?.Value.Workspace;
-        CacheFolder = config?.Value.CacheFolder;
+        Root = config.Value.Workspace;
+        CacheFolder = config.Value.CacheFolder;
         SkipAutoLoadProject = config?.Value.SkipAutoLoadProject ?? false;
         MonitorWorkspace = config?.Value.MonitorWorkspace ?? false;
 
@@ -222,7 +237,8 @@ public class Workspace : IWorkspace
 
     private void ResolveProjectReferences()
     {
-        var projects = new List<Project>() { Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject, Logger) };
+        workspaceProject = Project.FromWorkspaceFolder(Root, CacheFolder, SkipAutoLoadProject, Logger);
+        var projects = new List<Project>() { workspaceProject };
         projects.AddRange(UserAddedProjects);
 
         var projectsToResolve = projects.Distinct(new ProjectFileComparer()).ToList();
@@ -377,7 +393,7 @@ public class Workspace : IWorkspace
         return true;
     }
 
-    private void LoadReferencedPackages(Action<string> statusCallback = null)
+    private void LoadReferencedPackages(Action<string>? statusCallback = null)
     {
         foreach (var project in Projects)
         {
@@ -440,13 +456,13 @@ public class Workspace : IWorkspace
     /// <summary>
     /// Reloads the workspace from disk.
     /// </summary>
-    public async Task Reload(Action<string> statusCallback = null)
+    public async Task Reload(Action<string>? statusCallback = null)
     {
         await Initialization;
         await DoReload(statusCallback);
     }
 
-    private async Task DoReload(Action<string> statusCallback = null)
+    private async Task DoReload(Action<string>? statusCallback = null)
     { 
         var duration = Stopwatch.StartNew();
         var fileCount = 0;

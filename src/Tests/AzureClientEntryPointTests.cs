@@ -3,10 +3,6 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
@@ -30,11 +26,11 @@ namespace Tests.IQSharp
 
             if (codeSnippets != null)
             {
-                var snippets = services.GetService<ISnippets>();
-                snippets.Items = codeSnippets.Select(codeSnippet => new Snippet() { code = codeSnippet });
+                var snippets = services.GetRequiredService<ISnippets>();
+                snippets.Items = codeSnippets.Select(codeSnippet => new Snippet() { Code = codeSnippet });
             }
 
-            return services.GetService<IEntryPointGenerator>();
+            return services.GetRequiredService<IEntryPointGenerator>();
         }
 
         internal async Task CheckValidParameter(

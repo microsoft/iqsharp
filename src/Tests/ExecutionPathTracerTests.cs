@@ -32,10 +32,10 @@ namespace Tests.IQSharp
             if (this.operations == null)
             {
                 var ws = await InitWorkspace();
-                this.operations = ws.AssemblyInfo.Operations;
+                this.operations = ws.AssemblyInfo?.Operations;
             }
 
-            var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
+            var op = this.operations?.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
             Assert.IsNotNull(op);
 
             var tracer = new ExecutionPathTracer();

@@ -3,11 +3,7 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -62,7 +58,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The information of the assembly compiled from all the given snippets
         /// </summary>
-        AssemblyInfo AssemblyInfo { get; }
+        AssemblyInfo? AssemblyInfo { get; }
 
         /// <summary>
         /// The list of currently available snippets.
@@ -74,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp
         /// with the new operations found in the Snippet and returns a new Snippet
         /// populated with the results of the compilation.
         /// </summary>
-        Task<Snippet> Compile(string code, ITaskReporter? parent = null);
+        Task<Snippet> Compile(string code, TargetCapability? capability = null, ITaskReporter? parent = null);
 
         /// <summary>
         /// The list of operations found in all snippets compiled successfully so far.

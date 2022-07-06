@@ -203,8 +203,8 @@ class IQSharpClient(object):
     def trace(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('trace', op, _quiet_ = True, **kwargs)
 
-    def compile_to_qir(self, op, output: str) -> None:
-        return self._execute_callable_magic('qir', op, output=output)
+    def compile_to_qir(self, op) -> None:
+        return self._execute_callable_magic('qir', op)
 
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """

@@ -29,10 +29,21 @@ namespace Tests.IQSharp
     [TestClass]
     public class IQSharpEngineTests
     {
-        public async static Task<IQSharpEngine> Init(string workspace = "Workspace")
+        public async static Task<IQSharpEngine> Init(string workspace = "Workspace", Action<IServiceProvider>? configure = null)
         {
             System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
-            var engine = Startup.Create<IQSharpEngine>(workspace);
+            var engine = Startup.Create<IQSharpEngine>(workspace, configure);
+            engine.Start();
+            await engine.Initialized;
+            Assert.IsNotNull(engine.Workspace);
+            await engine.Workspace!.Initialization;
+            return engine;
+        }
+
+        public async static Task<IQSharpEngine> Init(string workspace, Func<IServiceProvider, Task> configure)
+        {
+            System.Environment.SetEnvironmentVariable("RUST_BACKTRACE", "1");
+            var engine = await Startup.Create<IQSharpEngine>(workspace, configure);
             engine.Start();
             await engine.Initialized;
             Assert.IsNotNull(engine.Workspace);
@@ -222,7 +233,13 @@ namespace Tests.IQSharp
             Assert.AreEqual(ExecuteStatus.Error, response.Status);
             Assert.AreEqual(0, channel.msgs.Count);
             Assert.AreEqual(1, channel.errors.Count);
-            Assert.AreEqual(ChannelWithNewLines.Format($"Invalid operation name: _snippet_.HelloQ"), channel.errors[0]);
+            Assert.AreEqual(
+                ChannelWithNewLines.Format(
+                    "No Q# operation with name `_snippet_.HelloQ` has been defined.\n" +
+                    "Hint: You may have misspelled the name `_snippet_.HelloQ`, or you may have forgotten to run a cell above."
+                ),
+                channel.errors[0]
+            );
 
             // Compile it:
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
@@ -441,6 +458,8 @@ namespace Tests.IQSharp
 
             {
                 var channel = new MockChannel();
+                await engine.Execute("%config errors.style = \"basic\"", channel, default);
+                channel = new MockChannel();
                 var response = await engine.ExecuteMundane(SNIPPETS.ThreeWarnings, channel);
                 PrintResult(response, channel);
                 response.AssertIsOk();
@@ -470,6 +489,9 @@ namespace Tests.IQSharp
             var engine = await Init();
 
             var channel = new MockChannel();
+            await engine.Execute("%config errors.style = \"basic\"", channel, default);
+
+            channel = new MockChannel();
             var response = await engine.ExecuteMundane(SNIPPETS.TwoErrors, channel);
             PrintResult(response, channel);
             Assert.AreEqual(ExecuteStatus.Error, response.Status);

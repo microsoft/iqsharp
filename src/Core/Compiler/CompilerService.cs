@@ -21,6 +21,7 @@ using Microsoft.Quantum.QsCompiler.ReservedKeywords;
 using Microsoft.Quantum.QsCompiler.SyntaxProcessing;
 using Microsoft.Quantum.QsCompiler.SyntaxTokens;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
+using Microsoft.Quantum.QsCompiler.Transformations;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
 using Microsoft.Quantum.QsCompiler.Transformations.QsCodeOutput;
 using Microsoft.Quantum.QsCompiler.Transformations.SyntaxTreeTrimming;
@@ -35,21 +36,20 @@ namespace Microsoft.Quantum.IQSharp
     /// Default implementation of ICompilerService.
     /// This service is capable of building .net core assemblies on the fly from Q# code.
     /// </summary>
-    public class CompilerService : ICompilerService
+    public partial class CompilerService : ICompilerService
     {
         /// <summary>
         ///     Settings for controlling how the compiler service creates
         ///     assemblies from snippets.
         /// </summary>
-        public class Settings
+        public record Settings
         {
             /// <summary>
             ///     A list of namespaces to be automatically opened in snippets,
             ///     separated by <c>,</c>. If <c>"$null"</c>, then no namespaces
             ///     are opened. Aliases can be provided by using <c>=</c>.
             /// </summary>
-            public string? AutoOpenNamespaces { get; set; }
-
+            public string? AutoOpenNamespaces { get; init; } = null;
 
             /// <summary>
             ///     If <c>true</c>, loads and caches compiler dependencies (e.g.: Roslyn
@@ -58,7 +58,19 @@ namespace Microsoft.Quantum.IQSharp
             ///     when a kernel is started in the background, but can cause
             ///     more RAM to be used.
             /// </summary>
-            public bool CacheCompilerDependencies { get; set; } = false;
+            public bool CacheCompilerDependencies { get; init; } = false;
+
+            /// <summary>
+            ///      If set to a non-null and non-empty string, enables binlogs
+            ///      when building temporary projects.
+            /// </summary>
+            public string? MSBuildBinlogPath { get; init; } = null;
+
+            /// <summary>
+            ///      If <c>true</c>, will always use heuristics to compute target
+            ///      package assemblies rather than using MSBuild and SDK packages.
+            /// </summary>
+            public bool ForceTargetingHeuristics { get; init; } = false;
         }
 
         /// <summary>
@@ -75,6 +87,8 @@ namespace Microsoft.Quantum.IQSharp
 
         private readonly Task DependenciesInitialized;
         private readonly ILogger? Logger;
+        private readonly Settings settings;
+        private readonly IServiceProvider services;
 
         // Note to future IQ# developers: This service should start ★fast★.
         // Please be judicious when adding parameters to this constructor, and
@@ -88,8 +102,10 @@ namespace Microsoft.Quantum.IQSharp
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            this.settings = options?.Value ?? new();
             Logger = logger;
-            if (options?.Value?.AutoOpenNamespaces is string namespaces)
+            this.services = serviceProvider;
+            if (settings.AutoOpenNamespaces is string namespaces)
             {
                 logger?.LogInformation(
                     "Auto-open namespaces overridden by startup options: \"{0}\"",
@@ -108,7 +124,7 @@ namespace Microsoft.Quantum.IQSharp
             }
 
             eventService?.TriggerServiceInitialized<ICompilerService>(this);
-            if (options?.Value.CacheCompilerDependencies ?? false)
+            if (settings.CacheCompilerDependencies)
             {
                 DependenciesInitialized = InitializeDependencies(serviceProvider.GetRequiredServiceInBackground<IReferences>(logger));
                 Task.Run(async () =>
@@ -273,7 +289,7 @@ namespace Microsoft.Quantum.IQSharp
         /// if the keys of the given references differ from the currently loaded ones.
         /// Returns an enumerable of all namespaces, including the content from both source files and references.
         /// </summary> 
-        private QsCompilation? UpdateCompilation(
+        private (QsCompilation?, IDictionary<string, string> AssemblyConstants) UpdateCompilation(
             ImmutableDictionary<Uri, string> sources,
             QsReferences references,
             QSharpLogger? logger = null,
@@ -284,21 +300,28 @@ namespace Microsoft.Quantum.IQSharp
         )
         {
             using var perfTask = parent?.BeginSubtask("Updating compilation", "update-compilation");
+            var targetPackages = compileAsExecutable
+                    ? TargetPackageAssemblyPaths(executionTarget, capability?.Name)
+                    : Enumerable.Empty<string>();
+            Logger.LogDebug("Using target package assemblies:\n{TargetAssemblies}", string.Join("\n", targetPackages));
+            var assemblyConstants = new Dictionary<string, string>
+            {
+                [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty,
+                [AssemblyConstants.TargetPackageAssemblies] =
+                    string.Join(";", targetPackages.Where(s => !string.IsNullOrWhiteSpace(s)))
+            };
             var loadOptions = new CompilationLoader.Configuration
             {
                 GenerateFunctorSupport = true,
                 LoadReferencesBasedOnGeneratedCsharp = false, // deserialization of resources in references is only needed if there is an execution target
                 IsExecutable = compileAsExecutable,
-                AssemblyConstants = new Dictionary<string, string> { [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty },
+                AssemblyConstants = assemblyConstants,
                 TargetCapability = capability ?? TargetCapabilityModule.FullComputation,
-                // ToDo: The logic for determining if we should generate QIR should live in the SubmitterFactory as a
-                // static function, `TargetSupportsQir`. We should then be calling that static function here for
-                // PrepareQirGeneration instead of this logic.
-                // GitHub Issue: https://github.com/microsoft/qsharp-runtime/issues/968
-                PrepareQirGeneration = executionTarget?.StartsWith("microsoft.simulator") ?? false
+                PrepareQirGeneration = compileAsExecutable,
+                TargetPackageAssemblies = targetPackages
             };
             var loaded = new CompilationLoader(_ => sources, _ => references, loadOptions, logger);
-            return loaded.CompilationOutput;
+            return (loaded.CompilationOutput, assemblyConstants);
         }
 
         /// <inheritdoc/>
@@ -338,7 +361,7 @@ namespace Microsoft.Quantum.IQSharp
                     : $"open {entry.Key} as {entry.Value};"
                 ));
             string WrapInNamespace(Snippet s) =>
-                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.code}\n}}";
+                $"namespace {Snippets.SNIPPETS_NAMESPACE} {{ {openStatements}\n{s.Code}\n}}";
 
             var sources = snippets.ToImmutableDictionary(s => s.Uri, WrapInNamespace);
 
@@ -388,7 +411,7 @@ namespace Microsoft.Quantum.IQSharp
 
             // Ignore any @EntryPoint() attributes found in libraries.
             logger.WarningCodesToIgnore.Add(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
-            var qsCompilation = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
+            var (qsCompilation, assemblyConstants) = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
             if (logger.HasErrors || qsCompilation == null) return null;
@@ -428,16 +451,26 @@ namespace Microsoft.Quantum.IQSharp
                 }
                 else if (qsCompilation.EntryPoints.Any())
                 {
-                    var transformed = TrimSyntaxTree.Apply(qsCompilation, keepAllIntrinsics: false);
-                    transformed = InferTargetInstructions.ReplaceSelfAdjointSpecializations(transformed);
-                    transformed = InferTargetInstructions.LiftIntrinsicSpecializations(transformed);
-                    var allAttributesAdded = InferTargetInstructions.TryAddMissingTargetInstructionAttributes(transformed, out transformed);
-                    using var generator = new Generator(transformed);
-                    generator.Apply();
-                    // Write generated QIR to disk.
-                    var tempPath = Path.GetTempPath();
-                    var bcFile = CompilationLoader.GeneratedFile(Path.Combine(tempPath, Path.GetRandomFileName()), tempPath, ".bc", "");
-                    generator.Emit(bcFile, emitBitcode: true);
+                    var tempPath = Path.GetTempFileName();
+                    var bcFile = CompilationLoader.GeneratedFile(tempPath, Path.GetDirectoryName(tempPath), ".bc", "");
+                    var diagnostics = new List<IRewriteStep.Diagnostic>();
+                    CompilationSteps.GenerateBitcode(qsCompilation, capability, bcFile, diagnostics: diagnostics);
+                    foreach (var diagnostic in diagnostics)
+                    {
+                        Logger?.Log(
+                            diagnostic.Severity switch
+                            {
+                                DiagnosticSeverity.Warning => LogLevel.Warning,
+                                DiagnosticSeverity.Error => LogLevel.Error,
+                                _ => LogLevel.Information
+                            },
+                            "IRewriteStep diagnostic during QIR generation: {Source} {Range} {Stage} {Message}",
+                            diagnostic.Source,
+                            diagnostic.Range,
+                            diagnostic.Stage,
+                            diagnostic.Message
+                        );
+                    }
                     qirStream = File.OpenRead(bcFile);
                 }
                 else if (generateQir)
@@ -455,13 +488,14 @@ namespace Microsoft.Quantum.IQSharp
                     : sources.Keys.Select(
                         file => CompilationUnitManager.GetFileId(file)
                       );
+                Logger.LogDebug($"All C# sources:\n{string.Join("\n---\n", allSources)}");
 
                 CodeAnalysis.SyntaxTree createTree(string file)
                 {
                     codeGenTask?.ReportStatus($"Creating codegen context for file {file}", "generate-one-file");
                     var codegenContext = string.IsNullOrEmpty(executionTarget)
                         ? CodegenContext.Create(qsCompilation.Namespaces)
-                        : CodegenContext.Create(qsCompilation.Namespaces, new Dictionary<string, string>() { { AssemblyConstants.ExecutionTarget, executionTarget } });
+                        : CodegenContext.Create(qsCompilation.Namespaces,assemblyConstants);
                     codeGenTask?.ReportStatus($"Generating C# for file {file}", "generate-one-file");
                     var code = SimulationCode.generate(file, codegenContext);
                     codeGenTask?.ReportStatus($"Parsing generated C# for file {file}", "generate-one-file");

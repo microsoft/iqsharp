@@ -3,20 +3,10 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.Experimental;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -127,6 +117,26 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 .AddKernelAssembly<IQSharpKernelApp>()
                 .AddKernelAssembly<AzureClient.AzureClient>();
             return serviceProvider;
+        }
+
+        internal static void DisplayFancyDiagnostics(this IChannel channel, IEnumerable<Diagnostic>? diagnostics, ISnippets snippets, string? input)
+        {
+            var defaultPath = new Snippet().FileName;
+            var sources = snippets.Items.ToDictionary(
+                s => s.FileName,
+                s => s.Code
+            );
+            foreach (var m in diagnostics ?? Enumerable.Empty<Diagnostic>())
+            {
+                var source = m.Source is {} path
+                    ? sources.TryGetValue(path, out var snippet)
+                        ? snippet
+                        : path == defaultPath
+                            ? input
+                            : null
+                    : null;
+                channel.Display(new FancyError(source, m));
+            }
         }
     }
 

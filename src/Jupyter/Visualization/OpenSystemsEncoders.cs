@@ -16,13 +16,34 @@ namespace Microsoft.Quantum.IQSharp.Jupyter;
 [JsonConverter(typeof(StringEnumConverter))]
 public enum StabilizerStateVisualizationStyle
 {
+    /// <summary>
+    ///      Formats stabilizer states as matrices of binary symplectic
+    ///      representations of each generator of the stabilizer group, augmented
+    ///      by the associated anticommuting element for each generator
+    ///      (colloquially known as destabilizers).
+    /// </summary>
     MatrixWithDestabilizers,
+    /// <summary>
+    ///      Formats stabilizer states as matrices of binary symplectic
+    ///      representations of each generator of the stabilizer group.
+    /// </summary>
     MatrixWithoutDestabilizers,
+    /// <summary>
+    ///      Represents stabilizer states by listing the Pauli matrices that
+    ///      generate the stabilizer group in dense form.
+    /// </summary>
     DenseGroupPresentation,
+    /// <summary>
+    ///      Represents stabilizer states by listing the Pauli matrices that
+    ///      generate the stabilizer group in sparse form.
+    /// </summary>
     SparseGroupPresentation
 }
 
-// TODO: add display encoders for other formats.
+/// <summary>
+///      Encodes density operators for display in notebooks and other rich-text
+///      contexts.
+/// </summary>
 public class MixedStateToHtmlDisplayEncoder : IResultEncoder
 {
     /// <inheritdoc />
@@ -61,17 +82,14 @@ public class MixedStateToHtmlDisplayEncoder : IResultEncoder
     }
 }
 
-public class StabilizerStateToHtmlDisplayEncoder : IResultEncoder
+/// <summary>
+///      Encodes stabilizer states for display in notebooks and other rich-text
+///      contexts.
+/// </summary>
+public record StabilizerStateToHtmlDisplayEncoder(IConfigurationSource ConfigurationSource) : IResultEncoder
 {
-    private readonly IConfigurationSource config;
-
     /// <inheritdoc />
     public string MimeType => MimeTypes.Html;
-
-    public StabilizerStateToHtmlDisplayEncoder(IConfigurationSource config)
-    {
-        this.config = config;
-    }
 
     /// <inheritdoc />
     public EncodedData? Encode(object displayable)
@@ -91,7 +109,7 @@ public class StabilizerStateToHtmlDisplayEncoder : IResultEncoder
                     <tr>
                         <th>State data</th>
                         <td>{
-                            config.NoisySimulatorStabilizerStateVisualizationStyle switch
+                            ConfigurationSource.NoisySimulatorStabilizerStateVisualizationStyle switch
                             {
                                 StabilizerStateVisualizationStyle.MatrixWithDestabilizers =>
                                     $@"$$\left(\begin{{array}}{{{colspec}}}{
@@ -203,62 +221,63 @@ public class NoiseModelToHtmlDisplayEncoder : IResultEncoder
     /// <inheritdoc />
     public EncodedData? Encode(object displayable)
     {
+        string LaTeXForProcess(Process? process) =>
+            // NB: We use a switch expression here to
+            //     pattern match on what representation
+            //     the given process is expressed in.
+            //     In doing so, we use the {} pattern
+            //     to capture non-null process data,
+            //     so that we are guaranteed that we
+            //     only try to display processs that
+            //     were successfully deserialized.
+            // TODO: Add other variants of process here.
+            process switch
+            {
+                UnitaryProcess { Data: {} data } =>
+                    $@"
+                        \left( \begin{{matrix}}
+                            {data.AsLaTeXMatrixOfComplex() ?? ""}
+                        \end{{matrix}} \right)",
+                KrausDecompositionProcess { Data: {} data } =>
+                    $@"
+                        \left\{{{
+                            string.Join(", ",
+                                Enumerable
+                                    .Range(0, data.Shape[0])
+                                    .Select(idxKrausOperator =>
+                                        $@"
+                                            \left( \begin{{matrix}}
+                                                {data[idxKrausOperator].AsLaTeXMatrixOfComplex()}
+                                            \end{{matrix}} \right)
+                                        "
+                                    )
+                            )
+                        }\right\}}
+                    ",
+                MixedPauliProcess { Operators: {} ops } => 
+                    $@"
+                        \text{{(mixed Pauli process) }}
+                        \left\{{{
+                            string.Join(", ",
+                                ops.Select(
+                                    item => $@"{item.Item1} {string.Join(
+                                        "",
+                                        item.Item2.Select(pauli => pauli.ToString())
+                                    )}"
+                                )
+                            )
+                        }\right\}}
+                    ",
+                {} unknown => unknown.ToString(),
+                null => "<null>"
+            };
+
         string RowForProcess(string name, Process? process) =>
             $@"
                     <tr>
                         <th>{name}</th>
                         <td>
-                            $${
-                                // NB: We use a switch expression here to
-                                //     pattern match on what representation
-                                //     the given process is expressed in.
-                                //     In doing so, we use the {} pattern
-                                //     to capture non-null process data,
-                                //     so that we are guaranteed that we
-                                //     only try to display processs that
-                                //     were successfully deserialized.
-                                // TODO: Add other variants of process here.
-                                process switch
-                                {
-                                    UnitaryProcess { Data: {} data } =>
-                                        $@"
-                                            \left( \begin{{matrix}}
-                                                {data.AsLaTeXMatrixOfComplex() ?? ""}
-                                            \end{{matrix}} \right)",
-                                    KrausDecompositionProcess { Data: {} data } =>
-                                        $@"
-                                            \left\{{{
-                                                string.Join(", ",
-                                                    Enumerable
-                                                        .Range(0, data.Shape[0])
-                                                        .Select(idxKrausOperator =>
-                                                            $@"
-                                                                \left( \begin{{matrix}}
-                                                                    {data[idxKrausOperator].AsLaTeXMatrixOfComplex()}
-                                                                \end{{matrix}} \right)
-                                                            "
-                                                        )
-                                                )
-                                            }\right\}}
-                                        ",
-                                    MixedPauliProcess { Operators: {} ops } => 
-                                        $@"
-                                            \text{{(mixed Pauli process) }}
-                                            \left\{{{
-                                                string.Join(", ",
-                                                    ops.Select(
-                                                        item => $@"{item.Item1} {string.Join(
-                                                            "",
-                                                            item.Item2.Select(pauli => pauli.ToString())
-                                                        )}"
-                                                    )
-                                                )
-                                            }\right\}}
-                                        ",
-                                    {} unknown => unknown.ToString(),
-                                    null => "<null>"
-                                }
-                            }$$
+                            $${LaTeXForProcess(process)}$$
                         </td>
                     </tr>
             ";
@@ -297,13 +316,7 @@ public class NoiseModelToHtmlDisplayEncoder : IResultEncoder
                                     $$\left\{{{
                                         string.Join(", ",
                                             (effects ?? ImmutableList<Process>.Empty)
-                                                .Select(
-                                                    process => $@"
-                                                        \left( \begin{{matrix}}
-                                                            {(process as ArrayProcess)?.Data?.AsLaTeXMatrixOfComplex() ?? ""}
-                                                        \end{{matrix}} \right)
-                                                    "
-                                                )
+                                                .Select(LaTeXForProcess)
                                         )
                                     }\right\}}$$
                                 ",

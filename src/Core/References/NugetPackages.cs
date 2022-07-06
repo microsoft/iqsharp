@@ -182,6 +182,25 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        public async Task<IEnumerable<SourcePackageDependencyInfo>> Get(string package, Action<string>? statusCallback = null)
+        {
+            statusCallback?.Invoke("finding latest version");
+            var pkgId = await ParsePackageId(package);
+            return await Get(pkgId, statusCallback);
+        }
+
+        public async Task<IEnumerable<SourcePackageDependencyInfo>> Get(PackageIdentity pkgId, Action<string>? statusCallback = null)
+        {
+            using var sourceCacheContext = new SourceCacheContext();
+            statusCallback?.Invoke("getting dependencies");
+            var packages = (await GetPackageDependencies(pkgId, sourceCacheContext));
+            Logger.LogDebug($"Found {packages.Count()} dependencies of {pkgId}.");
+
+            await DownloadPackages(sourceCacheContext, packages, statusCallback);
+
+            return packages;
+        }
+
         /// <summary>
         /// Adds a new package given the name and version as strings.
         /// </summary>
@@ -212,19 +231,12 @@ namespace Microsoft.Quantum.IQSharp
                 return;
             }
 
-            using (var sourceCacheContext = new SourceCacheContext())
+            var packages = await Get(pkgId, statusCallback);
+
+            lock (this)
             {
-                statusCallback?.Invoke("getting dependencies");
-                var packages = (await GetPackageDependencies(pkgId, sourceCacheContext));
-                Logger.LogDebug($"Found {packages.Count()} dependencies of {pkgId}.");
-
-                await DownloadPackages(sourceCacheContext, packages, statusCallback);
-
-                lock (this)
-                {
-                    this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
-                    this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
-                }
+                this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
+                this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
             }
         }
 

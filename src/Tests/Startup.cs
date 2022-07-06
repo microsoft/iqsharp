@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,6 +26,15 @@ namespace Tests.IQSharp
                 .Build();
 
             var services = new ServiceCollection();
+            if (Microsoft.Quantum.IQSharp.Startup.VisualStudioInstance is {} vsi)
+            {
+                services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
+                    Version: vsi.Version,
+                    RootPath: vsi.VisualStudioRootPath,
+                    Name: vsi.Name,
+                    Path: vsi.MSBuildPath
+                ));
+            }
 
             services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
             services.AddSingleton<IConfiguration>(config);
@@ -57,9 +65,17 @@ namespace Tests.IQSharp
             return serviceProvider;
         }
 
-        internal static T Create<T>(string workspaceFolder)
+        internal static T Create<T>(string workspaceFolder, Action<IServiceProvider>? configure = null)
         {
             var serviceProvider = CreateServiceProvider(workspaceFolder);
+            configure?.Invoke(serviceProvider);
+            return ActivatorUtilities.CreateInstance<T>(serviceProvider);
+        }
+
+        internal async static Task<T> Create<T>(string workspaceFolder, Func<IServiceProvider, Task> configure)
+        {
+            var serviceProvider = CreateServiceProvider(workspaceFolder);
+            await configure.Invoke(serviceProvider);
             return ActivatorUtilities.CreateInstance<T>(serviceProvider);
         }
 
@@ -77,6 +93,12 @@ namespace Tests.IQSharp
         public static void AddTelemetry(this IServiceCollection services)
         {
             services.AddSingleton(typeof(ITelemetryService), TelemetryTests.TelemetryServiceType);
+        }
+
+        public static async Task<TOutput> Then<TInput, TOutput>(this Task<TInput> task, Func<TInput, Task<TOutput>> continuation)
+        {
+            var input = await task;
+            return await continuation(input);
         }
     }
 

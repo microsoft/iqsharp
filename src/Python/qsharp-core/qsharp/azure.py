@@ -119,6 +119,15 @@ def target(name : str = '', **params) -> AzureTarget:
     if "error_code" in result: raise AzureError(result)
     return AzureTarget(result)
 
+def target_capability(name : str = '', **params) -> Dict:
+    """
+    Sets or displays the active target capability for Q# job submission in an Azure Quantum workspace.
+    See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target-capability for more details.
+    """
+    result = qsharp.client._execute_magic(f"azure.target-capability {name}", raise_on_stderr=False, **params)
+    if "error_code" in result: raise AzureError(result)
+    return result
+
 def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
     """
     Submits a job to an Azure Quantum workspace.
