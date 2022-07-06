@@ -47,7 +47,7 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - template: steps-selfcontained.yml
-  condition: ne(variables['Enable.Conda'], 'false')
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
 
 - job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
