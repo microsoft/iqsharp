@@ -114,8 +114,8 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                     "\n\tPorts:   {IoPubPort}/{ShellPort}",
                     args.ManagedRamUsed,
                     args.TotalRamUsed, 
-                    context.Value.ConnectionInfo.IoPubPort,
-                    context.Value.ConnectionInfo.ShellPort
+                    context?.Value?.ConnectionInfo?.IoPubPort,
+                    context?.Value?.ConnectionInfo?.ShellPort
                 );
             };
             performanceMonitor.Start();
