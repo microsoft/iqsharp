@@ -110,9 +110,12 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 logger.LogInformation(
                     "Estimated RAM usage:" +
                     "\n\tManaged: {Managed} bytes" +
-                    "\n\tTotal:   {Total} bytes",
+                    "\n\tTotal:   {Total} bytes" + 
+                    "\n\tPorts:   {IoPubPort}/{ShellPort}",
                     args.ManagedRamUsed,
-                    args.TotalRamUsed
+                    args.TotalRamUsed, 
+                    context.Value.ConnectionInfo.IoPubPort,
+                    context.Value.ConnectionInfo.ShellPort
                 );
             };
             performanceMonitor.Start();

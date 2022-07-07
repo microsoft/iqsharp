@@ -298,7 +298,7 @@ class IQSharpClient(object):
         )
 
     def _handle_message(self, msg, handlers=None, error_callback=None, fallback_hook=None):
-        logger.debug(f"_handle_message:\n{msg}")
+        logger.debug(f"_handle_message on ports ({self.kernel_client.iopub_port}/{self.kernel_client.shell_port}):\n{msg}")
         if handlers is None:
             handlers = {}
         if fallback_hook is None:
@@ -311,7 +311,6 @@ class IQSharpClient(object):
                 error_callback(msg['content']['text'])
             else:
                 fallback_hook(msg)
-        logger.debug(f"_handle_message: COMPLETE")
 
     def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _timeout_=DEFAULT_TIMEOUT, _quiet_ : bool = False, **kwargs):
         logger.debug(f"sending:\n{input}")
