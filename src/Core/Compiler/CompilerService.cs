@@ -414,6 +414,12 @@ namespace Microsoft.Quantum.IQSharp
             var (qsCompilation, assemblyConstants) = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
+            var assebmlyConstants = new Dictionary<string, string?>
+            {
+                [AssemblyConstants.TargetCapability] = capability?.Name,
+                [AssemblyConstants.ProcessorArchitecture] = executionTarget
+            };
+
             if (logger.HasErrors || qsCompilation == null) return null;
 
             try
@@ -454,7 +460,7 @@ namespace Microsoft.Quantum.IQSharp
                     var tempPath = Path.GetTempFileName();
                     var bcFile = CompilationLoader.GeneratedFile(tempPath, Path.GetDirectoryName(tempPath), ".bc", "");
                     var diagnostics = new List<IRewriteStep.Diagnostic>();
-                    CompilationSteps.GenerateBitcode(qsCompilation, capability, bcFile, diagnostics: diagnostics);
+                    CompilationSteps.GenerateBitcode(qsCompilation, assebmlyConstants, bcFile, diagnostics: diagnostics);
                     foreach (var diagnostic in diagnostics)
                     {
                         Logger?.Log(
