@@ -414,10 +414,16 @@ namespace Microsoft.Quantum.IQSharp
             var (qsCompilation, assemblyConstants) = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
+            string processorArchitecture = "Any";
+            if (!(executionTarget is null) && executionTarget.ToLower() == "microsoft.simulator.fullstate")
+            {
+                processorArchitecture = AssemblyConstants.MicrosoftSimulator;
+            }
+
             var assebmlyConstants = new Dictionary<string, string?>
             {
                 [AssemblyConstants.TargetCapability] = capability?.Name,
-                [AssemblyConstants.ProcessorArchitecture] = executionTarget
+                [AssemblyConstants.ProcessorArchitecture] = processorArchitecture
             };
 
             if (logger.HasErrors || qsCompilation == null) return null;
