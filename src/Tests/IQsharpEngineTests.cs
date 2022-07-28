@@ -853,7 +853,9 @@ namespace Tests.IQSharp
             try
             {
                 Assert.AreEqual("iqsharp_debug_sessionstart", channel.iopubMessages[0].Header.MessageType);
-                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[1].Header.MessageType);
+                // Note that depending on how long it takes cancellation to run, we may encounter
+                // one or more IOPub messages corresponding to other debug session events.
+                Assert.AreEqual("iqsharp_debug_sessionend", channel.iopubMessages[channel.iopubMessages.Count - 1].Header.MessageType);
             }
             catch (AssertFailedException ex)
             {
