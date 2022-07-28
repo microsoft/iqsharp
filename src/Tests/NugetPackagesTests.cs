@@ -84,7 +84,7 @@ namespace Tests.IQSharp
             using (var context = new SourceCacheContext())
             {
                 await mgr.FindDependencies(pkgId, context);
-                Assert.AreEqual(165, mgr.AvailablePackages.Count());
+                Assert.AreEqual(163, mgr.AvailablePackages.Count());
             }
         }
 
