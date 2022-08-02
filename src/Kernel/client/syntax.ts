@@ -19,7 +19,7 @@ export function defineQSharpMode() {
         },
         {
             token: "keyword",
-            regex: String.raw`(namespace|open|as|operation|function|body|adjoint|newtype|controlled)\b`,
+            regex: String.raw`(namespace|open|as|operation|function|body|adjoint|newtype|controlled|internal)\b`,
             beginWord: true,
         },
         {
