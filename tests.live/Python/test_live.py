@@ -171,6 +171,8 @@ def test_quantinuum_targets():
     target_ids = [t.id for t in targets]
     assert 'quantinuum.hqs-lt-s1' in target_ids
     assert 'quantinuum.hqs-lt-s1-apival' in target_ids
+    assert 'quantinuum.qpu.h1-1' in target_ids
+    assert 'quantinuum.sim.h1-1sc' in target_ids
 
 def test_quantinuum_submit():
     """
@@ -190,6 +192,10 @@ def test_quantinuum_submit():
     t = qsharp.azure.target("quantinuum.hqs-lt-s1-apival")
     assert isinstance(t, qsharp.azure.AzureTarget)
     assert t.id == "quantinuum.hqs-lt-s1-apival"
+
+    t = qsharp.azure.target("quantinuum.sim.h1-1sc")
+    assert isinstance(t, qsharp.azure.AzureTarget)
+    assert t.id == "quantinuum.sim.h1-1sc"
 
     job = qsharp.azure.submit(RunTeleport, doPlus=expected)
     assert isinstance(job, qsharp.azure.AzureJob)
