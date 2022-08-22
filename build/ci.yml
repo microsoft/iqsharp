@@ -47,40 +47,36 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - template: steps-selfcontained.yml
-  condition: ne(variables['Enable.Conda'], 'false')
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
 
 - job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
     vmImage: 'macOS-latest'
   variables:
-    OS: 'mac'
-    CondaShellHook: "$('/usr/local/bin/conda' 'shell.bash' 'hook')"
+    CondaPath: /usr/local/bin/
   steps:
   - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
+  
 - job: "pack_conda_linux"
   dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
     vmImage: 'ubuntu-latest'
-  container: mcr.microsoft.com/quantum/linux-selfcontained:latest
+  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
   variables:
-    OS: 'linux'
-    CondaPath: '/miniconda/bin'
-    CondaShellHook: "$('/miniconda/bin/conda' 'shell.bash' 'hook')"
+    CondaPath:  /miniconda/bin/
   steps:
   - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
+  
 - job: "pack_conda_windows"
   dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
     vmImage: 'windows-latest'
-  container: mcr.microsoft.com/quantum/windows-selfcontained:latest
+  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
   variables:
-    OS: 'windows'
-    CondaPath: 'C:\Miniconda3\Scripts'
+    CondaPath: C:\Miniconda3\Scripts
   steps:
   - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
