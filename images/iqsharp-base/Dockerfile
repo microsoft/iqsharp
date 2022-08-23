@@ -1,12 +1,5 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim-buster
-
-# install the notebook package
-# force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
-#       jinja2==3.0.3 due to incompatibility with nbconvert
-#       nbclient==0.6.3 and ipython=7.33.0 to avoid race conditions (see #520)
-RUN pip install --no-cache --upgrade pip && \
-    pip install --no-cache notebook pyzmq==19.0.2 jinja2==3.0.3 nbclient==0.6.3 ipython==7.33.0
+FROM python:3.9-slim-bullseye
 
 # Install APT prerequisites.
 RUN apt-get update && \
@@ -109,6 +102,13 @@ ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
     chown ${USER} -R ${LOCAL_PACKAGES}/ ${HOME}/.nuget
 
+# Update pip.
+RUN pip install --no-cache --upgrade pip \
+# Install Jupyter
+RUN pip install \
+        ipython==8.4.0 \
+        jupyter==1.0.0 \
+        notebook==6.4.12
 # Install all wheels from the build context.
 RUN pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
 
