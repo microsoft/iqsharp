@@ -15,7 +15,6 @@ using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.FSharp.Core;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler;
@@ -50,9 +49,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private ILogger<AzureClient> Logger { get; }
         private IReferences References { get; }
         private IEntryPointGenerator EntryPointGenerator { get; }
-
-        private KernelContext KernelContext { get; }
-
         private IMetadataController MetadataController { get; }
         private IAzureFactory AzureFactory { get; }
         private readonly IWorkspace Workspace;
@@ -82,7 +78,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureFactory">A Factory class to create instance of Azure Quantum classes.</param>
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
-        /// <param name="context">The kernel context.</param>
         /// <param name="workspace">The service for the active IQ# workspace.</param>
         public AzureClient(
             IExecutionEngine engine,
@@ -92,7 +87,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
             IEventService eventService,
-            IOptions<KernelContext> context,
             IWorkspace workspace)
         {
             References = references;
@@ -101,7 +95,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureFactory = azureFactory;
             Logger = logger;
             Workspace = workspace;
-            KernelContext = context.Value;
 
             // If we're given a target capability, start with it set.
             if (workspace.WorkspaceProject.TargetCapability is {} capability)
@@ -151,8 +144,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             try
             {
-                Logger.LogDebug($"Sending kernel messages to (io/shell): {KernelContext?.ConnectionInfo?.IoPubPort}/{KernelContext?.ConnectionInfo?.ShellPort}");
-
                 // Capture the console output, specifically for the case the user is trying to use DeviceCode credentials
                 // so they can get the message for auth.
                 var currentOut = channel?.CaptureConsole();
