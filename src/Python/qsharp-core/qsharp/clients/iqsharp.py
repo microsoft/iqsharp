@@ -298,7 +298,6 @@ class IQSharpClient(object):
         )
 
     def _handle_message(self, msg, handlers=None, error_callback=None, fallback_hook=None):
-        logger.debug(f"_handle_message on ports ({self.kernel_client.iopub_port}/{self.kernel_client.shell_port}):\n{msg}")
         if handlers is None:
             handlers = {}
         if fallback_hook is None:
