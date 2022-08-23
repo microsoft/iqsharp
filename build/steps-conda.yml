@@ -12,11 +12,6 @@ steps:
     packageType: sdk
     useGlobalJson: true
 
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: 3.7
-  displayName: 'Use Python 3.7'
-
 - pwsh: |
     "CondaPath: $(CondaPath)" | Write-Host
     "##vso[task.prependpath]$(CondaPath)" | Write-Host
