@@ -1,6 +1,14 @@
 # The same image used by mybinder.org
 FROM python:3.9-slim-bullseye
 
+# Update pip.
+RUN pip install --no-cache --upgrade pip
+# Install Jupyter
+RUN pip install \
+        ipython==8.4.0 \
+        jupyter==1.0.0 \
+        notebook==6.4.12
+
 # Install APT prerequisites.
 RUN apt-get update && \
     apt-get -y upgrade \
@@ -15,7 +23,7 @@ RUN apt-get update && \
                        # Dependencies for the Quantum Development Kit.
                        # Note that we install them here to minimize the number
                        # of layers.
-                       libomp5-7 \
+                       libomp5-11 \
                        # Dependency for QIR
                        libc6 \
                        # Not strictly needed, but Git is useful for several
@@ -102,13 +110,6 @@ ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
     chown ${USER} -R ${LOCAL_PACKAGES}/ ${HOME}/.nuget
 
-# Update pip.
-RUN pip install --no-cache --upgrade pip \
-# Install Jupyter
-RUN pip install \
-        ipython==8.4.0 \
-        jupyter==1.0.0 \
-        notebook==6.4.12
 # Install all wheels from the build context.
 RUN pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
 
