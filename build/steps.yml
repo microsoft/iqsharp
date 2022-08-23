@@ -22,12 +22,6 @@ steps:
   displayName: "Bootstrap"
   workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-
-- task: CondaEnvironment@1
-  inputs:
-    packageSpecs: "python=3.7 pip setuptools pytest jupyter numpy"
-  displayName: 'Use conda environment w/ Python 3.'
-
 - pwsh: |
     pip install `
       setuptools `
