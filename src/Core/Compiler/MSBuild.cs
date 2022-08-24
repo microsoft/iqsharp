@@ -260,6 +260,11 @@ public partial class CompilerService
         var localPackagesFinder =
             packages.GlobalPackagesSource.GetResource<FindLocalPackagesResource>();
         var downloaded = localPackagesFinder.GetPackage(targetPackageIdentity, new NuGetLogger(Logger), default);
+        if (downloaded is null)
+        {
+            Logger?.LogDebug("Local package {Package} not found while searching for target package assemblies, skipping.", targetPackageIdentity);
+            yield break;
+        }
         var packageReader = downloaded.GetReader();
 
         // Look for props files that could tell us what target packages we need.
