@@ -50,10 +50,9 @@ steps:
     conda activate $(CondaEnvironmentName)
     conda info
 
-    $requirements = Join-Path 'src' 'Python' 'requirements.txt'
-    "##[info]Install requirements from: $requirements" | Write-Host
-    pip install -r $requirements
-  displayName: Install PyPI packages
+    "##[info]Running bootstrap" | Write-Host
+    .\bootstrap.ps1
+  displayName: Running bootstrap
 
 ##
 # Running pack-conda.ps1 from a new, independent instance of pwsh
