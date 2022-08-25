@@ -33,16 +33,25 @@ steps:
 - pwsh: |
     "##[info]Conda environment variables" | Write-Host
     Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
+    
+    $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
+    "##[info]CondaLocation: $CondaLocation" | Write-Host
+    "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
+    
+    $CondaShellHook="(`& $CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
+    "##[info]CondaShellHook: $CondaShellHook" | Write-Host
+    "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
 
-##
-# Install conda packages
-##
-- script: |
-    eval "$(CondaShellHook)"
-    conda install --yes --quiet --name base conda-build=3.18.8
-    conda install --yes --quiet --name conda_env python=3.7 pip setuptools pytest jupyter numpy conda-build=3.18.8 conda-package-handling=1.3.11
-  displayName: Install Anaconda packages
-  condition: or(eq(variables.OS, 'linux'), eq(variables.OS, 'mac'))
+    $CondaEnvironmentName='conda_env'
+    "##vso[task.setvariable variable=CondaEnvironmentName]$CondaEnvironmentName" | Write-Host
+
+    "##[info]Creating conda environment" | Write-Host
+    conda create --yes --name $CondaEnvironmentName
+
+    "##[info]Installing conda packages" | Write-Host
+    conda install --yes --name $CondaEnvironmentName python=3.9 pip conda-build=3.21.9 conda-package-handling=1.8.1
+  displayName: Create and setup conda environment
+
 
 - pwsh: |
     "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host
