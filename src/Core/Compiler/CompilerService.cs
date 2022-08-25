@@ -70,7 +70,7 @@ namespace Microsoft.Quantum.IQSharp
             ///      If <c>true</c>, will always use heuristics to compute target
             ///      package assemblies rather than using MSBuild and SDK packages.
             /// </summary>
-            public bool ForceTargetingHeuristics { get; init; } = false;
+            public bool ForceTargetingHeuristics { get; init; } = true;
         }
 
         /// <summary>

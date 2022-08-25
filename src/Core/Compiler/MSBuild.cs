@@ -44,6 +44,13 @@ public partial class CompilerService
         private Microsoft.Extensions.Logging.ILogger Logger;
         private readonly Dictionary<string, IDisposable> ProjectScopes = new();
 
+        // Define mappings between MSBuild and ILogger log levels. By default,
+        // we will downgrade severity of MSBuild errors, since we may be able
+        // to recover using heuristics.
+        public LogLevel ErrorLevel { get; init; } = LogLevel.Warning;
+        public LogLevel WarningLevel { get; init; } = LogLevel.Debug;
+        public LogLevel TraceLevel { get; init; } = LogLevel.Trace;
+
         // We ask for a logger scoped to this class to make sure that MSBuild
         // logs are easy to filter and select on.
         public MSBuildLogger(Microsoft.Extensions.Logging.ILogger<MSBuildLogger> logger)
@@ -54,13 +61,13 @@ public partial class CompilerService
         public override void Initialize(IEventSource eventSource)
         {
             eventSource.MessageRaised += (sender, e) =>
-                Logger.LogTrace("MSBuild message: {Code} {Message}", e.Code, e.Message);
+                Logger.Log(TraceLevel, "MSBuild message: {Code} {Message}", e.Code, e.Message);
 
             eventSource.WarningRaised += (sender, e) =>
-                Logger.LogWarning("MSBuild warning: {Code} {Message}", e.Code, e.Message);
+                Logger.Log(WarningLevel, "MSBuild warning: {Code} {Message}", e.Code, e.Message);
 
             eventSource.ErrorRaised += (sender, e) =>
-                Logger.LogError("MSBuild error: {Code} {Message}", e.Code, e.Message);
+                Logger.Log(ErrorLevel, "MSBuild error: {Code} {Message}", e.Code, e.Message);
 
             eventSource.ProjectStarted += (sender, e) =>
             {
@@ -253,6 +260,11 @@ public partial class CompilerService
         var localPackagesFinder =
             packages.GlobalPackagesSource.GetResource<FindLocalPackagesResource>();
         var downloaded = localPackagesFinder.GetPackage(targetPackageIdentity, new NuGetLogger(Logger), default);
+        if (downloaded is null)
+        {
+            Logger?.LogDebug("Local package {Package} not found while searching for target package assemblies, skipping.", targetPackageIdentity);
+            yield break;
+        }
         var packageReader = downloaded.GetReader();
 
         // Look for props files that could tell us what target packages we need.
