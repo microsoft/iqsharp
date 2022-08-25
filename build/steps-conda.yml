@@ -33,11 +33,11 @@ steps:
 - pwsh: |
     "##[info]Conda environment variables" | Write-Host
     Get-ChildItem env:CONDA*, env:*VERSION | Format-Table | Out-String | Write-Host
-    
+
     $CondaLocation=$(Get-Command conda | Select-Object -ExpandProperty Source)
     "##[info]CondaLocation: $CondaLocation" | Write-Host
     "##vso[task.setvariable variable=CondaLocation]$CondaLocation" | Write-Host
-    
+
     $CondaShellHook="(`& $CondaLocation 'shell.powershell' 'hook') | Out-String | Invoke-Expression"
     "##[info]CondaShellHook: $CondaShellHook" | Write-Host
     "##vso[task.setvariable variable=CondaShellHook]$CondaShellHook" | Write-Host
