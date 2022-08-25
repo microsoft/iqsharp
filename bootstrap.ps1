@@ -4,9 +4,13 @@
 
 # Fetch TypeScript definitions
 Push-Location (Join-Path $PSScriptRoot src/Kernel)
-    "##[info]Installing npm dependencies" | Write-Host
-    npm install | Write-Host
-    "==> npm install complete <==" | Write-Host
+    if (Get-Command npm -ErrorAction SilentlyContinue) {
+        "##[info]Installing npm dependencies" | Write-Host
+        npm install | Write-Host
+        "==> npm install complete <==" | Write-Host
+    } else {
+        "##[info]npm not installed. Will skip npm install" | Write-Host
+    }
 Pop-Location
 
 
