@@ -649,46 +649,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             using var stream = job.OutputDataUri.IsFile
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
-            if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
-            {
-                var (messages, result) = ParseSimulatorOutput(stream);
-                channel?.Stdout(messages);
-                return result.ToExecutionResult();
-            }
-            else
-            {
-                return stream.ToHistogram(channel, Logger).ToExecutionResult();
-            }
-        }
-
-        private static (string Messages, string Result) ParseSimulatorOutput(Stream stream)
-        {
-            var outputLines = new List<string>();
-            using (var reader = new StreamReader(stream))
-            {
-                var line = String.Empty;
-                while ((line = reader.ReadLine()) != null)
-                {
-                     outputLines.Add(line.Trim());
-                }
-            }
-
-            // N.B. The current simulator output format is just text and it does not distinguish
-            // between the result of the operation and other kinds of output.
-            // Attempt to parse the output to distinguish the result from the rest of the output
-            // until the simulator output format makes it easy to do so.
-            var resultStartLine = outputLines.Count() - 1;
-            if (outputLines[resultStartLine].EndsWith('"'))
-            {
-                while (!outputLines[resultStartLine].StartsWith('"'))
-                {
-                    resultStartLine -= 1;
-                }
-            }
-
-            var messages = String.Join('\n', outputLines.Take(resultStartLine));
-            var result = String.Join(' ', outputLines.Skip(resultStartLine));
-            return (messages, result);
+            return stream.ToHistogram(channel, Logger).ToExecutionResult();
         }
 
         /// <inheritdoc/>
