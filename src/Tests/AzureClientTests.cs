@@ -331,6 +331,37 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
+        public void TestMicrosoftSimulatorJobExecution()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = services.GetRequiredService<IAzureClient>();
+
+            // connect
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.IsFalse(targets.Any());
+
+            // add a target
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            azureWorkspace?.AddProviders("microsoft");
+
+            // set the active target
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.simulator"));
+            Assert.AreEqual("microsoft.simulator", target.TargetId);
+
+            // execute the job and verify that the results are retrieved successfully
+            var submissionContext = new AzureSubmissionContext()
+            {
+                OperationName = "Tests.qss.HelloAgain",
+                InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\""),
+                ExecutionTimeout = 5,
+                ExecutionPollingInterval = 1,
+            };
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Assert.IsNotNull(histogram);
+        }
+
+        [TestMethod]
         public void TestJobExecutionWithArrayInput()
         {
             var services = Startup.CreateServiceProvider("Workspace");
