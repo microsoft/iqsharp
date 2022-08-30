@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 using Azure.Core;
@@ -649,7 +650,52 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             using var stream = job.OutputDataUri.IsFile
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
-            return stream.ToHistogram(channel, Logger).ToExecutionResult();
+
+            if (job.OutputDataFormat == "microsoft.qir-results.v1")
+            {
+                var (messages, result) = ParseSimulatorOutput(stream);
+                channel?.Stdout(messages);
+                return result.ToExecutionResult();
+            }
+            else if (job.OutputDataFormat == "microsoft.quantum-results.v1")
+            {
+                return stream.ToHistogram(channel, Logger).ToExecutionResult();
+            }
+            else
+            {
+                channel?.Stderr($"Job ID {job.Id} has unsupported output format: {job.OutputDataFormat}");
+                return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
+            }
+        }
+
+        private static (string Messages, string Result) ParseSimulatorOutput(Stream stream)
+        {
+            var outputLines = new List<string>();
+            using (var reader = new StreamReader(stream))
+            {
+                var line = String.Empty;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    outputLines.Add(line.Trim());
+                }
+            }
+
+            // N.B. The current simulator output format is just text and it does not distinguish
+            // between the result of the operation and other kinds of output.
+            // Attempt to parse the output to distinguish the result from the rest of the output
+            // until the simulator output format makes it easy to do so.
+            var resultStartLine = outputLines.Count() - 1;
+            if (outputLines[resultStartLine].EndsWith('"'))
+            {
+                while (!outputLines[resultStartLine].StartsWith('"'))
+                {
+                    resultStartLine -= 1;
+                }
+            }
+
+            var messages = String.Join('\n', outputLines.Take(resultStartLine));
+            var result = String.Join(' ', outputLines.Skip(resultStartLine));
+            return (messages, result);
         }
 
         /// <inheritdoc/>
