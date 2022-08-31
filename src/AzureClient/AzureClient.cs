@@ -24,6 +24,18 @@ using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// Supported output data formats for QIR.
+    /// </summary>
+    internal static class OutputFormat
+    {
+        public const string QirResultsV1 = "microsoft.qir-results.v1";
+
+        public const string QuantumResultsV1 = "microsoft.quantum-results.v1";
+
+        public const string ResourceEstimatesV1 = "microsoft.resource-estimates.v1";
+    }
+
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
@@ -651,13 +663,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
 
-            if (job.OutputDataFormat == "microsoft.qir-results.v1")
+            if (job.OutputDataFormat == OutputFormat.QirResultsV1)
             {
                 var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
-            else if (job.OutputDataFormat == "microsoft.quantum-results.v1")
+            else if (job.OutputDataFormat == OutputFormat.QuantumResultsV1)
             {
                 return stream.ToHistogram(channel, Logger).ToExecutionResult();
             }

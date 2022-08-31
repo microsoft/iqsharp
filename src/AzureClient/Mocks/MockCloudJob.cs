@@ -55,12 +55,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// </summary>
     internal class MockJobDetails : JobDetails
     {
-        public MockJobDetails(string containerUri, string inputDataFormat, string providerId, string target)
+        public MockJobDetails(string containerUri, string inputDataFormat, string providerId, string target, string outputDataFormat)
             : base(containerUri: containerUri, 
                    inputDataFormat: inputDataFormat, 
                    providerId: providerId, 
                    target: target)
         {
+            OutputDataFormat = outputDataFormat;
         }
 
         private MockCostEstimate? costEstimate;
@@ -110,14 +111,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private string _id;
         private string? _outputFile;
 
-        public MockCloudJob(string? id = null)
+        public MockCloudJob(string? id = null, string outputFormat = OutputFormat.QuantumResultsV1)
             : base(
                 new MockAzureWorkspace("mockSubscriptionId", "mockResourceGroupName", "mockWorkspaceName", "mockLocation"),
                 new MockJobDetails(
                     containerUri: string.Empty,
                     inputDataFormat: string.Empty,
                     providerId: string.Empty,
-                    target: string.Empty
+                    target: string.Empty,
+                    outputDataFormat: outputFormat
                 ))
         {
             _id = id ?? Guid.NewGuid().ToString();
