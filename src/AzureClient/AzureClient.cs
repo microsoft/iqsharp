@@ -648,7 +648,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
+        internal async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
             async Task<Stream> ReadHttp()
             {

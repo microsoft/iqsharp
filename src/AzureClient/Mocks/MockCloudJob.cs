@@ -137,7 +137,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 {
                     var path = Path.GetTempFileName();
                     using var outputFile = new StreamWriter(path);
-                    outputFile.WriteLine(@"{'Histogram':['0',0.5,'1',0.5]}");
+                    if (OutputDataFormat == OutputFormat.QirResultsV1)
+                    {
+                        outputFile.WriteLine("\"This is a message.\"");
+                        outputFile.WriteLine("\"The is a two-line");
+                        outputFile.WriteLine("string result.\"");
+                    }
+                    else
+                    {
+                        outputFile.WriteLine(@"{'Histogram':['0',0.5,'1',0.5]}");
+                    }
 
                     _outputFile = path;
                 }

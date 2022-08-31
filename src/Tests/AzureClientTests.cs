@@ -331,10 +331,10 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestMicrosoftSimulatorJobExecution()
+        public void TestJobOutputFormats()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = services.GetRequiredService<IAzureClient>();
+            var azureClient = (AzureClient)services.GetRequiredService<IAzureClient>();
 
             // connect
             var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
@@ -349,16 +349,14 @@ namespace Tests.IQSharp
             var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.simulator"));
             Assert.AreEqual("microsoft.simulator", target.TargetId);
 
-            // execute the job and verify that the results are retrieved successfully
-            var submissionContext = new AzureSubmissionContext()
-            {
-                OperationName = "Tests.qss.HelloAgain",
-                InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\""),
-                ExecutionTimeout = 5,
-                ExecutionPollingInterval = 1,
-            };
-            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            var qirResultsJob = new MockCloudJob(null, OutputFormat.QirResultsV1);
+            var quantumResultsJob = new MockCloudJob(null, OutputFormat.QuantumResultsV1);
+
+            var histogram = ExpectSuccess<Histogram>(azureClient.CreateOutput(quantumResultsJob, new MockChannel(), CancellationToken.None));
             Assert.IsNotNull(histogram);
+
+            var stringOutput = ExpectSuccess<string>(azureClient.CreateOutput(qirResultsJob, new MockChannel(), CancellationToken.None));
+            Assert.IsNotNull(stringOutput);
         }
 
         [TestMethod]
