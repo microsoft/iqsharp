@@ -612,7 +612,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            if (!job.Succeeded || job.OutputDataUri == null)
+            if (job.InProgress)
             {
                 channel?.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
