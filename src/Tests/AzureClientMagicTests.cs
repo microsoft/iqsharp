@@ -387,7 +387,7 @@ namespace Tests.IQSharp
         {
             LastAction = AzureClientAction.SetActiveTarget;
             ActiveTarget = MockAzureExecutionTarget.CreateMock(targetId);
-            TargetCapability = ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top;
+            TargetCapability = ActiveTarget?.DefaultCapability ?? TargetCapabilityModule.Top;
             return ExecuteStatus.Ok.ToExecutionResult();
         }
 

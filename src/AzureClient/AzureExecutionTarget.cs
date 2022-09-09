@@ -60,7 +60,7 @@ public record AzureExecutionTarget
     ///     Any other target capability must be subsumed by this maximum
     ///     in order to be supported by this target.
     /// </summary>
-    public TargetCapability MaximumCapability => GetProvider(TargetId) switch
+    public TargetCapability DefaultCapability => GetProvider(TargetId) switch
     {
         AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
         AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
@@ -76,13 +76,50 @@ public record AzureExecutionTarget
     ///     level.
     /// </summary>
     public bool SupportsCapability(TargetCapability capability) =>
-        TargetCapabilityModule.Subsumes(this.MaximumCapability, capability);
+        // NB: Duplicates logic at https://github.com/microsoft/qsharp-compiler/blob/7714168fda4379fb7e6a6c616f680ec039c482f4/src/QuantumSdk/DefaultItems/DefaultItems.targets#L78,
+        //     but at the level of providers rather than at the level of resolved processors.
+        (GetProvider(TargetId) switch
+        {
+            AzureProvider.Quantinuum or AzureProvider.Honeywell => new[]
+            {
+                TargetCapabilityModule.AdaptiveExecution,
+                TargetCapabilityModule.BasicMeasurementFeedback,
+                TargetCapabilityModule.BasicExecution
+            },
+            AzureProvider.IonQ => new[]
+            {
+                TargetCapabilityModule.BasicQuantumFunctionality
+            },
+            AzureProvider.QCI => new[]
+            {
+                TargetCapabilityModule.AdaptiveExecution,
+                TargetCapabilityModule.BasicExecution
+            },
+            AzureProvider.Rigetti => new[]
+            {
+                TargetCapabilityModule.BasicExecution
+            },
+            AzureProvider.Microsoft => new[]
+            {
+                TargetCapabilityModule.FullComputation
+            },
+            _ => new[]
+            {
+                TargetCapabilityModule.FullComputation
+            }
+        })
+        .Any(c => TargetCapabilityModule.Subsumes(c, capability));
 
     /// <summary>
     ///      Attempts to get a <see cref="IQirSubmitter"/> instance appropriate
     ///      for use with this target.
     /// </summary>
-    public virtual bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
+    public virtual bool TryGetQirSubmitter(
+        Azure.Quantum.IWorkspace workspace,
+        string storageConnectionString,
+        TargetCapability? targetCapability,
+        [NotNullWhen(true)] out IQirSubmitter? submitter
+    )
     {
         if (this.TargetId == null || this.TargetId.EndsWith(".mock"))
         {
@@ -90,7 +127,7 @@ public record AzureExecutionTarget
             return false;
         }
 
-        if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, this.MaximumCapability.Name) is IQirSubmitter qirSubmitter)
+        if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, (targetCapability ?? this.DefaultCapability).Name) is IQirSubmitter qirSubmitter)
         {
             submitter = qirSubmitter;
             return true;
