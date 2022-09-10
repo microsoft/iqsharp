@@ -1,7 +1,7 @@
 # This file includes requirements to build and test the Python packages.
 ipython==8.4.0      # to avoid high-severity issue.
 jupyter==1.0.0
-nbconvert==6.5.0
+nbconvert==6.5.1
 notebook==6.4.12
 numpy==1.21.6
 pytest==7.1.2
