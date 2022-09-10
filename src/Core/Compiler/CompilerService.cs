@@ -414,8 +414,8 @@ namespace Microsoft.Quantum.IQSharp
             var (qsCompilation, assemblyConstants) = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
-            string processorArchitecture = "Any";
-            if (!(executionTarget is null) && executionTarget.ToLower() == "microsoft.simulator.fullstate")
+            var processorArchitecture = "Any";
+            if (string.Compare(executionTarget, "microsoft.simulator.fullstate", StringComparison.InvariantCultureIgnoreCase) == 0)
             {
                 processorArchitecture = AssemblyConstants.MicrosoftSimulator;
             }
