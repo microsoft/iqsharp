@@ -52,7 +52,7 @@ steps:
     conda create --yes --name $CondaEnvironmentName
 
     "##[info]Installing conda packages" | Write-Host
-    conda install --yes --name $CondaEnvironmentName python=3.9 pip conda-build=3.22.0 conda-package-handling=1.8.1
+    conda install --yes --name $CondaEnvironmentName python=3.9 pip conda-build=3.22.0 conda-package-handling=1.8.1 pywin32=228
   displayName: Create and setup conda environment
 
 
