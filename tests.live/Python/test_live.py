@@ -63,6 +63,7 @@ def test_ionq_targets():
     target_ids = [t.id for t in targets]
     assert 'ionq.simulator' in target_ids
     assert 'ionq.qpu' in target_ids
+    assert 'ionq.qpu.aria-1' in target_ids
 
 def test_ionq_submit():
     """
