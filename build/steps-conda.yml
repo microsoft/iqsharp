@@ -17,7 +17,7 @@ steps:
 # We need to take ownership if we want to update conda or install packages globally
 - bash: sudo chown -R $USER $CONDA
   displayName: Take ownership of conda installation
-  condition: eq(variables['Agent.OS'], 'Darwin')
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
   
 - task: DownloadBuildArtifacts@0
   inputs:
@@ -54,6 +54,14 @@ steps:
     "##[info]Installing conda packages" | Write-Host
     conda install --yes --name $CondaEnvironmentName python=3.9 pip conda-build=3.22.0 conda-package-handling=1.8.1
   displayName: Create and setup conda environment
+
+# NB: Installing qutip in windows is failing due to
+# https://github.com/conda/conda/issues/11503. Fixing the version of pywin32 fixes it.
+- pwsh: |
+    "##[info]Installing pywin32=228" | Write-Host
+    conda install --yes --name $(CondaEnvironmentName) pywin32=228
+  displayName: Install pywin32 on Windows
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
 
 - pwsh: |

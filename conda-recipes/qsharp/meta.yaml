@@ -33,9 +33,6 @@ test:
     - src/conda-recipes/qsharp/tests.py
 
   commands:
-    # NB: Installing qutip in windows is failing due to
-    # https://github.com/conda/conda/issues/11503. Fixing the version of pywin32 fixes it.
-    - pip install --upgrade pywin32==228 # [win]
     # NB: We install QuTiP this way to avoid turning on conda-forge when building
     #     the test environment, as that introduces a lot of potential
     #     conflicts. In particular, we want defaults to take priority over
