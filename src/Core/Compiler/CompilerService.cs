@@ -304,9 +304,17 @@ namespace Microsoft.Quantum.IQSharp
                     ? TargetPackageAssemblyPaths(executionTarget, capability?.Name)
                     : Enumerable.Empty<string>();
             Logger.LogDebug("Using target package assemblies:\n{TargetAssemblies}", string.Join("\n", targetPackages));
+
+            var processorArchitecture = executionTarget ?? string.Empty;
+            if (string.Compare(executionTarget, "microsoft.simulator.fullstate", StringComparison.InvariantCultureIgnoreCase) == 0)
+            {
+                processorArchitecture = AssemblyConstants.MicrosoftSimulator;
+            }
+
             var assemblyConstants = new Dictionary<string, string>
             {
-                [AssemblyConstants.ProcessorArchitecture] = executionTarget ?? string.Empty,
+                [AssemblyConstants.ProcessorArchitecture] = processorArchitecture,
+                [AssemblyConstants.TargetCapability] = capability?.Name ?? string.Empty,
                 [AssemblyConstants.TargetPackageAssemblies] =
                     string.Join(";", targetPackages.Where(s => !string.IsNullOrWhiteSpace(s)))
             };
@@ -414,18 +422,6 @@ namespace Microsoft.Quantum.IQSharp
             var (qsCompilation, assemblyConstants) = this.UpdateCompilation(sources, metadata.QsMetadatas, logger, compileAsExecutable, executionTarget, capability, parent: perfTask);
             logger.WarningCodesToIgnore.Remove(QsCompiler.Diagnostics.WarningCode.EntryPointInLibrary);
 
-            var processorArchitecture = "Any";
-            if (string.Compare(executionTarget, "microsoft.simulator.fullstate", StringComparison.InvariantCultureIgnoreCase) == 0)
-            {
-                processorArchitecture = AssemblyConstants.MicrosoftSimulator;
-            }
-
-            var assebmlyConstants = new Dictionary<string, string?>
-            {
-                [AssemblyConstants.TargetCapability] = capability?.Name,
-                [AssemblyConstants.ProcessorArchitecture] = processorArchitecture
-            };
-
             if (logger.HasErrors || qsCompilation == null) return null;
 
             try
@@ -466,7 +462,7 @@ namespace Microsoft.Quantum.IQSharp
                     var tempPath = Path.GetTempFileName();
                     var bcFile = CompilationLoader.GeneratedFile(tempPath, Path.GetDirectoryName(tempPath), ".bc", "");
                     var diagnostics = new List<IRewriteStep.Diagnostic>();
-                    CompilationSteps.GenerateBitcode(qsCompilation, assebmlyConstants, bcFile, diagnostics: diagnostics);
+                    CompilationSteps.GenerateBitcode(qsCompilation, (IDictionary<string, string?>)assemblyConstants, bcFile, diagnostics: diagnostics);
                     foreach (var diagnostic in diagnostics)
                     {
                         Logger?.Log(
