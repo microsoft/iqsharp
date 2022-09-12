@@ -1,12 +1,13 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim-buster
+FROM python:3.9-slim-bullseye
 
-# install the notebook package
-# force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
-#       jinja2==3.0.3 due to incompatibility with nbconvert
-#       nbclient==0.6.3 and ipython=7.33.0 to avoid race conditions (see #520)
-RUN pip install --no-cache --upgrade pip && \
-    pip install --no-cache notebook pyzmq==19.0.2 jinja2==3.0.3 nbclient==0.6.3 ipython==7.33.0
+# Update pip.
+RUN pip install --no-cache --upgrade pip
+# Install Jupyter
+RUN pip install \
+        ipython==8.4.0 \
+        jupyter==1.0.0 \
+        notebook==6.4.12
 
 # Install APT prerequisites.
 RUN apt-get update && \
@@ -22,7 +23,7 @@ RUN apt-get update && \
                        # Dependencies for the Quantum Development Kit.
                        # Note that we install them here to minimize the number
                        # of layers.
-                       libomp5-7 \
+                       libomp5-11 \
                        # Dependency for QIR
                        libc6 \
                        # Not strictly needed, but Git is useful for several
@@ -132,7 +133,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.25.227074-beta" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.25.228311" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \

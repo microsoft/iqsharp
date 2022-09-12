@@ -7,30 +7,11 @@ steps:
 ##
 # Pre-reqs
 ##
-- task: UseDotNet@2
-  displayName: 'Use .NET SDK'
-  inputs:
-    packageType: sdk
-    useGlobalJson: true
-
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: 3.7
-  displayName: 'Use Python 3.7'
+- template: steps-frameworks.yml
 
 - pwsh: .\bootstrap.ps1
   displayName: "Bootstrap"
   workingDirectory: '$(System.DefaultWorkingDirectory)'
-
-- pwsh: |
-    pip install `
-      setuptools `
-      pytest `
-      jupyter `
-      numpy `
-      wheel `
-      qutip
-  displayName: "Install Python tools."
 
 ##
 # Build, test & pack

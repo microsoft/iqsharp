@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS buildbase
-
-RUN powershell (New-Object System.Net.WebClient).DownloadFile('https://repo.anaconda.com/miniconda/Miniconda3-py37_4.11.0-Windows-x86_64.exe', 'Miniconda3.exe') && \
-    powershell (Get-FileHash .\Miniconda3.exe).Hash -eq 'b33797064593ab2229a0135dc69001bea05cb56a20c2f243b1231213642e260a' && \
+ 
+RUN powershell (New-Object System.Net.WebClient).DownloadFile('https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Windows-x86_64.exe', 'Miniconda3.exe') && \
+    powershell (Get-FileHash .\Miniconda3.exe).Hash -eq '1ACBC2E8277DDD54A5F724896C7EDEE112D068529588D944702966C867E7E9CC' && \
     powershell Unblock-File Miniconda3.exe && \
     Miniconda3.exe /InstallationType=JustMe /RegisterPython=1 /S /D=C:\Miniconda3
 

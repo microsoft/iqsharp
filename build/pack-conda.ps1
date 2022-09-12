@@ -21,7 +21,7 @@ $PSVersionTable | Format-Table | Out-String | Write-Host;
 function Pack-CondaRecipe() {
     param(
         [string] $Path,
-        [string[]] $PythonVersions = @("3.7", "3.8", "3.9")
+        [string[]] $PythonVersions = @("3.9", "3.10")
     );
 
     if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {
