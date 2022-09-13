@@ -61,8 +61,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'jupyter_client<7.0',
-        'pyzmq<20.0.0',     # due to incompatibility of IQ# with pyzmq>=20.0.0,
-        'traitlets!=5.2.2'  # https://github.com/ipython/traitlets/issues/740
+        'jupyter_client>=7.3.4'
     ]
 )

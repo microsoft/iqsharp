@@ -1,7 +1,7 @@
 ARG CONDA_VER=latest
 ARG UBUNTU_VER=20.04
 ARG OS_TYPE=x86_64
-ARG PY_VER=3.7
+ARG PY_VER=3.9
 
 FROM mcr.microsoft.com/mirror/docker/library/ubuntu:${UBUNTU_VER}
 

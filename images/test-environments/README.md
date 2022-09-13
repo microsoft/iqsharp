@@ -8,5 +8,5 @@ Each Dockerfile includes instructions to download the following tools:
 
 * PowerShell 7
 * Miniconda3
-* Python 3.7
+* Python 3.9
 * Git
