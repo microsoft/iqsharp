@@ -388,10 +388,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
             if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, this.TargetCapability, out var submitter))
             {
+                Logger?.LogDebug("Using QIR submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
             }
             else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
             {
+                Logger?.LogDebug("Using legacy submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(machine, submissionContext);
             }
             else
@@ -405,7 +407,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             try
             {
                 entryPoint = await EntryPointGenerator.Generate(
-                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.DefaultCapability
+                    submissionContext.OperationName, ActiveTarget.TargetId, this.TargetCapability
                 );
             }
             catch (TaskCanceledException tce)

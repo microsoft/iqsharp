@@ -84,6 +84,7 @@ public record AzureExecutionTarget
             {
                 TargetCapabilityModule.AdaptiveExecution,
                 TargetCapabilityModule.BasicMeasurementFeedback,
+                TargetCapabilityModule.BasicQuantumFunctionality,
                 TargetCapabilityModule.BasicExecution
             },
             AzureProvider.IonQ => new[]
@@ -105,7 +106,11 @@ public record AzureExecutionTarget
             },
             _ => new[]
             {
-                TargetCapabilityModule.FullComputation
+                TargetCapabilityModule.FullComputation,
+                TargetCapabilityModule.AdaptiveExecution,
+                TargetCapabilityModule.BasicMeasurementFeedback,
+                TargetCapabilityModule.BasicQuantumFunctionality,
+                TargetCapabilityModule.BasicExecution
             }
         })
         .Any(c => TargetCapabilityModule.Subsumes(c, capability));
