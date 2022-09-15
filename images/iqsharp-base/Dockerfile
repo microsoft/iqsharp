@@ -7,7 +7,9 @@ RUN pip install --no-cache --upgrade pip
 RUN pip install \
         ipython==8.4.0 \
         jupyter==1.0.0 \
-        notebook==6.4.12
+        notebook==6.4.12 \
+        # to workaround: https://github.com/zeromq/pyzmq/issues/1764
+        pyzmq==23.2.1
 
 # Install APT prerequisites.
 RUN apt-get update && \
