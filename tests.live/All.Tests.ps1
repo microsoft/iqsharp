@@ -11,8 +11,8 @@ BeforeAll {
         
         # These are needed for environment credentials:
         $Env:AZURE_TENANT_ID | Should -Not -BeNullOrEmpty
-        $Env:AZURE_CLIENT_ID | Should -Not -BeNullOrEmpty
-        $Env:AZURE_CLIENT_SECRET | Should -Not -BeNullOrEmpty
+        # $Env:AZURE_CLIENT_ID | Should -Not -BeNullOrEmpty
+        # $Env:AZURE_CLIENT_SECRET | Should -Not -BeNullOrEmpty
     }
 
     function Test-Notebook([string]$notebook) {
