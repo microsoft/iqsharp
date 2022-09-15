@@ -173,7 +173,8 @@ def test_quantinuum_targets():
     assert 'quantinuum.hqs-lt-s1' in target_ids
     assert 'quantinuum.hqs-lt-s1-apival' in target_ids
 
-def test_quantinuum_submit():
+@pytest.mark.parametrize("enable_qir", [False, True])
+def test_quantinuum_submit(enable_qir):
     """
     Test that the RunTeleport operation can be submitted successfully on the quantinuum apival target
     """
@@ -192,6 +193,9 @@ def test_quantinuum_submit():
     assert isinstance(t, qsharp.azure.AzureTarget)
     assert t.id == "quantinuum.hqs-lt-s1-apival"
 
+    if enable_qir:
+        qsharp.azure.target_capability("AdaptiveExecution")
+
     job = qsharp.azure.submit(RunTeleport, doPlus=expected)
     assert isinstance(job, qsharp.azure.AzureJob)
     assert not job.id == ''
@@ -208,4 +212,3 @@ def test_quantinuum_submit():
             retrieved_histogram = qsharp.azure.output()
             assert isinstance(retrieved_histogram, dict)
             assert '0' in retrieved_histogram
-    
