@@ -79,7 +79,6 @@ class TestIonQ:
         """
         import time
         import qsharp
-        qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "ionq", "IonQ.csproj"))
         from Microsoft.Quantum.Tests import SampleQrng
 
         # Make sure we can simulate locally:
