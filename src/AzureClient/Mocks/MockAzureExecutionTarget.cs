@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Azure.Quantum;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 
@@ -33,7 +34,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             : null;
 
 
-        public override bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, [NotNullWhen(true)] out IQirSubmitter? submitter)
+        public override bool TryGetQirSubmitter(Azure.Quantum.IWorkspace workspace, string storageConnectionString, TargetCapability? targetCapability, [NotNullWhen(true)] out IQirSubmitter? submitter)
         {
             if (this.TargetId?.EndsWith("mock-qir") ?? false)
             {

@@ -398,12 +398,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Thus, we can branch on whether we need a QIR submitter or a translator,
             // but can use the same task object to represent both return values.
             Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
-            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
+            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, this.TargetCapability, out var submitter))
             {
+                Logger?.LogDebug("Using QIR submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
             }
             else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
             {
+                Logger?.LogDebug("Using legacy submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(machine, submissionContext);
             }
             else
@@ -417,7 +419,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             try
             {
                 entryPoint = await EntryPointGenerator.Generate(
-                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability
+                    submissionContext.OperationName, ActiveTarget.TargetId, this.TargetCapability
                 );
             }
             catch (TaskCanceledException tce)
@@ -581,7 +583,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
-            TargetCapability = executionTarget.MaximumCapability;
+            TargetCapability = executionTarget.DefaultCapability;
 
             channel?.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
@@ -833,7 +835,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
         {
             var capability = capabilityName is null
-                ? ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top
+                ? ActiveTarget?.DefaultCapability ?? TargetCapabilityModule.Top
                 : TargetCapabilityModule.FromName(capabilityName);
             if (!FSharpOption<TargetCapability>.get_IsSome(capability))
             {
@@ -844,7 +846,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (ActiveTarget != null && !ActiveTarget.SupportsCapability(capability.Value))
             {
-                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.MaximumCapability.Name}.");
+                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.DefaultCapability.Name}.");
                 targetCapability = null;
                 return false;
             }

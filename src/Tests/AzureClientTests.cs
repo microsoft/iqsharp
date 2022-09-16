@@ -198,6 +198,7 @@ namespace Tests.IQSharp
         [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
         [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
         [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
+        [DataRow("quantinuum.mock", "AdaptiveExecution", ExecuteStatus.Ok)]
         public async Task TestManualCapabilities(string targetId, string capabilityName, ExecuteStatus expectedResult) =>
             await Assert.That
                 .UsingEngine(async services =>
