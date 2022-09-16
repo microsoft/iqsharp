@@ -89,11 +89,6 @@ class CookieConsentHelper {
         });
     }
 
-    private onConsentChanged(categoryPreferences: Record<ConsentCategories, boolean>) {
-        console.log("onConsentChanged", categoryPreferences);
-        this.checkRequiredConsent();
-    }
-
     private checkRequiredConsent() {
         const hasConsent = this.siteConsent.getConsentFor(ConsentCategories.Required);
         console.log(`HasConsent: ${hasConsent}`);
@@ -127,7 +122,12 @@ class CookieConsentHelper {
             } else {
                 console.log("Error initializing WcpConsent: " + err);
             }
-        }, this.onConsentChanged, window.matchMedia('prefers-color-scheme: dark').matches ? Themes.dark : Themes.light);
+        }, 
+        (categoryPreferences: Record<ConsentCategories, boolean>) => {
+            console.log("onConsentChanged", categoryPreferences);
+            this.checkRequiredConsent();
+        },
+        window.matchMedia('prefers-color-scheme: dark').matches ? Themes.dark : Themes.light);
     }
 }
 
