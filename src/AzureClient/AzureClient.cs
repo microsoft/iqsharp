@@ -129,6 +129,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new ResourceEstimationToHtmlEncoder(logger));
             }
 
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
@@ -626,7 +627,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            if (!job.Succeeded || job.OutputDataUri == null)
+            if (job.InProgress)
             {
                 channel?.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
@@ -664,7 +665,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
 
-            if (job.OutputDataFormat == OutputFormat.QirResultsV1)
+            if (job.OutputDataFormat == OutputFormat.ResourceEstimatesV1)
+            {
+                return stream.ToResourceEstimationResults().ToExecutionResult();
+            }
+            else if (job.OutputDataFormat == OutputFormat.QirResultsV1)
             {
                 var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);

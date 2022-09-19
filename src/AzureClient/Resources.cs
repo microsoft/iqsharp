@@ -28,6 +28,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public const string AzureClientErrorJobOutputDownloadFailed =
             "Failed to download results for the specified Azure Quantum job.";
 
+        public const string AzureClientErrorJobOutputDisplayFailed =
+            "Failed to parse and display downloaded results for the specified Azure Quantum job.";
+
         public const string AzureClientErrorNoOperationName =
             "No Q# operation name was specified for Azure Quantum job submission.";
 
