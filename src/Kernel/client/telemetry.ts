@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-//[SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This function access is supposed to be public.")]
-const CLIENT_INFO_API_URL = 'https://iqsharp-telemetry.azurewebsites.net/api/GetClientInfo?code=1kIsLwHdwLlH9n5LflhgVlafZaTH122yPK/3xezIjCQqC87MJrkdyQ==';
+const CLIENT_INFO_API_URL = 'https://iqsharp-telemetry.azurewebsites.net/api/GetClientInfo?';
 
 const COOKIE_CONSENT_JS = 'https://wcpstatic.microsoft.com/mscc/lib/v2/wcp-consent.js';
 
@@ -89,11 +88,6 @@ class CookieConsentHelper {
         });
     }
 
-    private onConsentChanged(categoryPreferences: Record<ConsentCategories, boolean>) {
-        console.log("onConsentChanged", categoryPreferences);
-        this.checkRequiredConsent();
-    }
-
     private checkRequiredConsent() {
         const hasConsent = this.siteConsent.getConsentFor(ConsentCategories.Required);
         console.log(`HasConsent: ${hasConsent}`);
@@ -127,7 +121,12 @@ class CookieConsentHelper {
             } else {
                 console.log("Error initializing WcpConsent: " + err);
             }
-        }, this.onConsentChanged, window.matchMedia('prefers-color-scheme: dark').matches ? Themes.dark : Themes.light);
+        }, 
+        (categoryPreferences: Record<ConsentCategories, boolean>) => {
+            console.log("onConsentChanged", categoryPreferences);
+            this.checkRequiredConsent();
+        },
+        window.matchMedia('prefers-color-scheme: dark').matches ? Themes.dark : Themes.light);
     }
 }
 
