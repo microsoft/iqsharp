@@ -23,6 +23,18 @@ using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// Supported output data formats for QIR.
+    /// </summary>
+    internal static class OutputFormat
+    {
+        public const string QirResultsV1 = "microsoft.qir-results.v1";
+
+        public const string QuantumResultsV1 = "microsoft.quantum-results.v1";
+
+        public const string ResourceEstimatesV1 = "microsoft.resource-estimates.v1";
+    }
+
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
@@ -637,7 +649,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
+        internal async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
             async Task<Stream> ReadHttp()
             {
@@ -651,15 +663,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             using var stream = job.OutputDataUri.IsFile
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
-            if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+
+            if (job.OutputDataFormat == OutputFormat.QirResultsV1)
             {
                 var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
-            else
+            else if (job.OutputDataFormat == OutputFormat.QuantumResultsV1)
             {
                 return stream.ToHistogram(channel, Logger).ToExecutionResult();
+            }
+            else
+            {
+                channel?.Stderr($"Job ID {job.Id} has unsupported output format: {job.OutputDataFormat}");
+                return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
         }
 
@@ -671,7 +689,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 var line = String.Empty;
                 while ((line = reader.ReadLine()) != null)
                 {
-                     outputLines.Add(line.Trim());
+                    outputLines.Add(line.Trim());
                 }
             }
 
