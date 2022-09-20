@@ -205,11 +205,15 @@ public static class Extensions
 
             // This is a temporary fix in order to send JSON encoded data as strings to the Azure submission client
             var intermediate = JsonConvert.DeserializeObject<ImmutableDictionary<string, object>>(parameterValue);
-            if (intermediate == null) {
+            if (intermediate is null)
+            {
                 return defaultValue;
-            } else {
+            }
+            else
+            {
                 var transformedIntermediate = new Dictionary<string, string>();
-                foreach (var (key, value) in intermediate) {
+                foreach (var (key, value) in intermediate)
+                {
                     transformedIntermediate.Add(key, value.ToString());
                 }
                 return transformedIntermediate.ToImmutableDictionary();
