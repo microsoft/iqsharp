@@ -211,12 +211,7 @@ public static class Extensions
             }
             else
             {
-                var transformedIntermediate = new Dictionary<string, string>();
-                foreach (var (key, value) in intermediate)
-                {
-                    transformedIntermediate.Add(key, value.ToString());
-                }
-                return transformedIntermediate.ToImmutableDictionary();
+                return intermediate.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.ToString());
             }
         }
 
