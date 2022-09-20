@@ -53,14 +53,191 @@ def wait_until_completed(job):
             else poll_wait * 1.5
         )
 
-@pytest.fixture(scope="session")
-def ionq_project():
-    import qsharp
-    return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "ionq", "IonQ.csproj"))
+# @pytest.fixture(scope="session")
+# def ionq_project():
+#     import qsharp
+#     return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "ionq", "IonQ.csproj"))
 
-@pytest.mark.usefixtures("ionq_project")
-class TestIonQ:
-    def test_ionq_targets(self):
+# @pytest.mark.usefixtures("ionq_project")
+# class TestIonQ:
+#     def test_ionq_targets(self):
+#         """
+#         Tests that we can fetch targets from the service,
+#         and that the workspace includes the targets we need for submission
+#         """
+#         targets = connect()
+#         assert len(targets) > 2
+
+#         target_ids = [t.id for t in targets]
+#         assert 'ionq.simulator' in target_ids
+#         assert 'ionq.qpu' in target_ids
+#         assert 'ionq.qpu.aria-1' in target_ids
+
+#     def test_ionq_submit(self):
+#         """
+#         Test that the SampleQrng operation can be submitted successfully on the ionq.simulator
+#         """
+#         import time
+#         import qsharp
+#         from Microsoft.Quantum.Tests import SampleQrng
+
+#         # Make sure we can simulate locally:
+#         count = 3
+#         result = SampleQrng.simulate(count=count, name='andres')
+#         assert len(result) == count
+
+#         import qsharp.azure
+#         connect()
+
+#         t = qsharp.azure.target("ionq.simulator")
+#         assert isinstance(t, qsharp.azure.AzureTarget)
+#         assert t.id == "ionq.simulator"
+
+#         job = qsharp.azure.submit(SampleQrng, count=count, name="andres")
+#         assert isinstance(job, qsharp.azure.AzureJob)
+#         assert not job.id == ''
+#         print("Submitted job: ", job.id)
+
+#         try:
+#             wait_until_completed(job)
+#         except TimeoutError:
+#             warnings.warn("IonQ execution exceeded timeout. Skipping fetching results.")
+#         else:
+#             job = qsharp.azure.status()
+#             assert isinstance(job, qsharp.azure.AzureJob)
+#             assert job.status == "Succeeded"
+
+#             histogram = {
+#                 '[0,0,0]': 0.125,
+#                 '[0,0,1]': 0.125,
+#                 '[0,1,0]': 0.125,
+#                 '[0,1,1]': 0.125,
+#                 '[1,0,0]': 0.125,
+#                 '[1,0,1]': 0.125,
+#                 '[1,1,0]': 0.125,
+#                 '[1,1,1]': 0.125
+#             }
+#             retrieved_histogram = qsharp.azure.output()
+#             assert isinstance(retrieved_histogram, dict)
+#             assert histogram == retrieved_histogram
+
+# @pytest.fixture(scope="session")
+# def quantinuum_project():
+#     import qsharp
+#     return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "quantinuum", "Quantinuum.csproj"))
+
+# @pytest.mark.usefixtures("quantinuum_project")
+# class TestQuantinuum:
+#     def test_honeywell_targets(self):
+#         """
+#         Tests that we can fetch targets from the service,
+#         and that the workspace includes the targets we need for submission
+#         """
+#         targets = connect()
+#         assert len(targets) > 2
+
+#         target_ids = [t.id for t in targets]
+#         assert 'honeywell.hqs-lt-s1' in target_ids
+#         assert 'honeywell.hqs-lt-s1-apival' in target_ids
+
+#     def test_honeywell_submit(self):
+#         """
+#         Test that the RunTeleport operation can be submitted successfully on the honeywell apival target
+#         """
+#         import qsharp
+#         from Microsoft.Quantum.Tests import RunTeleport
+
+#         # Make sure we can simulate locally:
+#         expected = True
+#         result = RunTeleport.simulate(doPlus=expected)
+#         assert result == 0 if expected else 1
+
+#         import qsharp.azure
+#         connect()
+
+#         t = qsharp.azure.target("honeywell.hqs-lt-s1-apival")
+#         assert isinstance(t, qsharp.azure.AzureTarget)
+#         assert t.id == "honeywell.hqs-lt-s1-apival"
+
+#         job = qsharp.azure.submit(RunTeleport, doPlus=expected)
+#         assert isinstance(job, qsharp.azure.AzureJob)
+#         assert not job.id == ''
+#         print("Submitted job: ", job.id)
+
+#         try: 
+#             wait_until_completed(job)
+#         except TimeoutError:
+#             warnings.warn("Honeywell execution exceeded timeout. Skipping fetching results.")
+#         else:
+#             job = qsharp.azure.status()
+#             assert isinstance(job, qsharp.azure.AzureJob)
+#             if job.status == "Succeeded":
+#                 retrieved_histogram = qsharp.azure.output()
+#                 assert isinstance(retrieved_histogram, dict)
+#                 assert '0' in retrieved_histogram
+
+#     def test_quantinuum_targets(self):
+#         """
+#         Tests that we can fetch targets from the service,
+#         and that the workspace includes the targets we need for submission
+#         """
+#         targets = connect()
+#         assert len(targets) > 2
+
+#         target_ids = [t.id for t in targets]
+#         assert 'quantinuum.hqs-lt-s1' in target_ids
+#         assert 'quantinuum.hqs-lt-s1-apival' in target_ids
+
+#     @pytest.mark.parametrize("enable_qir", [False, True])
+#     def test_quantinuum_submit(self, enable_qir):
+#         """
+#         Test that the RunTeleport operation can be submitted successfully on the quantinuum apival target
+#         """
+#         import qsharp
+#         from Microsoft.Quantum.Tests import (
+#             # A version we can use without having to pass mutable parameters.
+#             RunTeleportWithPlus
+#         )
+
+#         # Make sure we can simulate locally:
+#         result = RunTeleportWithPlus.simulate()
+#         assert result == 0
+
+#         import qsharp.azure
+#         connect()
+
+#         t = qsharp.azure.target("quantinuum.hqs-lt-s1-apival")
+#         assert isinstance(t, qsharp.azure.AzureTarget)
+#         assert t.id == "quantinuum.hqs-lt-s1-apival"
+
+#         if enable_qir:
+#             qsharp.azure.target_capability("AdaptiveExecution")
+
+#         job = qsharp.azure.submit(RunTeleportWithPlus)
+#         assert isinstance(job, qsharp.azure.AzureJob)
+#         assert not job.id == ''
+#         print("Submitted job: ", job.id)
+
+#         try: 
+#             wait_until_completed(job)
+#         except TimeoutError:
+#             warnings.warn("Quantinuum execution exceeded timeout. Skipping fetching results.")
+#         else:
+#             job = qsharp.azure.status()
+#             assert isinstance(job, qsharp.azure.AzureJob)
+#             if job.status == "Succeeded":
+#                 retrieved_histogram = qsharp.azure.output()
+#                 assert isinstance(retrieved_histogram, dict)
+#                 assert '0' in retrieved_histogram
+
+@pytest.fixture(scope="session")
+def estimator_project():
+    import qsharp
+    return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "estimator", "Estimator.csproj"))
+
+@pytest.mark.usefixtures("estimator_project")
+class TestEstimator:
+    def test_estimator_target(self):
         """
         Tests that we can fetch targets from the service,
         and that the workspace includes the targets we need for submission
@@ -69,31 +246,26 @@ class TestIonQ:
         assert len(targets) > 2
 
         target_ids = [t.id for t in targets]
-        assert 'ionq.simulator' in target_ids
-        assert 'ionq.qpu' in target_ids
-        assert 'ionq.qpu.aria-1' in target_ids
+        print(target_ids)
+        assert 'microsoft.estimator' in target_ids
 
-    def test_ionq_submit(self):
+    def test_estimator_submit(self):
         """
-        Test that the SampleQrng operation can be submitted successfully on the ionq.simulator
+        Test that the EstimateMultiplication operation can be submitted successfully on microsoft.estimator
         """
         import time
         import qsharp
-        from Microsoft.Quantum.Tests import SampleQrng
-
-        # Make sure we can simulate locally:
-        count = 3
-        result = SampleQrng.simulate(count=count, name='andres')
-        assert len(result) == count
+        from Microsoft.Quantum.Tests import EstimateMultiplication
 
         import qsharp.azure
         connect()
 
-        t = qsharp.azure.target("ionq.simulator")
+        #TODO: change back to microsoft.estimator
+        t = qsharp.azure.target("microsoft.simulator.resources-estimator")
         assert isinstance(t, qsharp.azure.AzureTarget)
-        assert t.id == "ionq.simulator"
+        assert t.id == "microsoft.simulator.resources-estimator"
 
-        job = qsharp.azure.submit(SampleQrng, count=count, name="andres")
+        job = qsharp.azure.submit(EstimateMultiplication)
         assert isinstance(job, qsharp.azure.AzureJob)
         assert not job.id == ''
         print("Submitted job: ", job.id)
@@ -101,131 +273,47 @@ class TestIonQ:
         try:
             wait_until_completed(job)
         except TimeoutError:
-            warnings.warn("IonQ execution exceeded timeout. Skipping fetching results.")
+            warnings.warn("Resource estimator execution exceeded timeout. Skipping fetching results.")
         else:
             job = qsharp.azure.status()
             assert isinstance(job, qsharp.azure.AzureJob)
             assert job.status == "Succeeded"
 
-            histogram = {
-                '[0,0,0]': 0.125,
-                '[0,0,1]': 0.125,
-                '[0,1,0]': 0.125,
-                '[0,1,1]': 0.125,
-                '[1,0,0]': 0.125,
-                '[1,0,1]': 0.125,
-                '[1,1,0]': 0.125,
-                '[1,1,1]': 0.125
-            }
-            retrieved_histogram = qsharp.azure.output()
-            assert isinstance(retrieved_histogram, dict)
-            assert histogram == retrieved_histogram
+            # histogram = {
+            #     '[0,0,0]': 0.125,
+            #     '[0,0,1]': 0.125,
+            #     '[0,1,0]': 0.125,
+            #     '[0,1,1]': 0.125,
+            #     '[1,0,0]': 0.125,
+            #     '[1,0,1]': 0.125,
+            #     '[1,1,0]': 0.125,
+            #     '[1,1,1]': 0.125
+            # }
+            retrieved_output = qsharp.azure.output()
+            assert isinstance(retrieved_output, dict)
+            assert isinstance(retrieved_output, qsharp.azure.AzureResult)
 
-@pytest.fixture(scope="session")
-def quantinuum_project():
-    import qsharp
-    return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "quantinuum", "Quantinuum.csproj"))
+            assert qsharp.__version__ == "0.0.0.1"
 
-@pytest.mark.usefixtures("quantinuum_project")
-class TestQuantinuum:
-    def test_honeywell_targets(self):
-        """
-        Tests that we can fetch targets from the service,
-        and that the workspace includes the targets we need for submission
-        """
-        targets = connect()
-        assert len(targets) > 2
+            assert not retrieved_output._repr_mimebundle_().get("text/html") is None
 
-        target_ids = [t.id for t in targets]
-        assert 'honeywell.hqs-lt-s1' in target_ids
-        assert 'honeywell.hqs-lt-s1-apival' in target_ids
+            # Confirm output has expected structure
+            # assert not retrieved_output["reportData"] is None
+            # assert not retrieved_output["reportData"]["assumptions"] is None
+            # assert not retrieved_output["reportData"]["groups"] is None
+            
+            # assert len(retrieved_output["reportData"]["groups"]) > 1
+            # group = retrieved_output["reportData"]["groups"].pop()
+            # assert not group["alwaysVisible"] is None
+            # assert not group["title"] is None
+            # assert not group["entries"] is None
 
-    def test_honeywell_submit(self):
-        """
-        Test that the RunTeleport operation can be submitted successfully on the honeywell apival target
-        """
-        import qsharp
-        from Microsoft.Quantum.Tests import RunTeleport
+            # assert len(group["entries"]) > 1
+            # entry = group["entries"].pop()
+            # assert not entry["description"] is None
+            # assert not entry["label"] is None
+            # assert not entry["path"] is None
 
-        # Make sure we can simulate locally:
-        expected = True
-        result = RunTeleport.simulate(doPlus=expected)
-        assert result == 0 if expected else 1
 
-        import qsharp.azure
-        connect()
-
-        t = qsharp.azure.target("honeywell.hqs-lt-s1-apival")
-        assert isinstance(t, qsharp.azure.AzureTarget)
-        assert t.id == "honeywell.hqs-lt-s1-apival"
-
-        job = qsharp.azure.submit(RunTeleport, doPlus=expected)
-        assert isinstance(job, qsharp.azure.AzureJob)
-        assert not job.id == ''
-        print("Submitted job: ", job.id)
-
-        try: 
-            wait_until_completed(job)
-        except TimeoutError:
-            warnings.warn("Honeywell execution exceeded timeout. Skipping fetching results.")
-        else:
-            job = qsharp.azure.status()
-            assert isinstance(job, qsharp.azure.AzureJob)
-            if job.status == "Succeeded":
-                retrieved_histogram = qsharp.azure.output()
-                assert isinstance(retrieved_histogram, dict)
-                assert '0' in retrieved_histogram
-
-    def test_quantinuum_targets(self):
-        """
-        Tests that we can fetch targets from the service,
-        and that the workspace includes the targets we need for submission
-        """
-        targets = connect()
-        assert len(targets) > 2
-
-        target_ids = [t.id for t in targets]
-        assert 'quantinuum.hqs-lt-s1' in target_ids
-        assert 'quantinuum.hqs-lt-s1-apival' in target_ids
-
-    @pytest.mark.parametrize("enable_qir", [False, True])
-    def test_quantinuum_submit(self, enable_qir):
-        """
-        Test that the RunTeleport operation can be submitted successfully on the quantinuum apival target
-        """
-        import qsharp
-        from Microsoft.Quantum.Tests import (
-            # A version we can use without having to pass mutable parameters.
-            RunTeleportWithPlus
-        )
-
-        # Make sure we can simulate locally:
-        result = RunTeleportWithPlus.simulate()
-        assert result == 0
-
-        import qsharp.azure
-        connect()
-
-        t = qsharp.azure.target("quantinuum.hqs-lt-s1-apival")
-        assert isinstance(t, qsharp.azure.AzureTarget)
-        assert t.id == "quantinuum.hqs-lt-s1-apival"
-
-        if enable_qir:
-            qsharp.azure.target_capability("AdaptiveExecution")
-
-        job = qsharp.azure.submit(RunTeleportWithPlus)
-        assert isinstance(job, qsharp.azure.AzureJob)
-        assert not job.id == ''
-        print("Submitted job: ", job.id)
-
-        try: 
-            wait_until_completed(job)
-        except TimeoutError:
-            warnings.warn("Quantinuum execution exceeded timeout. Skipping fetching results.")
-        else:
-            job = qsharp.azure.status()
-            assert isinstance(job, qsharp.azure.AzureJob)
-            if job.status == "Succeeded":
-                retrieved_histogram = qsharp.azure.output()
-                assert isinstance(retrieved_histogram, dict)
-                assert '0' in retrieved_histogram
+            
+            # assert histogram == retrieved_histogram

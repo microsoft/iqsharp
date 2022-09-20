@@ -27,18 +27,18 @@ BeforeAll {
     }
 }
 
-Describe "Test Jupyter Notebooks" {
-    BeforeAll { 
-        Test-Environment
-        Push-Location .\Notebooks
-    }
+# Describe "Test Jupyter Notebooks" {
+#     BeforeAll { 
+#         Test-Environment
+#         Push-Location .\Notebooks
+#     }
 
-    It "Converts IonQ.ipynb successfully" -Tag "submit.ionq" {
-       Test-Notebook "IonQ.ipynb"
-    }
+#     It "Converts IonQ.ipynb successfully" -Tag "submit.ionq" {
+#        Test-Notebook "IonQ.ipynb"
+#     }
     
-    AfterAll { Pop-Location }
-}
+#     AfterAll { Pop-Location }
+# }
 
 Describe "Test Python Integration" {
     BeforeAll { 
@@ -50,18 +50,23 @@ Describe "Test Python Integration" {
         }
     }
 
-    It "Runs pytest successfully for ionq" -Tag "submit.ionq" {
-        python -m pytest -k ionq --junitxml="junit/TestResults-IonQ.xml" | Write-Verbose
-        $LASTEXITCODE | Should -Be 0
-    }
+    # It "Runs pytest successfully for ionq" -Tag "submit.ionq" {
+    #     python -m pytest -k ionq --junitxml="junit/TestResults-IonQ.xml" | Write-Verbose
+    #     $LASTEXITCODE | Should -Be 0
+    # }
 
-    It "Runs pytest successfully for honeywell" -Tag "submit.honeywell" {
-        python -m pytest -k honeywell --junitxml="junit/TestResults-Honeywell.xml" | Write-Verbose
-        $LASTEXITCODE | Should -Be 0
-    }
+    # It "Runs pytest successfully for honeywell" -Tag "submit.honeywell" {
+    #     python -m pytest -k honeywell --junitxml="junit/TestResults-Honeywell.xml" | Write-Verbose
+    #     $LASTEXITCODE | Should -Be 0
+    # }
 
-    It "Runs pytest successfully for Quantinuum" -Tag "submit.quantinuum" {
-        python -m pytest -k quantinuum --junitxml="junit/Quantinuum.xml" | Write-Verbose
+    # It "Runs pytest successfully for Quantinuum" -Tag "submit.quantinuum" {
+    #     python -m pytest -k quantinuum --junitxml="junit/Quantinuum.xml" | Write-Verbose
+    #     $LASTEXITCODE | Should -Be 0
+    # }
+
+    It "Runs pytest successfully for estimator" -Tag "submit.estimator" {
+        python -m pytest -k estimator --junitxml="junit/TestResults-Estimator.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
     }
     
