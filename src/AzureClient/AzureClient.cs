@@ -40,6 +40,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         private const string MicrosoftSimulator = "microsoft.simulator";
 
+        private const string MicrosoftEstimator = "microsoft.estimator";
+
         // ToDo: Use API provided by the Service, GitHub Issue: https://github.com/microsoft/iqsharp/issues/681 
         /// <summary>
         /// Returns whether a target ID is meant for quantum execution since not all targets
@@ -49,7 +51,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         private static bool IsQuantumExecutionTarget(string targetId) =>
             AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
-            || targetId.StartsWith(MicrosoftSimulator);
+            || targetId.StartsWith(MicrosoftSimulator)
+            || targetId.StartsWith(MicrosoftEstimator);
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
