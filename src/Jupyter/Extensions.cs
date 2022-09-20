@@ -202,6 +202,18 @@ public static class Extensions
                 parameterValue = parameterValue.Substring(1, parameterValue.Length - 2);    // Strip off the enclosing quotes
                 parameterValue = parameterValue.Replace("\\\"", "\"");                      // Don't escape the interior quotes
             }
+
+            // This is a temporary fix in order to send JSON encoded data as strings to the Azure submission client
+            var intermediate = JsonConvert.DeserializeObject<ImmutableDictionary<string, object>>(parameterValue);
+            if (intermediate == null) {
+                return defaultValue;
+            } else {
+                var transformedIntermediate = new Dictionary<string, string>();
+                foreach (var (key, value) in intermediate) {
+                    transformedIntermediate.Add(key, value.ToString());
+                }
+                return transformedIntermediate.ToImmutableDictionary();
+            }
         }
 
         return JsonConvert.DeserializeObject(parameterValue, type) ?? defaultValue;
