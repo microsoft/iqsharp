@@ -17,7 +17,8 @@ public static class JsonConverters
         new TargetStatusJsonConverter(),
         new TargetStatusListJsonConverter(),
         new AzureClientErrorJsonConverter(),
-        new TargetCapabilityConverter()
+        new TargetCapabilityConverter(),
+        new ResourceEstimationResultConverter()
     );
 
     /// <summary>

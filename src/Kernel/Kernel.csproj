@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="4.3.2" />
-	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.25.228311" />
+	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.26.230380-beta" />
   </ItemGroup>
 
   <!-- TypeScript compilation -->

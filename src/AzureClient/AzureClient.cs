@@ -14,6 +14,7 @@ using Azure.Core;
 using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -40,6 +41,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     {
         private const string MicrosoftSimulator = "microsoft.simulator";
 
+        private const string MicrosoftEstimator = "microsoft.estimator";
+
         // ToDo: Use API provided by the Service, GitHub Issue: https://github.com/microsoft/iqsharp/issues/681 
         /// <summary>
         /// Returns whether a target ID is meant for quantum execution since not all targets
@@ -49,7 +52,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         private static bool IsQuantumExecutionTarget(string targetId) =>
             AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
-            || targetId.StartsWith(MicrosoftSimulator);
+            || targetId.StartsWith(MicrosoftSimulator)
+            || targetId.StartsWith(MicrosoftEstimator);
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
@@ -78,6 +82,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
             ? "(no quantum computing execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
+        private IServiceProvider ServiceProvider { get; }
 
         /// <summary>
         /// Creates an <see cref="AzureClient"/> object that provides methods for
@@ -91,6 +96,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
         /// <param name="workspace">The service for the active IQ# workspace.</param>
+        /// <param name="serviceProvider">A service provider to create needed components.</param>
         public AzureClient(
             IExecutionEngine engine,
             IReferences references,
@@ -99,7 +105,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
             IEventService eventService,
-            IWorkspace workspace)
+            IWorkspace workspace,
+            IServiceProvider serviceProvider)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
@@ -107,6 +114,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureFactory = azureFactory;
             Logger = logger;
             Workspace = workspace;
+            ServiceProvider = serviceProvider;
 
             // If we're given a target capability, start with it set.
             if (workspace.WorkspaceProject.TargetCapability is {} capability)
@@ -129,6 +137,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new ResourceEstimationToHtmlEncoder(logger));
+                baseEngine.RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<ResourceEstimationToHtmlEncoder>(ServiceProvider));
             }
 
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
@@ -626,7 +636,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 return AzureClientError.JobNotFound.ToExecutionResult();
             }
 
-            if (!job.Succeeded || job.OutputDataUri == null)
+            if (job.InProgress)
             {
                 channel?.Stderr($"Job ID {jobId} has not completed. To check the status, call {GetCommandDisplayName("status")} with the job ID.");
                 return AzureClientError.JobNotCompleted.ToExecutionResult();
@@ -664,7 +674,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
 
-            if (job.OutputDataFormat == OutputFormat.QirResultsV1)
+            if (job.OutputDataFormat == OutputFormat.ResourceEstimatesV1)
+            {
+                return stream.ToResourceEstimationResults().ToExecutionResult();
+            }
+            else if (job.OutputDataFormat == OutputFormat.QirResultsV1)
             {
                 var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
