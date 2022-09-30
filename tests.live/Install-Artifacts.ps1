@@ -17,13 +17,9 @@ function Install-PreReqs() {
     Install-Module -Name Pester -SkipPublisherCheck -Force -Scope CurrentUser
 
     Push-Location (Join-Path $PSScriptRoot ..)
+        # bootstrap takes care of installing all test requirements: 
         "Running bootstrap" | Write-Verbose
         .\bootstrap.ps1
-    Pop-Location
-
-    Push-Location $PSScriptRoot
-        "Installing Python Pre-reqs" | Write-Verbose
-        pip install -r requirements.txt
     Pop-Location
 }
 

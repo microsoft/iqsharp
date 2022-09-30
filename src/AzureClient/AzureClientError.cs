@@ -55,6 +55,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         JobOutputDownloadFailed,
 
         /// <summary>
+        /// The job failed to be displayed.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobOutputDisplayFailed)]
+        JobOutputDisplayFailed,
+
+        /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
         [Description(Resources.AzureClientErrorNoOperationName)]

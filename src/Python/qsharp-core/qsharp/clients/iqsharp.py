@@ -278,11 +278,11 @@ class IQSharpClient(object):
             return message_content["data"]["application/json"]
         return None
 
-    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, return_full_result=False, **kwargs) -> Any:
         _timeout_ = kwargs.pop('_timeout_', DEFAULT_TIMEOUT)
         return self._execute(
             f'%{magic} {json.dumps(map_tuples(kwargs))}',
-            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_, _timeout_=_timeout_
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_, _timeout_=_timeout_, return_full_result=return_full_result
         )
 
     def _execute_callable_magic(self, magic : str, op,

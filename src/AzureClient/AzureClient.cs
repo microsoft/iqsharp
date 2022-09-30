@@ -14,6 +14,7 @@ using Azure.Core;
 using Azure.Quantum;
 using Microsoft.Azure.Quantum;
 using Microsoft.Azure.Quantum.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.Quantum.IQSharp.Common;
@@ -23,10 +24,24 @@ using Microsoft.Quantum.Simulation.Common;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    /// <summary>
+    /// Supported output data formats for QIR.
+    /// </summary>
+    internal static class OutputFormat
+    {
+        public const string QirResultsV1 = "microsoft.qir-results.v1";
+
+        public const string QuantumResultsV1 = "microsoft.quantum-results.v1";
+
+        public const string ResourceEstimatesV1 = "microsoft.resource-estimates.v1";
+    }
+
     /// <inheritdoc/>
     public class AzureClient : IAzureClient
     {
         private const string MicrosoftSimulator = "microsoft.simulator";
+
+        private const string MicrosoftEstimator = "microsoft.estimator";
 
         // ToDo: Use API provided by the Service, GitHub Issue: https://github.com/microsoft/iqsharp/issues/681 
         /// <summary>
@@ -37,7 +52,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         private static bool IsQuantumExecutionTarget(string targetId) =>
             AzureExecutionTarget.GetProvider(targetId) != AzureProvider.Microsoft
-            || targetId.StartsWith(MicrosoftSimulator);
+            || targetId.StartsWith(MicrosoftSimulator)
+            || targetId.StartsWith(MicrosoftEstimator);
 
         /// <inheritdoc />
         public Microsoft.Azure.Quantum.IWorkspace? ActiveWorkspace { get; private set; }
@@ -66,6 +82,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             (ValidExecutionTargets == null || ValidExecutionTargets.Count() == 0)
             ? "(no quantum computing execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
+        private IServiceProvider ServiceProvider { get; }
 
         /// <summary>
         /// Creates an <see cref="AzureClient"/> object that provides methods for
@@ -79,6 +96,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="logger">The logger to use for diagnostic information.</param>
         /// <param name="eventService">The event service for the IQ# kernel.</param>
         /// <param name="workspace">The service for the active IQ# workspace.</param>
+        /// <param name="serviceProvider">A service provider to create needed components.</param>
         public AzureClient(
             IExecutionEngine engine,
             IReferences references,
@@ -87,7 +105,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             IAzureFactory azureFactory,
             ILogger<AzureClient> logger,
             IEventService eventService,
-            IWorkspace workspace)
+            IWorkspace workspace,
+            IServiceProvider serviceProvider)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
@@ -95,6 +114,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             AzureFactory = azureFactory;
             Logger = logger;
             Workspace = workspace;
+            ServiceProvider = serviceProvider;
 
             // If we're given a target capability, start with it set.
             if (workspace.WorkspaceProject.TargetCapability is {} capability)
@@ -117,6 +137,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
+                baseEngine.RegisterDisplayEncoder(new ResourceEstimationToHtmlEncoder(logger));
+                baseEngine.RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<ResourceEstimationToHtmlEncoder>(ServiceProvider));
             }
 
             eventService?.TriggerServiceInitialized<IAzureClient>(this);
@@ -386,12 +408,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Thus, we can branch on whether we need a QIR submitter or a translator,
             // but can use the same task object to represent both return values.
             Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
-            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, out var submitter))
+            if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, this.TargetCapability, out var submitter))
             {
+                Logger?.LogDebug("Using QIR submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(submitter, submissionContext);
             }
             else if (AzureFactory.CreateMachine(this.ActiveWorkspace, this.ActiveTarget.TargetId, this.StorageConnectionString) is IQuantumMachine machine)
             {
+                Logger?.LogDebug("Using legacy submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
                 jobTask = entryPoint => entryPoint.SubmitAsync(machine, submissionContext);
             }
             else
@@ -405,7 +429,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             try
             {
                 entryPoint = await EntryPointGenerator.Generate(
-                    submissionContext.OperationName, ActiveTarget.TargetId, ActiveTarget.MaximumCapability
+                    submissionContext.OperationName, ActiveTarget.TargetId, this.TargetCapability
                 );
             }
             catch (TaskCanceledException tce)
@@ -569,7 +593,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             // Set the active target and load the package.
             ActiveTarget = executionTarget;
-            TargetCapability = executionTarget.MaximumCapability;
+            TargetCapability = executionTarget.DefaultCapability;
 
             channel?.Stdout($"Loading package {ActiveTarget.PackageName} and dependencies...");
             await References.AddPackage(ActiveTarget.PackageName);
@@ -635,7 +659,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
+        internal async Task<ExecutionResult> CreateOutput(CloudJob job, IChannel? channel, CancellationToken cancellationToken)
         {
             async Task<Stream> ReadHttp()
             {
@@ -649,15 +673,25 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             using var stream = job.OutputDataUri.IsFile
                 ? File.OpenRead(job.OutputDataUri.LocalPath)
                 : await ReadHttp();
-            if (this.ActiveTarget?.TargetId?.StartsWith(MicrosoftSimulator) ?? false)
+
+            if (job.OutputDataFormat == OutputFormat.ResourceEstimatesV1)
+            {
+                return stream.ToResourceEstimationResults().ToExecutionResult();
+            }
+            else if (job.OutputDataFormat == OutputFormat.QirResultsV1)
             {
                 var (messages, result) = ParseSimulatorOutput(stream);
                 channel?.Stdout(messages);
                 return result.ToExecutionResult();
             }
-            else
+            else if (job.OutputDataFormat == OutputFormat.QuantumResultsV1)
             {
                 return stream.ToHistogram(channel, Logger).ToExecutionResult();
+            }
+            else
+            {
+                channel?.Stderr($"Job ID {job.Id} has unsupported output format: {job.OutputDataFormat}");
+                return AzureClientError.JobOutputDownloadFailed.ToExecutionResult();
             }
         }
 
@@ -669,7 +703,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 var line = String.Empty;
                 while ((line = reader.ReadLine()) != null)
                 {
-                     outputLines.Add(line.Trim());
+                    outputLines.Add(line.Trim());
                 }
             }
 
@@ -815,7 +849,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public bool TrySetTargetCapability(IChannel? channel, string? capabilityName, [NotNullWhen(true)] out TargetCapability? targetCapability)
         {
             var capability = capabilityName is null
-                ? ActiveTarget?.MaximumCapability ?? TargetCapabilityModule.Top
+                ? ActiveTarget?.DefaultCapability ?? TargetCapabilityModule.Top
                 : TargetCapabilityModule.FromName(capabilityName);
             if (!FSharpOption<TargetCapability>.get_IsSome(capability))
             {
@@ -826,7 +860,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             if (ActiveTarget != null && !ActiveTarget.SupportsCapability(capability.Value))
             {
-                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.MaximumCapability.Name}.");
+                channel?.Stderr($"Target capability {capability.Value.Name} is not supported by the active target, {ActiveTarget.TargetId}. The active target supports a maximum capability level of {ActiveTarget.DefaultCapability.Name}.");
                 targetCapability = null;
                 return false;
             }

@@ -5,6 +5,22 @@ $ErrorActionPreference = 'Stop'
 & "$PSScriptRoot/set-env.ps1"
 $script:AllOk = $True
 
+function Get-ErrorMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline=$true)]
+        $Value
+    );
+
+    process {
+        if ($Value -is [System.Management.Automation.ErrorRecord]) {
+            $Value.Exception.Message | Write-Output
+        } else {
+            $Value.ToString() | Write-Output
+        }
+    }
+}
+
 function Test-CondaPackage {
     [CmdletBinding()]
     param (
@@ -25,7 +41,7 @@ function Test-CondaPackage {
 
     process {
         Write-Host "##[info]Testing conda package $Path..."
-        conda-build (Resolve-Path $Path) --test 2>&1 | ForEach-Object { "$_" };
+        conda-build (Resolve-Path $Path) --test 2>&1 | Get-ErrorMessage;
         if ($LASTEXITCODE -ne 0) {
             Write-Host "##vso[task.logissue type=error;]conda-build --test failed for $Path.";
             $script:AllOk = $false;

@@ -31,7 +31,8 @@ __all__ = [
     'jobs',
     'AzureTarget',
     'AzureJob',
-    'AzureError'
+    'AzureError',
+    'AzureResult'
 ]
 
 ## CLASSES ##
@@ -79,6 +80,17 @@ class AzureJob(object):
             # don't attempt to compare against unrelated types
             return NotImplemented
         return self.__dict__ == other.__dict__
+
+class AzureResult(Dict):
+    """
+    Represents a the results of an Azure Quantum job.
+    """
+    def __init__(self, data: Dict, mime_bundle: Dict[str, Any] = None):
+        super().__init__(data)
+        self.mime_bundle = mime_bundle if mime_bundle is not None else {}
+
+    def _repr_mimebundle_(self, include=None, exclude=None) -> Dict[str, Any]:
+        return self.mime_bundle
 
 class AzureError(Exception):
     """
@@ -137,7 +149,7 @@ def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
     if "error_code" in result: raise AzureError(result)
     return AzureJob(result)
 
-def execute(op : qsharp.QSharpCallable, **params) -> Dict:
+def execute(op : qsharp.QSharpCallable, **params) -> AzureResult:
     """
     Submits a job to an Azure Quantum workspace and waits for completion.
     Returns a dictionary containing the results of the job. This dictionary will usually
@@ -145,9 +157,9 @@ def execute(op : qsharp.QSharpCallable, **params) -> Dict:
     percentage of shots that resulted in that key value, but may vary depending on the job's target.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute for more details.
     """
-    result = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, **params)
+    (result, content) = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, return_full_result=True, **params)
     if "error_code" in result: raise AzureError(result)
-    return result
+    return AzureResult(result, content['data'])
 
 def status(jobId : str = '', **params) -> AzureJob:
     """
@@ -158,7 +170,7 @@ def status(jobId : str = '', **params) -> AzureJob:
     if "error_code" in result: raise AzureError(result)
     return AzureJob(result)
 
-def output(jobId : str = '', **params) -> Dict:
+def output(jobId : str = '', **params) -> AzureResult:
     """
     Displays results for a job in the current Azure Quantum workspace.
     Returns a dictionary containing the results of the job. This dictionary will usually
@@ -166,9 +178,9 @@ def output(jobId : str = '', **params) -> Dict:
     percentage of shots that resulted in that key value, but may vary depending on the job's target.
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.output for more details.
     """
-    result = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, **params)
+    (result, content) = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, return_full_result=True, **params)
     if "error_code" in result: raise AzureError(result)
-    return result
+    return AzureResult(result, content['data'])
 
 def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     """

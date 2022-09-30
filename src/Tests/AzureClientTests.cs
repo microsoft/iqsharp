@@ -198,6 +198,7 @@ namespace Tests.IQSharp
         [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
         [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
         [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
+        [DataRow("quantinuum.mock", "AdaptiveExecution", ExecuteStatus.Ok)]
         public async Task TestManualCapabilities(string targetId, string capabilityName, ExecuteStatus expectedResult) =>
             await Assert.That
                 .UsingEngine(async services =>
@@ -328,6 +329,35 @@ namespace Tests.IQSharp
             };
             var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             Assert.IsNotNull(histogram);
+        }
+
+        [TestMethod]
+        public void TestJobOutputFormats()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetRequiredService<IAzureClient>();
+
+            // connect
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.IsFalse(targets.Any());
+
+            // add a target
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            azureWorkspace?.AddProviders("microsoft");
+
+            // set the active target
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.simulator"));
+            Assert.AreEqual("microsoft.simulator", target.TargetId);
+
+            var qirResultsJob = new MockCloudJob(null, OutputFormat.QirResultsV1);
+            var quantumResultsJob = new MockCloudJob(null, OutputFormat.QuantumResultsV1);
+
+            var histogram = ExpectSuccess<Histogram>(azureClient.CreateOutput(quantumResultsJob, new MockChannel(), CancellationToken.None));
+            Assert.IsNotNull(histogram);
+
+            var stringOutput = ExpectSuccess<string>(azureClient.CreateOutput(qirResultsJob, new MockChannel(), CancellationToken.None));
+            Assert.IsNotNull(stringOutput);
         }
 
         [TestMethod]
