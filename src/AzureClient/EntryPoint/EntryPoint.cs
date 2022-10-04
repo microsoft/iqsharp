@@ -115,10 +115,34 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 return new ArgumentValue.Result(Newtonsoft.Json.JsonConvert.DeserializeObject<Result>(parameterValue)!);
             }
+            else if (parameterType.IsQArray())
+            {
+                var arrayType = parameterType.GenericTypeArguments.FirstOrDefault() ??
+                    throw new ArgumentException($""); // TODO: Set right error message.
+
+                if (arrayType == typeof(bool)) {
+                    
+                }
+                else if (arrayType == typeof(long))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Int(v));
+                    return ArgumentValue.Array.TryCreate(values.ToImmutableArray<ArgumentValue>(), ArgumentType.Int);
+                    //throw new ArgumentException($"cesarzc exception long | Values.Count: {values.Count()}");
+                }
+                
+                throw new ArgumentException($"cesarzc exception | ParameterValue: {parameterValue}, ArrayType: {arrayType} " +
+                $"HasElementType: {parameterType.HasElementType}, GetElementType: {parameterType.GetElementType()} " +
+                $"First: {parameterType.GenericTypeArguments.First()}");
+            }
             // TODO (cesarzc): here's where the change in the IQ# side needs to be done.
             else
             {
-                throw new ArgumentException($"The given type of {parameterType.Name} is not supported."); ;
+                throw new ArgumentException($"The given type of {parameterType.Name} is not supported. " +
+                $"FullName: {parameterType.FullName}, GenericTypeArguments.Length: {parameterType.GenericTypeArguments.Length}, " +
+                $"IsArray: {parameterType.IsArray}, IsGenericType: {parameterType.IsGenericType}, " +
+                $"IsInterface: {parameterType.IsInterface}, IsQArray: {parameterType.IsQArray()}, " +
+                $"IsQTuple: {parameterType.IsQTuple()}, QSharpType: {parameterType.QSharpType()}, ");
             }
         }
 
