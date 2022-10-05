@@ -170,18 +170,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             else
             {
-                // TODO (cesarzc): Remove edits to exception.
-                throw new ArgumentException($"The given type of {parameterType.Name} is not supported." +
-                $"FullName: {parameterType.FullName}, GenericTypeArguments.Length: {parameterType.GenericTypeArguments.Length}, " +
-                $"IsArray: {parameterType.IsArray}, IsGenericType: {parameterType.IsGenericType}, " +
-                $"IsInterface: {parameterType.IsInterface}, IsQArray: {parameterType.IsQArray()}, " +
-                $"IsQTuple: {parameterType.IsQTuple()}, QSharpType: {parameterType.QSharpType()}, ");
+                throw new ArgumentException($"The given type of {parameterType.Name} is not supported.");
             }
         }
 
         private IReadOnlyList<Argument> GetEntryPointInputArguments(AzureSubmissionContext submissionContext)
         {
-            Logger?.LogDebug($"cesarzc-dbg: GetEntryPointInputArguments");
             var argumentList = new List<Argument>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
@@ -240,15 +234,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQirSubmitter submitter, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
-            Logger.LogDebug("cesarzc-dbg: IQirSubmitter SubmitAsync");
             if (QirStream is null)
             {
                 throw new ArgumentException($"A QIR stream is required when submitting using the IQirSubmitter interface.");
             }
 
-            Logger?.LogInformation($"cesarzc-dbg | QirStream.Length: {QirStream.Length}");
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
-            Logger?.LogInformation($"cesarzc-dbg | entryPointInput: {entryPointInput}");
             Logger?.LogInformation("Submitting job {FriendlyName} with {NShots} shots.", submissionContext.FriendlyName, submissionContext.Shots);
             var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 

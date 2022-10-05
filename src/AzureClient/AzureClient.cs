@@ -408,8 +408,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             // Thus, we can branch on whether we need a QIR submitter or a translator,
             // but can use the same task object to represent both return values.
             Func<IEntryPoint, Task<IQuantumMachineJob>>? jobTask = null;
-            // TODO (cesarzc): Remove debug messages.
-            Logger?.LogDebug($"(cesarzc-dbg) Active target | name: {this.ActiveTarget.TargetId} - targetCapability: {this.TargetCapability.Name}");
             if (this.ActiveTarget.TryGetQirSubmitter(this.ActiveWorkspace, this.StorageConnectionString, this.TargetCapability, out var submitter))
             {
                 Logger?.LogDebug("Using QIR submitter for target {Target} and capability {Capability}.", this.ActiveTarget, this.TargetCapability);
@@ -445,7 +443,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
             catch (CompilationErrorsException e)
             {
-                e.Log(channel, Logger, $"(cesarzc) The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
+                e.Log(channel, Logger, $"The Q# operation {submissionContext.OperationName} could not be compiled as an entry point for job execution.");
                 foreach (var message in e.Errors) channel?.Stderr(message);
                 return AzureClientError.InvalidEntryPoint.ToExecutionResult();
             }
