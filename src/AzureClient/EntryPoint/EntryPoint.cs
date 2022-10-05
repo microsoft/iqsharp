@@ -203,7 +203,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <inheritdoc/>
         public Task<IQuantumMachineJob> SubmitAsync(IQuantumMachine machine, AzureSubmissionContext submissionContext, CancellationToken cancellationToken = default)
         {
-            Logger.LogDebug("cesarzc-dbg: IQuantumMachine SubmitAsync");
             var entryPointInput = GetEntryPointInputObject(submissionContext);
 
             try
