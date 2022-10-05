@@ -118,27 +118,60 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             else if (parameterType.IsQArray())
             {
                 var arrayType = parameterType.GenericTypeArguments.FirstOrDefault() ??
-                    throw new ArgumentException($""); // TODO: Set right error message.
-
+                    throw new ArgumentException($"Could not get the type of array.");
                 if (arrayType == typeof(bool)) {
-                    
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<bool[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Bool(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Bool) ??
+                        throw new ArgumentException($"Could not create array of Bool for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(double))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<double[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Double(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Double) ??
+                        throw new ArgumentException($"Could not create array of Bool for {parameter.Name}.");
                 }
                 else if (arrayType == typeof(long))
                 {
                     var values = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(parameterValue)
-                        .Select(v => new ArgumentValue.Int(v));
-                    return ArgumentValue.Array.TryCreate(values.ToImmutableArray<ArgumentValue>(), ArgumentType.Int);
-                    //throw new ArgumentException($"cesarzc exception long | Values.Count: {values.Count()}");
+                        .Select(v => new ArgumentValue.Int(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Int) ??
+                        throw new ArgumentException($"Could not create array of Int for {parameter.Name}.");
                 }
-                
-                throw new ArgumentException($"cesarzc exception | ParameterValue: {parameterValue}, ArrayType: {arrayType} " +
-                $"HasElementType: {parameterType.HasElementType}, GetElementType: {parameterType.GetElementType()} " +
-                $"First: {parameterType.GenericTypeArguments.First()}");
+                else if (arrayType == typeof(string)){
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(parameterValue)
+                        .Select(v => new ArgumentValue.String(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.String) ??
+                        throw new ArgumentException($"Could not create array of String for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(Pauli))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<Pauli[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Pauli(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Pauli) ??
+                        throw new ArgumentException($"Could not create array of Pauli for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(Result))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<Result[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Result(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Result) ??
+                        throw new ArgumentException($"Could not create array of Result for {parameter.Name}.");
+                }
+
+                throw new ArgumentException($"Invalid array type {arrayType}.");
             }
-            // TODO (cesarzc): here's where the change in the IQ# side needs to be done.
             else
             {
-                throw new ArgumentException($"The given type of {parameterType.Name} is not supported. " +
+                // TODO (cesarzc): Remove edits to exception.
+                throw new ArgumentException($"The given type of {parameterType.Name} is not supported." +
                 $"FullName: {parameterType.FullName}, GenericTypeArguments.Length: {parameterType.GenericTypeArguments.Length}, " +
                 $"IsArray: {parameterType.IsArray}, IsGenericType: {parameterType.IsGenericType}, " +
                 $"IsInterface: {parameterType.IsInterface}, IsQArray: {parameterType.IsQArray()}, " +
