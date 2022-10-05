@@ -47,9 +47,8 @@ public record AzureExecutionTarget
     /// </summary>
     public virtual string PackageName => GetProvider(TargetId) switch
     {
-        // TODO (cesarzc): Revert this.
-        //AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
-        AzureProvider.IonQ       => "Microsoft.Quantum.Providers.QCI",
+        
+        AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
         AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
         AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
         AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
@@ -134,12 +133,6 @@ public record AzureExecutionTarget
             return false;
         }
 
-        // TODO (cesarzc): Remove hard-coded creation of submitter.
-        if (SubmitterFactory.QirSubmitter("qci.simulator", workspace, storageConnectionString, "AdaptiveExecution") is IQirSubmitter hardcodedSubmitter)
-        {
-            submitter = hardcodedSubmitter;
-            return true;
-        }
         if (SubmitterFactory.QirSubmitter(this.TargetId, workspace, storageConnectionString, (targetCapability ?? this.DefaultCapability).Name) is IQirSubmitter qirSubmitter)
         {
             submitter = qirSubmitter;
