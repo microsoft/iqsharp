@@ -29,10 +29,8 @@ public record class ResourceEstimationResult(JToken RawJson)
 
 internal static class ResourceEstimationResultExtensions
 {
-    internal static ResourceEstimationResult ToResourceEstimationResults(this Stream stream)
-    {
-        return new ResourceEstimationResult(JToken.Parse(new StreamReader(stream).ReadToEnd()));
-    }
+    internal static ResourceEstimationResult ToResourceEstimationResults(this Stream stream) =>
+        new ResourceEstimationResult(JToken.Parse(new StreamReader(stream).ReadToEnd()));
 
     internal static T GetValue<T>(this JToken token, object key) =>
         token.Value<T>(key) is {} newValue
