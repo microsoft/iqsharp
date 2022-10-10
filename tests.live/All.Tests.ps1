@@ -36,6 +36,10 @@ Describe "Test Jupyter Notebooks" {
     It "Converts IonQ.ipynb successfully" -Tag "submit.ionq" {
        Test-Notebook "IonQ.ipynb"
     }
+
+    It "Converts ResourceEstimator.ipynb successfully" -Tag "submit.estimator" {
+       Test-Notebook "ResourceEstimator.ipynb"
+    }
     
     AfterAll { Pop-Location }
 }
@@ -62,6 +66,11 @@ Describe "Test Python Integration" {
 
     It "Runs pytest successfully for Quantinuum" -Tag "submit.quantinuum" {
         python -m pytest -k quantinuum --junitxml="junit/Quantinuum.xml" | Write-Verbose
+        $LASTEXITCODE | Should -Be 0
+    }
+
+    It "Runs pytest successfully for estimator" -Tag "submit.estimator" {
+        python -m pytest -k estimator --junitxml="junit/TestResults-Estimator.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
     }
     
