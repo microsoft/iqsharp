@@ -36,6 +36,10 @@ Describe "Test Jupyter Notebooks" {
     It "Converts IonQ.ipynb successfully" -Tag "submit.ionq" {
        Test-Notebook "IonQ.ipynb"
     }
+
+    It "Converts ResourceEstimator.ipynb successfully" -Tag "submit.estimator" {
+       Test-Notebook "ResourceEstimator.ipynb"
+    }
     
     AfterAll { Pop-Location }
 }
