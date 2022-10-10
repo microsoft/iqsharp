@@ -266,10 +266,9 @@ class TestEstimator:
         import qsharp.azure
         connect()
 
-        #TODO: change back to microsoft.estimator
-        t = qsharp.azure.target("microsoft.simulator.resources-estimator")
+        t = qsharp.azure.target("microsoft.estimator")
         assert isinstance(t, qsharp.azure.AzureTarget)
-        assert t.id == "microsoft.simulator.resources-estimator"
+        assert t.id == "microsoft.estimator"
 
         job = qsharp.azure.submit(EstimateMultiplication)
         assert isinstance(job, qsharp.azure.AzureJob)
@@ -289,7 +288,4 @@ class TestEstimator:
             assert isinstance(retrieved_output, dict)
             assert isinstance(retrieved_output, qsharp.azure.AzureResult)
 
-            assert qsharp.__version__ == "0.0.0.1"
-
             assert not retrieved_output._repr_mimebundle_().get("text/html") is None
-
