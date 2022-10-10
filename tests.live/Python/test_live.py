@@ -187,6 +187,8 @@ class TestQuantinuum:
         target_ids = [t.id for t in targets]
         assert 'quantinuum.hqs-lt-s1' in target_ids
         assert 'quantinuum.hqs-lt-s1-apival' in target_ids
+        assert 'quantinuum.qpu.h1-1' in target_ids
+        assert 'quantinuum.sim.h1-1sc' in target_ids
 
     @pytest.mark.parametrize("enable_qir", [False, True])
     def test_quantinuum_submit(self, enable_qir):
@@ -209,6 +211,10 @@ class TestQuantinuum:
         t = qsharp.azure.target("quantinuum.hqs-lt-s1-apival")
         assert isinstance(t, qsharp.azure.AzureTarget)
         assert t.id == "quantinuum.hqs-lt-s1-apival"
+        
+        t = qsharp.azure.target("quantinuum.sim.h1-1sc")
+        assert isinstance(t, qsharp.azure.AzureTarget)
+        assert t.id == "quantinuum.sim.h1-1sc"
 
         if enable_qir:
             qsharp.azure.target_capability("AdaptiveExecution")
@@ -279,16 +285,6 @@ class TestEstimator:
             assert isinstance(job, qsharp.azure.AzureJob)
             assert job.status == "Succeeded"
 
-            # histogram = {
-            #     '[0,0,0]': 0.125,
-            #     '[0,0,1]': 0.125,
-            #     '[0,1,0]': 0.125,
-            #     '[0,1,1]': 0.125,
-            #     '[1,0,0]': 0.125,
-            #     '[1,0,1]': 0.125,
-            #     '[1,1,0]': 0.125,
-            #     '[1,1,1]': 0.125
-            # }
             retrieved_output = qsharp.azure.output()
             assert isinstance(retrieved_output, dict)
             assert isinstance(retrieved_output, qsharp.azure.AzureResult)
@@ -297,23 +293,3 @@ class TestEstimator:
 
             assert not retrieved_output._repr_mimebundle_().get("text/html") is None
 
-            # Confirm output has expected structure
-            # assert not retrieved_output["reportData"] is None
-            # assert not retrieved_output["reportData"]["assumptions"] is None
-            # assert not retrieved_output["reportData"]["groups"] is None
-            
-            # assert len(retrieved_output["reportData"]["groups"]) > 1
-            # group = retrieved_output["reportData"]["groups"].pop()
-            # assert not group["alwaysVisible"] is None
-            # assert not group["title"] is None
-            # assert not group["entries"] is None
-
-            # assert len(group["entries"]) > 1
-            # entry = group["entries"].pop()
-            # assert not entry["description"] is None
-            # assert not entry["label"] is None
-            # assert not entry["path"] is None
-
-
-            
-            # assert histogram == retrieved_histogram
