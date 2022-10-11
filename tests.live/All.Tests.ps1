@@ -37,7 +37,7 @@ Describe "Test Jupyter Notebooks" {
        Test-Notebook "IonQ.ipynb"
     }
 
-    It "Converts ResourceEstimator.ipynb successfully" -Tag "submit.estimator" {
+    It "Converts ResourceEstimator.ipynb successfully" -Tag "submit.microsoft-qc" {
        Test-Notebook "ResourceEstimator.ipynb"
     }
     
@@ -69,7 +69,7 @@ Describe "Test Python Integration" {
         $LASTEXITCODE | Should -Be 0
     }
 
-    It "Runs pytest successfully for estimator" -Tag "submit.estimator" {
+    It "Runs pytest successfully for estimator" -Tag "submit.microsoft-qc" {
         python -m pytest -k estimator --junitxml="junit/TestResults-Estimator.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
     }
