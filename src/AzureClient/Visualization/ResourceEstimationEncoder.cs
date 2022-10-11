@@ -59,6 +59,41 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
                         td:first-child {
                             font-weight: bold
                         }
+
+                        .aqre-tooltip {
+                            position: relative;
+                            border-bottom: 1px dotted black;
+                        }
+
+                        .aqre-tooltip .aqre-tooltiptext {
+                            visibility: hidden;
+                            width: 200px;
+                            background-color: black;
+                            color: #fff;
+                            text-align: center;
+                            border-radius: 6px;
+                            padding: 5px 0;
+                            position: absolute;
+                            z-index: 1;
+                            top: 150%;
+                            left: 50%;
+                            margin-left: -100px;
+                        }
+
+                        .aqre-tooltip .aqre-tooltiptext::after {
+                            content: "";
+                            position: absolute;
+                            bottom: 100%;
+                            left: 50%;
+                            margin-left: -5px;
+                            border-width: 5px;
+                            border-style: solid;
+                            border-color: transparent transparent black transparent;
+                        }
+
+                        .aqre-tooltip:hover .aqre-tooltiptext {
+                            visibility: visible;
+                        }
                     </style>");
                 var groups = result.GetValueFromPath("reportData/groups");
                 foreach (var group in groups)
@@ -74,9 +109,9 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
                     {
                         var value = result.GetValueFromPath(entry.GetValue<string>("path"));
                         sb.AppendLine($@"
-                            <tr title='{entry["description"]}'>
+                            <tr class=aqre-tooltip>
                                 <td>{entry["label"]}</td>
-                                <td>{value}</td>
+                                <td class=aqre-tooltip>{value}<span class=aqre-tooltiptext>{entry["description"]}</span></td>
                             </tr>");
                     }
                     sb.AppendLine("</table></details>");
