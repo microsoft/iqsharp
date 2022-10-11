@@ -72,7 +72,7 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
                             color: #fff;
                             text-align: center;
                             border-radius: 6px;
-                            padding: 5px 0;
+                            padding: 5px;
                             position: absolute;
                             z-index: 1;
                             top: 150%;
