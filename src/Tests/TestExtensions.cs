@@ -52,7 +52,7 @@ internal static class TestExtensions
         var client = await (await engine).Engine.GetEngineService<IAzureClient>();
         if (client is AzureClient azureClient && azureClient.ActiveWorkspace is MockAzureWorkspace workspace)
         {
-            workspace.AddProviders("ionq", "quantinuum", "honeywell");
+            workspace.AddProviders("ionq", "quantinuum");
         }
         else
         {

@@ -84,16 +84,10 @@ namespace Tests.IQSharp
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.IonQ", executionTarget?.PackageName);
 
-            // Check that deprecated targets still work.
-            targetId = "HonEYWEll.targetId";
-            executionTarget = AzureExecutionTarget.Create(targetId);
-            Assert.AreEqual(targetId, executionTarget?.TargetId);
-            Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
-
             targetId = "QuantiNUUm.targetId";
             executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.AreEqual(targetId, executionTarget?.TargetId);
-            Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
+            Assert.AreEqual("Microsoft.Quantum.Providers.Quantinuum", executionTarget?.PackageName);
 
             targetId = "qci.target.name.qpu";
             executionTarget = AzureExecutionTarget.Create(targetId);
@@ -170,7 +164,7 @@ namespace Tests.IQSharp
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
+            azureWorkspace?.AddProviders("ionq", "quantinuum", "unrecognized");
 
             // get connection status to verify list of targets
             targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
@@ -196,8 +190,8 @@ namespace Tests.IQSharp
         [DataTestMethod]
         [DataRow("--clear", "--clear", ExecuteStatus.Ok)]
         [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
-        [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
-        [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
+        [DataRow("quantinuum.mock", "FullComputation", ExecuteStatus.Error)]
+        [DataRow("quantinuum.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
         [DataRow("quantinuum.mock", "AdaptiveExecution", ExecuteStatus.Ok)]
         public async Task TestManualCapabilities(string targetId, string capabilityName, ExecuteStatus expectedResult) =>
             await Assert.That
@@ -214,7 +208,7 @@ namespace Tests.IQSharp
                         CredentialType.Environment);
                     Assert.IsNotNull(client.ActiveWorkspace);
                     ((MockAzureWorkspace)client.ActiveWorkspace)
-                        .AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
+                        .AddProviders("ionq", "quantinuum", "unrecognized");
                 })
                     .Input("%azure.connect " +
                         "subscription=TEST_SUBSCRIPTION_ID " +
@@ -393,7 +387,6 @@ namespace Tests.IQSharp
 
         [DataTestMethod]
         [DataRow("ionq.mock", AzureClientError.InvalidEntryPoint)]
-        [DataRow("honeywell.mock", null)]
         [DataRow("quantinuum.mock", null)]
         public async Task TestRuntimeCapabilities(string targetId, AzureClientError? expectedError)
         {
@@ -409,7 +402,7 @@ namespace Tests.IQSharp
             // Set up workspace with mock providers
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum");
+            azureWorkspace?.AddProviders("ionq", "quantinuum");
 
             // Verify that IonQ job fails to compile (QPRGen0)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), targetId));

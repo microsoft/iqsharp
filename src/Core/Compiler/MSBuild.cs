@@ -219,7 +219,7 @@ public partial class CompilerService
             bool Matches(string pattern) =>
                 target?.Contains(pattern, StringComparison.InvariantCultureIgnoreCase) ?? false;
 
-            if (Matches("quantinuum") || Matches("honeywell") && capability is { ClassicalCompute: var classical } && classical != ClassicalComputeModule.Full)
+            if (Matches("quantinuum") && capability is { ClassicalCompute: var classical } && classical != ClassicalComputeModule.Full)
             {
                 return "Microsoft.Quantum.Type1.Core";
             }

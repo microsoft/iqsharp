@@ -59,11 +59,6 @@ Describe "Test Python Integration" {
         $LASTEXITCODE | Should -Be 0
     }
 
-    It "Runs pytest successfully for honeywell" -Tag "submit.honeywell" {
-        python -m pytest -k honeywell --junitxml="junit/TestResults-Honeywell.xml" | Write-Verbose
-        $LASTEXITCODE | Should -Be 0
-    }
-
     It "Runs pytest successfully for Quantinuum" -Tag "submit.quantinuum" {
         python -m pytest -k quantinuum --junitxml="junit/Quantinuum.xml" | Write-Verbose
         $LASTEXITCODE | Should -Be 0
