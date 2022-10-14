@@ -12786,7 +12786,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-Microsoft.Jupyter.Core 3.0.233310 - MIT
+Microsoft.Jupyter.Core 3.1.235334 - MIT
 
 
 (c) 2022 GitHub, Inc.
