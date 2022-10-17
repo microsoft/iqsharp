@@ -167,7 +167,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         throw new ArgumentException($"Could not create array of Result for {parameter.Name}.");
                 }
 
-                throw new ArgumentException($"Invalid array type {arrayType}.");
+                throw new ArgumentException($"Unsupported array type {arrayType}.");
             }
             else
             {
