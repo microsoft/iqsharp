@@ -119,7 +119,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 var arrayType = parameterType.GenericTypeArguments.FirstOrDefault() ??
                     throw new ArgumentException($"Could not get the type of array.");
-                if (arrayType == typeof(bool)) {
+                if (arrayType == typeof(bool))
+                {
                     var values = Newtonsoft.Json.JsonConvert.DeserializeObject<bool[]>(parameterValue)
                         .Select(v => new ArgumentValue.Bool(v))
                         .ToImmutableArray<ArgumentValue>();
