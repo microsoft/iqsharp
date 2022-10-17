@@ -235,3 +235,57 @@ class TestQuantinuum:
                 retrieved_histogram = qsharp.azure.output()
                 assert isinstance(retrieved_histogram, dict)
                 assert '0' in retrieved_histogram
+
+@pytest.fixture(scope="session")
+def estimator_project():
+    import qsharp
+    return qsharp.projects.add(path.join(path.dirname(__file__), "qsharp", "estimator", "Estimator.csproj"))
+
+@pytest.mark.usefixtures("estimator_project")
+class TestEstimator:
+    def test_estimator_target(self):
+        """
+        Tests that we can fetch targets from the service,
+        and that the workspace includes the targets we need for submission
+        """
+        targets = connect()
+        assert len(targets) > 2
+
+        target_ids = [t.id for t in targets]
+        print(target_ids)
+        assert 'microsoft.estimator' in target_ids
+
+    def test_estimator_submit(self):
+        """
+        Test that the EstimateMultiplication operation can be submitted successfully on microsoft.estimator
+        """
+        import time
+        import qsharp
+        from Microsoft.Quantum.Tests import EstimateMultiplication
+
+        import qsharp.azure
+        connect()
+
+        t = qsharp.azure.target("microsoft.estimator")
+        assert isinstance(t, qsharp.azure.AzureTarget)
+        assert t.id == "microsoft.estimator"
+
+        job = qsharp.azure.submit(EstimateMultiplication)
+        assert isinstance(job, qsharp.azure.AzureJob)
+        assert not job.id == ''
+        print("Submitted job: ", job.id)
+
+        try:
+            wait_until_completed(job)
+        except TimeoutError:
+            warnings.warn("Resource estimator execution exceeded timeout. Skipping fetching results.")
+        else:
+            job = qsharp.azure.status()
+            assert isinstance(job, qsharp.azure.AzureJob)
+            assert job.status == "Succeeded"
+
+            retrieved_output = qsharp.azure.output()
+            assert isinstance(retrieved_output, dict)
+            assert isinstance(retrieved_output, qsharp.azure.AzureResult)
+
+            assert not retrieved_output._repr_mimebundle_().get("text/html") is None
