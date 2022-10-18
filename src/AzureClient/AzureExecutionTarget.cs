@@ -45,7 +45,7 @@ public record AzureExecutionTarget
     public virtual string PackageName => GetProvider(TargetId) switch
     {
         AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
-        AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Quantinuum",
+        AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
         AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
         AzureProvider.Microsoft  => "Microsoft.Quantum.Providers.Core",
         _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
