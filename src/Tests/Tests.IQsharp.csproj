@@ -9,6 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Debug\netstandard2.1\ProjectA.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Release\netstandard2.1\ProjectA.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Debug\netstandard2.1\ProjectB.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Release\netstandard2.1\ProjectB.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences\obj\Debug\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences\obj\Release\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
     <Compile Include="../Common/GlobalUsings.cs" Link="Properties/Common/GlobalUsings.cs" />
   </ItemGroup>
@@ -18,6 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Workspace.ProjectReferences.ProjectA\obj\Debug\netstandard2.1\ProjectA.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectA\obj\Release\netstandard2.1\ProjectA.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectB\obj\Debug\netstandard2.1\ProjectB.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectB\obj\Release\netstandard2.1\ProjectB.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences\obj\Debug\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences\obj\Release\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
     <None Include="Workspace.ProjectReferences\Workspace.ProjectReferences.csproj" />
     <None Include="Workspace.ProjectReferences.ProjectA\ProjectA.csproj" />
     <None Include="Workspace.ProjectReferences.ProjectB\ProjectB.csproj" />
@@ -46,18 +61,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))"
-                      Include="libLLVM.runtime.win-x64" Version="11.0.0"
-                      PrivateAssets="All" GeneratePathProperty="true" />
-    <PackageReference Condition="$([MSBuild]::IsOsPlatform('OSX'))"
-                      Include="libLLVM.runtime.osx-x64" Version="11.0.0"
-                      PrivateAssets="All" GeneratePathProperty="true" />
-    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' == '18.04'"
-                      Include="libLLVM.runtime.ubuntu.18.04-x64" Version="11.0.0"
-                      PrivateAssets="All" GeneratePathProperty="true" />
-    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' != '18.04'"
-                      Include="libLLVM.runtime.ubuntu.20.04-x64" Version="11.0.0"
-                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))" Include="libLLVM.runtime.win-x64" Version="11.0.0" PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('OSX'))" Include="libLLVM.runtime.osx-x64" Version="11.0.0" PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' == '18.04'" Include="libLLVM.runtime.ubuntu.18.04-x64" Version="11.0.0" PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' != '18.04'" Include="libLLVM.runtime.ubuntu.20.04-x64" Version="11.0.0" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
