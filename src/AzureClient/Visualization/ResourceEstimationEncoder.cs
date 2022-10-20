@@ -145,7 +145,7 @@ public record class ResourceEstimationToHtmlEncoder(IConfigurationSource configu
                     sb.AppendLine("</table></details>");
                 }
                 sb.AppendLine(@"<details>
-                        <summary style='display:list-item'>Assumptions</summary>
+                        <summary style=""display:list-item""><strong>Assumptions</strong></summary>
                         <ul>");
                 foreach (var assumption in result.GetValueFromPath("reportData/assumptions"))
                 {
