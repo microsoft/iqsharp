@@ -115,9 +115,63 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             {
                 return new ArgumentValue.Result(Newtonsoft.Json.JsonConvert.DeserializeObject<Result>(parameterValue)!);
             }
+            else if (parameterType.IsQArray())
+            {
+                var arrayType = parameterType.GenericTypeArguments.FirstOrDefault() ??
+                    throw new ArgumentException($"Could not get the type of array.");
+                if (arrayType == typeof(bool))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<bool[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Bool(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Bool) ??
+                        throw new ArgumentException($"Could not create array of Bool for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(double))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<double[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Double(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Double) ??
+                        throw new ArgumentException($"Could not create array of Bool for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(long))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Int(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Int) ??
+                        throw new ArgumentException($"Could not create array of Int for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(string)){
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(parameterValue)
+                        .Select(v => new ArgumentValue.String(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.String) ??
+                        throw new ArgumentException($"Could not create array of String for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(Pauli))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<Pauli[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Pauli(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Pauli) ??
+                        throw new ArgumentException($"Could not create array of Pauli for {parameter.Name}.");
+                }
+                else if (arrayType == typeof(Result))
+                {
+                    var values = Newtonsoft.Json.JsonConvert.DeserializeObject<Result[]>(parameterValue)
+                        .Select(v => new ArgumentValue.Result(v))
+                        .ToImmutableArray<ArgumentValue>();
+                    return ArgumentValue.Array.TryCreate(values, ArgumentType.Result) ??
+                        throw new ArgumentException($"Could not create array of Result for {parameter.Name}.");
+                }
+
+                throw new ArgumentException($"Unsupported array type {arrayType}.");
+            }
             else
             {
-                throw new ArgumentException($"The given type of {parameterType.Name} is not supported."); ;
+                throw new ArgumentException($"The given type of {parameterType.Name} is not supported.");
             }
         }
 
@@ -186,7 +240,6 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
 
             var entryPointInput = GetEntryPointInputArguments(submissionContext);
-
             Logger?.LogInformation("Submitting job {FriendlyName} with {NShots} shots.", submissionContext.FriendlyName, submissionContext.Shots);
             var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 
