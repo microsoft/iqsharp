@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using System.Text;
+using Markdig;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient;
 
@@ -41,7 +42,7 @@ internal static class ResourceEstimationResultExtensions
 /// <summary>
 /// Encodes a <see cref="ResourceEstimationResult"/> object as HTML.
 /// </summary>
-public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IResultEncoder
+public record class ResourceEstimationToHtmlEncoder(IConfigurationSource configurationSource, ILogger? Logger = null) : IResultEncoder
 {
     /// <inheritdoc/>
     public string MimeType => MimeTypes.Html;
@@ -53,31 +54,35 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
         {
             try
             {
-                var sb = new StringBuilder();
-                sb.AppendLine(@"
-                    <style>
-                        td:first-child {
-                            font-weight: bold
-                        }
+                var pipeline = new MarkdownPipelineBuilder().UseMathematics().Build();
+                bool summary = configurationSource.GetOptionOrDefault("estimator.summary", false);
 
+                var sb = new StringBuilder();
+
+                if (summary)
+                {
+                    sb.AppendLine(@"
+                    <style>
                         .aqre-tooltip {
                             position: relative;
                             border-bottom: 1px dotted black;
                         }
 
                         .aqre-tooltip .aqre-tooltiptext {
+                            font-weight: normal;
                             visibility: hidden;
-                            width: 200px;
-                            background-color: black;
-                            color: #fff;
+                            width: 600px;
+                            background-color: #e0e0e0;
+                            color: black;
                             text-align: center;
                             border-radius: 6px;
-                            padding: 5px;
+                            padding: 5px 5px;
                             position: absolute;
                             z-index: 1;
                             top: 150%;
                             left: 50%;
-                            margin-left: -100px;
+                            margin-left: -200px;
+                            border: solid 1px black;
                         }
 
                         .aqre-tooltip .aqre-tooltiptext::after {
@@ -92,27 +97,50 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
                         }
 
                         .aqre-tooltip:hover .aqre-tooltiptext {
-                            visibility: visible;
+                          visibility: visible;
                         }
-                    </style>");
+                    </style>".Dedent());
+                }
+
                 var groups = result.GetValueFromPath("reportData/groups");
                 foreach (var group in groups)
                 {
                     sb.AppendLine($@"
                         <details {(group.Value<bool>("alwaysVisible") ? "open" : "")}>
                             <summary style='display:list-item'>
-                                {group["title"]}
+                                <strong>{group["title"]}</strong>
                             </summary>
                             <table>
                     ");
                     foreach (var entry in group.GetValue<JArray>("entries"))
                     {
+                        var label = entry.GetValue<string>("label");
                         var value = result.GetValueFromPath(entry.GetValue<string>("path"));
-                        sb.AppendLine($@"
-                            <tr class=aqre-tooltip>
-                                <td>{entry["label"]}</td>
-                                <td class=aqre-tooltip>{value}<span class=aqre-tooltiptext>{entry["description"]}</span></td>
-                            </tr>");
+                        var description = Markdown.ToHtml(entry.GetValue<string>("description"), pipeline);
+                        var explanation = Markdown.ToHtml(entry.GetValue<string>("explanation"), pipeline);
+
+                        if (summary)
+                        {
+                            sb.AppendLine($@"
+                                <tr class=""aqre-tooltip"">
+                                    <td style=""font-weight: bold""><span class=""aqre-tooltiptext"">{explanation}</span>{label}</td>
+                                    <td>{value}</td>
+                                    <td style=""text-align: left"">{description}</td>
+                                </tr>");
+                        }
+                        else
+                        {
+                            sb.AppendLine($@"
+                                <tr>
+                                    <td style=""font-weight: bold; vertical-align: top; white-space: nowrap"">{label}</td>
+                                    <td style=""vertical-align: top; white-space: nowrap"">{value}</td>
+                                    <td style=""text-align: left"">
+                                        <strong>{description}</strong>
+                                        <hr style=""margin-top: 2px; margin-bottom: 0px; border-top: solid 1px black"" />
+                                        {explanation}
+                                    </td>
+                                </tr>");
+                        }
                     }
                     sb.AppendLine("</table></details>");
                 }
@@ -121,7 +149,8 @@ public record class ResourceEstimationToHtmlEncoder(ILogger? Logger = null) : IR
                         <ul>");
                 foreach (var assumption in result.GetValueFromPath("reportData/assumptions"))
                 {
-                    sb.AppendLine($"<li>{assumption}</li>");
+                    var assumptionHtml = Markdown.ToHtml(assumption.ToString(), pipeline);
+                    sb.AppendLine($"<li>{assumptionHtml}</li>");
                 }
                 sb.AppendLine("</ul></details>");
                 return sb.ToString().ToEncodedData();
