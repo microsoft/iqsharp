@@ -55,7 +55,7 @@ public record class ResourceEstimationToHtmlEncoder(IConfigurationSource configu
             try
             {
                 var pipeline = new MarkdownPipelineBuilder().UseMathematics().Build();
-                bool summary = configurationSource.GetOptionOrDefault("estimator.summary", false);
+                bool summary = configurationSource.EstimatorSummary;
 
                 var sb = new StringBuilder();
 

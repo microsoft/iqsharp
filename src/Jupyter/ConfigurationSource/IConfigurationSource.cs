@@ -247,6 +247,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             GetOptionOrDefault("azure.quantum.workspace.name", string.Empty);
 
         /// <summary>
+        ///     Whether the resource estimation table should be shown in summary mode or not.
+        ///     In summary mode the explanations are shown as a tooltip, otherwise, they are inlined
+        ///     into the table cells.  The default value is `false`.
+        /// </summary>
+        public bool EstimatorSummary =>
+            GetOptionOrDefault("estimator.summary", false);
+
+        /// <summary>
         ///      If set to <c>true</c>, shows additional performance breakdowns
         ///      from within the notebook.
         /// </summary>
