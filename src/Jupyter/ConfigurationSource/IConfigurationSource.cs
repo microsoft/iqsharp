@@ -251,8 +251,8 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     In summary mode the explanations are shown as a tooltip, otherwise, they are inlined
         ///     into the table cells.  The default value is `false`.
         /// </summary>
-        public bool EstimatorSummary =>
-            GetOptionOrDefault("estimator.summary", false);
+        public bool EstimatorShowSummary =>
+            GetOptionOrDefault("estimator.showSummary", false);
 
         /// <summary>
         ///      If set to <c>true</c>, shows additional performance breakdowns
