@@ -97,7 +97,7 @@ public record class ResourceEstimationToHtmlEncoder(IConfigurationSource configu
                         }
 
                         .aqre-tooltip:hover .aqre-tooltiptext {
-                          visibility: visible;
+                            visibility: visible;
                         }
                     </style>".Dedent());
                 }
