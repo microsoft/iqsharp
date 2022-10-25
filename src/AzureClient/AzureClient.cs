@@ -83,6 +83,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ? "(no quantum computing execution targets available)"
             : string.Join(", ", ValidExecutionTargets.Select(target => target.TargetId));
         private IServiceProvider ServiceProvider { get; }
+        private IConfigurationSource ConfigurationSource { get; }
 
         /// <summary>
         /// Creates an <see cref="AzureClient"/> object that provides methods for
@@ -97,6 +98,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="eventService">The event service for the IQ# kernel.</param>
         /// <param name="workspace">The service for the active IQ# workspace.</param>
         /// <param name="serviceProvider">A service provider to create needed components.</param>
+        /// <param name="configurationSource">The service for configuration data.</param>
         public AzureClient(
             IExecutionEngine engine,
             IReferences references,
@@ -106,7 +108,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             ILogger<AzureClient> logger,
             IEventService eventService,
             IWorkspace workspace,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IConfigurationSource configurationSource)
         {
             References = references;
             EntryPointGenerator = entryPointGenerator;
@@ -115,6 +118,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Logger = logger;
             Workspace = workspace;
             ServiceProvider = serviceProvider;
+            ConfigurationSource = configurationSource;
 
             // If we're given a target capability, start with it set.
             if (workspace.WorkspaceProject.TargetCapability is {} capability)
@@ -137,7 +141,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 baseEngine.RegisterDisplayEncoder(new AzureClientErrorToTextEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToHtmlEncoder());
                 baseEngine.RegisterDisplayEncoder(new DeviceCodeResultToTextEncoder());
-                baseEngine.RegisterDisplayEncoder(new ResourceEstimationToHtmlEncoder(logger));
+                baseEngine.RegisterDisplayEncoder(new ResourceEstimationToHtmlEncoder(configurationSource, logger));
                 baseEngine.RegisterDisplayEncoder(ActivatorUtilities.CreateInstance<ResourceEstimationToHtmlEncoder>(ServiceProvider));
             }
 
