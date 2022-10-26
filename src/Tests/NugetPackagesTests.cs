@@ -20,7 +20,7 @@ namespace Tests.IQSharp
         /// We use a known-good version to avoid breaking IQ# tests due to changes in Libraries
         /// also, to make sure an end-to-end QDK build does not have circular build dependencies
         /// between Libraries and IQ#.
-        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.26.233415");
+        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.27.236950");
 
         public NugetPackages Init()
         {
