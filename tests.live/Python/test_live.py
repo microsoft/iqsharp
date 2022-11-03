@@ -142,7 +142,8 @@ class TestQuantinuum:
         assert 'quantinuum.qpu.h1-1' in target_ids
         assert 'quantinuum.sim.h1-1sc' in target_ids
 
-    @pytest.mark.parametrize("enable_qir", [False, True])
+    # Do not add "True" until QIR is supported for Quantinuum targets.
+    @pytest.mark.parametrize("enable_qir", [False])
     def test_quantinuum_submit(self, enable_qir):
         """
         Test that the RunTeleport operation can be submitted successfully on the quantinuum apival target
