@@ -13,9 +13,9 @@ namespace Microsoft.Quantum.IQSharp
     /// A typed Event, similar to EventHandler<> but without actually being a delegate
     /// </summary>
     /// <typeparam name="TArgs">The type of the arguments</typeparam>
-    public class Event<TArgs>
+    public record class Event<TArgs>
     {
-        public TArgs Args { get; set; }
+        public TArgs Args { get; init; }
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ namespace Microsoft.Quantum.IQSharp
         public void Trigger<TEvent, TArgs>(TEvent @event)
             where TEvent : Event<TArgs>
         {
-            Logger.LogInformation($"Event Triggered for '{typeof(TEvent).Name}'");
+            Logger.LogInformation($"Event Triggered for '{typeof(TEvent)}'");
             if (_Subscribers.TryGetValue(typeof(TEvent), out var subscribersList))
             {
                 object[] subscribers;
@@ -148,6 +148,7 @@ namespace Microsoft.Quantum.IQSharp
         public EventService(ILogger<EventService> logger)
         {
             EventPubSub = new EventPubSub(logger);
+            this?.TriggerServiceInitialized<IEventService>(this);
         }
 
         /// <summary>

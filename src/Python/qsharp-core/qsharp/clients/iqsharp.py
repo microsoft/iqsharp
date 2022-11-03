@@ -3,11 +3,13 @@
 ##
 # iqsharp.py: Client for the IQ# Jupyter kernel.
 ##
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
 
+## IMPORTS ##
 
+from contextlib import contextmanager
 import subprocess
 import time
 import http.client
@@ -21,7 +23,7 @@ import jupyter_client
 from functools import partial
 from io import StringIO
 from collections import defaultdict
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Optional
 from pathlib import Path
 from distutils.version import LooseVersion
 
@@ -37,14 +39,16 @@ except:
 ## VERSION REPORTING ##
 
 try:
-    from qsharp.version import user_agent_extra
+    from qsharp.version import _user_agent_extra
 except ImportError:
-    user_agent_extra = ""
+    _user_agent_extra = ""
 
 ## LOGGING ##
 
 import logging
 logger = logging.getLogger(__name__)
+
+DEFAULT_TIMEOUT=120
 
 ## CLASSES ##
 
@@ -73,14 +77,25 @@ class IQSharpClient(object):
     kernel_client = None
     _busy : bool = False
 
-    def __init__(self):
-        self.kernel_manager = jupyter_client.KernelManager(kernel_name='iqsharp')
+class IQSharpClient(object):
+    kernel_manager = None
+    kernel_client = None
+    _busy : bool = False
+
+    display_data_callback: Optional[Callable[[Any], bool]] = None
+
+    def __init__(self, kernel_name: str = 'iqsharp'):
+        self.kernel_manager = jupyter_client.KernelManager(kernel_name=kernel_name)
 
     ## Server Lifecycle ##
 
     def start(self):
         logger.info("Starting IQ# kernel...")
-        self.kernel_manager.start_kernel(extra_arguments=["--user-agent", f"qsharp.py{user_agent_extra}"])
+        # Pass along all environment variables except the user agent,
+        # as we'll override that to mark this as a Python session.
+        env = os.environ.copy()
+        env["IQSHARP_USER_AGENT"] = f"qsharp.py{_user_agent_extra}"
+        self.kernel_manager.start_kernel(env=env)
         self.kernel_client = self.kernel_manager.client()
         atexit.register(self.stop)
 
@@ -94,7 +109,7 @@ class IQSharpClient(object):
 
     def is_ready(self):
         try:
-            result = self.component_versions(timeout=6)
+            result = self.component_versions(_timeout_=6)
             logger.info(f"Q# version\n{result}")
         except Exception as ex:
             logger.info('Exception while checking if IQ# is ready.', exc_info=ex)
@@ -159,12 +174,19 @@ class IQSharpClient(object):
         return self._execute("%project", raise_on_stderr=False)
 
     def simulate(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('simulate', op, **kwargs)
 
+    def simulate_sparse(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
+        return self._execute_callable_magic('simulate_sparse', op, **kwargs)
+
     def toffoli_simulate(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('toffoli', op, **kwargs)
 
     def estimate(self, op, **kwargs) -> Dict[str, int]:
+        kwargs.setdefault('_timeout_', None)
         raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
         # Note that raw_counts will have the form:
         # [
@@ -178,6 +200,12 @@ class IQSharpClient(object):
             counts[row["Metric"]] = int(row["Sum"])
         return counts
 
+    def trace(self, op, **kwargs) -> Any:
+        return self._execute_callable_magic('trace', op, _quiet_ = True, **kwargs)
+
+    def compile_to_qir(self, op) -> None:
+        return self._execute_callable_magic('qir', op)
+
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """
         Returns a dictionary from components of the IQ# kernel to their
@@ -187,18 +215,74 @@ class IQSharpClient(object):
         def capture(msg):
             # We expect a display_data with the version table.
             if msg["msg_type"] == "display_data":
-                data = unmap_tuples(json.loads(msg["content"]["data"]["application/json"]))
+                data = unmap_tuples(json.loads(self._get_qsharp_data(msg["content"])))
                 for component, version in data["rows"]:
                     versions[component] = LooseVersion(version)
-        self._execute("%version", output_hook=capture, _quiet_=True, **kwargs)
+        self._execute("%version", display_data_handler=capture, _quiet_=True, **kwargs)
         return versions
+
+    @contextmanager
+    def capture_diagnostics(self, passthrough: bool) -> List[Any]:
+        captured_data = []
+        def callback(msg):
+            msg_data = (
+                # Check both the old and new MIME types used by the IQ#
+                # kernel.
+                json.loads(msg['content']['data'].get('application/json', "null")) or
+                json.loads(msg['content']['data'].get('application/x-qsharp-data', "null"))
+            )
+            if msg_data is not None:
+                captured_data.append(msg_data)
+                return passthrough
+            else:
+                # No JSON found found, so just fall back.
+                return True
+
+        old_callback = self.display_data_callback
+        self.display_data_callback = callback
+        try:
+            yield captured_data
+        finally:
+            self.display_data_callback = old_callback
+
+    def simulate_noise(self, op, **kwargs) -> Any:
+        kwargs.setdefault('_timeout_', None)
+        return self._execute_callable_magic('simulate_noise', op, **kwargs)
+
+    def get_noise_model(self) -> str:
+        return self._execute(f'%noise_model')
+
+    def get_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%noise_model --get-by-name {name}')
+
+    def set_noise_model(self, json_data : str) -> None:
+        # We assume json_data is already serialized, so that we skip the support
+        # provided by _execute_magic and call directly.
+        return self._execute(f'%noise_model {json_data}')
+
+    def set_noise_model_by_name(self, name : str) -> None:
+        return self._execute(f'%noise_model --load-by-name {name}')
+
 
     ## Internal-Use Methods ##
 
-    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, **kwargs) -> Any:
+    @staticmethod
+    def _get_qsharp_data(message_content):
+        if "application/x-qsharp-data" in message_content["data"]:
+            # Current versions of IQ# use application/x-qsharp-data
+            # for the JSON-encoded data in the execution result.
+            return message_content["data"]["application/x-qsharp-data"]
+        if "application/json" in message_content["data"]:
+            # For back-compat with older versions of IQ# <= 0.17.2105.144881
+            # that used the application/json MIME type for the JSON data.
+            return message_content["data"]["application/json"]
+        return None
+
+    def _execute_magic(self, magic : str, raise_on_stderr : bool = False, _quiet_ : bool = False, return_full_result=False, **kwargs) -> Any:
+        _timeout_ = kwargs.pop('_timeout_', DEFAULT_TIMEOUT)
         return self._execute(
             f'%{magic} {json.dumps(map_tuples(kwargs))}',
-            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_
+            raise_on_stderr=raise_on_stderr, _quiet_=_quiet_, _timeout_=_timeout_, return_full_result=return_full_result
         )
 
     def _execute_callable_magic(self, magic : str, op,
@@ -227,9 +311,9 @@ class IQSharpClient(object):
             else:
                 fallback_hook(msg)
 
-    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, _quiet_ : bool = False, **kwargs):
-
+    def _execute(self, input, return_full_result=False, raise_on_stderr : bool = False, output_hook=None, display_data_handler=None, _timeout_=DEFAULT_TIMEOUT, _quiet_ : bool = False, **kwargs):
         logger.debug(f"sending:\n{input}")
+        logger.debug(f"timeout: {_timeout_}")
 
         # make sure the server is still running:
         try:
@@ -243,13 +327,32 @@ class IQSharpClient(object):
         def log_error(msg):
             errors.append(msg)
 
+        # Set up handlers for various kinds of messages, making sure to
+        # fallback through to output_hook as appropriate, so that the IPython
+        # package can send display data through to Jupyter clients.
         handlers = {
-            'execute_result': (lambda msg: results.append(msg))
+            'execute_result': (lambda msg: results.append(msg)),
+            'render_execution_path':  (lambda msg: results.append(msg)),
+            'display_data': display_data_handler if display_data_handler is not None else lambda msg: ...
         }
+
+        # Pass display data through to IPython if we're not in quiet mode.
         if not _quiet_:
             handlers['display_data'] = (
                 lambda msg: display_raw(msg['content']['data'])
             )
+
+        # Finish setting up handlers by allowing the display_data_callback
+        # to intercept display data first, only sending messages through to
+        # other handlers if it returns True.
+        if self.display_data_callback is not None:
+            inner_handler = handlers['display_data']
+
+            def filter_display_data(msg):
+                if self.display_data_callback(msg):
+                    return inner_handler(msg)
+
+            handlers['display_data'] = filter_display_data
 
         _output_hook = partial(
             self._handle_message,
@@ -267,7 +370,7 @@ class IQSharpClient(object):
                 # propagate to a Jupyter protocol error.
                 raise AlreadyExecutingError("Cannot execute through the IQ# client while another execution is completing.")
             self._busy = True
-            reply = self.kernel_client.execute_interactive(input, output_hook=_output_hook, **kwargs)
+            reply = self.kernel_client.execute_interactive(input, timeout=_timeout_, output_hook=_output_hook, **kwargs)
         finally:
             self._busy = False
 
@@ -279,10 +382,14 @@ class IQSharpClient(object):
         if results:
             assert len(results) == 1
             content = results[0]['content']
-            if 'application/json' in content['data']:
-                obj = unmap_tuples(json.loads(content['data']['application/json']))
+            if 'executionPath' in content:
+                obj = content['executionPath']
             else:
-                obj = None
+                qsharp_data = self._get_qsharp_data(content)
+                if qsharp_data:
+                    obj = unmap_tuples(json.loads(qsharp_data))
+                else:
+                    obj = None
             return (obj, content) if return_full_result else obj
         else:
             return None

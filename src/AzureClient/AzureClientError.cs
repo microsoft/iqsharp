@@ -55,6 +55,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         JobOutputDownloadFailed,
 
         /// <summary>
+        /// The job failed to be displayed.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobOutputDisplayFailed)]
+        JobOutputDisplayFailed,
+
+        /// <summary>
         /// No Q# operation name was provided where one was required.
         /// </summary>
         [Description(Resources.AzureClientErrorNoOperationName)]
@@ -89,5 +95,24 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// </summary>
         [Description(Resources.AzureClientErrorWorkspaceNotFound)]
         WorkspaceNotFound,
+
+        /// <summary>
+        /// A workspace was provided without a location.
+        /// </summary>
+        [Description(Resources.AzureClientErrorNoWorkspaceLocation)]
+        NoWorkspaceLocation,
+
+
+        /// <summary>
+        /// A workspace was provided with an invalid location.
+        /// </summary>
+        [Description(Resources.AzureClientErrorInvalidWorkspaceLocation)]
+        InvalidWorkspaceLocation,
+
+        /// <summary>
+        /// The Azure Quantum job failed or was cancelled.
+        /// </summary>
+        [Description(Resources.AzureClientErrorJobFailedOrCancelled)]
+        JobFailedOrCancelled,
     }
 }

@@ -1,9 +1,5 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Tests.IQSharp
 {
@@ -158,6 +154,15 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string FailIfOne =
+ @"
+    operation FailIfOne() : Unit {
+        use q = Qubit();
+        if M(q) == One {
+            fail ""Expected measuring a freshly allocated qubit to return Zero, but returned One."";
+        }
+    }
+";
         public static string ApplyWithinBlock =
  @"
     /// # Summary
@@ -338,5 +343,198 @@ namespace Tests.IQSharp
     }
 ";
 
+        public static string UnusedClassicallyControlledOperation =
+@"
+    operation ValidEntryPoint() : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+
+    operation ClassicalControl() : Result {
+        use q = Qubit[2];
+        H(q[0]);
+        if (M(q[0])== One) {
+            X(q[1]);
+        }
+        return M(q[1]);
+    }
+";
+
+        public static string ValidParameterTypes =
+@"
+    operation UseValidParameterTypes(
+        myBool: Bool,
+        myDouble: Double,
+        myInt: Int,
+        myStr: String,
+        myPauli: Pauli,
+        myResult: Result,
+        (innerInt: Int, innerDouble: Double)
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidBoolParameter =
+@"
+    operation UseBoolType(
+        myBool: Bool
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidDoubleParameter =
+@"
+    operation UseDoubleType(
+        myDouble: Double
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidIntParameter =
+@"
+    operation UseIntType(
+        myInt: Int
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidStringParameter =
+@"
+    operation UseStringType(
+        myStr: String
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidPauliParameter =
+@"
+    operation UsePauliType(
+        myPauli: Pauli
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidResultParameter =
+@"
+    operation UseResultType(
+        myResult: Result
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string ValidTupleParameters =
+@"
+    operation UseTupleType(
+        (innerInt: Int, innerDouble: Double),
+        (innerString: String, innerResult: Result)
+    ) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string InvalidUnitParameters =
+@"
+    operation UseUnitType(myUnit: Unit) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseUnitTypeFirst(myUnit: Unit, myInt: Int, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseUnitTypeMiddle(myInt: Int, myUnit: Unit, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseUnitTypeLast(myInt: Int, myBool: Bool, myUnit: Unit) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string InvalidArrayParameters =
+@"
+    operation UseArrayType(myArray: Int[]) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseArrayTypeFirst(myArray: Int[], myInt: Int, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseArrayTypeMiddle(myInt: Int, myArray: Int[], myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseArrayTypeLast(myInt: Int, myBool: Bool, myArray: Int[]) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
+
+        public static string InvalidRangeParameters =
+@"
+    operation UseRangeType(myRange: Range) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseRangeTypeFirst(myRange: Range, myInt: Int, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseRangeTypeMiddle(myInt: Int, myRange: Range, myBool: Bool) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+    
+    operation UseRangeTypeLast(myInt: Int, myBool: Bool, myRange: Range) : Result {
+        use q = Qubit();
+        H(q);
+        return M(q);
+    }
+";
     }
 }

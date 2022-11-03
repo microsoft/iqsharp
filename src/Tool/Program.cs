@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 using McMaster.Extensions.CommandLineUtils;
@@ -27,6 +27,7 @@ namespace Microsoft.Quantum.IQSharp
         public class LoggingOptions
         {
             public string? LogPath { get; set; }
+            public LogLevel? FileLogLevel { get; set; }
         }
 
         public static bool TelemetryOptOut
@@ -63,8 +64,7 @@ namespace Microsoft.Quantum.IQSharp
                         new Dictionary<string, string>()
                         {
                             ["--user-agent"] = "UserAgent",
-                            ["--hosting-env"] = "HostingEnvironment",
-                            ["--register-folders-for-telemetry"] = "RegisterFoldersForTelemetry"
+                            ["--hosting-env"] = "HostingEnvironment"
                         }
                     )
                     .Add(new NormalizedEnvironmentVariableConfigurationSource
@@ -72,13 +72,23 @@ namespace Microsoft.Quantum.IQSharp
                         Prefix = "IQSHARP_",
                         Aliases = new Dictionary<string, string>
                         {
-                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
-                            ["USER_AGENT"] = "UserAgent",
-                            ["HOSTING_ENV"] = "HostingEnvironment",
-                            ["LOG_PATH"] = "LogPath",
+                            // Package and project load settings
                             ["AUTO_LOAD_PACKAGES"] = "AutoLoadPackages",
                             ["AUTO_OPEN_NAMESPACES"] = "AutoOpenNamespaces",
                             ["SKIP_AUTO_LOAD_PROJECT"] = "SkipAutoLoadProject",
+                            ["FORCE_TARGETING_HEURISTICS"] = "ForceTargetingHeuristics",
+
+                            // Telemetry and metadata settings
+                            ["TELEMETRY_OPT_OUT"] = nameof(TelemetryOptOut),
+                            ["HOSTING_ENV"] = "HostingEnvironment",
+                            ["USER_AGENT"] = "UserAgent",
+                            ["USER_AGENT_EXTRA"] = "UserAgentExtra",
+
+                            // Logging settings
+                            ["LOG_PATH"] = "LogPath",
+                            ["FILE_LOG_LEVEL"] = "FileLogLevel",
+                            ["BINLOG_PATH"] = "MSBuildBinlogPath",
+                            ["SESSION_RECORD_PATH"] = "SessionRecordPath",
                         }
                     })
                     .Build();
@@ -97,7 +107,7 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             loggingBuilder.AddFile(
                                 options.LogPath,
-                                minimumLevel: LogLevel.Debug
+                                minimumLevel: options.FileLogLevel ?? LogLevel.Debug
                             );
                         }
                     }
@@ -116,16 +126,37 @@ namespace Microsoft.Quantum.IQSharp
                         });
                     }
                 );
+                CommandOption? userAgentOption = null;
 
                 AddWorkspaceOption(
                     app
-                    .AddInstallCommand()
+                    .AddInstallCommand(installCmd =>
+                    {
+                        userAgentOption = installCmd.Option(
+                            "--user-agent-extra <AGENT>",
+                            "Sets additional user agent information to be sent to the kernel.",
+                            CommandOptionType.SingleValue
+                        );
+                    })
+                    .WithKernelArguments(() =>
+                        // We know that the closure above is called by the time
+                        // we get to this point, such that userAgentOption is
+                        // not null at this point.
+                        userAgentOption!.HasValue()
+                        ? new [] {"--user-agent-extra", userAgentOption!.Value()}
+                        : Array.Empty<string>()
+                    )
                     .AddKernelCommand(
                         // These command options will be consumed by the Program.Configuration
                         // object above, rather than by the kernel application object itself.
                         // Thus, we only need placeholders to prevent the kernel application
                         // from raising an exception when unrecognized options are passed.
                         kernelCmd => {
+                            kernelCmd.Option<string>(
+                                "--user-agent-extra <AGENT>",
+                                "Sets additional user agent information to be sent to the kernel.",
+                                CommandOptionType.SingleValue
+                            );
                             kernelCmd.Option<string>(
                                 "--user-agent <AGENT>",
                                 "Specifies which user agent has initiated this kernel instance.",
@@ -150,11 +181,16 @@ namespace Microsoft.Quantum.IQSharp
 
         public static IWebHost GetHttpServer(string[]? args)
         {
-           return WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://localhost:8888")
-                .UseStartup<Startup>()
-                .UseConfiguration(Configuration)
-                .Build();
+           var builder = WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
+                .UseUrls("http://localhost:8008")
+                .UseStartup<Startup>();
+
+            if (Configuration is not null)
+            {
+                builder.UseConfiguration(Configuration);
+            }
+                
+            return builder.Build();
         }
 
         // Adds the Workspace settings to the "server" and "kernel" commands:

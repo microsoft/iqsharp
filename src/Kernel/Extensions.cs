@@ -3,16 +3,10 @@
 
 #nullable enable
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Jupyter.Core;
 using Microsoft.Jupyter.Core.Protocol;
-using Microsoft.Quantum.IQSharp.Jupyter;
-using Microsoft.Quantum.QsCompiler.SyntaxTokens;
-using Microsoft.Quantum.QsCompiler.SyntaxTree;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,12 +21,17 @@ namespace Microsoft.Quantum.IQSharp.Kernel
         ///     Adds services required for the IQ# kernel to a given service
         ///     collection.
         /// </summary>
-        public static void AddIQSharpKernel(this IServiceCollection services)
+        public static T AddIQSharpKernel<T>(this T services)
+        where T: IServiceCollection
         {
-            services.AddSingleton<ISymbolResolver, Kernel.SymbolResolver>();
-            services.AddSingleton<IMagicSymbolResolver, Kernel.MagicSymbolResolver>();
+            services.AddSingleton<ISymbolResolver, SymbolResolver>();
+            services.AddSingleton<IMagicSymbolResolver, MagicSymbolResolver>();
             services.AddSingleton<IExecutionEngine, Kernel.IQSharpEngine>();
             services.AddSingleton<IConfigurationSource, ConfigurationSource>();
+            services.AddSingleton<INoiseModelSource, NoiseModelSource>();
+            services.AddSingleton<ClientInfoListener>();
+
+            return services;
         }
 
         internal static void RenderExecutionPath(this ExecutionPathTracer.ExecutionPathTracer tracer,
@@ -66,70 +65,79 @@ namespace Microsoft.Quantum.IQSharp.Kernel
                 }
             );
         }
-        
-        internal static IEnumerable<QsDeclarationAttribute> GetAttributesByName(
-            this OperationInfo operation, string attributeName,
-            string namespaceName = "Microsoft.Quantum.Documentation"
-        ) =>
-            operation.Header.Attributes.Where(
-                attribute =>
-                    // Since QsNullable<UserDefinedType>.Item can be null,
-                    // we use a pattern match here to make sure that we have
-                    // an actual UDT to compare against.
-                    attribute.TypeId.Item is UserDefinedType udt &&
-                    udt.Namespace == namespaceName &&
-                    udt.Name == attributeName
-            );
 
-        internal static bool TryAsStringLiteral(this TypedExpression expression, [NotNullWhen(true)] out string? value)
+        private readonly static Regex UserAgentVersionRegex = new Regex(@"\[(.*)\]");
+
+        internal static Version? GetUserAgentVersion(this IMetadataController? metadataController)
         {
-            if (expression.Expression is QsExpressionKind<TypedExpression, Identifier, ResolvedType>.StringLiteral literal)
-            {
-                value = literal.Item1;
-                return true;
-            }
-            else
-            {
-                value = null;
-                return false;
-            }
+            var userAgent = metadataController?.UserAgent;
+            if (string.IsNullOrWhiteSpace(userAgent))
+                return null;
+
+            var match = UserAgentVersionRegex.Match(userAgent);
+            if (match == null || !match.Success)
+                return null;
+
+            if (!Version.TryParse(match.Groups[1].Value, out Version version))
+                return null;
+
+            // return null for development versions that start with 0.0
+            if (version.Major == 0 && version.Minor == 0)
+                return null;
+
+            return version;
         }
 
-        internal static IEnumerable<string> GetStringAttributes(
-            this OperationInfo operation, string attributeName,
-            string namespaceName = "Microsoft.Quantum.Documentation"
-        ) => operation
-            .GetAttributesByName(attributeName, namespaceName)
-            .Select(
-                attribute =>
-                    attribute.Argument.TryAsStringLiteral(out var value)
-                    ? value : null
-            )
-            .Where(value => value != null)
-            // The Where above ensures that all elements are non-nullable,
-            // but the C# compiler doesn't quite figure that out, so we
-            // need to help it with a no-op that uses the null-forgiving
-            // operator.
-            .Select(value => value!);
+        internal static int EditDistanceFrom(this string s1, string s2)
+        {
+            // Uses the approach at
+            // https://github.com/dotnet/samples/blob/main/csharp/parallel/EditDistance/Program.cs.
+            var dist = new int[s1.Length + 1, s2.Length + 1];
+            for (int i = 0; i <= s1.Length; i++) dist[i, 0] = i;
+            for (int j = 0; j <= s2.Length; j++) dist[0, j] = j;
 
-        internal static IDictionary<string?, string?> GetDictionaryAttributes(
-            this OperationInfo operation, string attributeName,
-            string namespaceName = "Microsoft.Quantum.Documentation"
-        ) => operation
-            .GetAttributesByName(attributeName, namespaceName)
-            .SelectMany(
-                attribute => attribute.Argument.Expression switch
+            for (int i = 1; i <= s1.Length; i++)
+            {
+                for (int j = 1; j <= s2.Length; j++)
                 {
-                    QsExpressionKind<TypedExpression, Identifier, ResolvedType>.ValueTuple tuple =>
-                        tuple.Item.Length != 2
-                        ? throw new System.Exception("Expected attribute to be a tuple of two strings.")
-                        : ImmutableList.Create((tuple.Item[0], tuple.Item[1])),
-                    _ => ImmutableList<(TypedExpression, TypedExpression)>.Empty
+                    dist[i, j] = (s1[i - 1] == s2[j - 1]) ?
+                        dist[i - 1, j - 1] :
+                        1 + System.Math.Min(dist[i - 1, j],
+                            System.Math.Min(dist[i, j - 1],
+                                            dist[i - 1, j - 1]));
                 }
-            )
-            .ToDictionary(
-                attribute => attribute.Item1.TryAsStringLiteral(out var value) ? value : null,
-                attribute => attribute.Item2.TryAsStringLiteral(out var value) ? value : null
+            }
+
+            return dist[s1.Length, s2.Length];
+        }
+
+        internal static IServiceProvider AddBuiltInMagicSymbols(this IServiceProvider serviceProvider)
+        {
+            serviceProvider.GetRequiredService<IMagicSymbolResolver>()
+                .AddKernelAssembly<IQSharpKernelApp>()
+                .AddKernelAssembly<AzureClient.AzureClient>();
+            return serviceProvider;
+        }
+
+        internal static void DisplayFancyDiagnostics(this IChannel channel, IEnumerable<Diagnostic>? diagnostics, ISnippets snippets, string? input)
+        {
+            var defaultPath = new Snippet().FileName;
+            var sources = snippets.Items.ToDictionary(
+                s => s.FileName,
+                s => s.Code
             );
+            foreach (var m in diagnostics ?? Enumerable.Empty<Diagnostic>())
+            {
+                var source = m.Source is {} path
+                    ? sources.TryGetValue(path, out var snippet)
+                        ? snippet
+                        : path == defaultPath
+                            ? input
+                            : null
+                    : null;
+                channel.Display(new FancyError(source, m));
+            }
+        }
     }
+
 }

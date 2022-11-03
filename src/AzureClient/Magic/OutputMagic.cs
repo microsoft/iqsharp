@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public OutputMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public OutputMagic(IAzureClient azureClient, ILogger<OutputMagic> logger)
             : base(
                 azureClient,
                 "azure.output",
@@ -40,13 +42,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         results.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}).
                         
                         #### Optional parameters
 
                         - The job ID for which to display results. If not specified, the job ID from
-                        the most recent call to [`%azure.submit`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.submit)
-                        or [`%azure.execute`](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute) will be used.
+                        the most recent call to [`%azure.submit`]({KnownUris.ReferenceForMagicCommand("azure.submit")})
+                        or [`%azure.execute`]({KnownUris.ReferenceForMagicCommand("azure.execute")}) will be used.
                         
                         #### Possible errors
 
@@ -54,6 +56,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         - {AzureClientError.JobNotFound.ToMarkdown()}
                         - {AzureClientError.JobNotCompleted.ToMarkdown()}
                         - {AzureClientError.JobOutputDownloadFailed.ToMarkdown()}
+                        - {AzureClientError.JobFailedOrCancelled.ToMarkdown()}
                     ".Dedent(),
                     Examples = new[]
                     {
@@ -73,7 +76,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                }) {}
+                }, logger) {}
 
         /// <summary>
         ///     Displays the output of a given completed job ID, if provided,
@@ -82,8 +85,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public override async Task<ExecutionResult> RunAsync(string input, IChannel channel, CancellationToken cancellationToken)
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameJobId);
-            string jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
-            return await AzureClient.GetJobResultAsync(channel, jobId);
+            var jobId = inputParameters.DecodeParameter<string>(ParameterNameJobId);
+            return await AzureClient.GetJobResultAsync(channel, jobId, cancellationToken);
         }
     }
 }

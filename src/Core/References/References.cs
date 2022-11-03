@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 
@@ -7,14 +7,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NuGet.Packaging.Core;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -78,17 +77,17 @@ namespace Microsoft.Quantum.IQSharp
         /// Create a new References list populated with the list of DEFAULT_ASSEMBLIES 
         /// </summary>
         public References(
-                INugetPackages packages,
-                IEventService eventService,
-                ILogger<References> logger,
-                IOptions<Settings> options
-                )
+            INugetPackages packages,
+            IEventService eventService,
+            ILogger<References> logger,
+            IOptions<Settings> options,
+            IPerformanceMonitor performanceMonitor
+        )
         {
+            this.performanceMonitor = performanceMonitor;
             Assemblies = QUANTUM_CORE_ASSEMBLIES.ToImmutableArray();
             Nugets = packages;
             Logger = logger;
-
-            eventService?.TriggerServiceInitialized<IReferences>(this);
 
             var referencesOptions = options.Value;
             if (referencesOptions?.AutoLoadPackages is string autoLoadPkgs)
@@ -100,9 +99,13 @@ namespace Microsoft.Quantum.IQSharp
                 AutoLoadPackages = ParsePackages(autoLoadPkgs);
             }
 
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            // The call to Reset below ensures that _metadata is not null.
+            Reset();
+            Debug.Assert(_metadata != null, "Reset did not initialize compiler metadata.");
 
             AssemblyLoadContext.Default.Resolving += Resolve;
+
+            eventService?.TriggerServiceInitialized<IReferences>(this);
         }
 
         /// <inheritdoc/>
@@ -123,7 +126,9 @@ namespace Microsoft.Quantum.IQSharp
 
         /// Manages nuget packages.
         internal INugetPackages Nugets { get; }
-        private Lazy<CompilerMetadata> _metadata;
+        private readonly IPerformanceMonitor performanceMonitor;
+        private Task<CompilerMetadata> _metadata;
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         private ILogger<References> Logger { get; }
 
@@ -134,7 +139,7 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public ImmutableArray<AssemblyInfo> Assemblies { get; private set; }
 
-        public CompilerMetadata CompilerMetadata => _metadata.Value;
+        public CompilerMetadata CompilerMetadata => _metadata.Result;
 
         /// <summary>
         /// The list of Nuget Packages that are available for compilation and execution.
@@ -173,19 +178,52 @@ namespace Microsoft.Quantum.IQSharp
             AddAssemblies(Nugets.Assemblies.ToArray());
 
             duration.Stop();
+            Logger?.LogInformation("Loaded package {Id}::{Version} in {Time}.", pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed);
             PackageLoaded?.Invoke(this, new PackageLoadedEventArgs(pkg.Id, pkg.Version?.ToNormalizedString() ?? string.Empty, duration.Elapsed));
         }
 
         private void Reset()
         {
-            _metadata = new Lazy<CompilerMetadata>(() => new CompilerMetadata(this.Assemblies));
+            var oldMetadata = _metadata;
+            // Begin loading metadata in the background.
+            _metadata = Task.Run(
+                async () =>
+                {
+                    // Don't run multiple assembly reference loads at a time.
+                    if (oldMetadata != null)
+                    {
+                        await oldMetadata;
+                    }
+                    using var perfTask = performanceMonitor.BeginTask("Resetting reference metadata.", "reset-refs-meta");
+                    var result = new CompilerMetadata(this.Assemblies.Where(IsAssemblyPossiblyQSharpReference));
+                    return result;
+                },
+                tokenSource.Token
+            );
         }
+
+        private static bool IsAssemblyPossiblyQSharpReference(AssemblyInfo arg) =>
+            !Regex.Match(
+                arg.Assembly.GetName().Name,
+                // Reference filtering should match the filtering at
+                // https://github.com/microsoft/qsharp-compiler/blob/c3d1a09f70960d09af68e805294962e7e6c690d8/src/QuantumSdk/Sdk/Sdk.targets#L70.
+                "(?i)system.|mscorlib|netstandard.library|microsoft.netcore.app|csharp|fsharp|microsoft.visualstudio|microsoft.testplatform|microsoft.codeanalysis|fparsec|newtonsoft|roslynwrapper|yamldotnet|markdig|serilog"
+            ).Success;
 
         /// <summary>
         /// Because the assemblies are loaded into memory, we need to provide this method to the AssemblyLoadContext
         /// such that the Workspace assembly or this assembly is correctly resolved when it is executed for simulation.
         /// </summary>
-        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) =>
-            Assemblies.FirstOrDefault(a => a.Assembly.FullName == name.FullName)?.Assembly;
+        public Assembly? Resolve(AssemblyLoadContext context, AssemblyName name) 
+        {
+            bool Compare(AssemblyInfo a) =>
+                // If the Assembly requested doesn't include version, then check only for the simple name
+                // of the assembly, otherwise check for the full name (including PublicKey)
+                (name.Version == null)
+                    ? a.Assembly.GetName().Name == name.Name
+                    : a.Assembly.FullName == name.FullName;
+            
+            return Assemblies.FirstOrDefault(Compare)?.Assembly;
+        }
     }
 }

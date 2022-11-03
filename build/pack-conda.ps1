@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 $ErrorActionPreference = 'Stop'
 
@@ -9,7 +9,9 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
     Set-PSDebug -Trace 1;
 }
 
-$CondaPlatform = (conda info --json) `
+# Print conda-info and capture the current platform.
+(conda info --json) | Tee-Object -Variable condaInfo;
+$CondaPlatform = $condaInfo `
     | ConvertFrom-Json `
     | Select-Object -ExpandProperty platform;
 
@@ -19,7 +21,7 @@ $PSVersionTable | Format-Table | Out-String | Write-Host;
 function Pack-CondaRecipe() {
     param(
         [string] $Path,
-        [string[]] $PythonVersions = @("3.7")
+        [string[]] $PythonVersions = @("3.9", "3.10")
     );
 
     if (-not (Get-Command conda-build -ErrorAction SilentlyContinue)) {

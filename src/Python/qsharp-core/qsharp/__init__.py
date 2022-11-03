@@ -14,7 +14,8 @@
 ## IMPORTS ##
 
 import sys
-from typing import List, Dict, Union
+from contextlib import contextmanager
+from typing import Any, List, Dict, Union
 from collections import defaultdict
 from distutils.version import LooseVersion
 
@@ -25,6 +26,7 @@ from qsharp.config import Config
 from qsharp.packages import Packages
 from qsharp.projects import Projects
 from qsharp.types import Result, Pauli
+from qsharp.utils import ImportFailure, try_import_qutip
 try:
     from qsharp.version import __version__
 except:
@@ -43,9 +45,13 @@ __all__ = [
     'Result', 'Pauli'
 ]
 
+from qsharp.noise_model import *
+import qsharp.noise_model
+__all__ += qsharp.noise_model.__all__
+
 ## FUNCTIONS ##
 
-def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
+def compile(code : str) -> Union[None, QSharpCallable, List[QSharpCallable]]:
     """
     Given a string containing Q# source code, compiles it into the current
     workspace and returns one or more Q# callable objects that can be used to
@@ -55,9 +61,13 @@ def compile(code : str) -> Union[QSharpCallable, List[QSharpCallable]]:
     :returns: A list of callables compiled from `code`, or a callable if exactly
         one callable is found.
     """
+    compiled = client.compile(code)
+    if compiled is None:
+        return None
+
     ops = [
         QSharpCallable(op, "snippets")
-        for op in client.compile(code)
+        for op in compiled
     ]
     if len(ops) == 1:
         return ops[0]
@@ -115,8 +125,77 @@ def component_versions() -> Dict[str, LooseVersion]:
     versions = client.component_versions()
     # Add in the qsharp Python package itself.
     versions["qsharp"] = LooseVersion(__version__)
+    # If any experimental features are enabled, report them here.
+    if _experimental_versions is not None:
+        versions['experimental'] = _experimental_versions
     return versions
 
+@contextmanager
+def capture_diagnostics(passthrough: bool = False, as_qobj: bool = False) -> List[Any]:
+    """
+    Returns a context manager that captures diagnostics output from running Q#
+    programs into a list.
+
+    For example, to capture `DumpMachine` calls from a Q# operation run on the
+    full-state simulator:
+
+    .. code-block:: qsharp
+
+        namespace Sample {
+            open Microsoft.Quantum.Intrinsic;
+            open Microsoft.Quantum.Diagnostics;
+
+            operation RunMain() : Unit {
+                use q = Qubit();
+                within {
+                    H(q);
+                } apply {
+                    DumpMachine();
+                }
+            }
+        }
+
+    .. code-block:: python
+
+        import qsharp
+        from Sample import RunMain
+
+        with qsharp.capture_diagnostics() as diagnostics:
+            RunMain.simulate()
+
+        print(len(diagnostics)) # will print 1
+
+    :param passthrough: If `True`, captured diagnostics will also be displayed
+        as normal. By default, diagnostic outputs captured by this context
+        manager will not be displayed.
+    :param as_qobj: If `True`, this context manager will attempt to convert
+        captured diagnostics representing quantum states and operations into
+        QuTiP objects. This option requires that QuTiP is installed and
+        can be imported.
+    """
+    # Before proceeding, check that if we were asked to convert to qobj data
+    # that we can actually import qutip.
+    if as_qobj:
+        # We don't actually need QuTiP here, but are only importing to capture
+        # exceptions as early as possible so as to provide actionable error
+        # messages to the user.
+        qt = try_import_qutip()
+        if isinstance(qt, ImportFailure):
+            raise ImportError("as_qobj was set to `True`, but cannot convert captured diagnostics to QObj since QuTiP failed to import.") from qt.cause
+
+        from qsharp.qobj import convert_diagnostic_to_qobj
+
+    processed_data = []
+    with client.capture_diagnostics(passthrough=passthrough) as data:
+        yield processed_data
+
+        # Apply any postprocessing needed here and append to processed_data.
+        for diagnostic in data:
+            if as_qobj:
+                converted = convert_diagnostic_to_qobj(diagnostic)
+                if converted is not None:
+                    diagnostic = converted
+            processed_data.append(diagnostic)
 
 ## STARTUP ##
 
@@ -124,10 +203,20 @@ client = _start_client()
 config = Config(client)
 packages = Packages(client)
 projects = Projects(client)
+_experimental_versions = None
 
 # Make sure that we're last on the meta_path so that actual modules are loaded
 # first.
 sys.meta_path.append(QSharpModuleFinder())
+
+# If using IPython, forward some useful IQ# magic commands as IPython magic
+# commands and define a couple new magic commands for IPython.
+try:
+    if __IPYTHON__:
+        import qsharp.ipython_magic
+        qsharp.ipython_magic.register_magics()
+except NameError:
+    pass
 
 # Needed to recognize PEP 420 packages as subpackages.
 import pkg_resources

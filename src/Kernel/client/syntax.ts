@@ -19,7 +19,7 @@ export function defineQSharpMode() {
         },
         {
             token: "keyword",
-            regex: String.raw`(namespace|open|as|operation|function|body|adjoint|newtype|controlled)\b`,
+            regex: String.raw`(namespace|open|as|operation|function|body|adjoint|newtype|controlled|internal)\b`,
             beginWord: true,
         },
         {
@@ -34,7 +34,7 @@ export function defineQSharpMode() {
         },
         {
             token: "keyword",
-            regex: String.raw`(let|set|w\/|new|not|and|or|using|borrowing|newtype|mutable)\b`,
+            regex: String.raw`(let|set|w\/|new|not|and|or|use|borrow|using|borrowing|newtype|mutable)\b`,
             beginWord: true,
         },
         {
@@ -60,13 +60,13 @@ export function defineQSharpMode() {
         {
             // built-in magic commands
             token: "builtin",
-            regex: String.raw`(%(config|debug|estimate|lsmagic|package|performance|simulate|toffoli|trace|version|who|workspace))\b`,
+            regex: String.raw`(%(config|debug|estimate|lsmagic|package|performance|simulate|toffoli|trace|version|who|workspace|qir))\b`,
             beginWord: true,
         },
         {
             // Azure magic commands
             token: "builtin",
-            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target))\b`,
+            regex: String.raw`(%azure\.(connect|execute|jobs|output|status|submit|target|target\-capability))\b`,
             beginWord: true,
         },
         {

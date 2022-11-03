@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using Microsoft.Jupyter.Core;
 using Markdig;
+using Microsoft.Quantum.IQSharp.Jupyter;
 
 namespace Microsoft.Quantum.IQSharp.Kernel
 {
@@ -51,12 +52,16 @@ namespace Microsoft.Quantum.IQSharp.Kernel
             {
                 var codeLink =
                     $"<a href=\"{symbol.Source}\"><i class=\"fa fas fa-code\"></i></a>";
+                var summary = symbol.Summary != null
+                    ? "<h5>Summary</h5>" + Markdown.ToHtml(symbol.Summary)
+                    : string.Empty;
+                var description = symbol.Description != null
+                    ? "<h5>Description</h5>" + Markdown.ToHtml(symbol.Description)
+                    : string.Empty;
                 return $@"
                     <h4><i class=""fa fas fa-terminal""></i> {symbol.Name} {codeLink}</h4>
-                    <h5>Summary</h5>
-                    {Markdown.ToHtml(symbol.Summary)}
-                    <h5>Description</h5>
-                    {Markdown.ToHtml(symbol.Description)}
+                    {summary}
+                    {description}
                 ".ToEncodedData();
 
             }

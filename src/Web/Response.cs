@@ -1,6 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -23,10 +25,10 @@ namespace Microsoft.Quantum.IQSharp.Common
     {
         public Response() { }
 
-        public Response(Status status, string[] messages, T result = default(T))
+        public Response(Status status, IEnumerable<string> messages, T? result = default(T))
         {
             this.Status = status;
-            this.Messages = messages;
+            this.Messages = messages.ToArray();
             this.Result = result;
         }
 
@@ -41,12 +43,12 @@ namespace Microsoft.Quantum.IQSharp.Common
         /// the list of warnings from a successful compilation, or the list of Messages
         /// from a Q# simulation.
         /// </summary>
-        public string[] Messages { get; set; }
+        public string[]? Messages { get; set; }
 
         /// <summary>
         /// The actual result from the operation. From simulation this is the result of
         /// the operation being simulated. For compilation, the list of operations found in the snippet.
         /// </summary>
-        public T Result { get; set; }
+        public T? Result { get; set; }
     }
 }

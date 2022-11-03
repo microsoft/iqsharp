@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp.Jupyter;
 
@@ -19,6 +20,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public class JobsMagic : AzureClientMagicBase
     {
         private const string ParameterNameFilter = "__filter__";
+        private const string ParameterNameCount = "count";
+
+        private const int CountDefaultValue = 30;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JobsMagic"/> class.
@@ -26,7 +30,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public JobsMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public JobsMagic(IAzureClient azureClient, ILogger<JobsMagic> logger)
             : base(
                 azureClient,
                 "azure.jobs",
@@ -39,14 +44,15 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         have an ID, name, or target containing the provided filter parameter.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect).
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}).
                         
                         #### Optional parameters
 
                         - A string to filter the list of jobs. Jobs which have an ID, name, or target
                         containing the provided filter parameter will be displayed. If not specified,
-                        all recent jobs are displayed.
-                        
+                        no job is filtered.
+                        - `{ParameterNameCount}=<integer>` (default={CountDefaultValue}): The max number of jobs to return.
+
                         #### Possible errors
 
                         - {AzureClientError.NotConnected.ToMarkdown()}
@@ -68,8 +74,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             Out[]: <detailed status of matching jobs in the workspace>
                             ```
                         ".Dedent(),
+
+                        @"
+                            Get the list of jobs whose ID, name, or target contains ""My job"", limit it to at most 100 jobs:
+                            ```
+                            In []: %azure.jobs ""My job"" count=100
+                            Out[]: <detailed status of at most 100 matching jobs in the workspace>
+                            ```
+                        ".Dedent(),
                     },
-                }) {}
+                }, logger) {}
 
         /// <summary>
         ///     Lists all jobs in the active workspace, optionally filtered by a provided parameter.
@@ -78,7 +92,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameFilter);
             var filter = inputParameters.DecodeParameter<string>(ParameterNameFilter, defaultValue: string.Empty);
-            return await AzureClient.GetJobListAsync(channel, filter);
+            var count = inputParameters.DecodeParameter<int>(ParameterNameCount, defaultValue: CountDefaultValue);
+            return await AzureClient.GetJobListAsync(channel, filter ?? "", count, cancellationToken);
         }
     }
 }

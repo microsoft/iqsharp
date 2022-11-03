@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -6,6 +6,9 @@
     <RootNamespace>Microsoft.Quantum.IQSharp.Kernel</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.Kernel</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <LangVersion>10.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="4.3.2" />
+	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.26.230380-beta" />
   </ItemGroup>
 
   <!-- TypeScript compilation -->
@@ -30,6 +34,7 @@
     <EmbeddedResource Include="res\kernel.js" />
     <EmbeddedResource Include="res\bundle.js" />
     <EmbeddedResource Include="node_modules\chart.js\dist\Chart.bundle.min.js" Link="res\chart.js" />
+    <EmbeddedResource Include="node_modules\@microsoft\quantum-viz.js\dist\qviz.min.js" Link="res\quantum-viz.js" />
     <Content Include="tsconfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>

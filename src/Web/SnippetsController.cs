@@ -65,10 +65,10 @@ namespace Microsoft.Quantum.IQSharp
             await AsResponse(async (logger) =>
             await IfReady(async () =>
             {
-                var result = Snippets.Compile(model.Code);
+                var result = await Snippets.Compile(model.Code);
 
                 // log warnings:
-                foreach (var m in result.warnings) { logger(m); }
+                foreach (var m in result.Warnings) { logger(m); }
 
                 // Gets the names of all the operations found for this snippet
                 var opsNames =

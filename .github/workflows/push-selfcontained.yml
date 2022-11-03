@@ -1,0 +1,39 @@
+# Leverages the callable workflow defined in docker-build.yml
+# to build the images used in conda tests. This is necessary
+# as the Windows and Linux images need to be built on agents
+# of those operating systems, respectively. Using a callable
+# workflow allows the agent's OS to be parameterized.
+
+name: Push Docker test images
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'images/test-environments/**/Dockerfile'
+  workflow_dispatch:
+  schedule:
+    # set schedule to run at 2AM PT on Saturdays
+    - cron: '0 9 * * SAT'
+
+jobs:
+  windows:
+    name: "Build windows image"
+    uses: ./.github/workflows/docker-build.yml
+    secrets: inherit
+    with:
+      os: "windows-latest"
+      path: "images/test-environments/windows"
+      repoName: "windows-selfcontained"
+      tagSuffix: "windows"
+
+  linux:
+    name: "Build linux image"
+    uses: ./.github/workflows/docker-build.yml
+    secrets: inherit
+    with:
+      os: "ubuntu-latest"
+      path: "images/test-environments/linux"
+      repoName: "linux-selfcontained"
+      tagSuffix: "linux"

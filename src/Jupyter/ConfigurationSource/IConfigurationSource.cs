@@ -1,11 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 #nullable enable
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using Newtonsoft.Json;
+using Microsoft.Quantum.Simulation.Simulators;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Quantum.IQSharp.Jupyter
@@ -32,8 +29,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
         /// <summary>
         ///     Given the name for a configuration and a default value,
-        ///     returns the given option if it exists, or the default if the
-        ///     user has not specified that option.
+        ///     returns the given option if it exists, the value of an environment variable
+        ///     if an environment variable with the same name or with the name prefixed with 
+        ///     IQSHARP_ exists, or the default if the
+        ///     the option is missing or not available in the environment.
         /// </summary>
         /// <param name="optionName">
         ///     Name of the option to be retrieved.
@@ -41,6 +40,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// <param name="defaultValue">
         ///     Value to be returned when the option specified by
         ///     <paramref name="optionName" /> has not been set.
+        /// </param>
+        /// <param name="parser">
+        ///     A parser to parse the string representation of the option
+        ///     (from the environment) into the corresponding expected Type.
         /// </param>
         /// <typeparam name="T">
         ///     The expected type of the given option.
@@ -50,17 +53,67 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     <paramref name="optionName" /> if it exists, otherwise
         ///     the value of <paramref name="defaultValue" />.
         /// </returns>
-        public T GetOptionOrDefault<T>(string optionName, T defaultValue) =>
-            Configuration.TryGetValue(optionName, out var token)
-            ? token.ToObject<T>() ?? defaultValue
-            : defaultValue;
+        public T GetOptionOrDefault<T>(string optionName, T defaultValue, Func<string, T> parser)
+        {
+            if (Configuration.TryGetValue(optionName, out var token))
+            {
+                return token.ToObject<T>() ?? defaultValue;
+            }
+
+            var key = optionName.ToUpperInvariant().Replace('.', '_');
+            var keyWithPrefix = "IQSHARP_" + key;
+
+            var environment = System.Environment.GetEnvironmentVariable(keyWithPrefix) ?? System.Environment.GetEnvironmentVariable(key);
+            if (environment != null)
+            {
+                return parser(environment);
+            }
+
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for boolean options.
+        /// </summary>
+        public bool GetOptionOrDefault(string optionName, bool defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, bool.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for int options.
+        /// </summary>
+        public int GetOptionOrDefault(string optionName, int defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, int.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for uint options.
+        /// </summary>
+        public uint GetOptionOrDefault(string optionName, uint defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, uint.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for double options.
+        /// </summary>
+        public double GetOptionOrDefault(string optionName, double defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, double.Parse);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for string options.
+        /// </summary>
+        public string GetOptionOrDefault(string optionName, string defaultValue) =>
+            GetOptionOrDefault(optionName, defaultValue, e => e);
+
+        /// <summary>
+        /// Convenience method to call <see cref="GetOptionOrDefault{T}(string, T, Func{string, T})"/> for enum options.
+        /// </summary>
+        public TEnum GetOptionOrDefault<TEnum>(string optionName, TEnum defaultValue) where TEnum : struct =>
+            GetOptionOrDefault(optionName, defaultValue, Enum.Parse<TEnum>);
 
         /// <summary>
         ///     The labeling convention to be used when labeling computational
         ///     basis states (bit string, little-endian or big-endian).
         /// </summary>
-        public BasisStateLabelingConvention BasisStateLabelingConvention =>
-            GetOptionOrDefault("dump.basisStateLabelingConvention", BasisStateLabelingConvention.LittleEndian);
+        public CommonNativeSimulator.BasisStateLabelingConvention BasisStateLabelingConvention =>
+            GetOptionOrDefault("dump.basisStateLabelingConvention", CommonNativeSimulator.BasisStateLabelingConvention.LittleEndian);
 
         /// <summary>
         ///     Whether small amplitudes should be truncated when dumping
@@ -78,7 +131,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         ///     is <c>true</c>.
         /// </summary>
         public double TruncationThreshold =>
-            GetOptionOrDefault("dump.truncationThreshold", 1e-10);
+            GetOptionOrDefault("dump.truncationThreshold", 1e-10, double.Parse);
 
         /// <summary>
         ///     Allows for options to view phase as arrows, or in radians
@@ -129,5 +182,82 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
         /// </summary>
         public TraceVisualizationStyle TraceVisualizationStyle =>
             GetOptionOrDefault("trace.style", TraceVisualizationStyle.Default);
+
+        /// <summary>
+        ///     Specifies the number of qubits that the open systems simulator
+        ///     supports for use in running Q# programs.
+        /// </summary>
+        public uint NoisySimulatorCapacity =>
+            GetOptionOrDefault<uint>("simulators.noisy.nQubits", 3);
+
+        /// <summary>
+        ///     Specifies the representation to use for the initial state
+        ///     when simulating Q# programs with open systems simulator.
+        /// </summary>
+        public string NoisySimulatorRepresentation =>
+            GetOptionOrDefault("simulators.noisy.representation", "mixed");
+
+        /// <summary>
+        ///     Specifies the format used in dumping stabilizer states.
+        /// </summary>
+        public StabilizerStateVisualizationStyle NoisySimulatorStabilizerStateVisualizationStyle =>
+            GetOptionOrDefault("simulators.noisy.stabilizerStateStyle", StabilizerStateVisualizationStyle.MatrixWithDestabilizers);
+
+        /// <summary>
+        ///      Specifies whether hints are shown for kernel error messages.
+        /// </summary>
+        public bool ShowHintsOnErrors =>
+            GetOptionOrDefault("errors.showHints", true);
+
+        /// <summary>
+        ///      Specifies the format used for reporting Q# compilation errors.
+        /// </summary>
+        public CompilationErrorStyle CompilationErrorStyle =>
+            GetOptionOrDefault("errors.style", CompilationErrorStyle.Fancy);
+
+        /// <summary>
+        ///      Specifies how many lines of context should be displayed around
+        ///      errors and other Q# compilation diagnostics.
+        /// </summary>
+        public int NContextLines =>
+            GetOptionOrDefault("errors.nContextLines", 1);
+
+        /// <summary>
+        ///     Default SubscriptionId to use when connecting to Azure Quantum. Returns an empty string if not configured.
+        /// </summary>
+        public string SubscriptionId =>
+            GetOptionOrDefault("azure.quantum.subscription.id", string.Empty);
+
+        /// <summary>
+        ///     Default Workspace's Resource Group to use when connecting to Azure Quantum. Returns an empty string if not configured.
+        /// </summary>
+        public string WorkspaceRG =>
+            GetOptionOrDefault("azure.quantum.workspace.rg", string.Empty);
+
+        /// <summary>
+        ///     Default Workspace's location to use when connecting to Azure Quantum. Returns an empty string if not configured.
+        /// </summary>
+        public string WorkspaceLocation =>
+            GetOptionOrDefault("azure.quantum.workspace.location", string.Empty);
+
+        /// <summary>
+        ///     Default Workspace's name to use when connecting to Azure Quantum. Returns an empty string if not configured.
+        /// </summary>
+        public string WorkspaceName =>
+            GetOptionOrDefault("azure.quantum.workspace.name", string.Empty);
+
+        /// <summary>
+        ///      If set to <c>true</c>, shows additional performance breakdowns
+        ///      from within the notebook.
+        /// </summary>
+        public bool InternalShowPerf =>
+            GetOptionOrDefault("internal.showPerf", false);
+
+        /// <summary>
+        ///      If set to <c>true</c>, shows additional performance breakdowns
+        ///      forwarded from the Q# compiler.
+        /// </summary>
+        public bool InternalShowCompilerPerf =>
+            GetOptionOrDefault("internal.showCompilerPerf", false);
     }
 }

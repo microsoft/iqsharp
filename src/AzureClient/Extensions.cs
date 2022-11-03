@@ -4,12 +4,11 @@
 #nullable enable
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Azure.Quantum;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Jupyter.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
@@ -20,12 +19,28 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public static class Extensions
     {
         /// <summary>
+        ///     The name of the environment variable used by Python tests
+        ///     to indicate the Azure Environment to use.
+        /// </summary>
+        public static string AZURE_QUANTUM_ENV = "AZURE_QUANTUM_ENV";
+
+        /// <summary>
+        ///    Value of the environment variable used by Python tests
+        ///     to indicate to use Mocks for Azure Quantum instances.
+        /// </summary>
+        public static string MOCK_ENVIRONMENT = "mock";
+
+        /// <summary>
         ///     Adds services required for the AzureClient to a given service collection.
         /// </summary>
         public static void AddAzureClient(this IServiceCollection services)
         {
             services.AddSingleton<IAzureClient, AzureClient>();
             services.AddSingleton<IEntryPointGenerator, EntryPointGenerator>();
+
+            // For Python unittests, we support an environment variable to create Mock Azure objects:
+            var useMocks = System.Environment.GetEnvironmentVariable(AZURE_QUANTUM_ENV) == MOCK_ENVIRONMENT;
+            services.AddSingleton(useMocks ? new MocksAzureFactory() : new AzureFactory() as IAzureFactory);
         }
 
         /// <summary>
@@ -71,5 +86,29 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             (job.Id != null && job.Id.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
             (job.Details.Name != null && job.Details.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
             (job.Details.Target != null && job.Details.Target.Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        ///      Writes an exception to a logger and emits it to the stderr stream
+        ///      of a Jupyter display channel.
+        /// </summary>
+        internal static void Log(this Exception ex, IChannel? channel, ILogger? logger, string msg = "")
+        {
+            logger?.LogError(ex, msg);
+            channel?.Stderr(msg);
+            channel?.Stderr(ex.Message);
+        }
+
+        /// <summary>
+        ///      Uses the given metadata controller to check if the current
+        ///      client is known to be a Python user agent.
+        /// </summary>
+        public static bool IsPythonUserAgent(this IMetadataController? controller) =>
+            controller?.UserAgent?.StartsWith("qsharp.py") ?? false;
+
+
+        internal static string CommandDisplayName(this IMetadataController? controller, string commandName) =>
+            controller.IsPythonUserAgent()
+            ? $"qsharp.azure.{commandName}()".Replace("-", "_")
+            : $"%azure.{commandName}";
     }
 }

@@ -3,11 +3,8 @@
 
 #nullable enable
 
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
@@ -22,7 +19,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="azureClient">
         /// The <see cref="IAzureClient"/> object to use for Azure functionality.
         /// </param>
-        public SubmitMagic(IAzureClient azureClient)
+        /// <param name="logger">Logger instance for messages.</param>
+        public SubmitMagic(IAzureClient azureClient, ILogger<SubmitMagic> logger)
             : base(
                 azureClient,
                 "azure.submit",
@@ -35,9 +33,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         The command returns immediately after the job is submitted.
 
                         The Azure Quantum workspace must have been previously initialized
-                        using the [`%azure.connect` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect),
+                        using the [`%azure.connect` magic command]({KnownUris.ReferenceForMagicCommand("azure.connect")}),
                         and an execution target for the job must have been specified using the
-                        [`%azure.target` magic command](https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target).
+                        [`%azure.target` magic command]({KnownUris.ReferenceForMagicCommand("azure.target")}).
 
                         #### Required parameters
 
@@ -49,6 +47,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
                         - `{AzureSubmissionContext.ParameterNameJobName}=<string>`: Friendly name to identify this job. If not specified,
                         the Q# operation or function name will be used as the job name.
+                        - `{AzureSubmissionContext.ParameterNameJobParams}=<JSON key:value pairs>`: Provider-specific job parameters
+                        expressed in JSON as one or more `key`:`value` pairs to be passed to the execution target. Values must be strings.
                         - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
                         specified Q# operation or function.
                         
@@ -79,9 +79,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         @"
                             Submit a Q# operation defined as `operation MyOperation(a : Int, b : Int) : Result`
                             for execution on the active target in the current Azure Quantum workspace,
-                            specifying a custom job name, number of shots, timeout, and polling interval:
+                            specifying a custom job name, number of shots, and provider-specific job parameters:
                             ```
-                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100
+                            In []: %azure.submit MyOperation a=5 b=10 jobName=""My job"" shots=100 jobParams={""Key1"":""Val1"",""Key2"":""Val2""}
                             Out[]: Submitting MyOperation to target provider.qpu...
                                    Job successfully submitted for 100 shots.
                                       Job name: My job
@@ -90,7 +90,8 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                             ```
                         ".Dedent(),
                     },
-                })
+                },
+                logger)
         { }
 
         /// <summary>

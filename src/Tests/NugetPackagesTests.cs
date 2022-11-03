@@ -1,11 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NuGet.Configuration;
@@ -24,7 +20,7 @@ namespace Tests.IQSharp
         /// We use a known-good version to avoid breaking IQ# tests due to changes in Libraries
         /// also, to make sure an end-to-end QDK build does not have circular build dependencies
         /// between Libraries and IQ#.
-        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.12.20070124");
+        public static readonly NuGetVersion QDK_LIBRARIES_VERSION = NuGetVersion.Parse("0.26.230380-beta");
 
         public NugetPackages Init()
         {
@@ -36,7 +32,7 @@ namespace Tests.IQSharp
         {
             var mgr = Init();
 
-            async Task TestOne(string pkg, string version)
+            async Task TestOne(string pkg, string? version)
             {
                 var actual = await mgr.GetLatestVersion(pkg);
 
@@ -70,7 +66,7 @@ namespace Tests.IQSharp
                 $"Microsoft.Quantum.Chemistry::{version}"
             };
 
-            var mgr = new NugetPackages(new MockNugetOptions(versions), null);
+            var mgr = new NugetPackages(new MockNugetOptions(versions), null, eventService: null);
 
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Standard"));
             Assert.AreEqual(nuVersion, await mgr.GetLatestVersion("Microsoft.Quantum.Chemistry"));
@@ -88,7 +84,7 @@ namespace Tests.IQSharp
             using (var context = new SourceCacheContext())
             {
                 await mgr.FindDependencies(pkgId, context);
-                Assert.AreEqual(144, mgr.AvailablePackages.Count());
+                Assert.AreEqual(163, mgr.AvailablePackages.Count());
             }
         }
 
@@ -103,8 +99,8 @@ namespace Tests.IQSharp
                 await mgr.FindDependencies(pkgId, context);
                 var list = mgr.ResolveDependencyGraph(pkgId).ToArray();
 
-                Assert.AreEqual(144, mgr.AvailablePackages.Count());
-                Assert.AreEqual(107, list.Length);
+                Assert.AreEqual(163, mgr.AvailablePackages.Count());
+                Assert.AreEqual(117, list.Length);
             }
         }
 
@@ -119,7 +115,7 @@ namespace Tests.IQSharp
             {
                 var dependencies = await mgr.GetPackageDependencies(pkgId, context);
 
-                Assert.AreEqual(107, dependencies.Count());
+                Assert.AreEqual(117, dependencies.Count());
             }
         }
 
@@ -133,9 +129,9 @@ namespace Tests.IQSharp
                 var pkg = new PackageIdentity(pkgName, pkgVersion);
                 var localPkg = LocalFolderUtility.GetPackageV3(SettingsUtility.GetGlobalPackagesFolder(mgr.NugetSettings), pkg, mgr.Logger);
 
-                if (localPkg != null)
+                if (localPkg != null && Path.GetDirectoryName(localPkg.Path) is {} localPath)
                 {
-                    Directory.Delete(Path.GetDirectoryName(localPkg.Path), true);
+                    Directory.Delete(localPath, true);
                 }
             }
 

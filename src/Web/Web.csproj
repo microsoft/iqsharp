@@ -1,12 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>Microsoft.Quantum.IQSharp.Web</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.Web</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))"
+                      Include="libLLVM.runtime.win-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('OSX'))"
+                      Include="libLLVM.runtime.osx-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' == '18.04'"
+                      Include="libLLVM.runtime.ubuntu.18.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' != '18.04'"
+                      Include="libLLVM.runtime.ubuntu.20.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
   </ItemGroup>

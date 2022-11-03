@@ -1,14 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <NoWarn>1701</NoWarn>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\build\DelaySign.cs" Link="Properties\DelaySign.cs" />
+    <Compile Include="../Common/GlobalUsings.cs" Link="Properties/Common/GlobalUsings.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,12 +24,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3" />
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.2.5" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.5" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +43,21 @@
     <ProjectReference Include="..\MockLibraries\Mock.Standard\Mock.Standard.csproj" />
     <ProjectReference Include="..\Tool\Tool.csproj" />
     <ProjectReference Include="..\Web\Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))"
+                      Include="libLLVM.runtime.win-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('OSX'))"
+                      Include="libLLVM.runtime.osx-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' == '18.04'"
+                      Include="libLLVM.runtime.ubuntu.18.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Linux')) And '$(UbuntuVersion)' != '18.04'"
+                      Include="libLLVM.runtime.ubuntu.20.04-x64" Version="11.0.0"
+                      PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -88,6 +107,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Workspace.QPRGen1\Operations.qs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Workspace.HardwareTarget\Operation.qs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

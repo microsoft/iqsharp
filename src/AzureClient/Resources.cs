@@ -17,7 +17,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             "No execution target has been configured for Azure Quantum job submission.";
 
         public const string AzureClientErrorInvalidTarget =
-            "The specified execution target is not valid for Q# job submission in the current Azure Quantum workspace.";
+            "The specified target is not enabled in this workspace. Please make sure the target name is valid and that the associated provider is added to your workspace. To add a provider to your quantum workspace in the Azure Portal, see https://aka.ms/AQ/Docs/AddProvider";
 
         public const string AzureClientErrorJobNotFound =
             "No job with the given ID was found in the current Azure Quantum workspace.";
@@ -27,6 +27,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public const string AzureClientErrorJobOutputDownloadFailed =
             "Failed to download results for the specified Azure Quantum job.";
+
+        public const string AzureClientErrorJobOutputDisplayFailed =
+            "Failed to parse and display downloaded results for the specified Azure Quantum job.";
 
         public const string AzureClientErrorNoOperationName =
             "No Q# operation name was specified for Azure Quantum job submission.";
@@ -45,5 +48,14 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         public const string AzureClientErrorWorkspaceNotFound =
             "No Azure Quantum workspace was found that matches the specified criteria.";
+
+        public const string AzureClientErrorNoWorkspaceLocation =
+            "The location parameter is missing.";
+
+        public const string AzureClientErrorInvalidWorkspaceLocation =
+            "The location provided is invalid.";
+
+        public const string AzureClientErrorJobFailedOrCancelled =
+            "The specified Azure Quantum job failed or was cancelled.";
     }
 }

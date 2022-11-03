@@ -1,47 +1,48 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+using Azure.Quantum.Jobs.Models;
 using Microsoft.Azure.Quantum;
-using Microsoft.Azure.Quantum.Client.Models;
+using Microsoft.Azure.Quantum.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Jupyter.Core;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.AzureClient;
+using Microsoft.Quantum.IQSharp.Jupyter;
+using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace Tests.IQSharp
 {
     [TestClass]
     public class AzureClientTests
     {
-        private string originalEnvironmentName = string.Empty;
-
-        [TestInitialize]
-        public void SetMockEnvironment()
-        {
-            originalEnvironmentName = Environment.GetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName) ?? string.Empty;
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Mock.ToString());
-        }
-
-        [TestCleanup]
-        public void RestoreEnvironment()
-        {
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, originalEnvironmentName);
-        }
-
         private T ExpectSuccess<T>(Task<ExecutionResult> task)
         {
             var result = task.GetAwaiter().GetResult();
             Assert.AreEqual(ExecuteStatus.Ok, result.Status);
             Assert.IsInstanceOfType(result.Output, typeof(T));
             return (T)result.Output;
+        }
+        private async Task<T> ExpectSuccess<T>(Func<IChannel, Task<ExecutionResult>> task)
+        {
+            var channel = new MockChannel();
+            try
+            {
+                var result = await task(channel);
+                Assert.AreEqual(ExecuteStatus.Ok, result.Status);
+                Assert.IsInstanceOfType(result.Output, typeof(T));
+                return (T)result.Output;
+            }
+            catch
+            {
+                Logger.LogMessage($"Task reported failure. Errors:\n{string.Join("\n", channel.errors)}");
+                throw;
+            }
         }
 
         private void ExpectError(AzureClientError expectedError, Task<ExecutionResult> task)
@@ -55,40 +56,20 @@ namespace Tests.IQSharp
         private Task<ExecutionResult> ConnectToWorkspaceAsync(
             IAzureClient azureClient,
             string workspaceName = "TEST_WORKSPACE_NAME",
-            string locationName = "")
+            string locationName = "TEST_LOCATION")
         {
+            // Reset the global set of jobs and providers everytime we connect to a new workspace:
             MockAzureWorkspace.MockJobIds = new string[] { };
-            MockAzureWorkspace.MockTargetIds = new string[] { };
+            MockAzureWorkspace.MockProviders = new HashSet<string>();
+
             return azureClient.ConnectAsync(
                 new MockChannel(),
                 "TEST_SUBSCRIPTION_ID",
                 "TEST_RESOURCE_GROUP_NAME",
                 workspaceName,
                 "TEST_CONNECTION_STRING",
-                locationName);
-        }
-
-        [TestMethod]
-        public void TestAzureEnvironment()
-        {
-            // Production environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Production.ToString());
-            var environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Production, environment.Type);
-
-            // Dogfood environment cannot be created in test because it requires a service call
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Dogfood.ToString());
-            Assert.ThrowsException<InvalidOperationException>(() => AzureEnvironment.Create("TEST_SUBSCRIPTION_ID"));
-
-            // Canary environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Canary.ToString());
-            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Canary, environment.Type);
-
-            // Mock environment
-            Environment.SetEnvironmentVariable(AzureEnvironment.EnvironmentVariableName, AzureEnvironmentType.Mock.ToString());
-            environment = AzureEnvironment.Create("TEST_SUBSCRIPTION_ID");
-            Assert.AreEqual(AzureEnvironmentType.Mock, environment.Type);
+                locationName,
+                CredentialType.Environment);
         }
 
         [TestMethod]
@@ -103,7 +84,13 @@ namespace Tests.IQSharp
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.IonQ", executionTarget?.PackageName);
 
+            // Check that deprecated targets still work.
             targetId = "HonEYWEll.targetId";
+            executionTarget = AzureExecutionTarget.Create(targetId);
+            Assert.AreEqual(targetId, executionTarget?.TargetId);
+            Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
+
+            targetId = "QuantiNUUm.targetId";
             executionTarget = AzureExecutionTarget.Create(targetId);
             Assert.AreEqual(targetId, executionTarget?.TargetId);
             Assert.AreEqual("Microsoft.Quantum.Providers.Honeywell", executionTarget?.PackageName);
@@ -118,13 +105,13 @@ namespace Tests.IQSharp
         public void TestJobStatus()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // not connected
             ExpectError(AzureClientError.NotConnected, azureClient.GetJobStatusAsync(new MockChannel(), "JOB_ID_1"));
 
             // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // set up the mock workspace
@@ -146,13 +133,29 @@ namespace Tests.IQSharp
             // jobs list with filter
             jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID_1"));
             Assert.AreEqual(1, jobs.Count());
+
+            // jobs list with count
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), string.Empty, 1));
+            Assert.AreEqual(1, jobs.Count());
+
+            // jobs list with invalid filter
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "INVALID_FILTER"));
+            Assert.AreEqual(0, jobs.Count());
+
+            // jobs list with partial filter
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID"));
+            Assert.AreEqual(2, jobs.Count());
+
+            // jobs list with filter and count
+            jobs = ExpectSuccess<IEnumerable<CloudJob>>(azureClient.GetJobListAsync(new MockChannel(), "JOB_ID", 1));
+            Assert.AreEqual(1, jobs.Count());
         }
 
         [TestMethod]
         public void TestManualTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // SetActiveTargetAsync with recognized target ID, but not yet connected
             ExpectError(AzureClientError.NotConnected, azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
@@ -161,48 +164,99 @@ namespace Tests.IQSharp
             ExpectError(AzureClientError.NotConnected, azureClient.GetActiveTargetAsync(new MockChannel()));
 
             // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // set up the mock workspace
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator", "honeywell.qpu", "unrecognized.target" };
+            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
 
             // get connection status to verify list of targets
-            targets = ExpectSuccess<IEnumerable<TargetStatus>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
-            Assert.AreEqual(2, targets.Count()); // only 2 valid quantum execution targets
+            targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(azureClient.GetConnectionStatusAsync(new MockChannel()));
+            // Above, we added 3 valid quantum execution targets, each of which contributes three targets (simulator, mock, and mock-qir),
+            // for a total of nine targets.
+            Assert.That.Enumerable(targets).HasCount(9);
 
             // GetActiveTargetAsync, but no active target set yet
             ExpectError(AzureClientError.NoTarget, azureClient.GetActiveTargetAsync(new MockChannel()));
 
             // SetActiveTargetAsync with target ID not valid for quantum execution
-            ExpectError(AzureClientError.InvalidTarget, azureClient.SetActiveTargetAsync(new MockChannel(), "unrecognized.target"));
+            ExpectError(AzureClientError.InvalidTarget, azureClient.SetActiveTargetAsync(new MockChannel(), "unrecognized.simulator"));
 
             // SetActiveTargetAsync with valid target ID
-            var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
-            Assert.AreEqual("ionq.simulator", target.Id);
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
+            Assert.AreEqual("ionq.simulator", target.TargetId);
 
             // GetActiveTargetAsync
-            target = ExpectSuccess<TargetStatus>(azureClient.GetActiveTargetAsync(new MockChannel()));
-            Assert.AreEqual("ionq.simulator", target.Id);
+            target = ExpectSuccess<TargetStatusInfo>(azureClient.GetActiveTargetAsync(new MockChannel()));
+            Assert.AreEqual("ionq.simulator", target.TargetId);
         }
+
+        [DataTestMethod]
+        [DataRow("--clear", "--clear", ExecuteStatus.Ok)]
+        [DataRow("--clear", "FullComputation", ExecuteStatus.Ok)]
+        [DataRow("honeywell.mock", "FullComputation", ExecuteStatus.Error)]
+        [DataRow("honeywell.mock", "BasicMeasurementFeedback", ExecuteStatus.Ok)]
+        [DataRow("quantinuum.mock", "AdaptiveExecution", ExecuteStatus.Ok)]
+        public async Task TestManualCapabilities(string targetId, string capabilityName, ExecuteStatus expectedResult) =>
+            await Assert.That
+                .UsingEngine(async services =>
+                {
+                    var client = services.GetRequiredService<IAzureClient>();
+                    await client.ConnectAsync(
+                        new MockChannel(),
+                        "TEST_SUBSCRIPTION_ID",
+                        "TEST_RESOURCE_GROUP_NAME",
+                        "TEST_WORKSPACE_NAME",
+                        "TEST_CONNECTION_STRING",
+                        "TEST_LOCATION",
+                        CredentialType.Environment);
+                    Assert.IsNotNull(client.ActiveWorkspace);
+                    ((MockAzureWorkspace)client.ActiveWorkspace)
+                        .AddProviders("ionq", "honeywell", "quantinuum", "unrecognized");
+                })
+                    .Input("%azure.connect " +
+                        "subscription=TEST_SUBSCRIPTION_ID " +
+                        "resourceGroup=TEST_RESOURCE_GROUP_NAME " +
+                        "workspace=TEST_WORKSPACE_NAME " +
+                        "location=TEST_LOCATION " +
+                        "credential=Environment"
+                    )
+                        .ExecutesSuccessfully()
+                    .Then(async input =>
+                    {
+                        // NB: This is not required, but provides some useful
+                        // diagnostics in output logs.
+                        var channel = new MockChannel();
+                        channel.Display((await input.Engine.Execute("%azure.target", channel, default)).Output);
+                        channel.Display((await input.Engine.Execute("%azure.target-capability", channel, default)).Output);
+                        return input;
+                    })
+                    .Input($"%azure.target {targetId}")
+                        .ExecutesSuccessfully()
+                    .Input($"%azure.target-capability {capabilityName}")
+                        .ExecutesWithStatus(expectedResult);
 
         [TestMethod]
         public void TestAllTargets()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect to mock workspace with all providers
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
-            Assert.AreEqual(Enum.GetNames(typeof(AzureProvider)).Length, targets.Count());
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, MockAzureWorkspace.NameWithMockProviders));
+            // 2 targets per provider: mock and simulator.
+
+            // We subtract two due to microsoft not having a mock target. See:
+            // GitHub Issue: https://github.com/microsoft/iqsharp/issues/609
+            Assert.That.Enumerable(targets).HasCount(3 * Enum.GetNames(typeof(AzureProvider)).Length - 2);
 
             // set each target, which will load the corresponding package
             foreach (var target in targets)
             {
-                var returnedTarget = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), target.Id));
-                Assert.AreEqual(target.Id, returnedTarget.Id);
+                var returnedTarget = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), target.TargetId ?? string.Empty));
+                Assert.AreEqual(target.TargetId, returnedTarget.TargetId);
             }
         }
 
@@ -210,14 +264,14 @@ namespace Tests.IQSharp
         public void TestJobSubmission()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
             var submissionContext = new AzureSubmissionContext();
 
             // not yet connected
             ExpectError(AzureClientError.NotConnected, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // no target yet
@@ -226,11 +280,11 @@ namespace Tests.IQSharp
             // add a target
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator" };
+            azureWorkspace?.AddProviders("ionq");
 
             // set the active target
-            var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
-            Assert.AreEqual("ionq.simulator", target.Id);
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
+            Assert.AreEqual("ionq.simulator", target.TargetId);
 
             // no operation name specified
             ExpectError(AzureClientError.NoOperationName, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
@@ -240,7 +294,7 @@ namespace Tests.IQSharp
             ExpectError(AzureClientError.JobSubmissionFailed, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
 
             // specify input parameters and verify that the job was submitted
-            submissionContext.InputParameters = new Dictionary<string, string>() { ["count"] = "3", ["name"] = "testing" };
+            submissionContext.InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\"");
             var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
             var retrievedJob = ExpectSuccess<CloudJob>(azureClient.GetJobStatusAsync(new MockChannel(), job.Id));
             Assert.AreEqual(job.Id, retrievedJob.Id);
@@ -250,26 +304,26 @@ namespace Tests.IQSharp
         public void TestJobExecution()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
             Assert.IsFalse(targets.Any());
 
             // add a target
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.simulator" };
+            azureWorkspace?.AddProviders("ionq");
 
             // set the active target
-            var target = ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
-            Assert.AreEqual("ionq.simulator", target.Id);
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
+            Assert.AreEqual("ionq.simulator", target.TargetId);
 
             // execute the job and verify that the results are retrieved successfully
             var submissionContext = new AzureSubmissionContext()
             {
                 OperationName = "Tests.qss.HelloAgain",
-                InputParameters = new Dictionary<string, string>() { ["count"] = "3", ["name"] = "testing" },
+                InputParameters = AbstractMagic.ParseInputParameters("count=3 name=\"testing\""),
                 ExecutionTimeout = 5,
                 ExecutionPollingInterval = 1,
             };
@@ -278,48 +332,243 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestRuntimeCapabilities()
+        public void TestJobOutputFormats()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = (AzureClient)services.GetRequiredService<IAzureClient>();
+
+            // connect
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.IsFalse(targets.Any());
+
+            // add a target
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            azureWorkspace?.AddProviders("microsoft");
+
+            // set the active target
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.simulator"));
+            Assert.AreEqual("microsoft.simulator", target.TargetId);
+
+            var qirResultsJob = new MockCloudJob(null, OutputFormat.QirResultsV1);
+            var quantumResultsJob = new MockCloudJob(null, OutputFormat.QuantumResultsV1);
+
+            var histogram = ExpectSuccess<Histogram>(azureClient.CreateOutput(quantumResultsJob, new MockChannel(), CancellationToken.None));
+            Assert.IsNotNull(histogram);
+
+            var stringOutput = ExpectSuccess<string>(azureClient.CreateOutput(qirResultsJob, new MockChannel(), CancellationToken.None));
+            Assert.IsNotNull(stringOutput);
+        }
+
+        [TestMethod]
+        public void TestJobExecutionWithArrayInput()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = services.GetRequiredService<IAzureClient>();
+
+            // connect
+            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
+            Assert.IsFalse(targets.Any());
+
+            // add a target
+            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
+            Assert.IsNotNull(azureWorkspace);
+            azureWorkspace?.AddProviders("ionq");
+
+            // set the active target
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.simulator"));
+            Assert.AreEqual("ionq.simulator", target.TargetId);
+
+            // execute the job and verify that the results are retrieved successfully
+            var submissionContext = new AzureSubmissionContext()
+            {
+                OperationName = "Tests.qss.SayHelloWithArray",
+                InputParameters = AbstractMagic.ParseInputParameters("{\"names\": [\"foo\", \"bar\"]}"),
+                ExecutionTimeout = 5,
+                ExecutionPollingInterval = 1,
+            };
+            var histogram = ExpectSuccess<Histogram>(azureClient.ExecuteJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
+            Assert.IsNotNull(histogram);
+        }
+
+        [DataTestMethod]
+        [DataRow("ionq.mock", AzureClientError.InvalidEntryPoint)]
+        [DataRow("honeywell.mock", null)]
+        [DataRow("quantinuum.mock", null)]
+        public async Task TestRuntimeCapabilities(string targetId, AzureClientError? expectedError)
         {
             var services = Startup.CreateServiceProvider("Workspace.QPRGen1");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
+            var azureClient = services.GetRequiredService<IAzureClient>();
+            var packagesService = services.GetRequiredService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
             // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
             var submissionContext = new AzureSubmissionContext() { OperationName = "Tests.qss.CompareMeasurementResult" };
-            ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
+            ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
 
             // Set up workspace with mock providers
             var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
             Assert.IsNotNull(azureWorkspace);
-            MockAzureWorkspace.MockTargetIds = new string[] { "ionq.mock", "honeywell.mock" };
+            azureWorkspace?.AddProviders("ionq", "honeywell", "quantinuum");
 
             // Verify that IonQ job fails to compile (QPRGen0)
-            ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "ionq.mock"));
-            ExpectError(AzureClientError.InvalidEntryPoint, azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
-
-            // Verify that Honeywell job can be successfully submitted (QPRGen1)
-            ExpectSuccess<TargetStatus>(azureClient.SetActiveTargetAsync(new MockChannel(), "honeywell.mock"));
-            var job = ExpectSuccess<CloudJob>(azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None));
-            Assert.IsNotNull(job);
+            ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), targetId));
+            var task = azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None);
+            if (expectedError is {} error)
+            {
+                ExpectError(error, task);
+            }
+            else
+            {
+                var job = ExpectSuccess<CloudJob>(task);
+                Assert.IsNotNull(job);
+            }
         }
 
         [TestMethod]
         public void TestLocations()
         {
             var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetService<IAzureClient>();
-
-            // Default location should be westus
-            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient));
-            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
+            var azureClient = services.GetRequiredService<IAzureClient>();
 
             // Locations with whitespace should be converted correctly
-            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
+            _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "Australia Central 2"));
             Assert.AreEqual("australiacentral2", azureClient.ActiveWorkspace?.Location);
 
-            // Locations with invalid hostname characters should fall back to default westus
-            _ = ExpectSuccess<IEnumerable<TargetStatus>>(ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
-            Assert.AreEqual("westus", azureClient.ActiveWorkspace?.Location);
+            // No location provided should fail
+            ExpectError(AzureClientError.NoWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: ""));
+            ExpectError(AzureClientError.NoWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "   "));
+
+            // Invalid locations should fail
+            ExpectError(AzureClientError.InvalidWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "#"));
+            ExpectError(AzureClientError.InvalidWorkspaceLocation, ConnectToWorkspaceAsync(azureClient, locationName: "/test/"));
+        }
+
+        [TestMethod]
+        public void TestConnectedEvent()
+        {
+            var services = Startup.CreateServiceProvider("Workspace");
+            var azureClient = services.GetRequiredService<IAzureClient>();
+
+            ConnectToWorkspaceEventArgs? lastArgs = null;
+
+            // connect
+            azureClient.ConnectToWorkspace += (object? sender, ConnectToWorkspaceEventArgs e) =>
+            {
+                lastArgs = e;
+            };
+
+            ExpectError(AzureClientError.WorkspaceNotFound, azureClient.ConnectAsync(
+                new MockChannel(),
+                "TEST_SUBSCRIPTION_ID",
+                "TEST_RESOURCE_GROUP_NAME",
+                MockAzureWorkspace.NameForInvalidWorkspace,
+                string.Empty,
+                "TEST_LOCATION",
+                CredentialType.Default));
+
+            Assert.IsNotNull(lastArgs);
+            if (lastArgs != null)
+            {
+                Assert.AreEqual(ExecuteStatus.Error, lastArgs.Status);
+                Assert.AreEqual(AzureClientError.WorkspaceNotFound, lastArgs.Error);
+                Assert.AreEqual(CredentialType.Default, lastArgs.CredentialType);
+                Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
+                Assert.AreEqual(false, lastArgs.UseCustomStorage);
+            }
+
+            lastArgs = null;
+            _ = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient, locationName: "TEST_LOCATION"));
+            Assert.IsNotNull(lastArgs);
+            if (lastArgs != null)
+            {
+                Assert.AreEqual(ExecuteStatus.Ok, lastArgs.Status);
+                Assert.AreEqual(null, lastArgs.Error);
+                Assert.AreEqual(CredentialType.Environment, lastArgs.CredentialType);
+                Assert.AreEqual("TEST_LOCATION", lastArgs.Location);
+                Assert.AreEqual(true, lastArgs.UseCustomStorage);
+            }
+        }
+
+        [TestMethod]
+        public void TestCloudJobExtensions()
+        {
+            // Note about currency formatting:
+            //   It seems that there is a differency of implementations when using the "C" currency
+            //   formatting accross different OSs.
+            //   For example, in my dev box I was getting "R$ 12.00" and in the build agent 
+            //   it was producing "R$12,00" even when explicitly passing the CultureInfo
+            //   So instead of using the expected string literals, we are using 
+            //      .ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD")
+            //   to guarantee consistency in the unit test.
+
+            const string jobId = "myjobid";
+            const string jobName = "myjobname";
+            var jobStatus = JobStatus.Succeeded;
+            const string jobProviderId = "microsoft";
+            const string jobTarget = "microsoft.paralleltempering-parameterfree.cpu";
+            var jobCreationTime =  new DateTimeOffset(2021, 08, 12, 01, 02, 03, TimeSpan.Zero);
+            var jobBeginExecutionTime =  new DateTimeOffset(2021, 08, 12, 02, 02, 03, TimeSpan.Zero);
+            var jobEndExecutionTime =  new DateTimeOffset(2021, 08, 12, 03, 02, 03, TimeSpan.Zero);
+            var costEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            var costEstimateString = 123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD"));
+
+            // Test Cost Estimate formatting
+            var cloudJob = new MockCloudJob();
+            cloudJob.Details.CostEstimate = new MockCostEstimate("USD", new List<UsageEvent>(), 123.45f);
+            Assert.AreEqual(123.45f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("USD")), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("BRL", new List<UsageEvent>(), 12f);
+            Assert.AreEqual(12f.ToString("C", CurrencyHelper.GetCultureInfoForCurrencyCode("BRL")), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("", new List<UsageEvent>(), 12f);
+            Assert.AreEqual(12f.ToString("F2"), cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = new MockCostEstimate("CustomCurrency", new List<UsageEvent>(), 12f);
+            Assert.AreEqual($"CustomCurrency {12f:F2}", cloudJob.GetCostEstimateText());
+            cloudJob.Details.CostEstimate = null;
+            Assert.AreEqual("", cloudJob.GetCostEstimateText());
+
+            // Test CloudJob to Dictionary
+            cloudJob = new MockCloudJob(id: jobId);
+            cloudJob.Details.Name = jobName;
+            cloudJob.Details.Status = jobStatus;
+            cloudJob.Details.ProviderId = jobProviderId;
+            cloudJob.Details.Target = jobTarget;
+            cloudJob.Details.CreationTime = jobCreationTime;
+            cloudJob.Details.BeginExecutionTime = jobBeginExecutionTime;
+            cloudJob.Details.EndExecutionTime = jobEndExecutionTime;
+            cloudJob.Details.CostEstimate = costEstimate;
+            var dictionary = cloudJob.ToDictionary();
+            Assert.AreEqual(jobId, dictionary["id"]);
+            Assert.AreEqual(jobName, dictionary["name"]);
+            Assert.AreEqual(jobStatus.ToString(), dictionary["status"]);
+            Assert.AreEqual(cloudJob.Uri.ToString(), dictionary["uri"]);
+            Assert.AreEqual(jobProviderId, dictionary["provider"]);
+            Assert.AreEqual(jobTarget, dictionary["target"]);
+            Assert.AreEqual(cloudJob.Details.CreationTime, dictionary["creation_time"]);
+            Assert.AreEqual(cloudJob.Details.BeginExecutionTime, dictionary["begin_execution_time"]);
+            Assert.AreEqual(cloudJob.Details.EndExecutionTime, dictionary["end_execution_time"]);
+            Assert.AreEqual(costEstimateString, dictionary["cost_estimate"]);
+            
+            // Test CloudJob to JupyterTable
+            var cloudJobs = new List<CloudJob> { cloudJob, new MockCloudJob() };
+            var table = cloudJobs.ToJupyterTable();
+            var expectedValues = new List<(string, string)>
+            {
+                ("Job Name", jobName),
+                ("Job ID", $"<a href=\"{cloudJob.Uri}\" target=\"_blank\">{jobId}</a>"),
+                ("Job Status", jobStatus.ToString()),
+                ("Target", jobTarget),
+                ("Creation Time", jobCreationTime.ToString()),
+                ("Begin Execution Time", jobBeginExecutionTime.ToString()),
+                ("End Execution Time", jobEndExecutionTime.ToString()),
+                ("Cost Estimate", costEstimateString),
+            };
+            Assert.AreEqual(cloudJobs.Count, table.Rows.Count);
+            Assert.AreEqual(expectedValues.Count, table.Columns.Count);
+            foreach ((var expected, var actual) in Enumerable.Zip(expectedValues, table.Columns))
+            {
+                Assert.AreEqual(expected.Item1, actual.Item1);
+                Assert.AreEqual(expected.Item2, actual.Item2(cloudJob));
+            }
         }
     }
 }

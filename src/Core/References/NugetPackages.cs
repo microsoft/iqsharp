@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         // The framework used to find packages.
-        public static NuGetFramework NETCOREAPP3_1 = NuGetFramework.ParseFolder("netcoreapp3.1");
+        public static NuGetFramework NETSTANDARD2_1 = NuGetFramework.ParseFolder("netstandard2.1");
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
@@ -111,7 +111,8 @@ namespace Microsoft.Quantum.IQSharp
 
         public NugetPackages(
             IOptions<Settings> config,
-            ILogger<NugetPackages> logger
+            ILogger<NugetPackages>? logger,
+            IEventService? eventService
         )
         {
             this.Logger = new NuGetLogger(logger);
@@ -120,6 +121,8 @@ namespace Microsoft.Quantum.IQSharp
             this.DefaultVersions = InitDefaultVersions(config?.Value.DefaultPackageVersions);
             this.Items = Enumerable.Empty<PackageIdentity>();
             this.Assemblies = Enumerable.Empty<AssemblyInfo>();
+
+            eventService?.TriggerServiceInitialized<INugetPackages>(this);
         }
 
         /// <summary>
@@ -179,11 +182,31 @@ namespace Microsoft.Quantum.IQSharp
             }
         }
 
+        public async Task<IEnumerable<SourcePackageDependencyInfo>> Get(string package, Action<string>? statusCallback = null)
+        {
+            statusCallback?.Invoke("finding latest version");
+            var pkgId = await ParsePackageId(package);
+            return await Get(pkgId, statusCallback);
+        }
+
+        public async Task<IEnumerable<SourcePackageDependencyInfo>> Get(PackageIdentity pkgId, Action<string>? statusCallback = null)
+        {
+            using var sourceCacheContext = new SourceCacheContext();
+            statusCallback?.Invoke("getting dependencies");
+            var packages = (await GetPackageDependencies(pkgId, sourceCacheContext));
+            Logger.LogDebug($"Found {packages.Count()} dependencies of {pkgId}.");
+
+            await DownloadPackages(sourceCacheContext, packages, statusCallback);
+
+            return packages;
+        }
+
         /// <summary>
         /// Adds a new package given the name and version as strings.
         /// </summary>
         public async Task<PackageIdentity> Add(string package, Action<string>? statusCallback = null)
         {
+            Logger.LogDebug($"Asked to add NuGet package {package}.");
             if (string.IsNullOrWhiteSpace(package))
             {
                 throw new InvalidOperationException("Please provide a name of a package.");
@@ -202,20 +225,18 @@ namespace Microsoft.Quantum.IQSharp
         public async Task Add(PackageIdentity pkgId, Action<string>? statusCallback = null)
         {
             // Already added:
-            if (Items.Contains(pkgId)) return;
-
-            using (var sourceCacheContext = new SourceCacheContext())
+            if (Items.Contains(pkgId))
             {
-                statusCallback?.Invoke("getting dependencies");
-                var packages = await GetPackageDependencies(pkgId, sourceCacheContext);
+                Logger.LogInformation($"Skipping package {pkgId}, as it has already been added.");
+                return;
+            }
 
-                await DownloadPackages(sourceCacheContext, packages, statusCallback);
+            var packages = await Get(pkgId, statusCallback);
 
-                lock (this)
-                {
-                    this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
-                    this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
-                }
+            lock (this)
+            {
+                this.Items = Items.Union(new PackageIdentity[] { pkgId }).ToArray();
+                this.Assemblies = Assemblies.Union(packages.Reverse().SelectMany(GetAssemblies)).ToArray();
             }
         }
 
@@ -308,7 +329,7 @@ namespace Microsoft.Quantum.IQSharp
                 return files.ToArray();
             }
 
-            var names = CheckOnFramework(NETCOREAPP3_1);
+            var names = CheckOnFramework(NETSTANDARD2_1);
 
             Assembly? LoadAssembly(string path)
             {
@@ -406,7 +427,7 @@ namespace Microsoft.Quantum.IQSharp
                 dependencyBehavior: DependencyBehavior.Lowest,
                 targetIds: new[] { pkgId.Id },
                 requiredPackageIds: Enumerable.Empty<string>(),
-                packagesConfig: Items.Select(p => new PackageReference(p, NETCOREAPP3_1, true)),
+                packagesConfig: Items.Select(p => new PackageReference(p, NETSTANDARD2_1, true)),
                 preferredVersions: Enumerable.Empty<PackageIdentity>(),
                 availablePackages: AvailablePackages,
                 packageSources: Repositories.Select(s => s.PackageSource),
@@ -436,6 +457,7 @@ namespace Microsoft.Quantum.IQSharp
                 the local folders.                
             */
             var uniquePackageIds = AvailablePackages.Select(pkg => pkg.Id).Distinct();
+            var globalPackagesSource = GlobalPackagesSource;
             var uniqueAvailablePackages = uniquePackageIds.SelectMany(
                     pkgId =>
                         LocalPackagesFinder.FindPackagesById(pkgId, Logger, CancellationToken.None)
@@ -451,7 +473,7 @@ namespace Microsoft.Quantum.IQSharp
                                                 .FirstOrDefault()
                                                 ?.Dependencies ?? new List<PackageDependency>(),
                                 listed: true,
-                                source: GlobalPackagesSource))
+                                source: globalPackagesSource))
                 );
             return uniqueAvailablePackages;
         }
@@ -464,7 +486,11 @@ namespace Microsoft.Quantum.IQSharp
             PackageIdentity package,
             SourceCacheContext context)
         {
-            if (AvailablePackages.Contains(package)) return;
+            if (AvailablePackages.Contains(package))
+            {
+                Logger?.LogDebug($"Package {package.Id}::{package.Version} was already available, skipping finding its dependencies.");
+                return;
+            }
 
             foreach (var repo in this.Repositories)
             {
@@ -473,8 +499,10 @@ namespace Microsoft.Quantum.IQSharp
                     var dependencyInfoResource = await repo.GetResourceAsync<DependencyInfoResource>();
                     if (dependencyInfoResource == null) continue;
 
-                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETCOREAPP3_1, context, this.Logger, CancellationToken.None);
+                    var dependencyInfo = await dependencyInfoResource.ResolvePackage(package, NETSTANDARD2_1, context, this.Logger, CancellationToken.None);
                     if (dependencyInfo == null) continue;
+
+                    Logger?.LogDebug($"Found package {package.Id}::{package.Version} in repository {repo.PackageSource.SourceUri}.");
 
                     AvailablePackages.Add(dependencyInfo);
 

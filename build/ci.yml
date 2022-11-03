@@ -1,4 +1,4 @@
-name: $(Build.Major).$(Build.Minor).$(date:yyMM).$(DayOfMonth)$(rev:rr)
+name: $(Build.Major).$(Build.Minor).$(DayOfMonth)$(rev:rr)
 
 trigger: none
 
@@ -8,14 +8,25 @@ pr:
 - features/*
 - release/*
 
+schedules:
+- cron: "0 9 * * Sat"
+  displayName: 'Build for Component Governance'
+  branches:
+    include:
+    - main
+  always: true
+
 variables:
   Build.Major: 0
-  Build.Minor: 14
+  Build.Minor: 18
   Drops.Dir: $(Build.ArtifactStagingDirectory)/drops
   IQSharp.Hosting.Env: 'build-agent-iqsharp'
+  agent.preferPowerShellOnContainers: false
 
 jobs:
 - job: "iqsharp"
+  pool:
+    vmImage: 'ubuntu-latest'
   steps:
   - template: steps.yml
   - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
@@ -36,28 +47,36 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - template: steps-selfcontained.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
-- job: "pack_conda_linux"
-  dependsOn: "pack_selfcontained"
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-  - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
 
 - job: "pack_conda_macos"
   dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
     vmImage: 'macOS-latest'
+  variables:
+    CondaPath: '/usr/local/bin/'
   steps:
   - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
-
-- job: "pack_conda_win"
+  
+- job: "pack_conda_linux"
   dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'ubuntu-latest'
+  container: 'mcr.microsoft.com/quantum/linux-selfcontained:latest'
+  variables:
+    CondaPath: '/miniconda/bin/'
   steps:
   - template: steps-conda.yml
-  condition: ne(variables['Enable.Conda'], 'false')
+  
+- job: "pack_conda_windows"
+  dependsOn: "pack_selfcontained"
+  condition: and(succeeded(), ne(variables['Enable.Conda'], 'false'))
+  pool:
+    vmImage: 'windows-latest'
+  container: 'mcr.microsoft.com/quantum/windows-selfcontained:latest'
+  variables:
+    CondaPath: 'C:\Miniconda3\Scripts'
+  steps:
+  - template: steps-conda.yml

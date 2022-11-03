@@ -6,7 +6,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-
+using System.Threading.Tasks;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.ExecutionPathTracer;
 using Microsoft.Quantum.Simulation.Simulators;
@@ -17,25 +17,25 @@ namespace Tests.IQSharp
     public class ExecutionPathTracerTests
     {
         IEnumerable<OperationInfo>? operations = null;
-        public Workspace InitWorkspace()
+        public async Task<Workspace> InitWorkspace()
         {
             var ws = Startup.Create<Workspace>("Workspace.ExecutionPathTracer");
             ws.Initialization.Wait();
             ws.GlobalReferences.AddPackage("mock.standard").Wait();
-            ws.Reload();
-            Assert.IsFalse(ws.HasErrors);
+            await ws.Reload();
+            Assert.That.Workspace(ws).DoesNotHaveErrors();
             return ws;
         }
 
-        public ExecutionPath GetExecutionPath(string name)
+        public async Task<ExecutionPath> GetExecutionPath(string name)
         {
             if (this.operations == null)
             {
-                var ws = InitWorkspace();
-                this.operations = ws.AssemblyInfo.Operations;
+                var ws = await InitWorkspace();
+                this.operations = ws.AssemblyInfo?.Operations;
             }
 
-            var op = this.operations.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
+            var op = this.operations?.SingleOrDefault(o => o.FullName == $"Tests.ExecutionPathTracer.{name}");
             Assert.IsNotNull(op);
 
             var tracer = new ExecutionPathTracer();
@@ -65,6 +65,19 @@ namespace Tests.IQSharp
                 else PruneNonDeterministicGates(op.Children);
             }
         }
+
+        private Operation NormalizeAdjointness(Operation operation)
+        {
+            var alteredOperation = operation;
+            alteredOperation.IsAdjoint = false;
+            alteredOperation.Children = operation.Children?.Select(NormalizeAdjointness).ToImmutableList();
+            return alteredOperation;
+        }
+
+        // Sets `IsAdjoint` to `false` recursively for all operations in an execution path
+        protected ExecutionPath NormalizeAdjointness(ExecutionPath path) =>
+
+            new ExecutionPath(path.Qubits, path.Operations.Select(NormalizeAdjointness));
 
         // Helper functions for tests
         public Operation ControlledX(int[] controlId, int targetId) =>
@@ -96,9 +109,9 @@ namespace Tests.IQSharp
     public class IntrinsicTests : ExecutionPathTracerTests
     {
         [TestMethod]
-        public void HTest()
+        public async Task HTest()
         {
-            var path = GetExecutionPath("HCirc");
+            var path = await GetExecutionPath("HCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -117,9 +130,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void MTest()
+        public async Task MTest()
         {
-            var path = GetExecutionPath("MCirc");
+            var path = await GetExecutionPath("MCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -139,9 +152,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void CnotTest()
+        public async Task CnotTest()
         {
-            var path = GetExecutionPath("CnotCirc");
+            var path = await GetExecutionPath("CnotCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -157,9 +170,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void CcnotTest()
+        public async Task CcnotTest()
         {
-            var path = GetExecutionPath("CcnotCirc");
+            var path = await GetExecutionPath("CcnotCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -176,9 +189,12 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void SwapTest()
+        public async Task SwapTest()
         {
-            var path = GetExecutionPath("SwapCirc");
+            // NOTE: we only normalize the IsAdjoint property here, because
+            //       self adjoint attribution is not propagated from the Q#
+            //       AST to C# code generation.
+            var path = NormalizeAdjointness(await GetExecutionPath("SwapCirc"));
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0),
@@ -204,9 +220,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void RxTest()
+        public async Task RxTest()
         {
-            var path = GetExecutionPath("RxCirc");
+            var path = await GetExecutionPath("RxCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -236,9 +252,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void AdjointHTest()
+        public async Task AdjointHTest()
         {
-            var path = GetExecutionPath("AdjointHCirc");
+            var path = await GetExecutionPath("AdjointHCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -258,9 +274,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ControlledXTest()
+        public async Task ControlledXTest()
         {
-            var path = GetExecutionPath("ControlledXCirc");
+            var path = await GetExecutionPath("ControlledXCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -275,14 +291,14 @@ namespace Tests.IQSharp
             AssertExecutionPathsEqual(expected, path);
 
             // JSON should be the same as CNOT's
-            var path2 = GetExecutionPath("CnotCirc");
+            var path2 = await GetExecutionPath("CnotCirc");
             AssertExecutionPathsEqual(expected, path2);
         }
 
         [TestMethod]
-        public void ControlledAdjointSTest()
+        public async Task ControlledAdjointSTest()
         {
-            var path = GetExecutionPath("ControlledAdjointSCirc");
+            var path = await GetExecutionPath("ControlledAdjointSCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -309,9 +325,9 @@ namespace Tests.IQSharp
     public class Circuits : ExecutionPathTracerTests
     {
         [TestMethod]
-        public void FooTest()
+        public async Task FooTest()
         {
-            var path = GetExecutionPath("FooCirc");
+            var path = await GetExecutionPath("FooCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0),
@@ -330,9 +346,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ControlledFooTest()
+        public async Task ControlledFooTest()
         {
-            var path = GetExecutionPath("ControlledFooCirc");
+            var path = await GetExecutionPath("ControlledFooCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0),
@@ -354,9 +370,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void UnusedQubitTest()
+        public async Task UnusedQubitTest()
         {
-            var path = GetExecutionPath("UnusedQubitCirc");
+            var path = await GetExecutionPath("UnusedQubitCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -373,9 +389,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void PartialOpTest()
+        public async Task PartialOpTest()
         {
-            var path = GetExecutionPath("PartialOpCirc");
+            var path = await GetExecutionPath("PartialOpCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -414,9 +430,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void EmptyTest()
+        public async Task EmptyTest()
         {
-            var path = GetExecutionPath("EmptyCirc");
+            var path = await GetExecutionPath("EmptyCirc");
             var qubits = new QubitDeclaration[] { };
             var operations = new Operation[] { };
             var expected = new ExecutionPath(qubits, operations);
@@ -424,9 +440,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void NoQubitArgsTest()
+        public async Task NoQubitArgsTest()
         {
-            var path = GetExecutionPath("NoQubitArgsCirc");
+            var path = await GetExecutionPath("NoQubitArgsCirc");
             var qubits = new QubitDeclaration[] { };
             var operations = new Operation[]
             {
@@ -441,9 +457,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void WithQArrayArgsTest()
+        public async Task WithQArrayArgsTest()
         {
-            var path = GetExecutionPath("WithQArrayArgsCirc");
+            var path = await GetExecutionPath("WithQArrayArgsCirc");
             var qubits = new QubitDeclaration[] { };
             var operations = new Operation[]
             {
@@ -458,9 +474,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void OperationArgsTest()
+        public async Task OperationArgsTest()
         {
-            var path = GetExecutionPath("OperationArgsCirc");
+            var path = await GetExecutionPath("OperationArgsCirc");
             var qubits = new QubitDeclaration[] { };
             var operations = new Operation[]
             {
@@ -475,9 +491,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void NestedTest()
+        public async Task NestedTest()
         {
-            var path = GetExecutionPath("NestedCirc");
+            var path = await GetExecutionPath("NestedCirc");
             var qubits = new QubitDeclaration[] {
                 new QubitDeclaration(0, 1),
                 new QubitDeclaration(1, 1),
@@ -511,9 +527,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void BigTest()
+        public async Task BigTest()
         {
-            var path = GetExecutionPath("BigCirc");
+            var path = await GetExecutionPath("BigCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 2),
@@ -583,9 +599,9 @@ namespace Tests.IQSharp
     public class CanonTests : ExecutionPathTracerTests
     {
         [TestMethod]
-        public void ApplyToEachTest()
+        public async Task ApplyToEachTest()
         {
-            var path = GetExecutionPath("ApplyToEachCirc");
+            var path = await GetExecutionPath("ApplyToEachCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -631,10 +647,10 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ApplyToEachDepth2Test()
+        public async Task ApplyToEachDepth2Test()
         {
             // Test depth 1
-            var path = GetExecutionPath("ApplyToEachDepth2Circ");
+            var path = await GetExecutionPath("ApplyToEachDepth2Circ");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -703,9 +719,9 @@ namespace Tests.IQSharp
     public class MeasurementTests : ExecutionPathTracerTests
     {
         [TestMethod]
-        public void MResetXTest()
+        public async Task MResetXTest()
         {
-            var path = GetExecutionPath("MResetXCirc");
+            var path = await GetExecutionPath("MResetXCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -725,9 +741,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void MResetYTest()
+        public async Task MResetYTest()
         {
-            var path = GetExecutionPath("MResetYCirc");
+            var path = await GetExecutionPath("MResetYCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -747,9 +763,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void MResetZTest()
+        public async Task MResetZTest()
         {
-            var path = GetExecutionPath("MResetZCirc");
+            var path = await GetExecutionPath("MResetZCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),
@@ -769,9 +785,9 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void ForEachMeasureCirc()
+        public async Task ForEachMeasureCirc()
         {
-            var path = GetExecutionPath("ForEachMeasureCirc");
+            var path = await GetExecutionPath("ForEachMeasureCirc");
             var qubits = new QubitDeclaration[]
             {
                 new QubitDeclaration(0, 1),

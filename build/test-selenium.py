@@ -58,9 +58,9 @@ def get_sample_operation():
     # closing braces from the string that we enter.
     return '''
         operation DoNothing() : Unit {
-            using (q = Qubit()) {
-                H(q);
-                H(q);
+            use q = Qubit();
+            H(q);
+            H(q);
     '''
     
 def test_kernel_startup():
@@ -83,8 +83,7 @@ def test_kernel_startup():
     nb.browser.execute_script("require('codemirror/addon/mode/simple')")
     nb.browser.execute_script("require('plotting')")
     nb.browser.execute_script("require('telemetry')")
-    nb.browser.execute_script("require('visualizer')")
-    nb.browser.execute_script("require('ExecutionPathVisualizer/index')")
+    nb.browser.execute_script("require('@microsoft/quantum-viz.js')")
     
     nb.browser.quit()
 

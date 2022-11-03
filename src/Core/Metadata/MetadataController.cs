@@ -182,7 +182,9 @@ namespace Microsoft.Quantum.IQSharp
             IEventService eventService
         )
         {
-            UserAgent = clientInformation.Value.UserAgent;
+            UserAgent =
+                clientInformation.Value.UserAgent ?? ""
+                + (string.IsNullOrWhiteSpace(clientInformation.Value.UserAgentExtra) ? "" : $"({clientInformation.Value.UserAgentExtra})");
             HostingEnvironment = clientInformation.Value.HostingEnvironment;
             TelemetryOptOut = clientInformation.Value.IsTelemetryOptOut;
             IQSharpVersion = typeof(MetadataController).Assembly.GetName().Version.ToString();

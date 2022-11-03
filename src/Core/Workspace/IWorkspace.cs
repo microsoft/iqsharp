@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Quantum.IQSharp.Common;
+#nullable enable
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -63,12 +60,12 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// This event is triggered whenever the workspace is reloaded.
         /// </summary>
-        event EventHandler<ReloadedEventArgs> Reloaded;
+        event EventHandler<ReloadedEventArgs>? Reloaded;
 
         /// <summary>
         /// This event is triggered whenever a project is loaded into the workspace.
         /// </summary>
-        event EventHandler<ProjectLoadedEventArgs> ProjectLoaded;
+        event EventHandler<ProjectLoadedEventArgs>? ProjectLoaded;
 
         /// <summary>
         /// The root folder.
@@ -81,6 +78,12 @@ namespace Microsoft.Quantum.IQSharp
         /// project in the enumeration should be built first.
         /// </summary>
         public IEnumerable<Project> Projects { get; set; }
+
+        /// <summary>
+        ///     A project describing the workspace folder itself, whether implied
+        ///     or loaded from a project file marked for automatic loading.
+        /// </summary>
+        public Project WorkspaceProject { get; }
 
         /// <summary>
         /// Attempt to add a Q# project reference to this workspace. This does not trigger
@@ -117,7 +120,7 @@ namespace Microsoft.Quantum.IQSharp
         /// To get all assembly information, use the <see cref="Assemblies"/>
         /// property.
         /// </remarks>
-        AssemblyInfo AssemblyInfo { get; }
+        AssemblyInfo? AssemblyInfo { get; }
 
         /// <summary>
         /// Information of all assemblies built from this Workspace.
@@ -127,7 +130,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// The compilation errors, if any.
         /// </summary>
-        IEnumerable<string> ErrorMessages { get; }
+        IEnumerable<string>? ErrorMessages { get; }
 
         /// <summary>
         /// If any of the files in the workspace had any compilation errors.
@@ -137,7 +140,7 @@ namespace Microsoft.Quantum.IQSharp
         /// <summary>
         /// Triggers the workspace to be reloaded from disk.
         /// </summary>
-        void Reload(Action<string> statusCallback = null);
+        Task Reload(Action<string>? statusCallback = null);
 
         /// <summary>
         /// Task that will be completed when the initial workspace

@@ -1,15 +1,12 @@
 ﻿using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Quantum.IQSharp;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.IQSharp.Web.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Tests.IQSharp
 {
@@ -18,7 +15,7 @@ namespace Tests.IQSharp
     {
         private string autoLoadPackagesEnvVarName = "IQSHARP_AUTO_LOAD_PACKAGES";
         private string originalAutoLoadPackages = string.Empty;
-        
+
         [TestInitialize]
         public void SetTestEnvironment()
         {
@@ -38,7 +35,8 @@ namespace Tests.IQSharp
         [TestMethod]
         public async Task CompileAndSimulateViaApi()
         {
-            string[] args = new string[]{ "server" };
+            var vsi = Microsoft.Quantum.IQSharp.Startup.VisualStudioInstance;
+            var args = new string[] { "server" };
 
             // Set the same configuration that Program.cs is using.
             Program.Configuration = new ConfigurationBuilder()
@@ -74,7 +72,7 @@ namespace Tests.IQSharp
                 // TODO: Use constant strings for these http requests. Port and paths.
 
                 // Compile a snippet with the server and get back a list of now executable operations.
-                var compileResult = await "http://localhost:8888/api"
+                var compileResult = await "http://localhost:8008/api"
                     .AppendPathSegment("Snippets")
                     .AppendPathSegment("compile")
                     .PostJsonAsync(new CompileSnippetModel
@@ -87,7 +85,7 @@ namespace Tests.IQSharp
                 Assert.AreEqual("HelloQ", compileResult.Result.First());
 
                 // Now simulate the operation and check the output is as expected.
-                var simulateResult = await "http://localhost:8888/api"
+                var simulateResult = await "http://localhost:8008/api"
                     .AppendPathSegment("Snippets")
                     .AppendPathSegment("HelloQ")
                     .AppendPathSegment("simulate")

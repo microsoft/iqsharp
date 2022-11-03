@@ -8,6 +8,7 @@ using Microsoft.Quantum.IQSharp.Kernel;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using System;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Build.Locator;
 
 namespace Microsoft.Quantum.IQSharp
 {
@@ -17,6 +18,24 @@ namespace Microsoft.Quantum.IQSharp
     public class Startup
     {
         private readonly IConfiguration Configuration;
+
+        // We need to make sure that MSBuild is located exactly once; either
+        // failing to call `.RegisterDefaults` or calling it twice will cause
+        // an exception.
+        private static readonly Lazy<VisualStudioInstance?> visualStudioInstance = new(() =>
+        {
+            try
+            {
+                return MSBuildLocator.RegisterDefaults();
+            }
+            catch
+            {
+                return null;
+            }
+        });
+
+        public static VisualStudioInstance? VisualStudioInstance => visualStudioInstance.Value;
+
         public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
@@ -25,10 +44,23 @@ namespace Microsoft.Quantum.IQSharp
         // This method gets called by the runtime. Use this method to add services to the container.
         public virtual void ConfigureServices(IServiceCollection services)
         {
+            // NB: MSBuildLocator must be used as early as possible, so we
+            //     run it as services are being configured.
+            if (VisualStudioInstance is {} vsi)
+            {
+                services.AddSingleton<CompilerService.MSBuildMetadata>(new CompilerService.MSBuildMetadata(
+                    Version: vsi.Version,
+                    RootPath: vsi.VisualStudioRootPath,
+                    Name: vsi.Name,
+                    Path: vsi.MSBuildPath
+                ));
+            }
+
             services.Configure<Workspace.Settings>(Configuration);
             services.Configure<NugetPackages.Settings>(Configuration);
             services.Configure<References.Settings>(Configuration);
             services.Configure<CompilerService.Settings>(Configuration);
+            services.Configure<IQSharpEngine.Settings>(Configuration);
             services.Configure<ClientInformation>(Configuration);
 
             services.AddSingleton(typeof(ITelemetryService), GetTelemetryServiceType());

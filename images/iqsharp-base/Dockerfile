@@ -1,10 +1,15 @@
 # The same image used by mybinder.org
-FROM python:3.7-slim-buster
+FROM python:3.9-slim-bullseye
 
-# install the notebook package
-# force pyzmq==19.0.2 due to incompatibility of IQ# with pyzmq>=20.0.0
-RUN pip install --no-cache --upgrade pip && \
-    pip install --no-cache notebook pyzmq==19.0.2
+# Update pip.
+RUN pip install --no-cache --upgrade pip
+# Install Jupyter
+RUN pip install \
+        ipython==8.4.0 \
+        jupyter==1.0.0 \
+        notebook==6.4.12 \
+        # to workaround: https://github.com/zeromq/pyzmq/issues/1764
+        pyzmq==23.2.1
 
 # Install APT prerequisites.
 RUN apt-get update && \
@@ -20,7 +25,9 @@ RUN apt-get update && \
                        # Dependencies for the Quantum Development Kit.
                        # Note that we install them here to minimize the number
                        # of layers.
-                       libgomp1 \
+                       libomp5-11 \
+                       # Dependency for QIR
+                       libc6 \
                        # Not strictly needed, but Git is useful for several
                        # interactive scenarios, so we finish by adding it as
                        # well. Thankfully, Git is a small dependency (~3 MiB)
@@ -40,6 +47,7 @@ ENV NUGET_XMLDOC_MODE=skip \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
 
 # Now that we have all the dependencies in place, we install the .NET Core SDK itself.
+# Notice that we're installing the SDK for both .NET Core 3.1 as well as .NET 6.0 for compatibility.
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
     mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
     wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
@@ -47,7 +55,8 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-3.1 && \
+    apt-get -y install dotnet-sdk-3.1=3.1.416-1 dotnet-sdk-6.0 && \
+    apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # Install prerequisites needed for integration with Live Share and VS Online.
@@ -95,7 +104,9 @@ RUN mkdir -p ${HOME}/.nuget/NuGet && \
     cat ${HOME}/.nuget/NuGet/NuGet.Config
 # Add Python and NuGet packages from the build context
 ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
-ADD wheels/*.whl ${LOCAL_PACKAGES}/wheels/
+# When adding wheels, use *-any.whl to make sure that platform-specific wheels
+# are not incorrectly added to the Docker image.
+ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
 # Give the notebook user ownership over the packages and config copied from
 # the context.
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
@@ -112,6 +123,10 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Get the az quantum extension
 RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
 
+# Assign the .azure folder back to the notebook user so that they
+# can run az commands.
+RUN chown -R ${USER}:${USER} /home/${USER}/.azure
+
 # Switch to the notebook user to finish the installation.
 USER ${USER}
 # Make sure that .NET Core is on the notebook users' path.
@@ -120,7 +135,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.14.2011120240" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.26.230380-beta" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
@@ -129,9 +144,10 @@ RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 # Ensure that the necessary NuGet packages are cached.
 ARG EXTRA_NUGET_PACKAGES=
 RUN echo "Adding standard packages..." && \
-    python -c "import qsharp;" && \
+    dotnet new classlib -n "foo" -lang Q# && \
     echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
     for p in ${EXTRA_NUGET_PACKAGES}; do \
-        python -c "import qsharp; qsharp.packages.add('$p')" && \
+        dotnet add foo package $p --version ${IQSHARP_VERSION} && \
         echo "Added package: $p"; \
-    done
+    done && \
+    rm -Rdf foo

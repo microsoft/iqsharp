@@ -1,16 +1,15 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
+#nullable enable
+
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Jupyter.Core;
+using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.Common;
 using Microsoft.Quantum.QsCompiler.Serialization;
+using Microsoft.Quantum.Simulation.Simulators;
 // NB: The name `Documentation` can be ambiguous in this context,
 //     since we rely both on Microsoft.Quantum.Documentation and on
 //     the name from Jupyter Core.
@@ -23,16 +22,20 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
     /// </summary>
     public abstract class AbstractMagic : CancellableMagicSymbol
     {
+        private ILogger? Logger;
+
         /// <summary>
         ///     Constructs a new magic symbol given its name and documentation.
         /// </summary>
-        public AbstractMagic(string keyword, JupyterDocumentation docs)
+        public AbstractMagic(string keyword, JupyterDocumentation docs, ILogger? logger = null)
         {
             this.Name = $"%{keyword}";
             this.Documentation = docs;
 
             this.Kind = SymbolKind.Magic;
             this.ExecuteCancellable = this.SafeExecute(this.RunCancellable);
+
+            this.Logger = logger;
         }
 
         /// <summary>
@@ -52,6 +55,12 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     {
                         return await Task.Run(() => magic(input, channel, cancellationToken));
                     }
+                    catch (TaskCanceledException tce)
+                    {
+                        // Rethrow so that the jupyter-core library can
+                        // properly handle the task cancellation.
+                        throw tce;
+                    }
                     catch (InvalidWorkspaceException ws)
                     {
                         foreach (var m in ws.Errors) channel.Stderr(m);
@@ -59,11 +68,32 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     }
                     catch (AggregateException agg)
                     {
-                        foreach (var e in agg.InnerExceptions) channel.Stderr(e?.Message);
+                        Logger?.LogWarning(agg, "Unhandled aggregate exception in magic command {Magic}, printing as stderr.", this.Name);
+                        foreach (var e in agg.InnerExceptions)
+                        {
+                            if (e?.Message is {} msg)
+                            {
+                                channel.Stderr(msg);
+                            }
+                        };
+                        return ExecuteStatus.Error.ToExecutionResult();
+                    }
+                    catch (SimulationException e)
+                    {
+                        Logger?.LogWarning(e, "Unhandled native simulation exception in magic command {Magic}, printing as stderr.\nNative stacktrace: {Stacktrace}", this.Name, e.NativeBacktrace);
+                        channel.Stderr(e.Message);
+                        // When compiling in debug configuration, print out Rust-language backtraces as well.
+                        #if DEBUG
+                        if (e.NativeBacktrace is not null)
+                        {
+                            channel.Stderr(e.NativeBacktrace);
+                        }
+                        #endif
                         return ExecuteStatus.Error.ToExecutionResult();
                     }
                     catch (Exception e)
                     {
+                        Logger?.LogWarning(e, "Unhandled exception in magic command {Magic}, printing as stderr.", this.Name);
                         channel.Stderr(e.Message);
                         return ExecuteStatus.Error.ToExecutionResult();
                     }

@@ -43,6 +43,10 @@ function Test-One {
             --no-build `
             --logger trx `
             --filter $_ `
+            <# Enable additional output from the test logger, but
+               without also turning on lots of additional noise from msbuild.
+            #> `
+            --logger:"console;verbosity=detailed" `
             /property:DefineConstants=$Env:ASSEMBLY_CONSTANTS `
             /property:InformationalVersion=$Env:SEMVER_VERSION `
             /property:Version=$Env:ASSEMBLY_VERSION
@@ -64,7 +68,7 @@ function Test-Python {
 
     Write-Host "##[info]Installing IQ# kernel"
     Push-Location (Join-Path $PSScriptRoot '../src/Tool')
-        dotnet run -c $Env:BUILD_CONFIGURATION --no-build -- install --user
+        dotnet run -c $Env:BUILD_CONFIGURATION --no-build -- install --user --log-level Debug
     Pop-Location
 
     Write-Host "##[info]Testing Python inside $testFolder"    
@@ -113,15 +117,13 @@ function Test-JavaScript {
     }
 }
 
-Test-One '../iqsharp.sln' @("AzureClient", "IQSharpEngine", "Workspace")
+Test-One (Join-Path $PSScriptRoot '../iqsharp.sln') @("AzureClient", "IQSharpEngine", "Workspace")
 
 if ($Env:ENABLE_PYTHON -eq "false") {
     Write-Host "##vso[task.logissue type=warning;]Skipping Testing Python packages. Env:ENABLE_PYTHON was set to 'false'."
 } else {
     Test-Python '../src/Python/qsharp-core' '../src/Python/qsharp-core/qsharp/tests'
 }
-
-Test-JavaScript '../src/Kernel'
 
 if (-not $all_ok) 
 {
