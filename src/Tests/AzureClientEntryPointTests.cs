@@ -280,63 +280,6 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task InvalidArrayParameters()
-        {
-            var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidArrayParameters });
-
-            var entryPoint = await entryPointGenerator.Generate("UseArrayType", null);
-            Assert.IsNotNull(entryPoint);
-            await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>()),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string> { ["myArray"] = "\"[2, 4, 8]\"" }
-                }));
-
-            entryPoint = await entryPointGenerator.Generate("UseArrayTypeFirst", null);
-            Assert.IsNotNull(entryPoint);
-            await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>()),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string>
-                    {
-                        ["myArray"] = "\"[2, 4, 8]\"",
-                        ["myInt"] = "\"2\"",
-                        ["myBool"] = "\"true\""
-                    }
-                }));
-
-            entryPoint = await entryPointGenerator.Generate("UseArrayTypeMiddle", null);
-            Assert.IsNotNull(entryPoint);
-            await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>()),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string>
-                    {
-                        ["myInt"] = "\"2\"",
-                        ["myArray"] = "\"[2, 4, 8]\"",
-                        ["myBool"] = "\"true\""
-                    }
-                }));
-
-            entryPoint = await entryPointGenerator.Generate("UseArrayTypeLast", null);
-            Assert.IsNotNull(entryPoint);
-            await Assert.ThrowsExceptionAsync<ArgumentException>(() => entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>()),
-                new AzureSubmissionContext()
-                {
-                    InputParameters = new Dictionary<string, string>
-                    {
-                        ["myInt"] = "\"2\"",
-                        ["myBool"] = "\"true\"",
-                        ["myArray"] = "\"[2, 4, 8]\""
-                    }
-                }));
-        }
-
-        [TestMethod]
         public async Task InvalidRangeParameters()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.InvalidRangeParameters });

@@ -15,9 +15,6 @@ internal enum AzureProvider
     Microsoft,
     IonQ,
     Quantinuum,
-    // NB: This provider name is deprecated, but may exist in older
-    //     workspaces and should still be supported.
-    Honeywell,
     QCI,
     Rigetti,
     Mock
@@ -49,7 +46,6 @@ public record AzureExecutionTarget
     {
         AzureProvider.IonQ       => "Microsoft.Quantum.Providers.IonQ",
         AzureProvider.Quantinuum => "Microsoft.Quantum.Providers.Honeywell",
-        AzureProvider.Honeywell  => "Microsoft.Quantum.Providers.Honeywell",
         AzureProvider.QCI        => "Microsoft.Quantum.Providers.QCI",
         AzureProvider.Microsoft  => "Microsoft.Quantum.Providers.Core",
         _                        => $"Microsoft.Quantum.Providers.{GetProvider(TargetId)}"
@@ -64,7 +60,6 @@ public record AzureExecutionTarget
     {
         AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
         AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,
-        AzureProvider.Honeywell  => TargetCapabilityModule.BasicMeasurementFeedback,
         AzureProvider.QCI        => TargetCapabilityModule.AdaptiveExecution,
         AzureProvider.Rigetti    => TargetCapabilityModule.BasicExecution,
         AzureProvider.Microsoft  => TargetCapabilityModule.FullComputation,
@@ -80,7 +75,7 @@ public record AzureExecutionTarget
         //     but at the level of providers rather than at the level of resolved processors.
         (GetProvider(TargetId) switch
         {
-            AzureProvider.Quantinuum or AzureProvider.Honeywell => new[]
+            AzureProvider.Quantinuum => new[]
             {
                 TargetCapabilityModule.AdaptiveExecution,
                 TargetCapabilityModule.BasicMeasurementFeedback,
