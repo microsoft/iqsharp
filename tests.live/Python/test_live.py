@@ -183,10 +183,10 @@ class TestQuantinuum:
         else:
             job = qsharp.azure.status()
             assert isinstance(job, qsharp.azure.AzureJob)
-            if job.status == "Succeeded":
-                retrieved_histogram = qsharp.azure.output()
-                assert isinstance(retrieved_histogram, dict)
-                assert '0' in retrieved_histogram
+            assert job.status == "Succeeded"
+            retrieved_histogram = qsharp.azure.output()
+            assert isinstance(retrieved_histogram, dict)
+            assert '0' in retrieved_histogram
 
 @pytest.fixture(scope="session")
 def estimator_project():
