@@ -119,16 +119,16 @@ namespace Microsoft.Quantum.IQSharp
 
             if (config?.GetValue<string>("HostingEnvironment") == "build-agent")
             {
-                RegisterFoldersForTelemetry(Path.GetFileName(Directory.GetCurrentDirectory()));
+                RegisterFoldersForTelemetry(Directory.GetCurrentDirectory());
                 LogManager.UploadNow();
             }
         }
 
         private void RegisterFoldersForTelemetry(string folder, string rootFolder = null)
         {
-            rootFolder ??= Directory.GetParent(folder).FullName;
             if (!string.IsNullOrEmpty(folder))
             {
+                rootFolder ??= Directory.GetParent(folder).FullName;
                 var evt = new EventProperties() { Name = "WellKnownFolder".WithTelemetryNamespace() };
                 evt.SetProperty("FolderName".WithTelemetryNamespace(), Path.GetRelativePath(rootFolder, folder), PiiKind.None);
                 evt.SetProperty("FolderNameHash".WithTelemetryNamespace(), Path.GetFileName(folder), PiiKind.GenericData);
