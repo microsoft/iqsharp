@@ -125,12 +125,12 @@ class QSharpCallable(object):
         """
         return qsharp.client.simulate_noise(self, **kwargs)
 
-    def as_qir(self) -> bytes:
+    def as_qir(self, **kwargs) -> bytes:
         """
         Returns the QIR representation of the callable,
         assuming the callable is an entry point.
         """
-        data = qsharp.client.compile_to_qir(self)
+        data = qsharp.client.compile_to_qir(self, **kwargs)
         return data['Text']
 
 class QSharpModule(ModuleType):
