@@ -7,8 +7,8 @@
     "devDependencies": {
         "@types/chart.js": "2.8.0",
         "@types/codemirror": "0.0.56",
-        "canvas": "^2.8.0",
-        "typescript": "^3.9.6",
-        "tar": "^6.1.9"
+        "canvas": "^2.11.0",
+        "tar": "^6.1.9",
+        "typescript": "^3.9.6"
     }
 }
