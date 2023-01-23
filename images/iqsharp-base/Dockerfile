@@ -3,13 +3,12 @@ FROM python:3.9-slim-bullseye
 
 # Update pip.
 RUN pip install --no-cache --upgrade pip
+
 # Install Jupyter
-RUN pip install \
-        ipython==8.4.0 \
+RUN pip install --no-cache \
+        ipython==8.8.0 \
         jupyter==1.0.0 \
-        notebook==6.4.12 \
-        # to workaround: https://github.com/zeromq/pyzmq/issues/1764
-        pyzmq==23.2.1
+        notebook==6.5.2 \
 
 # Install APT prerequisites.
 RUN apt-get update && \
@@ -47,7 +46,6 @@ ENV NUGET_XMLDOC_MODE=skip \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
 
 # Now that we have all the dependencies in place, we install the .NET Core SDK itself.
-# Notice that we're installing the SDK for both .NET Core 3.1 as well as .NET 6.0 for compatibility.
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
     mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
     wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
@@ -55,7 +53,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get -y update && \
-    apt-get -y install dotnet-sdk-3.1=3.1.416-1 dotnet-sdk-6.0 && \
+    apt-get -y install dotnet-sdk-6.0 && \
     apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
@@ -107,25 +105,24 @@ ADD nugets/*.nupkg ${LOCAL_PACKAGES}/nugets/
 # When adding wheels, use *-any.whl to make sure that platform-specific wheels
 # are not incorrectly added to the Docker image.
 ADD wheels/*-any.whl ${LOCAL_PACKAGES}/wheels/
+
 # Give the notebook user ownership over the packages and config copied from
 # the context.
 RUN chown ${USER} -R ${LOCAL_PACKAGES}/ && \
-    chown ${USER} -R ${LOCAL_PACKAGES}/ ${HOME}/.nuget
-
-# Install all wheels from the build context.
-RUN pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
+    chown ${USER} -R ${LOCAL_PACKAGES}/ ${HOME}/.nuget && \
+    # Install all wheels from the build context.
+    pip install $(ls ${LOCAL_PACKAGES}/wheels/*.whl)
 
 # Get the Azure CLI tool
-ENV AZURE_CLI_VERSION "2.14.2"
+ENV AZURE_CLI_VERSION "2.44.1"
 
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
-# Get the az quantum extension
-RUN az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes
-
-# Assign the .azure folder back to the notebook user so that they
-# can run az commands.
-RUN chown -R ${USER}:${USER} /home/${USER}/.azure
+# Clean apt-cache after install, since Azure CLI install script does an apt-get update underneath, and does not clean cache afterwards
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash; apt-get clean && rm -rf /var/lib/apt/lists/ && \
+    # Get the az quantum extension
+    az extension add --source https://msquantumpublic.blob.core.windows.net/az-quantum-cli/quantum-latest-py3-none-any.whl --yes && \
+    # Assign the .azure folder back to the notebook user so that they
+    # can run az commands.
+    chown -R ${USER}:${USER} /home/${USER}/.azure
 
 # Switch to the notebook user to finish the installation.
 USER ${USER}
@@ -139,8 +136,9 @@ RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.27.244707" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \
-           --version ${IQSHARP_VERSION}
-RUN dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
+           --version ${IQSHARP_VERSION} && \
+    dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
+
 # Ensure that the necessary NuGet packages are cached.
 ARG EXTRA_NUGET_PACKAGES=
 RUN echo "Adding standard packages..." && \
