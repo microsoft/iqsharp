@@ -386,7 +386,7 @@ namespace Tests.IQSharp
         }
 
         [DataTestMethod]
-        [DataRow("ionq.mock", AzureClientError.InvalidEntryPoint)]
+        [DataRow("ionq.mock", null)]
         [DataRow("quantinuum.mock", null)]
         public async Task TestRuntimeCapabilities(string targetId, AzureClientError? expectedError)
         {
@@ -395,7 +395,7 @@ namespace Tests.IQSharp
             var packagesService = services.GetRequiredService<INugetPackages>();
 
             // Choose an operation with measurement result comparison, which should
-            // fail to compile on QPRGen0 targets but succeed on QPRGen1 targets
+            // generate warnings on QPRGen0 targets but succeed on QPRGen1 targets
             var submissionContext = new AzureSubmissionContext() { OperationName = "Tests.qss.CompareMeasurementResult" };
             ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
 
@@ -404,7 +404,7 @@ namespace Tests.IQSharp
             Assert.IsNotNull(azureWorkspace);
             azureWorkspace?.AddProviders("ionq", "quantinuum");
 
-            // Verify that IonQ job fails to compile (QPRGen0)
+            // Verify that IonQ job should generate warnings (QPRGen0)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), targetId));
             var task = azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None);
             if (expectedError is {} error)
