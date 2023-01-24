@@ -8,7 +8,7 @@ RUN pip install --no-cache --upgrade pip
 RUN pip install --no-cache \
         ipython==8.8.0 \
         jupyter==1.0.0 \
-        notebook==6.5.2 \
+        notebook==6.5.2
 
 # Install APT prerequisites.
 RUN apt-get update && \
