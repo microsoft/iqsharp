@@ -404,7 +404,7 @@ namespace Tests.IQSharp
             Assert.IsNotNull(azureWorkspace);
             azureWorkspace?.AddProviders("ionq", "quantinuum");
 
-            // Verify that IonQ job should generate warnings (QPRGen0)
+            // Verify that IonQ job does not generate errors (QPRGen0)
             ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), targetId));
             var task = azureClient.SubmitJobAsync(new MockChannel(), submissionContext, CancellationToken.None);
             if (expectedError is {} error)
