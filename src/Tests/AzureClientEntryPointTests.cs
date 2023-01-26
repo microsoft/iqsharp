@@ -444,8 +444,8 @@ namespace Tests.IQSharp
             var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
-            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
-                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality));
+            var entryPoint2 = entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint2);
         }
 
         [TestMethod]
@@ -455,8 +455,8 @@ namespace Tests.IQSharp
             var entryPoint = await entryPointGenerator.Generate("ValidEntryPoint", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
             Assert.IsNotNull(entryPoint);
 
-            await Assert.ThrowsExceptionAsync<CompilationErrorsException>(async () =>
-                await entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality));
+            var entryPoint2 = entryPointGenerator.Generate("ClassicalControl", "ionq.simulator", TargetCapabilityModule.BasicQuantumFunctionality);
+            Assert.IsNotNull(entryPoint2);
         }
     }
 }

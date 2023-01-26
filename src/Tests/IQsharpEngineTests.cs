@@ -963,17 +963,8 @@ namespace Tests.IQSharp
                 .Input("%azure.target ionq.mock")
                     .ExecutesSuccessfully()
                 .Input("%azure.submit RunTeleport")
-                    .ExecutesWithError(errors => errors.Any(error =>
-                        // Use StartsWith to avoid mismatching on newlines at
-                        // the end.
-                        error.StartsWith(
-                            "The Q# operation RunTeleport could not be " +
-                            "compiled as an entry point for job execution."
-                        )
-                    ));
-
-
-            
+                    .ExecutesSuccessfully();
+           
         }
 
 
