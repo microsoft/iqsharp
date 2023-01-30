@@ -133,6 +133,37 @@ class QSharpCallable(object):
         data = qsharp.client.compile_to_qir(self, **kwargs)
         return data['Text']
 
+    def _repr_qir_(self, metadata: Optional[Dict[str, str]] = None) -> bytes:
+        """
+        Returns the QIR representation of the callable,
+        assuming the callable is an entry point.
+
+        :param Optional[Dict[str, str]] metadata: dictionary containing metadata for QIR generation
+        The following key-value is optional, but recommended:
+        - "azure.target_id": "provider_id.target_name" 
+          The intended execution target for the compiled entrypoint.
+          Defaults to the active Azure Quantum target (which can be set with `%azure.target`).                
+          Otherwise, defaults to a generic target, which may not work when running on a specific target.
+
+        The following key-value is optional, but recommended:
+        - "azure.target_capability": "provider_id.target_name" 
+          The capability of the intended execution target.
+          If `azure.target_id` specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
+          Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
+        
+        :rtype: bytes
+        """
+        metadata = metadata if metadata else {}
+        target = metadata.pop("azure.target_id", None)
+        target_capability = metadata.pop("azure.target_capability", None)
+        qir_bitcodeBase64 = self.as_qir(output_format="BitcodeBase64",
+                                        target=target,
+                                        target_capability=target_capability)
+        import base64
+        qir_bitcode = base64.b64decode(qir_bitcodeBase64)
+        return qir_bitcode
+
+
 class QSharpModule(ModuleType):
     _qs_name : str
 
