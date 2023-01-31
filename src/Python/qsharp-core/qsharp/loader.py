@@ -133,7 +133,7 @@ class QSharpCallable(object):
         data = qsharp.client.compile_to_qir(self, **kwargs)
         return data['Text']
 
-    def _repr_qir_(self, metadata: Optional[Dict[str, str]] = None) -> bytes:
+    def _repr_qir_(self, metadata: Optional[Dict[str, str]] = None, **kwargs: Any) -> bytes:
         """
         Returns the QIR representation of the callable,
         assuming the callable is an entry point.
@@ -150,12 +150,17 @@ class QSharpCallable(object):
           The capability of the intended execution target.
           If `azure.target_id` specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
           Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
-        
+
+        This implementation also accepts the following kwargs parameters:
+        - `target`: used when metadata["azure.target_id"] is not passed
+        - `target_capability`: used when metadata["azure.target_capability"] is not passed
+
         :rtype: bytes
         """
         metadata = metadata if metadata else {}
-        target = metadata.pop("azure.target_id", None)
-        target_capability = metadata.pop("azure.target_capability", None)
+        target = metadata.pop("azure.target_id", kwargs.pop("target", None))
+        target_capability = metadata.pop("azure.target_capability", kwargs.pop("target_capability", None))
+        # We need to use the Base64 encoding to be able to transfer the bitcode thru the Jupyter protocol
         qir_bitcodeBase64 = self.as_qir(output_format="BitcodeBase64",
                                         target=target,
                                         target_capability=target_capability)
