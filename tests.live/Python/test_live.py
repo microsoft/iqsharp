@@ -223,7 +223,7 @@ class TestEstimator:
         assert isinstance(t, qsharp.azure.AzureTarget)
         assert t.id == "microsoft.estimator"
 
-        job = qsharp.azure.submit(EstimateMultiplication)
+        job = qsharp.azure.submit(EstimateMultiplication, bitwidth=4)
         assert isinstance(job, qsharp.azure.AzureJob)
         assert not job.id == ''
         print("Submitted job: ", job.id)

@@ -4,9 +4,7 @@
 namespace Microsoft.Quantum.Tests {
     open Microsoft.Quantum.Arithmetic;
     
-    operation EstimateMultiplication() : Unit {
-        let bitwidth = 4;
-
+    operation EstimateMultiplication(bitwidth : Int) : Unit {
         use factor1 = Qubit[bitwidth];
         use factor2 = Qubit[bitwidth];
         use product = Qubit[2 * bitwidth];
