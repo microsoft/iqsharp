@@ -266,7 +266,7 @@ def test_projects(tmp_path):
     temp_project_path.write_text(f'''
         <Project Sdk="Microsoft.Quantum.Sdk/0.12.20072031">
             <PropertyGroup>
-                <TargetFramework>netstandard2.1</TargetFramework>
+                <TargetFramework>net6.0</TargetFramework>
                 <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages>
             </PropertyGroup>
         </Project>
