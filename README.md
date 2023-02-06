@@ -18,7 +18,7 @@ See the [introduction to quantum computing](https://docs.microsoft.com/azure/qua
 
 ## Getting Started ##
 
-The Jupyter kernel provided in this repository is built using [.NET 6.0](https://dotnet.microsoft.com/en-us/download) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum).
+The Jupyter kernel provided in this repository is built using [.NET 6.0](https://dotnet.microsoft.com/download) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum).
 Please see the [getting started guide](https://docs.microsoft.com/azure/quantum/install-overview-qdk) for how to get up and running.
 
 You may also visit the [**microsoft/quantum**](https://github.com/microsoft/quantum) repository, which offers a wide variety
