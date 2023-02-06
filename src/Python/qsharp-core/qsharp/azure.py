@@ -91,6 +91,8 @@ class AzureResult(Dict):
 
     def _repr_mimebundle_(self, include=None, exclude=None) -> Dict[str, Any]:
         return self.mime_bundle
+    
+from .results.resource_estimator import ResourceEstimatorResult
 
 class AzureError(Exception):
     """
@@ -159,7 +161,10 @@ def execute(op : qsharp.QSharpCallable, **params) -> AzureResult:
     """
     (result, content) = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, return_full_result=True, **params)
     if "error_code" in result: raise AzureError(result)
-    return AzureResult(result, content['data'])
+    if "physicalCounts" in result:
+        return ResourceEstimatorResult(result)
+    else:
+        return AzureResult(result, content['data'])
 
 def status(jobId : str = '', **params) -> AzureJob:
     """
@@ -180,7 +185,10 @@ def output(jobId : str = '', **params) -> AzureResult:
     """
     (result, content) = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, return_full_result=True, **params)
     if "error_code" in result: raise AzureError(result)
-    return AzureResult(result, content['data'])
+    if "physicalCounts" in result:
+        return ResourceEstimatorResult(result)
+    else:
+        return AzureResult(result, content['data'])
 
 def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     """
