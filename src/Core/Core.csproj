@@ -47,7 +47,7 @@
     <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.27.253010" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.1" />
     <PackageReference Include="NuGet.Resolver" Version="5.7.3" />
-    <PackageReference Include="System.DirectoryServices.Protocols" Version="5.0.1" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="6.0.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 
