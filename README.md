@@ -9,7 +9,7 @@ This kernel provides Q# support for the Jupyter platform, as well as the backend
 - **[src/Kernel/](./src/Kernel/)**: Assembly used to interoperate between Jupyter and the rest of the IQ# kernel.
 - **[src/Python/](./src/Python)**: Python package for accessing IQ#.
 - **[src/Tests/](./src/Tests/)**: Unit tests for IQ#.
-- **[src/Tool/](./src/Tool/)**: .NET Core Global Tool used to install and launch IQ#.
+- **[src/Tool/](./src/Tool/)**: .NET Global Tool used to install and launch IQ#.
 - **[src/Web/](./src/Web/)**: Provides a RESTful API into IQ#.
 
 ## New to Quantum? ##
@@ -18,7 +18,7 @@ See the [introduction to quantum computing](https://docs.microsoft.com/azure/qua
 
 ## Getting Started ##
 
-The Jupyter kernel provided in this repository is built using [.NET Core](https://docs.microsoft.com/dotnet/core/) (2.2 or later) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum).
+The Jupyter kernel provided in this repository is built using [.NET 6.0](https://dotnet.microsoft.com/download) and the compiler infrastructure provided with the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum).
 Please see the [getting started guide](https://docs.microsoft.com/azure/quantum/install-overview-qdk) for how to get up and running.
 
 You may also visit the [**microsoft/quantum**](https://github.com/microsoft/quantum) repository, which offers a wide variety
@@ -34,7 +34,7 @@ npm install
 ```
 
 To build IQ# from Visual Studio 2017 or later, please use the [`iqsharp.sln`](./iqsharp.sln) solution file.
-To build using the .NET Core SDK, please run `dotnet build iqsharp.sln`.
+To build using the .NET SDK, please run `dotnet build iqsharp.sln`.
 
 In either case, the IQ# kernel can be installed by using `dotnet run`:
 
@@ -52,11 +52,11 @@ dotnet run -- install --develop
 
 This can cause some issues, especially when running multiple instances of IQ#, such that we recommend against using development mode in general usage.
 
-Note that when building IQ# from source, this repository is configured so that .NET Core will automatically look at the [Quantum Development Kit prerelease feed](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_packaging?_a=feed&feed=alpha) in addition to any other feeds you may have configured.
+Note that when building IQ# from source, this repository is configured so that .NET will automatically look at the [Quantum Development Kit prerelease feed](https://dev.azure.com/ms-quantum-public/Microsoft%20Quantum%20(public)/_packaging?_a=feed&feed=alpha) in addition to any other feeds you may have configured.
 
 ### Using IQ# as a Container ###
 
-This repository provides a [Dockerfile](./images/iqsharp-base/Dockerfile) that includes the .NET Core SDK, Python, Jupyter Notebook, and the IQ# kernel.
+This repository provides a [Dockerfile](./images/iqsharp-base/Dockerfile) that includes the .NET SDK, Python, Jupyter Notebook, and the IQ# kernel.
 
 The image built from this Dockerfile is hosted on the [Microsoft Container Registry](https://github.com/microsoft/ContainerRegistry) as the `quantum/iqsharp-base` repository.
 The `iqsharp-base` image can be used, for instance, to quickly enable using [Binder](https://gke.mybinder.org/) with Q#-language repositories, or as a base image for [Visual Studio Code Development Containers](https://code.visualstudio.com/docs/remote/containers).

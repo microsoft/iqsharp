@@ -47,7 +47,7 @@ namespace Microsoft.Quantum.IQSharp
         }
 
         // The framework used to find packages.
-        public static NuGetFramework NETSTANDARD2_1 = NuGetFramework.ParseFolder("netstandard2.1");
+        public static NuGetFramework NETSTANDARD2_1 = NuGetFramework.ParseFolder("net6.0");
 
         // Nuget's logger.
         public NuGetLogger Logger { get; }
