@@ -132,27 +132,6 @@ namespace Tests.IQSharp
             return response.Output?.ToString();
         }
 
-        public static async Task<string?> AssertEstimate(IQSharpEngine engine, string snippetName, params string[] messages)
-        {
-            await engine.Initialized;
-            Assert.IsNotNull(engine.SymbolsResolver);
-
-            var channel = new MockChannel();
-            var estimateMagic = new EstimateMagic(engine.SymbolsResolver!, new UnitTestLogger<EstimateMagic>());
-            var response = await estimateMagic.Execute(snippetName, channel);
-            var result = response.Output as DataTable;
-            PrintResult(response, channel);
-            response.AssertIsOk();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(9, result?.Rows.Count);
-            var keys = result?.Rows.Cast<DataRow>().Select(row => row.ItemArray[0]).ToList();
-            CollectionAssert.Contains(keys, "T");
-            CollectionAssert.Contains(keys, "CNOT");
-            CollectionAssert.AreEqual(messages.Select(ChannelWithNewLines.Format).ToArray(), channel.msgs.ToArray());
-
-            return response.Output?.ToString();
-        }
-
         private async Task AssertTrace(string name, ExecutionPath expectedPath, int expectedDepth)
         {
             var engine = await Init("Workspace.ExecutionPathTracer");
@@ -298,19 +277,6 @@ namespace Tests.IQSharp
 
             // Run:
             await AssertSimulate(engine, "ApplyWithinBlock", "Within", "Apply", "Within");
-        }
-
-        [TestMethod]
-        public async Task Estimate()
-        {
-            var engine = await Init();
-            var channel = new MockChannel();
-
-            // Compile it:
-            await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
-
-            // Try running again:
-            await AssertEstimate(engine, "HelloQ");
         }
 
         [TestMethod]
@@ -712,7 +678,6 @@ namespace Tests.IQSharp
             Assert.AreEqual("%package", symbol!.Name);
 
             Assert.IsNotNull(resolver.Resolve("%who"));
-            Assert.IsNotNull(resolver.Resolve("%estimate"));
             Assert.IsNotNull(resolver.Resolve("%simulate"));
 
             symbol = resolver.Resolve("%foo");
