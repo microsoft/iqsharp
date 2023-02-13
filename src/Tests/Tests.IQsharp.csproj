@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Debug\netstandard2.1\ProjectA.AssemblyInfo.cs" />
-    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Release\netstandard2.1\ProjectA.AssemblyInfo.cs" />
-    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Debug\netstandard2.1\ProjectB.AssemblyInfo.cs" />
-    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Release\netstandard2.1\ProjectB.AssemblyInfo.cs" />
-    <Compile Remove="Workspace.ProjectReferences\obj\Debug\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
-    <Compile Remove="Workspace.ProjectReferences\obj\Release\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Debug\net6.0\ProjectA.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectA\obj\Release\net6.0\ProjectA.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Debug\net6.0\ProjectB.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences.ProjectB\obj\Release\net6.0\ProjectB.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences\obj\Debug\net6.0\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <Compile Remove="Workspace.ProjectReferences\obj\Release\net6.0\Workspace.ProjectReferences.AssemblyInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,12 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Workspace.ProjectReferences.ProjectA\obj\Debug\netstandard2.1\ProjectA.AssemblyInfo.cs" />
-    <None Include="Workspace.ProjectReferences.ProjectA\obj\Release\netstandard2.1\ProjectA.AssemblyInfo.cs" />
-    <None Include="Workspace.ProjectReferences.ProjectB\obj\Debug\netstandard2.1\ProjectB.AssemblyInfo.cs" />
-    <None Include="Workspace.ProjectReferences.ProjectB\obj\Release\netstandard2.1\ProjectB.AssemblyInfo.cs" />
-    <None Include="Workspace.ProjectReferences\obj\Debug\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
-    <None Include="Workspace.ProjectReferences\obj\Release\netstandard2.1\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectA\obj\Debug\net6.0\ProjectA.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectA\obj\Release\net6.0\ProjectA.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectB\obj\Debug\net6.0\ProjectB.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences.ProjectB\obj\Release\net6.0\ProjectB.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences\obj\Debug\net6.0\Workspace.ProjectReferences.AssemblyInfo.cs" />
+    <None Include="Workspace.ProjectReferences\obj\Release\net6.0\Workspace.ProjectReferences.AssemblyInfo.cs" />
     <None Include="Workspace.ProjectReferences\Workspace.ProjectReferences.csproj" />
     <None Include="Workspace.ProjectReferences.ProjectA\ProjectA.csproj" />
     <None Include="Workspace.ProjectReferences.ProjectB\ProjectB.csproj" />
