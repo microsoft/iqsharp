@@ -19,6 +19,8 @@ using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
+using LlvmBindings.Values;
+using YamlDotNet.Core;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
@@ -310,7 +312,10 @@ namespace Tests.IQSharp
             await AssertCompile(engine, SNIPPETS.HelloQ, "HelloQ");
 
             // Try running again:
-            await AssertEstimate(engine, "HelloQ");
+            await AssertEstimate(
+                engine,
+                "HelloQ",
+                "The local Resources Estimator will be removed in the March 2023. Use the new Azure Resource Estimator.");
         }
 
         [TestMethod]

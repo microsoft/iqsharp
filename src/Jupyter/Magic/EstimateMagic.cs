@@ -114,7 +114,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             qsim.OnDisplayableDiagnostic += channel.Display;
             qsim.DisableLogToConsole();
 
-            channel.Stdout("The Resources Estimator will be removed in the March 2023 QDK release. Please use the Azure-based version instead.");
+            channel.Stdout("The local Resources Estimator will be removed in the March 2023. Use the new Azure Resource Estimator.");
             await symbol.Operation.RunAsync(qsim, inputParameters);
 
             return qsim.Data.ToExecutionResult();
