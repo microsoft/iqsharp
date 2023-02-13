@@ -1,5 +1,5 @@
 # This file includes requirements to build and test the Python packages.
-ipython==8.4.0      # to avoid high-severity issue.
+ipython==8.10.0      # to avoid high-severity issue.
 jupyter==1.0.0
 nbconvert==7.0.0
 notebook==6.4.12
