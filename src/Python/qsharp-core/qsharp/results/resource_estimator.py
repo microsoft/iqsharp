@@ -3,17 +3,19 @@ import markdown
 
 from ..azure import AzureResult
 
-class ResourceEstimatorBatchResult(AzureResult):
+class ResourceEstimatorBatchResult():
     MAX_DEFAULT_ITEMS_IN_TABLE = 6
 
     def __init__(self, data) -> None:
-        # super().__init__(data)
         self._data = data
 
         self.result_items = [ResourceEstimatorResult(result) for result in self._data]
 
-    def data(self):
-        return self._data
+    def data(self, index):
+        return self._data[index]
+    
+    def __len__(self):
+        return len(self._data)
 
     def _repr_html_(self):
         num_items = len(self._data)
@@ -27,7 +29,7 @@ class ResourceEstimatorBatchResult(AzureResult):
         import matplotlib.pyplot as plt
 
         num_items = len(self._data)
-        [xs, ys] = zip(*[(self._data[i]['physicalCounts']['runtime'], self._data[i]['physicalCounts']['physicalQubits']) for i in range(num_items)])
+        [xs, ys] = zip(*[(self.data(i)['physicalCounts']['runtime'], self.data(i)['physicalCounts']['physicalQubits']) for i in range(num_items)])
 
         plt.ylabel('Physical qubits')
         plt.xlabel('Runtime')
@@ -64,9 +66,8 @@ class ResourceEstimatorBatchResult(AzureResult):
         else:
             return self.result_items[key]
 
-class ResourceEstimatorResult(AzureResult):
+class ResourceEstimatorResult():
     def __init__(self, data: Dict):
-        super().__init__(data)
         self._data = data
         self.summary = ResourceEstimatorResultSummary(data)
 
@@ -109,9 +110,8 @@ class ResourceEstimatorResult(AzureResult):
 
         return html
 
-class ResourceEstimatorResultSummary(AzureResult):
+class ResourceEstimatorResultSummary():
     def __init__(self, data):
-        super().__init__(data)
         self._data = data
 
     def data(self):
@@ -194,7 +194,7 @@ def batch_result_html_table(result, indices):
 
     item_headers = "".join(f"<th>{i}</th>" for i in indices)
 
-    for group_index, group in enumerate(result._data[0]['reportData']['groups']):
+    for group_index, group in enumerate(result.data(0)['reportData']['groups']):
         html += f"""
             <details {"open" if group['alwaysVisible'] else ""}>
                 <summary style="display:list-item">
@@ -205,7 +205,7 @@ def batch_result_html_table(result, indices):
 
         visited_entries = set()
 
-        for entry in [entry for index in indices for entry in result._data[index]['reportData']['groups'][group_index]['entries']]:
+        for entry in [entry for index in indices for entry in result.data(index)['reportData']['groups'][group_index]['entries']]:
             label = entry['label']
             if label in visited_entries:
                 continue
@@ -217,7 +217,7 @@ def batch_result_html_table(result, indices):
             """
 
             for index in indices:
-                val = result._data[index]
+                val = result.data(index)
                 for key in entry['path'].split("/"):
                     if key in val:
                         val = val[key]
@@ -234,7 +234,7 @@ def batch_result_html_table(result, indices):
         html += "</table></details>"
 
     html += f"<details><summary style=\"display:list-item\"><strong>Assumptions</strong></summary><ul>"
-    for assumption in result._data[0]['reportData']['assumptions']:
+    for assumption in result.data(0)['reportData']['assumptions']:
         html += f"<li>{md.convert(assumption)}</li>"
     html += "</ul></details>"
 
