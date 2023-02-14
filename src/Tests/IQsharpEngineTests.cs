@@ -315,7 +315,7 @@ namespace Tests.IQSharp
             await AssertEstimate(
                 engine,
                 "HelloQ",
-                "The local Resources Estimator will be removed in the March 2023. Use the new Azure Resource Estimator.");
+                "The local Resources Estimator will be removed in March 2023. The Resources Estimator is now available through Azure Quantum.");
         }
 
         [TestMethod]
