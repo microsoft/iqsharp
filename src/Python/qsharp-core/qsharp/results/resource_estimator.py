@@ -1,8 +1,6 @@
 from typing import Dict
 import markdown
 
-from ..azure import AzureResult
-
 class ResourceEstimatorBatchResult():
     """
     A customized result for a resource estimation batching job.
@@ -91,12 +89,14 @@ class ResourceEstimatorBatchResult():
         else:
             return self.result_items[key]
 
-class ResourceEstimatorResult():
+class ResourceEstimatorResult(Dict):
     """
     A customized result for a resource estimation job.
     """
 
     def __init__(self, data: Dict):
+        super().__init__(data)
+
         self._data = data
         self.summary = ResourceEstimatorResultSummary(data)
 
@@ -142,9 +142,6 @@ class ResourceEstimatorResult():
         html += "</ul></details>"
 
         return html
-
-    def __getitem__(self, key):
-        return self._data[key]
 
 class ResourceEstimatorResultSummary():
     def __init__(self, data):

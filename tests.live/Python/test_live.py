@@ -36,7 +36,7 @@ def wait_until_completed(job):
     import qsharp.azure
 
     max_poll_wait_secs = 5
-    timeout_secs = 30
+    timeout_secs = 60
     poll_wait = 0.2
     total_time = 0.
 
@@ -274,3 +274,6 @@ class TestEstimator:
             retrieved_output = qsharp.azure.output()
             assert isinstance(retrieved_output, qsharp.results.resource_estimator.ResourceEstimatorBatchResult)
             assert len(retrieved_output) == 2
+
+            assert retrieved_output[0]["physicalCounts"]["physicalQubits"] == 102094
+            assert retrieved_output[1]["physicalCounts"]["physicalQubits"] == 175934
