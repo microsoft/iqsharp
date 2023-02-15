@@ -238,7 +238,39 @@ class TestEstimator:
             assert job.status == "Succeeded"
 
             retrieved_output = qsharp.azure.output()
-            assert isinstance(retrieved_output, dict)
-            assert isinstance(retrieved_output, qsharp.azure.AzureResult)
+            assert isinstance(retrieved_output, qsharp.results.resource_estimator.ResourceEstimatorResult)
 
-            assert not retrieved_output._repr_mimebundle_().get("text/html") is None
+    def test_estimator_submit_items(self):
+        """
+        Test that the EstimateMultiplication operation can be submitted successfully on microsoft.estimator
+        """
+        import time
+        import qsharp
+        from Microsoft.Quantum.Tests import EstimateMultiplication
+
+        import qsharp.azure
+        connect()
+
+        t = qsharp.azure.target("microsoft.estimator")
+        assert isinstance(t, qsharp.azure.AzureTarget)
+        assert t.id == "microsoft.estimator"
+
+        item1 = {"arguments": [{"name": "bitwidth", "value": 4, "type": "Int"}]}
+        item2 = {"arguments": [{"name": "bitwidth", "value": 8, "type": "Int"}]}
+        job = qsharp.azure.submit(EstimateMultiplication, jobParams={"items": [item1, item2]})
+        assert isinstance(job, qsharp.azure.AzureJob)
+        assert not job.id == ''
+        print("Submitted job: ", job.id)
+
+        try:
+            wait_until_completed(job)
+        except TimeoutError:
+            warnings.warn("Resource estimator execution exceeded timeout. Skipping fetching results.")
+        else:
+            job = qsharp.azure.status()
+            assert isinstance(job, qsharp.azure.AzureJob)
+            assert job.status == "Succeeded"
+
+            retrieved_output = qsharp.azure.output()
+            assert isinstance(retrieved_output, qsharp.results.resource_estimator.ResourceEstimatorBatchResult)
+            assert len(retrieved_output) == 2

@@ -4,7 +4,11 @@ import markdown
 from ..azure import AzureResult
 
 class ResourceEstimatorBatchResult():
-    MAX_DEFAULT_ITEMS_IN_TABLE = 6
+    """
+    A customized result for a resource estimation batching job.
+    """
+
+    MAX_DEFAULT_ITEMS_IN_TABLE = 5
 
     def __init__(self, data) -> None:
         self._data = data
@@ -15,28 +19,48 @@ class ResourceEstimatorBatchResult():
         return self._data[index]
     
     def __len__(self):
+        """
+        Returns the number of items in the batching job.
+        """
         return len(self._data)
 
     def _repr_html_(self):
+        """
+        HTML representation of the result object.
+        """
         num_items = len(self._data)
         if num_items > self.MAX_DEFAULT_ITEMS_IN_TABLE:
             html = f"<p><b>Info:</b> <i>The overview table is cut off after {self.MAX_DEFAULT_ITEMS_IN_TABLE} items.  If you want to see all items, suffix the result variable with <code>[0:{num_items}]</code></i></p>"
-            return html + batch_result_html_table(self, range(self.MAX_DEFAULT_ITEMS_IN_TABLE))
+            return html + _batch_result_html_table(self, range(self.MAX_DEFAULT_ITEMS_IN_TABLE))
         else:
-            return batch_result_html_table(self, range(len(self._data)))
+            return _batch_result_html_table(self, range(len(self._data)))
     
-    def plot(self):
+    def plot(self, **kwargs):
+        """
+        Plots all result items in a space time plot, where the x-axis shows
+        total runtime, and the y-axis shows total number of physical qubits.
+        Both axes are in log-scale.
+
+        Attributes:
+            labels (list): List of labels for the legend.
+        """
         import matplotlib.pyplot as plt
 
-        num_items = len(self._data)
-        [xs, ys] = zip(*[(self.data(i)['physicalCounts']['runtime'], self.data(i)['physicalCounts']['physicalQubits']) for i in range(num_items)])
+        labels = kwargs.pop("labels", [])
+
+        [xs, ys] = zip(*[(self.data(i)['physicalCounts']['runtime'], self.data(i)['physicalCounts']['physicalQubits']) for i in range(len(self))])
+
+        _ = plt.figure(figsize=(15, 8))
 
         plt.ylabel('Physical qubits')
         plt.xlabel('Runtime')
         plt.loglog()
-        plt.scatter(x=xs, y=ys)
-        for i in range(num_items):
-            plt.annotate(f"{i}", (xs[i], ys[i]))
+        for i, (x, y) in enumerate(zip(xs, ys)):
+            if isinstance(labels, list) and i < len(labels):
+                label = labels[i]
+            else:
+                label = str(i)
+            plt.scatter(x=[x], y=[y], label=label, marker="os+x"[i % 4])
 
         nsec = 1
         usec = 1e3 * nsec
@@ -57,16 +81,21 @@ class ResourceEstimatorBatchResult():
         cutoff = next((i for i, x in enumerate(time_units) if x > max(xs)), len(time_units) - 1) + 1
 
         plt.xticks(time_units[0:cutoff], time_labels[0:cutoff], rotation=90)
+        plt.legend(loc="upper left")
         plt.show()
 
     def __getitem__(self, key):
         if isinstance(key, slice):
             from IPython.display import display, HTML
-            display(HTML(batch_result_html_table(self, range(len(self._data))[key])))
+            display(HTML(_batch_result_html_table(self, range(len(self._data))[key])))
         else:
             return self.result_items[key]
 
 class ResourceEstimatorResult():
+    """
+    A customized result for a resource estimation job.
+    """
+
     def __init__(self, data: Dict):
         self._data = data
         self.summary = ResourceEstimatorResultSummary(data)
@@ -75,6 +104,10 @@ class ResourceEstimatorResult():
         return self._data
 
     def _repr_html_(self):
+        """
+        HTML representation of the result object.
+        """
+
         html = ""
 
         md = markdown.Markdown(extensions=['mdx_math'])
@@ -190,7 +223,7 @@ class ResourceEstimatorResultSummary():
 
         return html
 
-def batch_result_html_table(result, indices):
+def _batch_result_html_table(result, indices):
     html = ""
 
     md = markdown.Markdown(extensions=['mdx_math'])
