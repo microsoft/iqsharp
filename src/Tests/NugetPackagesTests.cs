@@ -84,7 +84,7 @@ namespace Tests.IQSharp
             using (var context = new SourceCacheContext())
             {
                 await mgr.FindDependencies(pkgId, context);
-                Assert.AreEqual(163, mgr.AvailablePackages.Count());
+                Assert.AreEqual(152, mgr.AvailablePackages.Count());
             }
         }
 
@@ -99,8 +99,8 @@ namespace Tests.IQSharp
                 await mgr.FindDependencies(pkgId, context);
                 var list = mgr.ResolveDependencyGraph(pkgId).ToArray();
 
-                Assert.AreEqual(163, mgr.AvailablePackages.Count());
-                Assert.AreEqual(117, list.Length);
+                Assert.AreEqual(152, mgr.AvailablePackages.Count());
+                Assert.AreEqual(114, list.Length);
             }
         }
 
@@ -115,7 +115,7 @@ namespace Tests.IQSharp
             {
                 var dependencies = await mgr.GetPackageDependencies(pkgId, context);
 
-                Assert.AreEqual(117, dependencies.Count());
+                Assert.AreEqual(114, dependencies.Count());
             }
         }
 
