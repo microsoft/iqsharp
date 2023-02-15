@@ -121,7 +121,7 @@ def connect(**params) -> List[AzureTarget]:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.connect for more details.
     """
     result = qsharp.client._execute_magic(f"azure.connect", raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return [AzureTarget(target) for target in result]
 
 def target(name : str = '', **params) -> AzureTarget:
@@ -130,7 +130,7 @@ def target(name : str = '', **params) -> AzureTarget:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target for more details.
     """
     result = qsharp.client._execute_magic(f"azure.target {name}", raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return AzureTarget(result)
 
 def target_capability(name : str = '', **params) -> Dict:
@@ -139,7 +139,7 @@ def target_capability(name : str = '', **params) -> Dict:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.target-capability for more details.
     """
     result = qsharp.client._execute_magic(f"azure.target-capability {name}", raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return result
 
 def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
@@ -148,7 +148,7 @@ def submit(op : qsharp.QSharpCallable, **params) -> AzureJob:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.submit for more details.
     """
     result = qsharp.client._execute_callable_magic("azure.submit", op, raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return AzureJob(result)
 
 def execute(op : qsharp.QSharpCallable, **params) -> AzureResult:
@@ -169,7 +169,7 @@ def status(jobId : str = '', **params) -> AzureJob:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.status for more details.
     """
     result = qsharp.client._execute_magic(f"azure.status {jobId}", raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return AzureJob(result)
 
 def output(jobId : str = '', **params) -> AzureResult:
@@ -189,12 +189,11 @@ def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.jobs for more details.
     """
     result = qsharp.client._execute_magic(f"azure.jobs \"{filter}\" count={count}", raise_on_stderr=False, **params)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     return [AzureJob(job) for job in result]
 
 def process_result(result, content):
-    # Some targets use "code" instead of "error_code" (e.g. resource estimation target)
-    if "error_code" in result or "code" in result: raise AzureError(result)
+    if "error_code" in result: raise AzureError(result)
     # Simple resource estimation job
     if "physicalCounts" in result:
         return ResourceEstimatorResult(result)
