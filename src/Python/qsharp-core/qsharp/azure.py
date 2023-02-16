@@ -91,6 +91,8 @@ class AzureResult(Dict):
 
     def _repr_mimebundle_(self, include=None, exclude=None) -> Dict[str, Any]:
         return self.mime_bundle
+    
+from .results.resource_estimator import ResourceEstimatorResult, ResourceEstimatorBatchResult
 
 class AzureError(Exception):
     """
@@ -158,8 +160,8 @@ def execute(op : qsharp.QSharpCallable, **params) -> AzureResult:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.execute for more details.
     """
     (result, content) = qsharp.client._execute_callable_magic("azure.execute", op, raise_on_stderr=False, return_full_result=True, **params)
-    if "error_code" in result: raise AzureError(result)
-    return AzureResult(result, content['data'])
+    return process_result(result, content)
+
 
 def status(jobId : str = '', **params) -> AzureJob:
     """
@@ -179,8 +181,7 @@ def output(jobId : str = '', **params) -> AzureResult:
     See https://docs.microsoft.com/qsharp/api/iqsharp-magic/azure.output for more details.
     """
     (result, content) = qsharp.client._execute_magic(f"azure.output {jobId}", raise_on_stderr=False, return_full_result=True, **params)
-    if "error_code" in result: raise AzureError(result)
-    return AzureResult(result, content['data'])
+    return process_result(result, content)
 
 def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     """
@@ -190,3 +191,13 @@ def jobs(filter : str = '', count : int = 30, **params) -> List[AzureJob]:
     result = qsharp.client._execute_magic(f"azure.jobs \"{filter}\" count={count}", raise_on_stderr=False, **params)
     if "error_code" in result: raise AzureError(result)
     return [AzureJob(job) for job in result]
+
+def process_result(result, content):
+    if "error_code" in result: raise AzureError(result)
+    # Simple resource estimation job
+    if "physicalCounts" in result:
+        return ResourceEstimatorResult(result)
+    # Batching resource estimation job
+    if isinstance(result, list) and len(result) > 0 and "physicalCounts" in result[0]:
+        return ResourceEstimatorBatchResult(result)
+    return AzureResult(result, content['data'])
