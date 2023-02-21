@@ -54,11 +54,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                         the Q# operation or function name will be used as the job name.
                         - `{AzureSubmissionContext.ParameterNameJobParams}=<JSON key:value pairs>`: Provider-specific job parameters
                         expressed in JSON as one or more `key`:`value` pairs to be passed to the execution target. Values must be strings.
-                        - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default=500): Number of times to repeat execution of the
+                        - `{AzureSubmissionContext.ParameterNameShots}=<integer>` (default={AzureSubmissionContext.DefaultShots}): Number of times to repeat execution of the
                         specified Q# operation or function.
-                        - `{AzureSubmissionContext.ParameterNameTimeout}=<integer>` (default=30): Time to wait (in seconds) for job completion
+                        - `{AzureSubmissionContext.ParameterNameTimeout}=<integer>` (default={AzureSubmissionContext.DefaultExecutionTimeoutInSeconds}): Time to wait (in seconds) for job completion
                         before the magic command returns.
-                        - `{AzureSubmissionContext.ParameterNamePollingInterval}=<integer>` (default=5): Interval (in seconds) to poll for
+                        - `{AzureSubmissionContext.ParameterNamePollingInterval}=<integer>` (default={AzureSubmissionContext.DefaultExecutionPollingIntervalInSeconds}): Interval (in seconds) to poll for
                         job status while waiting for job execution to complete.
                         
                         #### Possible errors
@@ -85,7 +85,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                                    Job successfully submitted for 500 shots.
                                       Job name: MyOperation
                                       Job ID: <Azure Quantum job ID>
-                                   Waiting up to 30 seconds for Azure Quantum job to complete...
+                                   Waiting up to 300 seconds for Azure Quantum job to complete...
                                    [1:23:45 PM] Current job status: Waiting
                                    [1:23:50 PM] Current job status: Executing
                                    [1:23:55 PM] Current job status: Succeeded
