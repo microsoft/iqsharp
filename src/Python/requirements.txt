@@ -9,7 +9,7 @@ pygments==2.12.0    # to avoid high-severity issue.
 pyzmq==25.0.0
 qutip==4.7.0
 selenium==4.2.0
-setuptools==62.6.0
+setuptools==65.5.1
 wheel==0.37.1
 Markdown>=3.4.1
 python-markdown-math>=0.8
