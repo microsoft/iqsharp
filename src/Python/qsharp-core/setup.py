@@ -61,6 +61,8 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'jupyter_client>=7.3.4'
+        'jupyter_client>=7.3.4',
+        'Markdown>=3.4.1',
+        'python-markdown-math>=0.8'
     ]
 )
