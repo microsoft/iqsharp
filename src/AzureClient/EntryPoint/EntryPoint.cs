@@ -175,14 +175,21 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             }
         }
 
-        private IReadOnlyList<Argument> GetEntryPointInputArguments(AzureSubmissionContext submissionContext)
+        private IReadOnlyList<Argument> GetEntryPointInputArguments(AzureSubmissionContext submissionContext, bool allowOptionalParameters)
         {
             var argumentList = new List<Argument>();
             foreach (var parameter in OperationInfo.RoslynParameters)
             {
                 if (!submissionContext.InputParameters.ContainsKey(parameter.Name))
                 {
-                    throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
+                    if (allowOptionalParameters)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Required parameter {parameter.Name} was not specified.");
+                    }
                 }
 
                 var rawParameterValue = submissionContext.InputParameters[parameter.Name];
@@ -239,7 +246,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 throw new ArgumentException($"A QIR stream is required when submitting using the IQirSubmitter interface.");
             }
 
-            var entryPointInput = GetEntryPointInputArguments(submissionContext);
+            // In batching jobs, entry point arguments are specified as part of the `items` arguments (so far only supported in microsoft.estimator)
+            var isBatchingJob = submissionContext.InputParams.ContainsKey("items");
+            var allowOptionalParameters = isBatchingJob && submitter.Target == AzureClient.MicrosoftEstimator;
+
+            var entryPointInput = GetEntryPointInputArguments(submissionContext, allowOptionalParameters);
             Logger?.LogInformation("Submitting job {FriendlyName} with {NShots} shots.", submissionContext.FriendlyName, submissionContext.Shots);
             var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>Microsoft.Quantum.IQSharp.Kernel</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.Kernel</AssemblyName>
@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="4.3.2" />
-	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.27.252319-beta" />
+	<PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.27.253010" />
   </ItemGroup>
 
   <!-- TypeScript compilation -->
