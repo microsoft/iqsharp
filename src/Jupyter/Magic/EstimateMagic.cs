@@ -46,6 +46,14 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     or function name that has been defined either in the notebook or in a Q# file in the same folder.
                     - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
                 ".Dedent(),
+                Remarks = @"
+                    **QDK warning message**: ""The local Resources Estimator will be removed in March 2023.
+                    The Resources Estimator is now available through Azure Quantum.""
+
+                    The `%estimate` magic command is deprecated. To compute physical and logical resource estimation
+                    and runtime, we recommend using the
+                    [Azure Quantum Resource Estimator](https://learn.microsoft.com/azure/quantum/intro-to-resource-estimation) tool.
+                ".Dedent(),
                 Examples = new []
                 {
                     @"
