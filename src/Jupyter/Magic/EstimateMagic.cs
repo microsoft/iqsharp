@@ -47,11 +47,10 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     - Arguments for the Q# operation or function must also be specified as `key=value` pairs.
                 ".Dedent(),
                 Remarks = @"
-                    [!IMPORTANT]
                     **QDK warning message**: ""The local Resources Estimator will be removed in March 2023.
                     The Resources Estimator is now available through Azure Quantum.""
 
-                    The %estimate magic command is deprecated. To compute physical and logical resource estimation
+                    The `%estimate` magic command is deprecated. To compute physical and logical resource estimation
                     and runtime, we recommend using the
                     [Azure Quantum Resource Estimator](https://learn.microsoft.com/en-us/azure/quantum/intro-to-resource-estimation) tool.
                 ".Dedent(),
