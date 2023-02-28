@@ -52,7 +52,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
 
                     The `%estimate` magic command is deprecated. To compute physical and logical resource estimation
                     and runtime, we recommend using the
-                    [Azure Quantum Resource Estimator](https://learn.microsoft.com/en-us/azure/quantum/intro-to-resource-estimation) tool.
+                    [Azure Quantum Resource Estimator](https://learn.microsoft.com/azure/quantum/intro-to-resource-estimation) tool.
                 ".Dedent(),
                 Examples = new []
                 {
