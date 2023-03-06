@@ -87,13 +87,6 @@ class MockClient(object):
         logger.debug(f"MockClient.toffoli_simulate called with operation {op} and params:\n{params}")
         return ()
 
-    def estimate(self, op, **params) -> Dict[str, int]:
-        logger.debug(f"MockClient.estimate called with operation {op} and params:\n{params}")
-        return {
-            "Depth": 13,
-            "Width": 15
-        }
-
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """
         Returns a dictionary from components of the IQ# kernel to their
