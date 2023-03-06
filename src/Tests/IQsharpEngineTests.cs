@@ -19,6 +19,8 @@ using Microsoft.Quantum.Simulation.OpenSystems.DataModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
+using LlvmBindings.Values;
+using YamlDotNet.Core;
 
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>Microsoft.Quantum.IQSharp.AzureClient</RootNamespace>
     <AssemblyName>Microsoft.Quantum.IQSharp.AzureClient</AssemblyName>
@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Quantum.Jobs" Version="1.0.0-beta.3" />
-    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.27.253010" />
+    <PackageReference Include="Microsoft.Azure.Quantum.Client" Version="0.27.258160" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.23" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure" Version="3.3.19" />
     <PackageReference Include="System.Reactive" Version="4.3.2" />

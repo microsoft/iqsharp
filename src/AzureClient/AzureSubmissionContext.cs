@@ -18,9 +18,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     public sealed class AzureSubmissionContext : IQuantumMachineSubmissionContext
     {
         private static readonly ImmutableDictionary<string, string> DefaultJobParams = ImmutableDictionary<string, string>.Empty;
-        private static readonly int DefaultShots = 500;
-        private static readonly int DefaultExecutionTimeoutInSeconds = 30;
-        private static readonly int DefaultExecutionPollingIntervalInSeconds = 5;
+        internal static readonly int DefaultShots = 500;
+        internal static readonly int DefaultExecutionTimeoutInSeconds = 300;
+        internal static readonly int DefaultExecutionPollingIntervalInSeconds = 5;
         
         internal static readonly string ParameterNameOperationName = "__operationName__";
         internal static readonly string ParameterNameJobName = "jobName";
