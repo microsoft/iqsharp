@@ -25,8 +25,7 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                 Summary = "Lists the Q# operations available in the current session.",
                 Description = @"
                     This magic command returns a list of Q# operations and functions that are available
-                    in the current IQ# session for use with magic commands such as `%simulate`
-                    and `%estimate`.
+                    in the current IQ# session for use with magic commands such as `%simulate`.
 
                     The list will include Q# operations and functions which have been defined interactively
                     within cells in the current notebook (after the cells have been executed),

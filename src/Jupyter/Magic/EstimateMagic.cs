@@ -31,6 +31,9 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
             {
                 Summary = "Runs a given function or operation on the ResourcesEstimator target machine.",
                 Description = @"
+                    > [!NOTE]
+                    > The `%estimate` magic command and the QDK ResourcesEstimator have been deprecated.
+                    
                     The ResourcesEstimator estimates statistics about how many resources the given
                     operation needs for execution. The resources it calculates include:
 
@@ -38,7 +41,6 @@ namespace Microsoft.Quantum.IQSharp.Jupyter
                     - Depth (lower bound for the T-gate depth of the quantum circuit)
                     - Width (lower bound for the maximum number of qubits used for the computation)
 
-                    See the [ResourcesEstimator user guide](https://docs.microsoft.com/azure/quantum/user-guide/machines/resources-estimator) to learn more.
 
                     #### Required parameters
 
