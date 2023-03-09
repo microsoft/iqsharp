@@ -56,22 +56,5 @@ namespace Microsoft.Quantum.IQSharp
         /// </summary>
         public static string WithoutNamespace(this string name, string ns) => name.StartsWith(ns) ? name.Substring(ns.Length + 1) : name;
 
-        /// <summary>
-        /// Returns the ResourcesEstimator data as metric=value
-        /// </summary>
-        public static Dictionary<string, double> AsDictionary(this ResourcesEstimator qsim)
-        {
-            var counts = new Dictionary<string, double>();
-
-            foreach (DataRow row in qsim.Data.Rows)
-            {
-                string metric = (string)row["Metric"];
-                double data = (double)row["Sum"];
-
-                counts[metric] = data;
-            }
-
-            return counts;
-        }
     }
 }

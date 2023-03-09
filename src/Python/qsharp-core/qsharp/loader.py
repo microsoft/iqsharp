@@ -107,9 +107,6 @@ class QSharpCallable(object):
         """
         return qsharp.client.toffoli_simulate(self, **kwargs)
 
-    def estimate_resources(self, **kwargs) -> Dict[str, int]:
-        return qsharp.client.estimate(self, **kwargs)
-
     def trace(self, **kwargs) -> Any:
         """
         Returns a structure representing the set of gates and qubits

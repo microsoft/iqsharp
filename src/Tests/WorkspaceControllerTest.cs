@@ -78,34 +78,6 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public async Task EstimateCCNOTDriver()
-        {
-            var args = new Dictionary<string, string> { { "applyT", "false" }, { "extra", "whatever" } };    // Extra parameters should be ignored
-            var controller = Init();
-            var messages = new List<string>();
-
-            var response = await controller.Estimate("Tests.qss.CCNOTDriver", args, messages.Add);
-
-            Assert.AreEqual(0, messages.Count);
-            Assert.AreEqual(9, response.Count);
-            Assert.AreEqual(10.0, response["CNOT"]);
-            Assert.AreEqual(7.0, response["T"]);
-            Assert.AreEqual(3.0, response["Width"]);
-        }
-
-        [TestMethod]
-        public async Task EstimateMissingParameter()
-        {
-            var controller = Init();
-
-            var response = await controller.Estimate("Tests.qss.CCNOTDriver");
-
-            Assert.AreEqual(Status.Error, response.Status);
-            Assert.AreEqual(1, response.Messages.Length);
-            Assert.AreEqual($"Received invalid parameters. Please fix and try again:\n applyT: missing.", response.Messages[0]);
-        }
-
-        [TestMethod]
         public async Task SimulateUnknown()
         {
             var controller = Init();

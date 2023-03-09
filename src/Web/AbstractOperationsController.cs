@@ -44,23 +44,6 @@ namespace Microsoft.Quantum.IQSharp
             });
 
         /// <summary>
-        /// Returns an estimation of how many resources are needed to run the given operation on a quantum computer
-        /// with the given arguments.
-        /// </summary>
-        [NonAction]
-        public async Task<Dictionary<string, double>> Estimate(string id, IDictionary<string, string> args, Action<string> logger) =>
-            await IfReady(async () =>
-            {
-                var qsim = new ResourcesEstimator();
-                qsim.DisableLogToConsole();
-                qsim.OnLog += logger;
-
-                var value = await Find(id).RunAsync(qsim, args);
-
-                return qsim.AsDictionary();
-            });
-
-        /// <summary>
         /// Wraps the result of calling an asynchronous action into a `Response` object.
         /// If an Exception is caught, it returns an error response with the Exception as the
         /// corresponding error message.
