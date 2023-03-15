@@ -56,7 +56,12 @@ public record AzureExecutionTarget
     ///     Any other target capability must be subsumed by this maximum
     ///     in order to be supported by this target.
     /// </summary>
-    public TargetCapability DefaultCapability => GetProvider(TargetId) switch
+    public TargetCapability DefaultCapability => GetMaximumCapability(TargetId);
+
+    /// <summary>
+    ///     Returns the maximum level of capability supported by the target.
+    /// </summary>
+    public static TargetCapability GetMaximumCapability(string? targetId) => GetProvider(targetId) switch
     {
         AzureProvider.IonQ       => TargetCapabilityModule.BasicQuantumFunctionality,
         AzureProvider.Quantinuum => TargetCapabilityModule.BasicMeasurementFeedback,

@@ -6,11 +6,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Text;
 using LlvmBindings;
 using LlvmBindings.Interop;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.IQSharp.AzureClient;
 using Microsoft.Quantum.IQSharp.Common;
+using Microsoft.Quantum.QsCompiler;
 
 namespace Microsoft.Quantum.IQSharp.Kernel;
 
@@ -44,6 +46,17 @@ public record LlvmIr(
 public class QirMagic : AbstractMagic
 {
     private const string ParameterNameOperationName = "__operationName__";
+    private const string ParameterNameTarget = "target";
+    private const string ParameterNameTargetCapability = "target_capability";
+    private const string ParameterNameOutputFile = "output_file";
+    private const string ParameterNameOutputFormat = "output_format";
+
+    private enum QirOutputFormat
+    {
+        IR,
+        Bitcode,
+        BitcodeBase64,
+    }
 
     /// <summary>
     ///     Constructs the magic command from DI services.
@@ -62,15 +75,44 @@ public class QirMagic : AbstractMagic
         new Microsoft.Jupyter.Core.Documentation
         {
             Summary = "Compiles a given Q# entry point to QIR, saving the resulting QIR to a given file.",
-            Description = @"
+            Description = $@"
                 This command takes the full name of a Q# entry point, and compiles the Q# from that entry point
                 into QIR. The resulting program is then executed, and the output of the program is displayed.
 
                 #### Required parameters
 
-                - Q# operation or function name. This must be the first parameter, and must be a valid Q# operation
+                - `{ParameterNameOperationName}=<string>`: Q# operation or function name.
+                This must be the first parameter, and must be a valid Q# operation
                 or function name that has been defined either in the notebook or in a Q# file in the same folder.
-                - The file path for where to save the output QIR to, specified as `output=<file path>`.
+
+                #### Optional parameters
+
+                - `{ParameterNameTarget}=<string>`: The intended execution target for the compiled entrypoint.
+                Defaults to the active Azure Quantum target (which can be set with `%azure.target`).                
+                Otherwise, defaults to a generic target, which may not work when running on a specific target.
+
+                - `{ParameterNameTargetCapability}=<string>`: The capability of the intended execution target.
+                If `{ParameterNameTarget}` is specified or there is an active Azure Quantum target,
+                defaults to the target's maximum capability.
+                Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
+                Possible options are:
+                    * `{TargetCapabilityModule.Top}`
+                    * `{TargetCapabilityModule.Bottom}`
+                    * `{TargetCapabilityModule.BasicExecution}`
+                    * `{TargetCapabilityModule.AdaptiveExecution}`
+                    * `{TargetCapabilityModule.BasicQuantumFunctionality}`
+                    * `{TargetCapabilityModule.BasicMeasurementFeedback}`
+                    * `{TargetCapabilityModule.FullComputation}`
+
+                - `{ParameterNameOutputFile}=<string>`: The file path for where to save the output QIR.
+                If empty, a uniquely-named temporary file will be created.
+
+                - `{ParameterNameOutputFormat}=<QirOutputFormat>`: The QIR output format.
+                Defaults to `IR`.
+                Possible options are:
+                    * `{nameof(QirOutputFormat.IR)}`: Human-readable Intermediate Representation in plain-text
+                    * `{nameof(QirOutputFormat.Bitcode)}`: LLVM bitcode (only when writing to a output file)
+                    * `{nameof(QirOutputFormat.BitcodeBase64)}`: LLVM bitcode encoded as Base64
             ".Dedent(),
             Examples = new []
             {
@@ -155,6 +197,7 @@ public class QirMagic : AbstractMagic
 
         var name = inputParameters.DecodeParameter<string>(ParameterNameOperationName);
         if (name == null) throw new InvalidOperationException($"No operation name provided.");
+
         var symbol = SymbolResolver.Resolve(name) as IQSharpSymbol;
         if (symbol == null)
         {
@@ -162,33 +205,40 @@ public class QirMagic : AbstractMagic
             return ExecuteStatus.Error.ToExecutionResult();
         }
 
+        var outputFilePath = inputParameters.DecodeParameter<string>(ParameterNameOutputFile);
+        var outputFormat = inputParameters.DecodeParameter<QirOutputFormat>(ParameterNameOutputFormat,
+                                                                            QirOutputFormat.IR);
+        var target = inputParameters.DecodeParameter<string>(ParameterNameTarget,
+                                                             this.AzureClient.ActiveTarget?.TargetId);
+        var capabilityName = inputParameters.DecodeParameter<string>(ParameterNameTargetCapability);
+        TargetCapability? capability = null;
+        if (!string.IsNullOrEmpty(capabilityName))
+        {
+            var capabilityFromName = TargetCapabilityModule.FromName(capabilityName);
+            if (FSharp.Core.OptionModule.IsNone(capabilityFromName))
+            {
+                return $"The capability {capabilityName} is not a valid target capability."
+                    .ToExecutionResult(ExecuteStatus.Error);
+            }
+            capability = capabilityFromName.Value;
+        }
+        else if (!string.IsNullOrEmpty(target))
+        {
+            capability = AzureExecutionTarget.GetMaximumCapability(target);
+        }
+
         IEntryPoint entryPoint;
         try
         {
-            var capability = this.AzureClient.TargetCapability;
-            var target = this.AzureClient.ActiveTarget?.TargetId;
             entryPoint = await EntryPointGenerator.Generate(name, target, capability, generateQir: true);
         }
         catch (TaskCanceledException tce)
         {
             throw tce;
         }
-        catch (CompilationErrorsException e)
+        catch (CompilationErrorsException exception)
         {
-            var msg = $"The Q# operation {name} could not be compiled as an entry point for job execution.";
-            this.Logger?.LogError(e, msg);
-            channel.Stderr(msg);
-            channel.Stderr(e.Message);
-
-            if (MetadataController.IsPythonUserAgent() || ConfigurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
-            {
-                foreach (var m in e.Errors) channel.Stderr(m);
-            }
-            else
-            {
-                channel.DisplayFancyDiagnostics(e.Diagnostics, Snippets, input);
-            }
-            return AzureClientError.InvalidEntryPoint.ToExecutionResult();
+            return ReturnCompilationError(input, channel, name, exception);
         }
 
         if (entryPoint is null)
@@ -203,13 +253,32 @@ public class QirMagic : AbstractMagic
                 .ToExecutionResult(ExecuteStatus.Error);
         }
 
-        var bitcodeFile = Path.ChangeExtension(Path.GetTempFileName(), ".bc");
-        using (var outStream = File.OpenWrite(bitcodeFile))
+        Stream qriStream = entryPoint.QirStream;
+
+        return outputFormat switch
         {
-            entryPoint.QirStream.CopyTo(outStream);
+            QirOutputFormat.Bitcode =>
+                ReturnQirBitcode(outputFilePath, outputFormat, qriStream),
+            QirOutputFormat.BitcodeBase64 =>
+                ReturnQirBitcodeBase64(outputFilePath, outputFormat, qriStream),
+            QirOutputFormat.IR or _ =>
+                ReturnQIR_IR(channel, outputFilePath, outputFormat, qriStream),
+        };
+    }
+
+    private ExecutionResult ReturnQIR_IR(IChannel channel, string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    {
+        string bitcodeFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".bc")!;
+        string irFilePath = string.IsNullOrEmpty(outputFilePath)
+                            ? Path.ChangeExtension(bitcodeFilePath, ".ll")
+                            : outputFilePath;
+
+        using (var outStream = File.OpenWrite(bitcodeFilePath))
+        {
+            qirStream.CopyTo(outStream);
         }
 
-        if (!TryParseBitcode(bitcodeFile, out var moduleRef, out var parseErr))
+        if (!TryParseBitcode(bitcodeFilePath, out var moduleRef, out var parseErr))
         {
             var msg = $"Internal error: Could not parse generated QIR bitcode.\nLLVM returned error message: {parseErr}";
             channel.Stderr(msg);
@@ -217,10 +286,72 @@ public class QirMagic : AbstractMagic
             return ExecuteStatus.Error.ToExecutionResult();
         }
 
-        var llFile = Path.ChangeExtension(bitcodeFile, ".ll");
-        moduleRef.TryPrintToFile(llFile, out var writeErr);
-        var llvmIR = File.ReadAllText(llFile);
+        if (!moduleRef.TryPrintToFile(irFilePath, out var writeErr))
+        {
+            return $"Error generating IR from bitcode: {writeErr}"
+                   .ToExecutionResult(ExecuteStatus.Error);
+        }
 
+        if (!string.IsNullOrEmpty(outputFilePath))
+        {
+            return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+        }
+
+        var llvmIR = File.ReadAllText(irFilePath);
         return new LlvmIr(llvmIR).ToExecutionResult();
+    }
+
+    private static ExecutionResult ReturnQirBitcodeBase64(string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    {
+        byte[] bytes;
+        using (var memoryStream = new MemoryStream())
+        {
+            qirStream.CopyTo(memoryStream);
+            bytes = memoryStream.ToArray();
+        }
+        string bitchedBase64 = System.Convert.ToBase64String(bytes);
+
+        if (!string.IsNullOrEmpty(outputFilePath))
+        {
+            File.WriteAllText(outputFilePath, bitchedBase64);
+            return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+        }
+
+        return new LlvmIr(bitchedBase64).ToExecutionResult();
+    }
+
+    private static ExecutionResult ReturnQirBitcode(string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    {
+        if (string.IsNullOrEmpty(outputFilePath))
+        {
+            return $"Bitcode format can only be written to a file. You must pass the `{ParameterNameOutputFile}` parameter."
+                   .ToExecutionResult(ExecuteStatus.Error);
+        }
+
+        using (var outStream = File.OpenWrite(outputFilePath))
+        {
+            qirStream.CopyTo(outStream);
+        }
+
+        return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+    }
+
+    private ExecutionResult ReturnCompilationError(string input, IChannel channel, string? name, CompilationErrorsException exception)
+    {
+        StringBuilder message = new($"The Q# operation {name} could not be compiled as an entry point for job execution.");
+        this.Logger?.LogError(exception, message.ToString());
+        message.AppendLine(exception.Message);
+
+        if (MetadataController.IsPythonUserAgent() || ConfigurationSource.CompilationErrorStyle == CompilationErrorStyle.Basic)
+        {
+            foreach (var m in exception.Errors) message.AppendLine(m);
+        }
+        else
+        {
+            channel.DisplayFancyDiagnostics(exception.Diagnostics, Snippets, input);
+        }
+
+        channel.Stderr(message.ToString());
+        return message.ToString().ToExecutionResult(ExecuteStatus.Error);
     }
 }
