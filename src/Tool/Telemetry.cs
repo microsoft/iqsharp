@@ -285,7 +285,7 @@ namespace Microsoft.Quantum.IQSharp
         {
             var evt = new EventProperties() { Name = "QirMagic".WithTelemetryNamespace() };
             evt.SetProperty("CapabilityName".WithTelemetryNamespace(), qirMagicArgs.CapabilityName);
-            evt.SetProperty("CapabilityInsuficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsuficient);
+            evt.SetProperty("CapabilityInsufficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsufficient);
             evt.SetProperty("QirStreamSize".WithTelemetryNamespace(), qirMagicArgs.QirStreamSize?.ToString());
             evt.SetProperty("Capability".WithTelemetryNamespace(), qirMagicArgs.Capability);
             evt.SetProperty("CapabilityInsuficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsuficient);
