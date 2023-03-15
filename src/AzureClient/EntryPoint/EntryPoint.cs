@@ -6,6 +6,7 @@
 using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 using Microsoft.Quantum.Simulation.Core;
@@ -26,7 +27,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
         /// <inheritdoc/>
         public Stream? QirStream { get; }
-
+        /// <inheritdoc/>
+        public TargetCapability? TargetCapability { get; } 
+ 
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
         /// </summary>
@@ -41,7 +44,16 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <param name="qirStream">
         ///     Stream from which QIR bitcode for the entry point can be read.
         /// </param>
-        public EntryPoint(object entryPointInfo, Type inputType, Type outputType, OperationInfo operationInfo, ILogger? logger, Stream? qirStream = null)
+        /// <param name="targetCapability">
+        ///     The target capability which the QIR was generated for.
+        /// </param>
+        public EntryPoint(object entryPointInfo,
+                          Type inputType, 
+                          Type outputType, 
+                          OperationInfo operationInfo, 
+                          ILogger? logger, 
+                          Stream? qirStream = null,
+                          TargetCapability? targetCapability = null)
         {
             EntryPointInfo = entryPointInfo;
             InputType = inputType;
@@ -49,6 +61,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             OperationInfo = operationInfo;
             Logger = logger;
             QirStream = qirStream;
+            TargetCapability = targetCapability;
         }
 
         private object GetEntryPointInputObject(AzureSubmissionContext submissionContext)
@@ -252,7 +265,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 
             var entryPointInput = GetEntryPointInputArguments(submissionContext, allowOptionalParameters);
             Logger?.LogInformation("Submitting job {FriendlyName} with {NShots} shots.", submissionContext.FriendlyName, submissionContext.Shots);
-            var options = SubmissionOptions.Default.With(submissionContext.FriendlyName, submissionContext.Shots, submissionContext.InputParams);
+            var options = SubmissionOptions.Default.With(
+                friendlyName: submissionContext.FriendlyName, 
+                shots: submissionContext.Shots,
+                inputParams: submissionContext.InputParams,
+                targetCapability: $"{TargetCapability}");
 
             // Find and invoke the method on IQirSubmitter that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)

@@ -106,11 +106,15 @@ namespace Tests.IQSharp
         public async Task QIRSubmission()
         {
             var entryPointGenerator = Init("Workspace", new string[] { SNIPPETS.HelloQ });
-            var entryPoint = await entryPointGenerator.Generate("HelloQ", null, generateQir: true);
+            var entryPoint = await entryPointGenerator.Generate(operationName: "HelloQ",
+                                                                executionTarget: "MyTarget",
+                                                                capability: TargetCapabilityModule.AdaptiveExecution,
+                                                                generateQir: true);
 
             Assert.IsNotNull(entryPoint);
+            Assert.AreEqual(TargetCapabilityModule.AdaptiveExecution, entryPoint.TargetCapability);
             var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>()),
+                new MockQirSubmitter(new List<Argument>(), ExpectedTargetCapability: TargetCapabilityModule.AdaptiveExecution.ToString()),
                 new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }

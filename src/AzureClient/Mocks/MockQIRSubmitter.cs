@@ -3,13 +3,9 @@
 
 #nullable enable
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace System.Runtime.CompilerServices
 {
@@ -19,7 +15,8 @@ namespace System.Runtime.CompilerServices
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     /// <param name="ExpectedArguments">The expected entry point arguments to the SubmitAsync method.</param>
-    internal record MockQirSubmitter(IReadOnlyList<Argument> ExpectedArguments) : IQirSubmitter
+    /// <param name="ExpectedTargetCapability">The expected target capability to the SubmitAsync method.</param>
+    internal record MockQirSubmitter(IReadOnlyList<Argument> ExpectedArguments, string? ExpectedTargetCapability = null) : IQirSubmitter
     {
         public string Target => throw new NotImplementedException();
 
@@ -71,6 +68,12 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             if (!IsEqualToExpected(arguments))
             {
                 throw new ArgumentException("The arguments passed to the SubmitAsync did not match the expected arguments to the Mock QIR submitter.");
+            }
+
+            if (ExpectedTargetCapability != null
+                && !ExpectedTargetCapability.Equals(options.TargetCapability))
+            {
+                throw new ArgumentException("The options.TargetCapability passed to the SubmitAsync did not match the ExpectedTargetCapability to the Mock QIR submitter.");
             }
 
             return Task.FromResult(job as IQuantumMachineJob);
