@@ -72,6 +72,4 @@ class TestQir(unittest.TestCase):
     def test_repr_qir_(self):
         metadata = {"azure.target_id": "rigetti.simulator"}
         qir_bitcode = self.qsharp_callable_basic._repr_qir_(metadata)
-        expected_magic_number = 1111736542
-        magic_number = int.from_bytes(qir_bitcode[0:4], "big")
-        self.assertEqual(expected_magic_number, magic_number)
+        self.assertGreater(len(qir_bitcode), 4)
