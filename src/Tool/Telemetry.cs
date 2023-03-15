@@ -82,8 +82,12 @@ namespace Microsoft.Quantum.IQSharp
             this.OnServiceInitialized<IWorkspace>();
             eventService.Events<WorkspaceReadyEvent, IWorkspace>().On += (workspace) =>
             {
-                var evt = "WorkspaceReady"
-                    .AsTelemetryEvent();
+                var evt = "WorkspaceReady".AsTelemetryEvent();
+                TelemetryLogger.LogEvent(evt);
+            };
+            eventService.Events<QirMagicEvent, QirMagicArgs>().On += (qirMagicArgs) =>
+            {
+                var evt = qirMagicArgs.AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
             this.OnServiceInitialized<IReferences>();
@@ -269,6 +273,22 @@ namespace Microsoft.Quantum.IQSharp
                 ).ToString("c")
             );
 
+            return evt;
+        }
+
+        public static EventProperties AsTelemetryEvent(this QirMagicArgs qirMagicArgs)
+        {
+            var evt = new EventProperties() { Name = "QirMagic".WithTelemetryNamespace() };
+            evt.SetProperty("CapabilityName".WithTelemetryNamespace(), qirMagicArgs.CapabilityName);
+            evt.SetProperty("CapabilityInsuficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsuficient);
+            evt.SetProperty("QirStreamSize".WithTelemetryNamespace(), qirMagicArgs.QirStreamSize?.ToString());
+            evt.SetProperty("Capability".WithTelemetryNamespace(), qirMagicArgs.Capability);
+            evt.SetProperty("CapabilityInsuficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsuficient);
+            evt.SetProperty("Error".WithTelemetryNamespace(), qirMagicArgs.Error);
+            evt.SetProperty("InvalidCapability".WithTelemetryNamespace(), qirMagicArgs.InvalidCapability);
+            evt.SetProperty("OutputFormat".WithTelemetryNamespace(), qirMagicArgs.OutputFormat?.ToString());
+            evt.SetProperty("Target".WithTelemetryNamespace(), qirMagicArgs.Target);
+            evt.SetCommonProperties();
             return evt;
         }
 
