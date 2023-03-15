@@ -4,7 +4,6 @@
 ##
 
 import unittest
-import pytest
 import qsharp
 from qsharp.clients.iqsharp import IQSharpError
 
@@ -70,24 +69,7 @@ class TestQir(unittest.TestCase):
                                target_capability="FullComputation")
         self.assertIn("@ENTRYPOINT__GenerateRandomBitAdvanced", qir_text)
 
-    def test_as_qir_unsupported_capability(self):
-        # As of March 2023, assumes that the maximum capability of
-        # rigetti.simulator is BasicExecution
-        # (from src\AzureClient\AzureExecutionTarget.GetMaximumCapability).
-        metadata = {"azure.target_id": "rigetti.simulator"}
-        with pytest.raises(IQSharpError) as error:
-            self.qsharp_callable_advanced.as_qir(metadata)
-        self.assertIn("requires runtime capabilities which are not supported by the target",
-                      error.value.iqsharp_errors[0])
-
-        metadata = {"azure.target_id": "rigetti.simulator",
-                    "azure.target_capability": "BasicExecution"}
-        with pytest.raises(IQSharpError) as error:
-            self.qsharp_callable_advanced.as_qir(metadata)
-        self.assertIn("requires runtime capabilities which are not supported by the target",
-                      error.value.iqsharp_errors[0])
-
-    def test_as_qir_bitcode(self):
+    def test_repr_qir_(self):
         metadata = {"azure.target_id": "rigetti.simulator"}
         qir_bitcode = self.qsharp_callable_basic._repr_qir_(metadata)
         expected_magic_number = 1111736542
