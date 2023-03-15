@@ -14,7 +14,7 @@ using Microsoft.Quantum.Simulation.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
-    public record EntryPointSubmitArgs
+    public record EntryPointSubmitEventData
     {
         public string? MachineName { get; set;  }
         public string? Target { get; set; }
@@ -22,7 +22,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public string? JobId { get; set; }
     }
 
-    public record EntryPointSubmitEvent : Event<EntryPointSubmitArgs>;
+    public record EntryPointSubmitEvent : Event<EntryPointSubmitEventData>;
 
     /// <inheritdoc/>
     internal class EntryPoint : IEntryPoint
@@ -268,7 +268,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 .ContinueWith<IQuantumMachineJob>(jobTask =>
                 {
                     var job = jobTask.Result;
-                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitArgs>(new EntryPointSubmitArgs()
+                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitEventData>(new EntryPointSubmitEventData()
                     {
                         MachineName = machine.GetType().FullName,
                         JobId = job.Id,
@@ -304,7 +304,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 .ContinueWith<IQuantumMachineJob>(jobTask =>
                 {
                     var job = jobTask.Result;
-                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitArgs>(new EntryPointSubmitArgs()
+                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitEventData>(new EntryPointSubmitEventData()
                     {
                         MachineName = submitter.GetType().FullName,
                         JobId = job.Id,

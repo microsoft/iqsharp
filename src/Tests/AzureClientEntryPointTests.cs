@@ -114,7 +114,7 @@ namespace Tests.IQSharp
             Assert.IsNotNull(entryPoint);
             Assert.AreEqual(TargetCapabilityModule.AdaptiveExecution, entryPoint.TargetCapability);
             var job = await entryPoint.SubmitAsync(
-                new MockQirSubmitter(new List<Argument>(), ExpectedTargetCapability: TargetCapabilityModule.AdaptiveExecution.ToString()),
+                new MockQirSubmitter(new List<Argument>(), ExpectedTargetCapability: TargetCapabilityModule.AdaptiveExecution),
                 new AzureSubmissionContext());
             Assert.IsNotNull(job);
         }

@@ -48,7 +48,7 @@ public enum QirOutputFormat
     BitcodeBase64,
 }
 
-public record QirMagicArgs()
+public record QirMagicEventData()
 {
     static Regex CapabilityInsuficientRegex = new Regex("(requires runtime capabilities).*(not supported by the target)",
         RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
@@ -56,7 +56,7 @@ public record QirMagicArgs()
     public string? Target { get; set; }
     public string? Capability { get; set; }
     public bool InvalidCapability { get; set; }
-    public bool CapabilityInsuficient { get; set; }
+    public bool CapabilityInsufficient { get; set; }
     public string? CapabilityName { get; set; }
     public long? QirStreamSize { get; set; }
     public QirOutputFormat? OutputFormat { get; set; }
@@ -68,11 +68,11 @@ public record QirMagicArgs()
     {
         this.Error = $"{exception.GetType().FullName}";
         var exceptionString = exception.ToString();
-        this.CapabilityInsuficient = CapabilityInsuficientRegex.IsMatch(exceptionString);
+        this.CapabilityInsufficient = CapabilityInsuficientRegex.IsMatch(exceptionString);
     }
 }
 
-public record QirMagicEvent : Event<QirMagicArgs>;
+public record QirMagicEvent : Event<QirMagicEventData>;
 
 
 /// <summary>
@@ -225,7 +225,7 @@ public class QirMagic : AbstractMagic
     /// </summary>
     public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
     {
-        QirMagicArgs qirMagicArgs = new();
+        QirMagicEventData qirMagicArgs = new();
         try
         {
             var inputParameters = ParseInputParameters(input, firstParameterInferredName: ParameterNameOperationName);
@@ -313,7 +313,7 @@ public class QirMagic : AbstractMagic
         }
         finally
         {
-            this.EventService?.Trigger<QirMagicEvent, QirMagicArgs>(qirMagicArgs);
+            this.EventService?.Trigger<QirMagicEvent, QirMagicEventData>(qirMagicArgs);
         }
     }
 

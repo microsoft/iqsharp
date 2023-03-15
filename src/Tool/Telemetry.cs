@@ -122,14 +122,14 @@ namespace Microsoft.Quantum.IQSharp
                 evt.SetProperty("TotalMemoryInGiB".WithTelemetryNamespace(), args.TotalMemoryInGiB?.ToString() ?? "");
                 TelemetryLogger.LogEvent(evt);
             };
-            eventService.Events<QirMagicEvent, QirMagicArgs>().On += (qirMagicArgs) =>
+            eventService.Events<QirMagicEvent, QirMagicEventData>().On += (qirMagicArgs) =>
             {
                 var evt = qirMagicArgs.AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
-            eventService.Events<EntryPointSubmitEvent, EntryPointSubmitArgs>().On += (entryPointSubmitArgs) =>
+            eventService.Events<EntryPointSubmitEvent, EntryPointSubmitEventData>().On += (entryPointSubmitEventData) =>
             {
-                var evt = entryPointSubmitArgs.AsTelemetryEvent();
+                var evt = entryPointSubmitEventData.AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
 
@@ -281,29 +281,29 @@ namespace Microsoft.Quantum.IQSharp
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this QirMagicArgs qirMagicArgs)
+        public static EventProperties AsTelemetryEvent(this QirMagicEventData qirMagicEventData)
         {
             var evt = new EventProperties() { Name = "QirMagic".WithTelemetryNamespace() };
-            evt.SetProperty("CapabilityName".WithTelemetryNamespace(), qirMagicArgs.CapabilityName);
-            evt.SetProperty("CapabilityInsufficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsufficient);
-            evt.SetProperty("QirStreamSize".WithTelemetryNamespace(), qirMagicArgs.QirStreamSize?.ToString());
-            evt.SetProperty("Capability".WithTelemetryNamespace(), qirMagicArgs.Capability);
-            evt.SetProperty("CapabilityInsufficient".WithTelemetryNamespace(), qirMagicArgs.CapabilityInsufficient);
-            evt.SetProperty("Error".WithTelemetryNamespace(), qirMagicArgs.Error);
-            evt.SetProperty("InvalidCapability".WithTelemetryNamespace(), qirMagicArgs.InvalidCapability);
-            evt.SetProperty("OutputFormat".WithTelemetryNamespace(), qirMagicArgs.OutputFormat?.ToString());
-            evt.SetProperty("Target".WithTelemetryNamespace(), qirMagicArgs.Target);
+            evt.SetProperty("CapabilityName".WithTelemetryNamespace(), qirMagicEventData.CapabilityName);
+            evt.SetProperty("CapabilityInsufficient".WithTelemetryNamespace(), qirMagicEventData.CapabilityInsufficient);
+            evt.SetProperty("QirStreamSize".WithTelemetryNamespace(), qirMagicEventData.QirStreamSize?.ToString());
+            evt.SetProperty("Capability".WithTelemetryNamespace(), qirMagicEventData.Capability);
+            evt.SetProperty("CapabilityInsufficient".WithTelemetryNamespace(), qirMagicEventData.CapabilityInsufficient);
+            evt.SetProperty("Error".WithTelemetryNamespace(), qirMagicEventData.Error);
+            evt.SetProperty("InvalidCapability".WithTelemetryNamespace(), qirMagicEventData.InvalidCapability);
+            evt.SetProperty("OutputFormat".WithTelemetryNamespace(), qirMagicEventData.OutputFormat?.ToString());
+            evt.SetProperty("Target".WithTelemetryNamespace(), qirMagicEventData.Target);
             evt.SetCommonProperties();
             return evt;
         }
 
-        public static EventProperties AsTelemetryEvent(this EntryPointSubmitArgs entryPointSubmitArgs)
+        public static EventProperties AsTelemetryEvent(this EntryPointSubmitEventData entryPointSubmitEventData)
         {
             var evt = new EventProperties() { Name = "EntryPointSubmit".WithTelemetryNamespace() };
-            evt.SetProperty("MachineName".WithTelemetryNamespace(), entryPointSubmitArgs.MachineName);
-            evt.SetProperty("Target".WithTelemetryNamespace(), entryPointSubmitArgs.Target);
-            evt.SetProperty("TargetCapability".WithTelemetryNamespace(), entryPointSubmitArgs.TargetCapability);
-            evt.SetProperty("JobId".WithTelemetryNamespace(), entryPointSubmitArgs.JobId);
+            evt.SetProperty("MachineName".WithTelemetryNamespace(), entryPointSubmitEventData.MachineName);
+            evt.SetProperty("Target".WithTelemetryNamespace(), entryPointSubmitEventData.Target);
+            evt.SetProperty("TargetCapability".WithTelemetryNamespace(), entryPointSubmitEventData.TargetCapability);
+            evt.SetProperty("JobId".WithTelemetryNamespace(), entryPointSubmitEventData.JobId);
             evt.SetCommonProperties();
             return evt;
         }
