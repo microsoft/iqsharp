@@ -23,6 +23,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private IWorkspace Workspace { get; }
         private ISnippets Snippets { get; }
         private IServiceProvider ServiceProvider { get; }
+        private IEventService EventService { get; }
         public IReferences References { get; }
         public AssemblyInfo[] WorkspaceAssemblies { get; set; } = Array.Empty<AssemblyInfo>();
         public AssemblyInfo? SnippetsAssemblyInfo { get; set; }
@@ -43,10 +44,11 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             References = references;
             Logger = logger;
             ServiceProvider = serviceProvider;
+            EventService = eventService;
 
             AssemblyLoadContext.Default.Resolving += Resolve;
 
-            eventService?.TriggerServiceInitialized<IEntryPointGenerator>(this);
+            EventService?.TriggerServiceInitialized<IEntryPointGenerator>(this);
         }
 
         /// <summary>
@@ -218,6 +220,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 outputType: entryPointOutputType, 
                 operationInfo: entryPointOperationInfo,
                 logger: ServiceProvider.GetService<ILogger<EntryPoint>>(),
+                eventService: EventService,
                 qirStream: EntryPointAssemblyInfo.QirBitcode,
                 targetCapability: capability
             );

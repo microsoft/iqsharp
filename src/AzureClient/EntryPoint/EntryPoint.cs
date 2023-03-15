@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.IO;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Quantum.QsCompiler;
@@ -13,6 +14,16 @@ using Microsoft.Quantum.Simulation.Core;
 
 namespace Microsoft.Quantum.IQSharp.AzureClient
 {
+    public record EntryPointSubmitArgs
+    {
+        public string? MachineName { get; set;  }
+        public string? Target { get; set; }
+        public string? TargetCapability { get; set; }
+        public string? JobId { get; set; }
+    }
+
+    public record EntryPointSubmitEvent : Event<EntryPointSubmitArgs>;
+
     /// <inheritdoc/>
     internal class EntryPoint : IEntryPoint
     {
@@ -24,12 +35,13 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         private Type OutputType { get; }
         private OperationInfo OperationInfo { get; }
         private ILogger? Logger { get; }
+        private IEventService? EventService { get; }
 
         /// <inheritdoc/>
         public Stream? QirStream { get; }
         /// <inheritdoc/>
-        public TargetCapability? TargetCapability { get; } 
- 
+        public TargetCapability? TargetCapability { get; }
+
         /// <summary>
         /// Creates an object used to submit jobs to Azure Quantum.
         /// </summary>
@@ -41,6 +53,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// <see cref="EntryPointInfo{I,O}"/> object provided as the <c>entryPointInfo</c> argument.</param>
         /// <param name="operationInfo">Information about the Q# operation to be used as the entry point.</param>
         /// <param name="logger">Logger used to report internal diagnostics.</param>
+        /// <param name="eventService">EventService used to report telemetry.</param>
         /// <param name="qirStream">
         ///     Stream from which QIR bitcode for the entry point can be read.
         /// </param>
@@ -50,8 +63,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         public EntryPoint(object entryPointInfo,
                           Type inputType, 
                           Type outputType, 
-                          OperationInfo operationInfo, 
-                          ILogger? logger, 
+                          OperationInfo operationInfo,
+                          ILogger? logger,
+                          IEventService? eventService,
                           Stream? qirStream = null,
                           TargetCapability? targetCapability = null)
         {
@@ -62,6 +76,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
             Logger = logger;
             QirStream = qirStream;
             TargetCapability = targetCapability;
+            EventService = eventService;
         }
 
         private object GetEntryPointInputObject(AzureSubmissionContext submissionContext)
@@ -248,7 +263,19 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                     && method.GetParameters()[2].ParameterType == typeof(IQuantumMachineSubmissionContext))
                 .MakeGenericMethod(new Type[] { InputType, OutputType });
             var submitParameters = new object[] { EntryPointInfo, entryPointInput, submissionContext };
-            return (Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters);
+
+            return ((Task<IQuantumMachineJob>)submitMethod.Invoke(machine, submitParameters))
+                .ContinueWith<IQuantumMachineJob>(jobTask =>
+                {
+                    var job = jobTask.Result;
+                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitArgs>(new EntryPointSubmitArgs()
+                    {
+                        MachineName = machine.GetType().FullName,
+                        JobId = job.Id,
+                        Target = machine.Target
+                    });
+                    return job;
+                });
         }
 
         /// <inheritdoc/>
@@ -269,11 +296,23 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
                 friendlyName: submissionContext.FriendlyName, 
                 shots: submissionContext.Shots,
                 inputParams: submissionContext.InputParams,
-                targetCapability: $"{TargetCapability}");
+                targetCapability: TargetCapability?.Name);
 
             // Find and invoke the method on IQirSubmitter that is declared as:
             // Task<IQuantumMachineJob> SubmitAsync(Stream qir, string entryPoint, IReadOnlyList<Argument> arguments, SubmissionOptions submissionOptions)
-            return submitter.SubmitAsync(QirStream, $"{EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options);
+            return submitter.SubmitAsync(QirStream, $"{EntryPointNamespaceName}__{submissionContext.OperationName}", entryPointInput, options)
+                .ContinueWith<IQuantumMachineJob>(jobTask =>
+                {
+                    var job = jobTask.Result;
+                    EventService?.Trigger<EntryPointSubmitEvent, EntryPointSubmitArgs>(new EntryPointSubmitArgs()
+                    {
+                        MachineName = submitter.GetType().FullName,
+                        JobId = job.Id,
+                        Target = submitter.Target,
+                        TargetCapability = this.TargetCapability?.Name,
+                    });
+                    return job;
+                });
         }
     }
 }

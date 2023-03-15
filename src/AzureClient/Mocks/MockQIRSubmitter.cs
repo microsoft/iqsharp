@@ -18,7 +18,7 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
     /// <param name="ExpectedTargetCapability">The expected target capability to the SubmitAsync method.</param>
     internal record MockQirSubmitter(IReadOnlyList<Argument> ExpectedArguments, string? ExpectedTargetCapability = null) : IQirSubmitter
     {
-        public string Target => throw new NotImplementedException();
+        public string Target => "MockQirSubmitter";
 
         private bool IsArgumentValueEqual(ArgumentValue fst, ArgumentValue snd) =>
             (fst, snd) switch

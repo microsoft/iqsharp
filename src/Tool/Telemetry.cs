@@ -85,11 +85,6 @@ namespace Microsoft.Quantum.IQSharp
                 var evt = "WorkspaceReady".AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
-            eventService.Events<QirMagicEvent, QirMagicArgs>().On += (qirMagicArgs) =>
-            {
-                var evt = qirMagicArgs.AsTelemetryEvent();
-                TelemetryLogger.LogEvent(evt);
-            };
             this.OnServiceInitialized<IReferences>();
             this.OnServiceInitialized<Microsoft.Quantum.IQSharp.Jupyter.IConfigurationSource>();
             this.OnServiceInitialized<IMetadataController>();
@@ -125,6 +120,16 @@ namespace Microsoft.Quantum.IQSharp
                 var evt = "DeviceCapabilities".AsTelemetryEvent();
                 evt.SetProperty("NProcessors".WithTelemetryNamespace(), args.NProcessors?.ToString() ?? "");
                 evt.SetProperty("TotalMemoryInGiB".WithTelemetryNamespace(), args.TotalMemoryInGiB?.ToString() ?? "");
+                TelemetryLogger.LogEvent(evt);
+            };
+            eventService.Events<QirMagicEvent, QirMagicArgs>().On += (qirMagicArgs) =>
+            {
+                var evt = qirMagicArgs.AsTelemetryEvent();
+                TelemetryLogger.LogEvent(evt);
+            };
+            eventService.Events<EntryPointSubmitEvent, EntryPointSubmitArgs>().On += (entryPointSubmitArgs) =>
+            {
+                var evt = entryPointSubmitArgs.AsTelemetryEvent();
                 TelemetryLogger.LogEvent(evt);
             };
 
@@ -288,6 +293,17 @@ namespace Microsoft.Quantum.IQSharp
             evt.SetProperty("InvalidCapability".WithTelemetryNamespace(), qirMagicArgs.InvalidCapability);
             evt.SetProperty("OutputFormat".WithTelemetryNamespace(), qirMagicArgs.OutputFormat?.ToString());
             evt.SetProperty("Target".WithTelemetryNamespace(), qirMagicArgs.Target);
+            evt.SetCommonProperties();
+            return evt;
+        }
+
+        public static EventProperties AsTelemetryEvent(this EntryPointSubmitArgs entryPointSubmitArgs)
+        {
+            var evt = new EventProperties() { Name = "EntryPointSubmit".WithTelemetryNamespace() };
+            evt.SetProperty("MachineName".WithTelemetryNamespace(), entryPointSubmitArgs.MachineName);
+            evt.SetProperty("Target".WithTelemetryNamespace(), entryPointSubmitArgs.Target);
+            evt.SetProperty("TargetCapability".WithTelemetryNamespace(), entryPointSubmitArgs.TargetCapability);
+            evt.SetProperty("JobId".WithTelemetryNamespace(), entryPointSubmitArgs.JobId);
             evt.SetCommonProperties();
             return evt;
         }
