@@ -39,21 +39,6 @@ class TestQir(unittest.TestCase):
         qir_text = self.qsharp_callable_basic.as_qir()
         self.assertIn("@ENTRYPOINT__GenerateRandomBitBasic", qir_text)
 
-    def test_as_qir_metadata(self):
-        metadata = {"azure.target_id": "rigetti.simulator"}
-        qir_text = self.qsharp_callable_basic.as_qir(metadata)
-        self.assertIn("@ENTRYPOINT__GenerateRandomBitBasic", qir_text)
-
-        metadata = {"azure.target_id": "rigetti.simulator",
-                    "azure.target_capability": "BasicExecution"}
-        qir_text = self.qsharp_callable_basic.as_qir(metadata)
-        self.assertIn("@ENTRYPOINT__GenerateRandomBitBasic", qir_text)
-
-        metadata = {"azure.target_id": "rigetti.simulator",
-                    "azure.target_capability": "FullComputation"}
-        qir_text = self.qsharp_callable_advanced.as_qir(metadata)
-        self.assertIn("@ENTRYPOINT__GenerateRandomBitAdvanced", qir_text)
-
     def test_as_qir_kwargs(self):
         qir_text = self.qsharp_callable_basic \
                        .as_qir(target="rigetti.simulator")
@@ -70,6 +55,6 @@ class TestQir(unittest.TestCase):
         self.assertIn("@ENTRYPOINT__GenerateRandomBitAdvanced", qir_text)
 
     def test_repr_qir_(self):
-        metadata = {"azure.target_id": "rigetti.simulator"}
-        qir_bitcode = self.qsharp_callable_basic._repr_qir_(metadata)
+        qir_bitcode = self.qsharp_callable_basic._repr_qir_(target="rigetti.simulator",
+                                                            target_capability="BasicExecution")
         self.assertGreater(len(qir_bitcode), 4)

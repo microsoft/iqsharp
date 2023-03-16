@@ -114,35 +114,6 @@ public class QirMagic : AbstractMagic
                 - `{ParameterNameOperationName}=<string>`: Q# operation or function name.
                 This must be the first parameter, and must be a valid Q# operation
                 or function name that has been defined either in the notebook or in a Q# file in the same folder.
-
-                #### Optional parameters
-
-                - `{ParameterNameTarget}=<string>`: The intended execution target for the compiled entrypoint.
-                Defaults to the active Azure Quantum target (which can be set with `%azure.target`).                
-                Otherwise, defaults to a generic target, which may not work when running on a specific target.
-
-                - `{ParameterNameTargetCapability}=<string>`: The capability of the intended execution target.
-                If `{ParameterNameTarget}` is specified or there is an active Azure Quantum target,
-                defaults to the target's maximum capability.
-                Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
-                Possible options are:
-                    * `{TargetCapabilityModule.Top}`
-                    * `{TargetCapabilityModule.Bottom}`
-                    * `{TargetCapabilityModule.BasicExecution}`
-                    * `{TargetCapabilityModule.AdaptiveExecution}`
-                    * `{TargetCapabilityModule.BasicQuantumFunctionality}`
-                    * `{TargetCapabilityModule.BasicMeasurementFeedback}`
-                    * `{TargetCapabilityModule.FullComputation}`
-
-                - `{ParameterNameOutputFile}=<string>`: The file path for where to save the output QIR.
-                If empty, a uniquely-named temporary file will be created.
-
-                - `{ParameterNameOutputFormat}=<QirOutputFormat>`: The QIR output format.
-                Defaults to `IR`.
-                Possible options are:
-                    * `{nameof(QirOutputFormat.IR)}`: Human-readable Intermediate Representation in plain-text
-                    * `{nameof(QirOutputFormat.Bitcode)}`: LLVM bitcode (only when writing to a output file)
-                    * `{nameof(QirOutputFormat.BitcodeBase64)}`: LLVM bitcode encoded as Base64
             ".Dedent(),
             Examples = new []
             {
@@ -220,8 +191,26 @@ public class QirMagic : AbstractMagic
     }
 
     /// <summary>
-    ///     Simulates an operation given a string with its name and a JSON
-    ///     encoding of its arguments.
+    ///     Runs the QIR magic.
+    ///     In addition to the public parameters documented in the %qir magic command,
+    ///     it also supports some internal parameters used by the `QSharpCallable._repr_qir_`
+    ///     method from the `qsharp` Python Package.
+    ///     #### Optional parameters
+    ///     - `target:string`: The intended execution target for the compiled entrypoint.
+    ///       Defaults to the active Azure Quantum target (which can be set with `%azure.target`).                
+    ///       Otherwise, defaults to a generic target, which may not work when running on a specific target.
+    ///     - `target_capability:string`: The capability of the intended execution target.
+    ///       If `target` is specified or there is an active Azure Quantum target,
+    ///       defaults to the target's maximum capability.
+    ///       Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
+    ///     - `output_file:string`: The file path for where to save the output QIR.
+    ///       If empty, a uniquely-named temporary file will be created.
+    ///     - `output_format:QirOutputFormat`: The QIR output format.
+    ///       Defaults to `IR`.
+    ///       Possible options are:
+    ///       * `IR`: Human-readable Intermediate Representation in plain-text
+    ///       * `Bitcode`: LLVM bitcode (only when writing to a output file)
+    ///       * `BitcodeBase64`: LLVM bitcode encoded as Base64
     /// </summary>
     public async Task<ExecutionResult> RunAsync(string input, IChannel channel)
     {
@@ -299,11 +288,11 @@ public class QirMagic : AbstractMagic
             return outputFormat switch
             {
                 QirOutputFormat.Bitcode =>
-                    ReturnQirBitcode(outputFilePath, outputFormat, qriStream),
+                    ReturnQirBitcode(outputFilePath, qriStream),
                 QirOutputFormat.BitcodeBase64 =>
-                    ReturnQirBitcodeBase64(outputFilePath, outputFormat, qriStream),
+                    ReturnQirBitcodeBase64(outputFilePath, qriStream),
                 QirOutputFormat.IR or _ =>
-                    ReturnQIR_IR(channel, outputFilePath, outputFormat, qriStream),
+                    ReturnQIR_IR(channel, outputFilePath, qriStream),
             };
         }
         catch (Exception exception)
@@ -317,7 +306,7 @@ public class QirMagic : AbstractMagic
         }
     }
 
-    private ExecutionResult ReturnQIR_IR(IChannel channel, string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    private ExecutionResult ReturnQIR_IR(IChannel channel, string? outputFilePath, Stream qirStream)
     {
         string bitcodeFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".bc")!;
         string irFilePath = string.IsNullOrEmpty(outputFilePath)
@@ -345,14 +334,14 @@ public class QirMagic : AbstractMagic
 
         if (!string.IsNullOrEmpty(outputFilePath))
         {
-            return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+            return new LlvmIr($"QIR {QirOutputFormat.IR} written to {outputFilePath}").ToExecutionResult();
         }
 
         var llvmIR = File.ReadAllText(irFilePath);
         return new LlvmIr(llvmIR).ToExecutionResult();
     }
 
-    private static ExecutionResult ReturnQirBitcodeBase64(string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    private static ExecutionResult ReturnQirBitcodeBase64(string? outputFilePath, Stream qirStream)
     {
         byte[] bytes;
         using (var memoryStream = new MemoryStream())
@@ -365,13 +354,13 @@ public class QirMagic : AbstractMagic
         if (!string.IsNullOrEmpty(outputFilePath))
         {
             File.WriteAllText(outputFilePath, bitchedBase64);
-            return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+            return new LlvmIr($"QIR {QirOutputFormat.BitcodeBase64} written to {outputFilePath}").ToExecutionResult();
         }
 
         return new LlvmIr(bitchedBase64).ToExecutionResult();
     }
 
-    private static ExecutionResult ReturnQirBitcode(string? outputFilePath, QirOutputFormat outputFormat, Stream qirStream)
+    private static ExecutionResult ReturnQirBitcode(string? outputFilePath, Stream qirStream)
     {
         if (string.IsNullOrEmpty(outputFilePath))
         {
@@ -384,7 +373,7 @@ public class QirMagic : AbstractMagic
             qirStream.CopyTo(outStream);
         }
 
-        return new LlvmIr($"QIR {outputFormat} written to {outputFilePath}").ToExecutionResult();
+        return new LlvmIr($"QIR {QirOutputFormat.Bitcode} written to {outputFilePath}").ToExecutionResult();
     }
 
     private ExecutionResult ReturnCompilationError(string input, IChannel channel, string? name, CompilationErrorsException exception)

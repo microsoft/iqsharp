@@ -120,72 +120,53 @@ class QSharpCallable(object):
         """
         return qsharp.client.simulate_noise(self, **kwargs)
 
-    def as_qir(self, metadata: Optional[Dict[str, str]] = None, **kwargs) -> str:
+    def as_qir(self, **kwargs) -> str:
         """
         Returns the QIR representation of the callable,
         assuming the callable is an entry point.
 
-        :param Optional[Dict[str, str]] metadata: dictionary containing metadata for QIR generation
-        The following key-values are optional, but recommended:
-        - "azure.target_id": "provider_id.target_name"
-          The intended execution target for the compiled entrypoint.
-          Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
-          Otherwise, defaults to a generic target, which may not work when running on a specific target.
-        - "azure.target_capability": "provider_id.target_name"
-          The capability of the intended execution target.
-          If `azure.target_id` specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
-          Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
-
-        This method also accepts the following (optional) kwargs parameters:
-        - `target`: used when metadata["azure.target_id"] is not passed.
-        - `target_capability`: used when metadata["azure.target_capability"] is not passed.
+        This method uses `%qir` magic command, which accepts the
+        following (optional) kwargs parameters:
+        - `target`: The intended execution target for the compiled entrypoint.
+                    Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
+                    Otherwise, defaults to a generic target, which may not work when running on a specific target.
+        - `target_capability`: The capability of the intended execution target.
+                               If `target` is specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
+                               Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
         - `output_format`: the QIR output format. Defaults to `IR`.
-            Possible options are:
-                * `IR`: Human-readable Intermediate Representation in plain-text
-                * `Bitcode`: LLVM bitcode (only when writing to a output file)
-                * `BitcodeBase64`: LLVM bitcode encoded as Base64
+          Possible options are:
+            * `IR`: Human-readable Intermediate Representation in plain-text
+            * `Bitcode`: LLVM bitcode (only when writing to a output file)
+            * `BitcodeBase64`: LLVM bitcode encoded as Base64
         - `output_file`: The file path for where to save the output QIR.
 
         :rtype: bytes
         """
-        metadata = metadata if metadata else {}
-        target = metadata.pop("azure.target_id", kwargs.pop("target", None))
-        target_capability = metadata.pop("azure.target_capability", kwargs.pop("target_capability", None))
         data = qsharp.client.compile_to_qir(self,
-                                            target=target,
-                                            target_capability=target_capability,
                                             **kwargs)
-        
         if "Text" in data:
             return data['Text']
         raise IQSharpError([f'Error in generating QIR. {data}'])
 
-    def _repr_qir_(self, metadata: Optional[Dict[str, str]] = None, **kwargs: Any) -> bytes:
+    def _repr_qir_(self, **kwargs: Any) -> bytes:
         """
         Returns the QIR representation of the callable,
         assuming the callable is an entry point.
 
-        :param Optional[Dict[str, str]] metadata: dictionary containing metadata for QIR generation
-        The following key-values are optional, but recommended:
-        - "azure.target_id": "provider_id.target_name"
-          The intended execution target for the compiled entrypoint.
-          Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
-          Otherwise, defaults to a generic target, which may not work when running on a specific target.
-        - "azure.target_capability": "provider_id.target_name"
-          The capability of the intended execution target.
-          If `azure.target_id` specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
-          Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
-
-        This method also accepts the following (optional) kwargs parameters:
-        - `target`: used when metadata["azure.target_id"] is not passed.
-        - `target_capability`: used when metadata["azure.target_capability"] is not passed.
+        This method uses `%qir` magic command, which accepts the
+        following (optional) kwargs parameters:
+        - `target`: The intended execution target for the compiled entrypoint.
+                    Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
+                    Otherwise, defaults to a generic target, which may not work when running on a specific target.
+        - `target_capability`: The capability of the intended execution target.
+                               If `target` is specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
+                               Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
 
         :rtype: bytes
         """
         # We need to use the Base64 encoding to be able to transfer
         # the bitcode via the Jupyter protocol
-        qir_bitcodeBase64 = self.as_qir(metadata=metadata,
-                                        output_format="BitcodeBase64",
+        qir_bitcodeBase64 = self.as_qir(output_format="BitcodeBase64",
                                         kwargs=kwargs)
         import base64
         qir_bitcode = base64.b64decode(qir_bitcodeBase64)
