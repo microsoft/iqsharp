@@ -144,7 +144,7 @@ class QSharpCallable(object):
         """
         data = qsharp.client.compile_to_qir(self,
                                             **kwargs)
-        if "Text" in data:
+        if data and ("Text" in data):
             return data['Text']
         raise IQSharpError([f'Error in generating QIR. {data}'])
 
