@@ -24,7 +24,7 @@ def register_magics():
         callables = qs.compile(cell)
         if isinstance(callables, qs.QSharpCallable):
             local_ns[callables._name] = callables
-        else:
+        elif callables:
             for qs_callable in callables:
                 local_ns[qs_callable._name] = qs_callable
 
