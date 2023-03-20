@@ -167,7 +167,7 @@ class QSharpCallable(object):
         # We need to use the Base64 encoding to be able to transfer
         # the bitcode via the Jupyter protocol
         qir_bitcodeBase64 = self.as_qir(output_format="BitcodeBase64",
-                                        kwargs=kwargs)
+                                        **kwargs)
         import base64
         qir_bitcode = base64.b64decode(qir_bitcodeBase64)
         return qir_bitcode
