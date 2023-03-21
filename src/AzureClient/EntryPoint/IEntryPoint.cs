@@ -5,7 +5,7 @@
 
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Runtime.Submitters;
 
@@ -39,5 +39,10 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
         /// The stream from which QIR bitcode for the entry point can be read.
         /// </summary>
         public Stream? QirStream { get; }
-    }
+
+        /// <summary>
+        /// The target capability which the QIR was generated for.
+        /// </summary>
+        public TargetCapability? TargetCapability { get; } 
+     }
 }

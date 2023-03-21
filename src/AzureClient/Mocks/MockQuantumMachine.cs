@@ -3,10 +3,6 @@
 
 #nullable enable
 
-using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Quantum.Runtime;
 using Microsoft.Quantum.Simulation.Core;
 
@@ -14,9 +10,9 @@ namespace Microsoft.Quantum.IQSharp.AzureClient
 {
     internal class MockQuantumMachine : IQuantumMachine
     {
-        public string ProviderId => throw new NotImplementedException();
+        public string ProviderId => "MockQuantumMachine";
 
-        public string Target => throw new NotImplementedException();
+        public string Target => "MockQuantumMachine.Target";
 
         private MockAzureWorkspace? Workspace { get; }
 
