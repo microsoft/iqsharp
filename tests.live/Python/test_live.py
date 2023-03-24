@@ -275,5 +275,5 @@ class TestEstimator:
             assert isinstance(retrieved_output, qsharp.results.resource_estimator.ResourceEstimatorBatchResult)
             assert len(retrieved_output) == 2
 
-            assert retrieved_output[0]["physicalCounts"]["physicalQubits"] == 102094
-            assert retrieved_output[1]["physicalCounts"]["physicalQubits"] == 175934
+            assert retrieved_output[0]["logicalCounts"]["numQubits"] == 17
+            assert retrieved_output[1]["logicalCounts"]["numQubits"] == 33
