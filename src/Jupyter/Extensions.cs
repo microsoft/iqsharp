@@ -103,11 +103,7 @@ public static class Extensions
         simulator.DisableExceptionPrinting();
         simulator.OnException += (exception, stackTrace) =>
         {
-            channel.Display(new DisplayableException
-            {
-                Exception = exception,
-                StackTrace = stackTrace
-            });
+            channel.Display(DisplayableException.Create(exception, stackTrace));
         };
         return simulator;
     }
