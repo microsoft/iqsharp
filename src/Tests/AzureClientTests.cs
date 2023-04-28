@@ -341,8 +341,8 @@ namespace Tests.IQSharp
             azureWorkspace?.AddProviders("microsoft");
 
             // set the active target
-            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.simulator"));
-            Assert.AreEqual("microsoft.simulator", target.TargetId);
+            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.estimator"));
+            Assert.AreEqual("microsoft.estimator", target.TargetId);
 
             var qirResultsJob = new MockCloudJob(null, OutputFormat.QirResultsV1);
             var quantumResultsJob = new MockCloudJob(null, OutputFormat.QuantumResultsV1);
