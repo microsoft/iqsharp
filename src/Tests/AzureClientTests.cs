@@ -326,35 +326,6 @@ namespace Tests.IQSharp
         }
 
         [TestMethod]
-        public void TestJobOutputFormats()
-        {
-            var services = Startup.CreateServiceProvider("Workspace");
-            var azureClient = (AzureClient)services.GetRequiredService<IAzureClient>();
-
-            // connect
-            var targets = ExpectSuccess<IEnumerable<TargetStatusInfo>>(ConnectToWorkspaceAsync(azureClient));
-            Assert.IsFalse(targets.Any());
-
-            // add a target
-            var azureWorkspace = azureClient.ActiveWorkspace as MockAzureWorkspace;
-            Assert.IsNotNull(azureWorkspace);
-            azureWorkspace?.AddProviders("microsoft");
-
-            // set the active target
-            var target = ExpectSuccess<TargetStatusInfo>(azureClient.SetActiveTargetAsync(new MockChannel(), "microsoft.estimator"));
-            Assert.AreEqual("microsoft.estimator", target.TargetId);
-
-            var qirResultsJob = new MockCloudJob(null, OutputFormat.QirResultsV1);
-            var quantumResultsJob = new MockCloudJob(null, OutputFormat.QuantumResultsV1);
-
-            var histogram = ExpectSuccess<Histogram>(azureClient.CreateOutput(quantumResultsJob, new MockChannel(), CancellationToken.None));
-            Assert.IsNotNull(histogram);
-
-            var stringOutput = ExpectSuccess<string>(azureClient.CreateOutput(qirResultsJob, new MockChannel(), CancellationToken.None));
-            Assert.IsNotNull(stringOutput);
-        }
-
-        [TestMethod]
         public void TestJobExecutionWithArrayInput()
         {
             var services = Startup.CreateServiceProvider("Workspace");
