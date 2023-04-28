@@ -244,7 +244,7 @@ namespace Tests.IQSharp
 
             // We subtract two due to microsoft not having a mock target. See:
             // GitHub Issue: https://github.com/microsoft/iqsharp/issues/609
-            Assert.That.Enumerable(targets).HasCount(3 * Enum.GetNames(typeof(AzureProvider)).Length - 2);
+            Assert.That.Enumerable(targets).HasCount(3 * Enum.GetNames(typeof(AzureProvider)).Length - 3);
 
             // set each target, which will load the corresponding package
             foreach (var target in targets)
