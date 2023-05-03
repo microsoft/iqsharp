@@ -6,35 +6,35 @@ RUN pip install --no-cache --upgrade pip
 
 # Install Jupyter
 RUN pip install --no-cache \
-    setuptools==67.7.2 \
-    ipython==8.8.0 \
-    jupyter==1.0.0 \
-    notebook==6.5.2
+        setuptools==67.7.2 \
+        ipython==8.8.0 \
+        jupyter==1.0.0 \
+        notebook==6.5.2
 
 # Install APT prerequisites.
 RUN apt-get update && \
     apt-get -y upgrade \
-    # Make sure SSL packages are up to date.
-    libsasl2-2 && \
+                       # Make sure SSL packages are up to date.
+                       libsasl2-2 && \
     apt-get -y install \
-    # Dependencies for the .NET Core SDK.
-    wget \
-    pgp \
-    vim \
-    apt-transport-https \
-    # Dependencies for the Quantum Development Kit.
-    # Note that we install them here to minimize the number
-    # of layers.
-    libomp5-11 \
-    # Dependency for QIR
-    libc6 \
-    # Not strictly needed, but Git is useful for several
-    # interactive scenarios, so we finish by adding it as
-    # well. Thankfully, Git is a small dependency (~3 MiB)
-    # given what we have already installed.
-    git \
-    # Used to retrieve node version information.
-    curl && \
+                       # Dependencies for the .NET Core SDK.
+                       wget \
+                       pgp \
+                       vim \
+                       apt-transport-https \
+                       # Dependencies for the Quantum Development Kit.
+                       # Note that we install them here to minimize the number
+                       # of layers.
+                       libomp5-11 \
+                       # Dependency for QIR
+                       libc6 \
+                       # Not strictly needed, but Git is useful for several
+                       # interactive scenarios, so we finish by adding it as
+                       # well. Thankfully, Git is a small dependency (~3 MiB)
+                       # given what we have already installed.
+                       git \
+                       # Used to retrieve node version information.
+                       curl && \
     # Upgrade optional dependencies brought in by the previous step.
     apt-get -y upgrade libidn2-0 && \
     # We clean the apt cache at the end of each apt command so that the caches
@@ -91,13 +91,13 @@ ARG EXTRA_NUGET_SOURCES=
 # Add the local NuGet packages folder as a source.
 RUN mkdir -p ${HOME}/.nuget/NuGet && \
     echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-    <configuration>\n\
-    <packageSources>\n\
-    <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
-    <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
-    ${EXTRA_NUGET_SOURCES}\n\
-    </packageSources>\n\
-    </configuration>\n\
+        <configuration>\n\
+            <packageSources>\n\
+                <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
+                <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
+                ${EXTRA_NUGET_SOURCES}\n\
+            </packageSources>\n\
+        </configuration>\n\
     " > ${HOME}/.nuget/NuGet/NuGet.Config && \
     echo "Using NuGet.Config:" && \
     cat ${HOME}/.nuget/NuGet/NuGet.Config
@@ -135,9 +135,9 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 ARG IQSHARP_VERSION
 RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.28.263081" && \
     dotnet tool install \
-    --global \
-    Microsoft.Quantum.IQSharp \
-    --version ${IQSHARP_VERSION} && \
+            --global \
+            Microsoft.Quantum.IQSharp \
+            --version ${IQSHARP_VERSION} && \
     dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 
 # Ensure that the necessary NuGet packages are cached.
@@ -146,7 +146,7 @@ RUN echo "Adding standard packages..." && \
     dotnet new classlib -n "foo" -lang Q# && \
     echo "Adding extra packages: ${EXTRA_NUGET_PACKAGES}..." && \
     for p in ${EXTRA_NUGET_PACKAGES}; do \
-    dotnet add foo package $p --version ${IQSHARP_VERSION} && \
-    echo "Added package: $p"; \
+        dotnet add foo package $p --version ${IQSHARP_VERSION} && \
+        echo "Added package: $p"; \
     done && \
     rm -Rdf foo
