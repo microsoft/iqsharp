@@ -58,13 +58,6 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     apt-get -y install procps && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
-# Install prerequisites needed for integration with Live Share and VS Online.
-# TODO: Consider splitting this out into a new "extended" IQ# image.
-RUN wget -O /tmp/vsls-reqs https://aka.ms/vsls-linux-prereq-script && \
-    chmod +x /tmp/vsls-reqs && /tmp/vsls-reqs && \
-    rm /tmp/vsls-reqs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/
-
 # create user with a home directory
 # Required for mybinder.org
 ARG NB_USER=jovyan
