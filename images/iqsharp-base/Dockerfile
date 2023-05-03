@@ -6,6 +6,7 @@ RUN pip install --no-cache --upgrade pip
 
 # Install Jupyter
 RUN pip install --no-cache \
+        setuptools==67.7.2 \
         ipython==8.8.0 \
         jupyter==1.0.0 \
         notebook==6.5.2
