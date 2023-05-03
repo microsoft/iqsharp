@@ -91,13 +91,13 @@ ARG EXTRA_NUGET_SOURCES=
 # Add the local NuGet packages folder as a source.
 RUN mkdir -p ${HOME}/.nuget/NuGet && \
     echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-        <configuration>\n\
-            <packageSources>\n\
-                <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
-                <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
-                ${EXTRA_NUGET_SOURCES}\n\
-            </packageSources>\n\
-        </configuration>\n\
+          <configuration>\n\
+              <packageSources>\n\
+                  <add key=\"nuget\" value=\"https://api.nuget.org/v3/index.json\" />\n\
+                  <add key=\"context\" value=\"${LOCAL_PACKAGES}/nugets\" />\n\
+                  ${EXTRA_NUGET_SOURCES}\n\
+              </packageSources>\n\
+          </configuration>\n\
     " > ${HOME}/.nuget/NuGet/NuGet.Config && \
     echo "Using NuGet.Config:" && \
     cat ${HOME}/.nuget/NuGet/NuGet.Config
@@ -135,9 +135,9 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 ARG IQSHARP_VERSION
 RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.28.263081" && \
     dotnet tool install \
-            --global \
-            Microsoft.Quantum.IQSharp \
-            --version ${IQSHARP_VERSION} && \
+           --global \
+           Microsoft.Quantum.IQSharp \
+           --version ${IQSHARP_VERSION} && \
     dotnet iqsharp install --user --path-to-tool="$(which dotnet-iqsharp)"
 
 # Ensure that the necessary NuGet packages are cached.
