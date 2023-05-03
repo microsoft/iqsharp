@@ -59,7 +59,7 @@ Note that when building IQ# from source, this repository is configured so that .
 This repository provides a [Dockerfile](./images/iqsharp-base/Dockerfile) that includes the .NET SDK, Python, Jupyter Notebook, and the IQ# kernel.
 
 The image built from this Dockerfile is hosted on the [Microsoft Container Registry](https://github.com/microsoft/ContainerRegistry) as the `quantum/iqsharp-base` repository.
-The `iqsharp-base` image can be used, for instance, to quickly enable using [Binder](https://gke.mybinder.org/) with Q#-language repositories, or as a base image for [Visual Studio Code Development Containers](https://code.visualstudio.com/docs/remote/containers).
+The `iqsharp-base` image can be used, for instance, to quickly enable using [Binder](https://mybinder.org/) with Q#-language repositories, or as a base image for [Visual Studio Code Development Containers](https://code.visualstudio.com/docs/remote/containers).
 
 To use the `iqsharp-base` image in your own Dockerfile, make sure to begin your Dockerfile with a `FROM` line that points to the Microsoft Container Registry:
 
