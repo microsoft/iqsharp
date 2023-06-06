@@ -15,10 +15,10 @@ namespace Microsoft.Quantum.IQSharp;
 public static class JsonConverters
 {
     private static readonly ImmutableList<JsonConverter> tupleConverters;
-    private static readonly ImmutableList<JsonConverter> otherConverters;
+
     public static JsonConverter[] TupleConverters => tupleConverters.ToArray();
 
-    public static JsonConverter[] AllConverters => tupleConverters.Concat(otherConverters).ToArray();
+    public static JsonConverter[] AllConverters => tupleConverters.ToArray();
 
     static JsonConverters()
     {
@@ -36,9 +36,6 @@ public static class JsonConverters
             new DelegatedConverter<DataModel.StabilizerState, DataModel.State>(new DataModel.StateConverter())
         }
         .ToImmutableList();
-        otherConverters = ImmutableList.Create<JsonConverter>(
-            new ResourcesEstimatorConverter()
-        );
     }
 
     /// <summary>
@@ -156,19 +153,6 @@ public class QTupleConverter : JsonConverter
         var token = JToken.FromObject(tokenData, serializer);
         token.WriteTo(writer);
     }
-}
-
-public class ResourcesEstimatorConverter : JsonConverter<ResourcesEstimator>
-{
-    public override ResourcesEstimator ReadJson(JsonReader reader, Type objectType, [AllowNull] ResourcesEstimator existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void WriteJson(JsonWriter writer, [AllowNull] ResourcesEstimator value, JsonSerializer serializer) =>
-        JToken
-        .FromObject(value.AsDictionary())
-        .WriteTo(writer);
 }
 
 public class QVoidConverter : JsonConverter<QVoid>

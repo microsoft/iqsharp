@@ -94,19 +94,6 @@ namespace Microsoft.Quantum.IQSharp
             await Simulate(id, await GetRunArguments(Request), logger)));
 
         /// <summary>
-        /// Returns an estimation of how many resources are needed to run the given operation on a quantum computer.
-        /// As with simulate, supports both, GET and POST.
-        /// If GET, then the parameters are expected as normal query parameters
-        /// If POST, then the parameters are expected as a JSON object in the body.
-        /// </summary>
-        [HttpGet("{id}/estimate")]
-        [HttpPost("{id}/estimate")]
-        public async Task<Response<Dictionary<string, double>>> Estimate(string id) =>
-            await AsResponse(async (logger) =>
-            await IfReady(async () =>
-            await Estimate(id, await GetRunArguments(Request), logger)));
-
-        /// <summary>
         /// Overrides CheckIfReady by not checking if the Workspace is actually available.
         /// It should be possible to build and run self-contained snippets.
         /// We still need to wait for Workspace initialization to complete, however,

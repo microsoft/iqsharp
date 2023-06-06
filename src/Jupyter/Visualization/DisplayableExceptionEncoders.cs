@@ -2,43 +2,47 @@
 // Licensed under the MIT License.
 #nullable enable
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using Microsoft.Quantum.Simulation.Common;
+using Microsoft.Quantum.Simulation.Core;
 using System.Data;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Jupyter.Core;
-using Microsoft.Quantum.QsCompiler.SyntaxTree;
-using Microsoft.Quantum.Simulation.Common;
-using Microsoft.Quantum.Simulation.Core;
-using Microsoft.Quantum.Simulation.Simulators;
 
 namespace Microsoft.Quantum.IQSharp
 {
-    internal record struct DisplayableException(Exception Exception, IEnumerable<StackFrame>? StackTrace)
+    internal record struct DisplayableStackFrame(string Callable, string SourceFile, string BestSourceLocation, int LineNumber)
     {
-        public string Header =>
-            $"Unhandled exception. {Exception.GetType().FullName}: {Exception.Message}";
     }
 
-    internal static class StackFrameExtensions
+    internal record struct DisplayableException(string? ExceptionType, string ExceptionMessage, IEnumerable<DisplayableStackFrame> StackTrace)
     {
-        internal static string ToFriendlyName(this ICallable callable)
+        public static DisplayableException Create(Exception exception, IEnumerable<StackFrame> stackTrace)
+        {
+            return new DisplayableException
+            {
+                ExceptionType = exception.GetType().FullName,
+                ExceptionMessage = exception.Message,
+                StackTrace = stackTrace.Select(sf => new DisplayableStackFrame
+                {
+                    Callable = GetCallableFriendlyName(sf.Callable),
+                    SourceFile = sf.SourceFile,
+                    BestSourceLocation = sf.GetBestSourceLocation(),
+                    LineNumber = sf.FailedLineNumber
+                })
+            };
+        }
+
+        public string Header =>
+            $"Unhandled exception. {ExceptionType}: {ExceptionMessage}";
+
+        private static string GetCallableFriendlyName(ICallable callable)
         {
             var fullName = callable.FullName;
             return fullName.StartsWith(Snippets.SNIPPETS_NAMESPACE)
             ? fullName.Substring(Snippets.SNIPPETS_NAMESPACE.Length + 1)
             : fullName;
         }
-
-        internal static string ToSourceLink(this StackFrame frame) =>
-            Regex.Match(frame.SourceFile, "snippet_[0-9]*.qs$").Success
-            ? "(notebook)"
-            : $"<a href=\"{frame.GetBestSourceLocation()}\">{frame.SourceFile}:{frame.FailedLineNumber}</a>";
     }
 
     /// <summary>
@@ -54,15 +58,20 @@ namespace Microsoft.Quantum.IQSharp
         {
             if (displayable is DisplayableException ex)
             {
+                // StackTrace should have been populated by the StackTraceCollector 
+                // upon the failure event raised by the simulator
+                System.Diagnostics.Debug.Assert(ex.StackTrace != null);
+
                 var rows = ex
                     .StackTrace
-                    ?.Select(frame => $@"
+                    .Select(frame => $@"
                         <tr>
-                            <td>{frame.ToSourceLink()}</td>
-                            <td>{frame.Callable.ToFriendlyName()}</td>
+                            <td>{ToSourceLink(frame)}</td>
+                            <td>{frame.Callable}</td>
                         </tr>
                     ");
-                var stackTrace = rows is null ? $"<pre>{WebUtility.HtmlEncode(ex.Exception.StackTrace)}</pre>" : $@"
+
+                var stackTrace = $@"
                     <thead>
                         <tr>
                             <th>Source</th>
@@ -74,10 +83,12 @@ namespace Microsoft.Quantum.IQSharp
                         {String.Join("\n", rows)}
                     </tbody>
                 ";
+
+                // { display: list-item } style is needed for a <summary> tag so that the arrow shows up 
                 var table = $@"
                     <details>
-                        <summary>
-                            Unhandled exception of type {ex.Exception.GetType().FullName}: {ex.Exception.Message}
+                        <summary style=""display:list-item"">
+                            {WebUtility.HtmlEncode(ex.Header)}
                         </summary>
                         <table>
                             {stackTrace}
@@ -88,6 +99,11 @@ namespace Microsoft.Quantum.IQSharp
             }
             else return null;
         }
+
+        private static string ToSourceLink(DisplayableStackFrame frame) =>
+            Regex.Match(frame.SourceFile, "snippet_[0-9]*.qs$").Success
+            ? "(notebook)"
+            : $"<a href=\"{frame.BestSourceLocation}\">{WebUtility.HtmlEncode(frame.SourceFile)}:{frame.LineNumber}</a>";
     }
 
     /// <summary>
@@ -104,14 +120,18 @@ namespace Microsoft.Quantum.IQSharp
         {
             if (displayable is DisplayableException ex)
             {
+                // StackTrace should have been populated by the StackTraceCollector 
+                // upon the failure event raised by the simulator
+                System.Diagnostics.Debug.Assert(ex.StackTrace != null);
+
                 var builder = new StringBuilder();
                 builder.AppendLine(ex.Header);
                 var first = true;
-                foreach (var frame in ex.StackTrace ?? Enumerable.Empty<StackFrame>())
+                foreach (var frame in ex.StackTrace)
                 {
                     builder.AppendLine(
                         (first ? " ---> " : "   at ") +
-                        frame.ToStringWithBestSourceLocation()
+                        $"{frame.Callable} on {frame.BestSourceLocation}:line {frame.LineNumber}"
                     );
                     first = false;
                 }

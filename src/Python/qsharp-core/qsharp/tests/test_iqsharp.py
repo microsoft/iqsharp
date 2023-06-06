@@ -158,17 +158,6 @@ def test_paulis():
     assert r[1] == qsharp.Pauli.Z
 
 @skip_if_no_workspace
-def test_estimate():
-    """
-    Verifies that resource estimation works.
-    """
-    from Microsoft.Quantum.SanityTests import HelloAgain
-    r = HelloAgain.estimate_resources(count=4, name="estimate test")
-    assert r['Measure'] == 8
-    assert r['QubitClifford'] == 1
-    assert r['BorrowedWidth'] == 0
-
-@skip_if_no_workspace
 def test_trace():
     """
     Verifies the trace commands works.
