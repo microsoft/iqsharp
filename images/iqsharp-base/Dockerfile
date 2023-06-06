@@ -6,6 +6,7 @@ RUN pip install --no-cache --upgrade pip
 
 # Install Jupyter
 RUN pip install --no-cache \
+        setuptools==67.7.2 \
         ipython==8.8.0 \
         jupyter==1.0.0 \
         notebook==6.5.2
@@ -55,13 +56,6 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     apt-get -y update && \
     apt-get -y install dotnet-sdk-6.0 && \
     apt-get -y install procps && \
-    apt-get clean && rm -rf /var/lib/apt/lists/
-
-# Install prerequisites needed for integration with Live Share and VS Online.
-# TODO: Consider splitting this out into a new "extended" IQ# image.
-RUN wget -O /tmp/vsls-reqs https://aka.ms/vsls-linux-prereq-script && \
-    chmod +x /tmp/vsls-reqs && /tmp/vsls-reqs && \
-    rm /tmp/vsls-reqs && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # create user with a home directory
@@ -132,7 +126,7 @@ ENV PATH=$PATH:${HOME}/dotnet:${HOME}/.dotnet/tools \
 # Install IQ# and the project templates, using the NuGet packages from the
 # build context.
 ARG IQSHARP_VERSION
-RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.27.253010" && \
+RUN dotnet new -i "Microsoft.Quantum.ProjectTemplates::0.28.263081" && \
     dotnet tool install \
            --global \
            Microsoft.Quantum.IQSharp \

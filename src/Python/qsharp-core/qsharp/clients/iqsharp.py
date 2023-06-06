@@ -185,26 +185,11 @@ class IQSharpClient(object):
         kwargs.setdefault('_timeout_', None)
         return self._execute_callable_magic('toffoli', op, **kwargs)
 
-    def estimate(self, op, **kwargs) -> Dict[str, int]:
-        kwargs.setdefault('_timeout_', None)
-        raw_counts = self._execute_callable_magic('estimate', op, **kwargs)
-        # Note that raw_counts will have the form:
-        # [
-        #     {"Metric": "<name>", "Sum": "<value>"},
-        #     ...
-        # ]
-        # We thus need to convert it into a dict. As we do so, we convert counts
-        # to ints, since they get turned to floats by JSON serialization.
-        counts = {}
-        for row in raw_counts:
-            counts[row["Metric"]] = int(row["Sum"])
-        return counts
-
     def trace(self, op, **kwargs) -> Any:
         return self._execute_callable_magic('trace', op, _quiet_ = True, **kwargs)
 
-    def compile_to_qir(self, op) -> None:
-        return self._execute_callable_magic('qir', op)
+    def compile_to_qir(self, op, **kwargs) -> None:
+        return self._execute_callable_magic('qir', op, **kwargs)
 
     def component_versions(self, **kwargs) -> Dict[str, LooseVersion]:
         """

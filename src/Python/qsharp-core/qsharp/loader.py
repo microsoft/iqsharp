@@ -7,19 +7,17 @@
 # Licensed under the MIT License.
 ##
 
-import os
 import sys
+import logging
 from types import ModuleType, new_class
-import importlib
 from importlib.abc import MetaPathFinder, Loader
-import tempfile as tf
+from typing import Iterable, Optional, Any, Dict, Tuple
 
 import qsharp
+from qsharp.clients.iqsharp import IQSharpError
 
-from typing import Iterable, List, Optional, Any, Dict, Tuple
-
-import logging
 logger = logging.getLogger(__name__)
+
 
 class QSharpModuleFinder(MetaPathFinder):
     def find_module(self, full_name : str, path : Optional[str] = None) -> Loader:
@@ -107,9 +105,6 @@ class QSharpCallable(object):
         """
         return qsharp.client.toffoli_simulate(self, **kwargs)
 
-    def estimate_resources(self, **kwargs) -> Dict[str, int]:
-        return qsharp.client.estimate(self, **kwargs)
-
     def trace(self, **kwargs) -> Any:
         """
         Returns a structure representing the set of gates and qubits
@@ -125,13 +120,58 @@ class QSharpCallable(object):
         """
         return qsharp.client.simulate_noise(self, **kwargs)
 
-    def as_qir(self) -> bytes:
+    def as_qir(self, **kwargs) -> str:
         """
         Returns the QIR representation of the callable,
         assuming the callable is an entry point.
+
+        This method uses `%qir` magic command, which accepts the
+        following (optional) kwargs parameters:
+        - `target`: The intended execution target for the compiled entrypoint.
+                    Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
+                    Otherwise, defaults to a generic target, which may not work when running on a specific target.
+        - `target_capability`: The capability of the intended execution target.
+                               If `target` is specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
+                               Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
+        - `output_format`: the QIR output format. Defaults to `IR`.
+          Possible options are:
+            * `IR`: Human-readable Intermediate Representation in plain-text
+            * `Bitcode`: LLVM bitcode (only when writing to a output file)
+            * `BitcodeBase64`: LLVM bitcode encoded as Base64
+        - `output_file`: The file path for where to save the output QIR.
+
+        :rtype: bytes
         """
-        data = qsharp.client.compile_to_qir(self)
-        return data['Text']
+        data = qsharp.client.compile_to_qir(self,
+                                            **kwargs)
+        if data and ("Text" in data):
+            return data['Text']
+        raise IQSharpError([f'Error in generating QIR. {data}'])
+
+    def _repr_qir_(self, **kwargs: Any) -> bytes:
+        """
+        Returns the QIR representation of the callable,
+        assuming the callable is an entry point.
+
+        This method uses `%qir` magic command, which accepts the
+        following (optional) kwargs parameters:
+        - `target`: The intended execution target for the compiled entrypoint.
+                    Defaults to the active Azure Quantum target (which can be set with `%azure.target`).
+                    Otherwise, defaults to a generic target, which may not work when running on a specific target.
+        - `target_capability`: The capability of the intended execution target.
+                               If `target` is specified or there is an active Azure Quantum target, defaults to the target's maximum capability.
+                               Otherwise, defaults to `FullComputation`, which may not be supported when running on a specific target.
+
+        :rtype: bytes
+        """
+        # We need to use the Base64 encoding to be able to transfer
+        # the bitcode via the Jupyter protocol
+        qir_bitcodeBase64 = self.as_qir(output_format="BitcodeBase64",
+                                        **kwargs)
+        import base64
+        qir_bitcode = base64.b64decode(qir_bitcodeBase64)
+        return qir_bitcode
+
 
 class QSharpModule(ModuleType):
     _qs_name : str
