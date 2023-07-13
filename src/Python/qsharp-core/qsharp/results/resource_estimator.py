@@ -1,4 +1,5 @@
 from typing import Dict
+import json
 import markdown
 
 class ResourceEstimatorBatchResult():
@@ -99,6 +100,7 @@ class ResourceEstimatorResult(Dict):
 
         self._data = data
         self.summary = ResourceEstimatorResultSummary(data)
+        self.diagram = EstimatorResultDiagram(self.data().copy())
 
     def data(self):
         return self._data
@@ -272,3 +274,33 @@ def _batch_result_html_table(result, indices):
     html += "</ul></details>"
 
     return html
+
+class HTMLWrapper:
+    """
+    Simple HTML wrapper to expose _repr_html_ for Jupyter clients.
+    """
+    def __init__(self, content: str):
+        self.content = content
+
+    def _repr_html_(self):
+        return self.content
+
+class EstimatorResultDiagram:
+    def __init__(self, data):
+        data.pop("reportData")
+        self.data_json = json.dumps(data).replace(" ", "")
+        self.vis_lib = "https://cdn-aquavisualization-prod.azureedge.net/resource-estimation/index.js"
+        self.space = HTMLWrapper(self._space_diagram())
+        self.time = HTMLWrapper(self._time_diagram())
+
+    def _space_diagram(self):
+        html = f"""
+            <script src={self.vis_lib}></script>
+            <re-space-diagram data={self.data_json}></re-space-diagram>"""
+        return html
+
+    def _time_diagram(self):
+        html = f"""
+            <script src={self.vis_lib}></script>
+            <re-time-diagram data={self.data_json}></re-time-diagram>"""
+        return html
