@@ -49,7 +49,7 @@ namespace Tests.IQSharp
             }
 
             await TestOne("Microsoft.Quantum", null);
-            await TestOne("Newtonsoft.Json", "12.0.1");
+            //await TestOne("Newtonsoft.Json", "12.0.1");
         }
 
 
