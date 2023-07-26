@@ -63,6 +63,7 @@ steps:
   displayName: Install pywin32 on Windows
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
+- task: NuGetAuthenticate@1
 
 - pwsh: |
     "##[info]Activating conda environment:  $(CondaEnvironmentName)" | Write-Host

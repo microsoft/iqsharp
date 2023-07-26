@@ -13,6 +13,8 @@ steps:
   displayName: "Bootstrap"
   workingDirectory: '$(System.DefaultWorkingDirectory)'
 
+- task: NuGetAuthenticate@1
+
 ##
 # Build, test & pack
 ##

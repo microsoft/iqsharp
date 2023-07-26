@@ -48,7 +48,7 @@ namespace Microsoft.Quantum.IQSharp
             while (true)
             {
                 var metadataBatch = (await searchResource.SearchAsync(
-                    $"packageId:{packageId}",
+                    packageId,
                     filters: new SearchFilter(includePrerelease: includePrerelease),
                     skip: skip,
                     take: batchSize,

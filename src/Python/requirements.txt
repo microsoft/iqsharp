@@ -7,7 +7,7 @@ numpy==1.22.0
 pytest==7.2.0
 pygments==2.12.0    # to avoid high-severity issue.
 pyzmq==25.0.0
-qutip==4.7.0
+qutip==4.7.2
 selenium==4.2.0
 setuptools==67.7.2
 wheel==0.38.1

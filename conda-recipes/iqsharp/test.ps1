@@ -12,7 +12,7 @@ if ("$Env:BUILD_RELEASETYPE" -ne "release") {
     "<?xml version=""1.0"" encoding=""utf-8""?>
      <configuration>
         <packageSources>
-            <add key=""qdk-alpha"" value=""https://pkgs.dev.azure.com/ms-quantum-public/Microsoft Quantum (public)/_packaging/alpha/nuget/v3/index.json"" protocolVersion=""3"" />
+            <add key=""qdk-alpha"" value=""https://pkgs.dev.azure.com/ms-quantum-public/9af4e09e-a436-4aca-9559-2094cfe8d80c/_packaging/alpha/nuget/v3/index.json"" protocolVersion=""3"" />
         </packageSources>
      </configuration>" | Out-File -FilePath $NuGetDirectory/NuGet.Config -Encoding utf8
 }
