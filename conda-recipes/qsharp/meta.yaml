@@ -38,6 +38,7 @@ test:
     #     conflicts. In particular, we want defaults to take priority over
     #     conda-forge.
     - conda install --yes -c conda-forge qutip
+    - conda install --yes attrs
     - powershell -NoProfile src/conda-recipes/qsharp/test.ps1 # [win]
     - pwsh src/conda-recipes/qsharp/test.ps1 # [not win]
 
