@@ -9,6 +9,8 @@ if ("true" -eq $Env:SYSTEM_DEBUG) {
     Set-PSDebug -Trace 1;
 }
 
+conda install --yes conda=23.5.2    # TODO(kuzminrobin, https://github.com/conda/conda/issues/12928): Remove this line after the bug is fixed.
+
 # Print conda-info and capture the current platform.
 (conda info --json) | Tee-Object -Variable condaInfo;
 $CondaPlatform = $condaInfo `

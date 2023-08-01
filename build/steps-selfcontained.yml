@@ -18,6 +18,8 @@ steps:
     Move-Item "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/artifact/iqsharp/drops" "$Env:SYSTEM_DEFAULTWORKINGDIRECTORY/drops"
   displayName: "Copy build artifacts to IQ# working directory"
 
+- task: NuGetAuthenticate@1
+
 ##
 # Pack
 ##

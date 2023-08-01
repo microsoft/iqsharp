@@ -8029,7 +8029,7 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-qutip 4.7.0 - BSD-2-Clause AND BSD-3-Clause
+qutip 4.7.2 - BSD-2-Clause AND BSD-3-Clause
 
 
 Copyright (c) QuTiP team 2011
