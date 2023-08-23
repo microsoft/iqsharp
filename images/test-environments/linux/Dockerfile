@@ -13,8 +13,7 @@ ARG OS_TYPE
 RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh" && \
     bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b && \
     rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
-	
-RUN ./miniconda/bin/conda update -y certifi
+
 RUN ./miniconda/bin/conda update -y cryptography
 
 ARG UBUNTU_VER
