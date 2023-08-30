@@ -26,16 +26,16 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Update the list of packages after we added packages.microsoft.com
 RUN apt-get update && \
     apt-get -y install \
-    git \
-    powershell \
-    # install the below packages to pick up the latest security patch
-    logsave \
-    libext2fs2 \
-    libss2 \
-    libcom-err2 \
-    e2fsprogs \
-    libssl1.1 \
-    openssl && \
+        git \
+        powershell \
+        # install the below packages to pick up the latest security patch
+        logsave \
+        libext2fs2 \
+        libss2 \
+        libcom-err2 \
+        e2fsprogs \
+        libssl1.1 \
+        openssl && \
     # We clean the apt cache at the end of each apt command so that the caches
     # don't get stored in each layer.
     apt-get clean && rm -rf /var/lib/apt/lists/
