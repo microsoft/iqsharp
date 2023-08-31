@@ -14,6 +14,8 @@ RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-$
     bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b && \
     rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
 
+RUN ./miniconda/bin/conda update -y certifi
+
 ARG UBUNTU_VER
 # Download the Microsoft repository GPG keys
 RUN wget -q "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VER}/packages-microsoft-prod.deb"
