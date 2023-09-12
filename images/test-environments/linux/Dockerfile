@@ -14,8 +14,6 @@ RUN curl -LO "http://repo.continuum.io/miniconda/Miniconda3-${CONDA_VER}-Linux-$
     bash Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh -p /miniconda -b && \
     rm Miniconda3-${CONDA_VER}-Linux-${OS_TYPE}.sh
 
-RUN ./miniconda/bin/conda update -y certifi
-
 ARG UBUNTU_VER
 # Download the Microsoft repository GPG keys
 RUN wget -q "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VER}/packages-microsoft-prod.deb"
@@ -39,3 +37,6 @@ RUN apt-get update && \
     # We clean the apt cache at the end of each apt command so that the caches
     # don't get stored in each layer.
     apt-get clean && rm -rf /var/lib/apt/lists/
+
+RUN ./miniconda/bin/conda update -y certifi
+RUN ./miniconda/bin/conda update -y cryptography
