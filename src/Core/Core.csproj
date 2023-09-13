@@ -40,11 +40,11 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.28.291394" />
-    <PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.28.291394" />
-    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.28.291394" />
-    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.28.291394" />
-    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.28.291394" />
+    <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.28.302312-beta" />
+    <PackageReference Include="Microsoft.Quantum.QirGeneration" Version="0.28.302312-beta" />
+    <PackageReference Include="Microsoft.Quantum.CSharpGeneration" Version="0.28.302312-beta" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.28.302312-beta" />
+    <PackageReference Include="Microsoft.Quantum.QSharp.Core" Version="0.28.302312-beta" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.3" />
     <PackageReference Include="NuGet.Resolver" Version="5.11.5" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
