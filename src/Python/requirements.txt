@@ -10,6 +10,7 @@ pyzmq==25.0.0
 qutip==4.7.2
 selenium==4.2.0
 setuptools==67.7.2
+traitlets==5.9.0    # traitlets==5.10.0 and notebook==6.5.2 are incompatible: https://github.com/jupyter/notebook/issues/7048
 wheel==0.38.1
 Markdown>=3.4.1
 python-markdown-math>=0.8
