@@ -1,6 +1,14 @@
-# Microsoft Quantum Development Kit: IQ# Kernel #
+## DEPRECATION NOTICE
 
-Welcome to the Microsoft Quantum Development Kit!
+**This repository is deprecated.** 
+
+For the Modern QDK repository, please visit [Microsoft/qsharp](http://github.com/microsoft/qsharp).
+
+You can also try out the Modern QDK in VS Code for Web at [vscode.dev/quantum](http://vscode.dev/quantum).
+
+For more information about the Modern QDK and Azure Quantum, visit https://aka.ms/AQ/Documentation
+
+## Classic QDK ##
 
 This repository contains the IQ# kernel for the [Quantum Development Kit](https://docs.microsoft.com/azure/quantum/).
 This kernel provides Q# support for the Jupyter platform, as well as the backend used by the Python client for Q#.
