@@ -65,7 +65,8 @@ namespace Microsoft.Quantum.IQSharp
                         {
                             ["--user-agent"] = "UserAgent",
                             ["--user-agent-extra"] = "UserAgentExtra",
-                            ["--hosting-env"] = "HostingEnvironment"
+                            ["--hosting-env"] = "HostingEnvironment",
+                            ["--register-folders-for-telemetry"] = "RegisterFoldersForTelemetry"
                         }
                     )
                     .Add(new NormalizedEnvironmentVariableConfigurationSource
@@ -144,7 +145,7 @@ namespace Microsoft.Quantum.IQSharp
                         // we get to this point, such that userAgentOption is
                         // not null at this point.
                         userAgentOption!.HasValue()
-                        ? new [] {"--user-agent-extra", userAgentOption!.Value()}
+                        ? new[] { "--user-agent-extra", userAgentOption!.Value() }
                         : Array.Empty<string>()
                     )
                     .AddKernelCommand(
@@ -168,6 +169,11 @@ namespace Microsoft.Quantum.IQSharp
                                 "Specifies the hosting environment that this kernel is being run in.",
                                 CommandOptionType.SingleValue
                             );
+                            kernelCmd.Option<string>(
+                                "--register-folders-for-telemetry <FOLDER>",
+                                "Sends the sub-folders names of <FOLDER> as plain-text to Microsoft telemetry systems.",
+                                CommandOptionType.SingleValue
+                            );
                         }
                     )
                 );
@@ -182,15 +188,15 @@ namespace Microsoft.Quantum.IQSharp
 
         public static IWebHost GetHttpServer(string[]? args)
         {
-           var builder = WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
-                .UseUrls("http://localhost:8008")
-                .UseStartup<Startup>();
+            var builder = WebHost.CreateDefaultBuilder(args ?? Array.Empty<string>())
+                 .UseUrls("http://localhost:8008")
+                 .UseStartup<Startup>();
 
             if (Configuration is not null)
             {
                 builder.UseConfiguration(Configuration);
             }
-                
+
             return builder.Build();
         }
 
@@ -205,12 +211,18 @@ namespace Microsoft.Quantum.IQSharp
                 "operations available for simulation.", CommandOptionType.SingleValue);
             var skipAutoLoadProjectOption = app.Option("--skipAutoLoadProject",
                 "Specifies whether to skip automatically loading the .csproj from the workspace's root folder.", CommandOptionType.SingleValue);
+            var registerFoldersForTelemetryOption = app.Option<string>(
+                    "--register-folders-for-telemetry <FOLDER>",
+                    "Sends the sub-folders names of <FOLDER> as plain-text to Microsoft telemetry systems.",
+                    CommandOptionType.SingleValue
+                );
 
             foreach (var command in app.Commands.Where(c => c.Name == "kernel" || c.Name == "server"))
             {
                 command.Options.Add(cacheOption);
                 command.Options.Add(workspaceOption);
                 command.Options.Add(skipAutoLoadProjectOption);
+                command.Options.Add(registerFoldersForTelemetryOption);
             }
 
             return app;
