@@ -33,7 +33,8 @@ RUN apt-get update && \
         libcom-err2 \
         e2fsprogs \
         libssl1.1 \
-        openssl && \
+        openssl \
+        gpgv && \
     # We clean the apt cache at the end of each apt command so that the caches
     # don't get stored in each layer.
     apt-get clean && rm -rf /var/lib/apt/lists/
