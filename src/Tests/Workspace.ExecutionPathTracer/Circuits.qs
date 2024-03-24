@@ -4,6 +4,7 @@
 namespace Tests.ExecutionPathTracer {
     
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Simulation.QuantumProcessor.Extensions;
 
     // Custom operation
     operation Foo(theta : Double, (qubit : Qubit, bar : String)) : Unit
@@ -82,6 +83,14 @@ namespace Tests.ExecutionPathTracer {
             Controlled Adjoint Bar([qs[2]], ((1.0, 2.1), (qs[0], "foo")));
             let res = M(qs[0]);
             ResetAll(qs);
+        }
+    }
+
+    operation IfCirc() : Unit {
+        using (q = Qubit()) {
+            let res = M(q);
+            ApplyIfElseR(res, (X, q), (Z, q));
+            Reset(q);
         }
     }
 

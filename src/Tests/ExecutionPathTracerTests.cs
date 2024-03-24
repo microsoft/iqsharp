@@ -593,6 +593,53 @@ namespace Tests.IQSharp
             var expected = new ExecutionPath(qubits, operations);
             AssertExecutionPathsEqual(expected, path);
         }
+
+        [TestMethod]
+        public void IfTest()
+        {
+            var path = GetExecutionPath("IfCirc");
+            var qubits = new QubitDeclaration[] { new QubitDeclaration(0, 2) };
+            var operations = new Operation[]
+            {
+                new Operation()
+                {
+                    Gate = "M",
+                    IsMeasurement = true,
+                    Controls = new List<Register>() { new QubitRegister(0) },
+                    Targets = new List<Register>() { new ClassicalRegister(0, 0) },
+                },
+                new Operation()
+                {
+                    Gate = "ApplyIfElseR",
+                    DisplayArgs = "(Zero, (X), (Z))",
+                    Controls = new List<Register>() { new ClassicalRegister(0, 0) },
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                    Children = ImmutableList<Operation>.Empty.AddRange(
+                        new [] {
+                            new Operation()
+                            {
+                                Gate = "X",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                                ConditionalRender = ConditionalRender.OnZero,
+                            },
+                            new Operation()
+                            {
+                                Gate = "Z",
+                                Targets = new List<Register>() { new QubitRegister(0) },
+                                ConditionalRender = ConditionalRender.OnOne,
+                            },
+                        }
+                    )
+                },
+                new Operation()
+                {
+                    Gate = "Reset",
+                    Targets = new List<Register>() { new QubitRegister(0) },
+                },
+            };
+            var expected = new ExecutionPath(qubits, operations);
+            AssertExecutionPathsEqual(expected, path);
+        }
     }
 
     [TestClass]
